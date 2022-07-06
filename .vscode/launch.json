@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension",
+			"name": "debug vscode",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -15,20 +15,12 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			"preLaunchTask": "vscode npm watch-tests"
-		},
-		{
-			"name": "Extension Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/src/clients/vscode",
-				"--extensionTestsPath=${workspaceFolder}/src/clients/vscode/dist/test/suite/index"
-			],
-			"outFiles": [
-				"${workspaceFolder}/src/clients/vscode/dist/test/**/*.js"
-			],
-			"preLaunchTask": "vscode npm watch-tests"
+			"preLaunchTask": "vscode npm watch",
+			"sourceMaps": true,
+			//important, if not breakpoint remains unbound
+			"sourceMapPathOverrides": {
+				"webpack://?:*/*": "${workspaceFolder}/src/clients/vscode/*"
+			  }
 		}
 	]
 }

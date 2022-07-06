@@ -5,20 +5,22 @@
 	"tasks": [
 		{
 			"type": "npm",
+			"label": "vscode npm watch",
 			"script": "watch",
-			"problemMatcher": [
-				"$ts-webpack-watch",
-				"$tslint-webpack-watch"
-			],
-			"isBackground": true,
-			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
-			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			// "problemMatcher": [
+			// 	"$ts-webpack-watch",
+			// 	"$tslint-webpack-watch"
+			// ],
+			// "isBackground": true,
+			// "presentation": {
+			// 	"reveal": "never",
+			
+			// 	"group": "watchers"
+			// },
+			// "group": {
+			// 	"kind": "build",
+			// 	"isDefault": true
+			// },
 			"path": "src/clients/vscode"
 		},
 		{
