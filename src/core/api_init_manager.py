@@ -81,9 +81,6 @@ class ApiInitManager:
         
     def create_get_api(self, apiObj, path):
         
-        #https://swagger.io/docs/specification/describing-request-body/
-        #https://github.com/Dorthu/openapi3/blob/master/tests/ref_test.py
-        
         if not apiObj.get is None:
             api = Api()
             if not apiObj.get.operationId is None:
@@ -97,6 +94,10 @@ class ApiInitManager:
         return False, None
     
     def create_post_api(self, apiObj, path):
+        
+        #https://swagger.io/docs/specification/describing-request-body/
+        #understand request-body structure, example/examples are part of spec
+        #https://github.com/Dorthu/openapi3/blob/master/tests/ref_test.py
         
         if not apiObj.post is None:
             
