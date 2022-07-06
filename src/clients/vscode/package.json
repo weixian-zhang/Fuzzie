@@ -10,6 +10,7 @@
 		"Other"
 	],
 	"activationEvents": [
+		"*",
         "onCommand:wxz-fuzzie.helloWorld"
 	],
 	"main": "./dist/extension.js",
