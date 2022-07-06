@@ -1,0 +1,318 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+paths:
+  /pet:
+    post:
+      tags:
+      - pet
+      summary: Add a new pet to the store
+      description: ''
+      operationId: addPet
+      requestBody:
+        description: Pet object that needs to be added to the store
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Pet"
+            data:
+              Cat:
+                summary: An example of cat
+                description: An example of cat, using `value` property
+                value:
+                  id: 1
+                  category:
+                    id: 1
+                    name: cat
+                  name: fluffy
+                  photoUrls:
+                  - http://example.com/path/to/cat/1.jpg
+                  - http://example.com/path/to/cat/2.jpg
+                  tags:
+                  - id: 1
+                    name: cat
+                  status: available
+              Cat2:
+                summary: An example of cat
+                description: An example of cat, using `value` property, which value
+                  is an array
+                value:
+                - id: 1
+                  category:
+                    id: 1
+                    name: cat
+                  name: fluffy
+                  photoUrls:
+                  - http://example.com/path/to/cat/1.jpg
+                  - http://example.com/path/to/cat/2.jpg
+                  tags:
+                  - id: 1
+                    name: cat
+                  status: available
+              Dog:
+                summary: An example of dog
+                description: An example of dog, using `externalValue` property
+                externalValue: http://example.com/examples/dog.json
+          application/xml:
+            schema:
+              "$ref": "#/components/schemas/Pet"
+            examples:
+              Cat:
+                summary: An example of cat
+                description: An example of cat, using `value` property
+                value: "<xml></xml>"
+              Dog:
+                summary: An example of dog
+                description: An example of dog, using `externalValue` property
+                externalValue: http://example.com/examples/dog.xml
+      responses:
+        '405':
+          description: Invalid input
+  #query string example
+  /users/search/{name}/{age}:
+    get:
+      parameters:
+        - in: path
+          name: name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+            minimum: 1
+          description: The user name wildcard
+        - in: path
+          name: age   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: int
+            minimum: 1
+          description: The user age
+      responses:
+        '200':
+          description: |-
+            200 response
+  /:
+    get:
+      operationId: listVersionsv2
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+          content:
+            application/json:
+              examples: 
+                foo:
+                  value:
+                    {
+                      "versions": [
+                        {
+                            "status": "CURRENT",
+                            "updated": "2011-01-21T11:33:21Z",
+                            "id": "v2.0",
+                            "links": [
+                                {
+                                    "href": "http://127.0.0.1:8774/v2/",
+                                    "rel": "self"
+                                }
+                            ]
+                        },
+                        {
+                            "status": "EXPERIMENTAL",
+                            "updated": "2013-07-23T11:33:21Z",
+                            "id": "v3.0",
+                            "links": [
+                                {
+                                    "href": "http://127.0.0.1:8774/v3/",
+                                    "rel": "self"
+                                }
+                            ]
+                        }
+                      ]
+                    }
+        '300':
+          description: |-
+            300 response
+          content:
+            application/json: 
+              examples: 
+                foo:
+                  value: |
+                   {
+                    "versions": [
+                          {
+                            "status": "CURRENT",
+                            "updated": "2011-01-21T11:33:21Z",
+                            "id": "v2.0",
+                            "links": [
+                                {
+                                    "href": "http://127.0.0.1:8774/v2/",
+                                    "rel": "self"
+                                }
+                            ]
+                        },
+                        {
+                            "status": "EXPERIMENTAL",
+                            "updated": "2013-07-23T11:33:21Z",
+                            "id": "v3.0",
+                            "links": [
+                                {
+                                    "href": "http://127.0.0.1:8774/v3/",
+                                    "rel": "self"
+                                }
+                            ]
+                        }
+                    ]
+                   }
+  /v2:
+    get:
+      operationId: getVersionDetailsv2
+      summary: Show API version details
+      responses:
+        '200':
+          description: |-
+            200 response
+          content:
+            application/json: 
+              examples:
+                foo:
+                  value:
+                    {
+                      "version": {
+                        "status": "CURRENT",
+                        "updated": "2011-01-21T11:33:21Z",
+                        "media-types": [
+                          {
+                              "base": "application/xml",
+                              "type": "application/vnd.openstack.compute+xml;version=2"
+                          },
+                          {
+                              "base": "application/json",
+                              "type": "application/vnd.openstack.compute+json;version=2"
+                          }
+                        ],
+                        "id": "v2.0",
+                        "links": [
+                          {
+                              "href": "http://127.0.0.1:8774/v2/",
+                              "rel": "self"
+                          },
+                          {
+                              "href": "http://docs.openstack.org/api/openstack-compute/2/os-compute-devguide-2.pdf",
+                              "type": "application/pdf",
+                              "rel": "describedby"
+                          },
+                          {
+                              "href": "http://docs.openstack.org/api/openstack-compute/2/wadl/os-compute-2.wadl",
+                              "type": "application/vnd.sun.wadl+xml",
+                              "rel": "describedby"
+                          },
+                          {
+                            "href": "http://docs.openstack.org/api/openstack-compute/2/wadl/os-compute-2.wadl",
+                            "type": "application/vnd.sun.wadl+xml",
+                            "rel": "describedby"
+                          }
+                        ]
+                      }
+                    }
+        '203':
+          description: |-
+            203 response
+          content:
+            application/json: 
+              examples:
+                foo:
+                  value:
+                    {
+                      "version": {
+                        "status": "CURRENT",
+                        "updated": "2011-01-21T11:33:21Z",
+                        "media-types": [
+                          {
+                              "base": "application/xml",
+                              "type": "application/vnd.openstack.compute+xml;version=2"
+                          },
+                          {
+                              "base": "application/json",
+                              "type": "application/vnd.openstack.compute+json;version=2"
+                          }
+                        ],
+                        "id": "v2.0",
+                        "links": [
+                          {
+                              "href": "http://23.253.228.211:8774/v2/",
+                              "rel": "self"
+                          },
+                          {
+                              "href": "http://docs.openstack.org/api/openstack-compute/2/os-compute-devguide-2.pdf",
+                              "type": "application/pdf",
+                              "rel": "describedby"
+                          },
+                          {
+                              "href": "http://docs.openstack.org/api/openstack-compute/2/wadl/os-compute-2.wadl",
+                              "type": "application/vnd.sun.wadl+xml",
+                              "rel": "describedby"
+                          }
+                        ]
+                      }
+                    }
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+      xml:
+        name: Category
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+      xml:
+        name: Tag
+    Pet:
+      type: object
+      required:
+      - name
+      - photoUrls
+      properties:
+        id:
+          type: integer
+          format: int64
+        category:
+          "$ref": "#/components/schemas/Category"
+        name:
+          type: string
+          example: doggie
+        photoUrls:
+          type: array
+          xml:
+            name: photoUrl
+            wrapped: true
+          items:
+            type: string
+        tags:
+          type: array
+          xml:
+            name: tag
+            wrapped: true
+          items:
+            "$ref": "#/components/schemas/Tag"
+        status:
+          type: string
+          description: pet status in the store
+          enum:
+          - available
+          - pending
+          - sold
+      xml:
+        name: Pet
