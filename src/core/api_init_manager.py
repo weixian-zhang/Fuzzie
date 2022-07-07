@@ -164,19 +164,21 @@ class ApiInitManager:
             
             type = propSchema.type
             
-            #recurse case - if has more properties means nested json
+            #recurs case - if has more properties means nested json
             if type == 'object':
                 
                 newJDict = {}
                 
                 jDict[propName] = newJDict
                 
-                return self.get_complex_json_properties(propSchema.properties, newJDict)
+                self.get_complex_json_properties(propSchema.properties, newJDict)
+            else:
+                #base case
+                jDict[propName]= type
             
             
-            #base case
             
-            jDict[propName]= type
+            
             
             
             
