@@ -7,8 +7,11 @@ class ApiVerb(enum.Enum):
     GET = 1
     POST = 2
     PUT = 3
-    DELETE = 4
+    PATCH = 4
+    DELETE = 5
 
+#class ReqBodyComplexJsonValue:
+    
 class ApiContext:
     
     baseUrl = []
@@ -18,13 +21,11 @@ class ApiContext:
 
 class Api:
     
-    path: str = ''
+    path: str = '' #path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
-    hasGet: bool = False
-    hasPost: bool = False
-    hasPut: bool = False
-    hasDelete: bool = False
+    body = {}
+    isFileUpload: bool = False
     
 
 class ApiInitManager:
@@ -99,6 +100,9 @@ class ApiInitManager:
         #understand request-body structure, example/examples are part of spec
         #https://github.com/Dorthu/openapi3/blob/master/tests/ref_test.py
         
+        #file upload
+        #https://swagger.io/docs/specification/describing-request-body/file-upload/
+        
         if not apiObj.post is None:
             
             api = Api()
@@ -106,11 +110,11 @@ class ApiInitManager:
             api.verb = ApiVerb.POST
             api.hasPost = True
             
-            content = apiObj.post.requestBody.content
+            contentBody = apiObj.post.requestBody.content
             
-            if len(content) > 0:
+            if len(contentBody) > 0:
                     
-                jsonContent = content['application/json']
+                content = self.get_request_body_content(contentBody)
                 
                 if not jsonContent.schema is None:
                     properties = jsonContent.schema.properties
@@ -119,13 +123,88 @@ class ApiInitManager:
                         print(n)
                         type = properties[n].type
                         print(type)
-                    
-                bodyDict = json.dumps(jsonBody)
+                
             
             return True, api
         
         return False, None
+    
+    
+    def get_request_body_content(self, postPutPatchContent):
         
+        appJsonContentType = 'application/json'
+        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
+        multipartFormContentType = 'multipart/form-data' # single file or form + file or multiple files without form data
+        
+        
+        if self.has_attribute(postPutPatchContent, appJsonContentType):
+            jsonContent = postPutPatchContent[appJsonContentType]
+            
+            props = jsonContent.schema.properties
+            
+            jDictResult = {}
+            
+            self.get_complex_json_properties(props, jDictResult)
+                
+        
+        if self.has_attribute(postPutPatchContent, formDataWWWFormContentType):
+            formDataWWWFormContent = postPutPatchContent[formDataWWWFormContentType] 
+        
+        
+        if self.has_attribute(postPutPatchContent, multipartFormContentType):
+            pass
+        
+        
+    def get_complex_json_properties(self, jsonProperty, jDict):
+        
+        
+        for propName in jsonProperty:
+            
+            propSchema = jsonProperty[propName]
+            
+            type = propSchema.type
+            
+            #recurse case - if has more properties means nested json
+            if type == 'object':
+                
+                newJDict = {}
+                
+                jDict[propName] = newJDict
+                
+                return self.get_complex_json_properties(propSchema.properties, newJDict)
+            
+            
+            #base case
+            
+            jDict[propName]= type
+            
+            
+            
+            # if not propSchema.properties is None:
+            #     return self.get_complex_json_properties(newJDict, propSchema.properties)
+            
+            
+            
+            
+            #key = f'{propName}:{type}'
+            
+                
+            
+            
+            # if self.has_attribute(propSchema, 'properties'):
+            #     moreJsonProp =  prop['properties']
+            #     self.get_json_complex_structure(moreJsonProp)
+                
+        return jDict
+    
+    def has_attribute(self, obj, attrName):
+        
+        for k in obj:
+            if k == attrName:
+                return True
+        
+        return False
+                
         
             
            

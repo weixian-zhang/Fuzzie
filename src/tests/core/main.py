@@ -3,9 +3,9 @@ from pathlib import Path
 projPath = Path(__file__).parent.parent.parent # /src
 corePath = os.path.join(projPath, 'core')
 #projPath =str(projPath).replace('/', '\\')
-print(corePath)
+#print(corePath)
 sys.path.append(corePath)
-print(sys.path)
+#print(sys.path)
 
 
 currentFolder = Path(__file__).parent
