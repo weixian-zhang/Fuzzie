@@ -3,8 +3,29 @@ info:
   title: Simple API overview
   version: 2.0.0
 paths:
+  #multipart with nested json and file upload
+  /multipart/nestedjson:
+    post:
+      requestBody:
+        content:
+          multipart/form-data: # Media type
+            schema:            # Request payload
+              type: object
+              properties:      # Request parts
+                id:            # Part 1 (string value)
+                  type: string
+                  format: uuid
+                address:       # Part2 (object)
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                profileImage:  # Part 3 (an image)
+                  type: string
+                  format: binary
   # post nested json
-
   /secure/oauth/services/v2/Nested:
     post:
       summary: Try nested
@@ -28,8 +49,47 @@ paths:
         '200':
           description: Nested object OK
 
-  #patch json
+  # multiple media types
+  /employees:
+    get:
+      summary: Returns a list of employees.
+      responses:
+        '200':      # Response
+          description: OK
+          content:  # Response body
+            application/xml:    # Another media types
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  fullTime: 
+                    type: boolean
+            application/json:   # One of media types
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  fullTime: 
+                    type: boolean
+
+  #post + patch json
   /pets:
+    #post without content type
+    post:
+      summary: Add a new pet
+      requestBody:
+        $ref: '#/components/schemas/Pet'
+      responses:
+        '200':
+          description: Created
+
+    #patch json
     patch:
       requestBody:
         content:
@@ -61,7 +121,8 @@ paths:
       responses:
         '405':
           description: Invalid input
-  #post Json
+
+  #post Json with examples
   /pet:
     post:
       tags:
@@ -129,6 +190,7 @@ paths:
       responses:
         '405':
           description: Invalid input
+
   #query string example
   /users/search/{name}/{age}:
     get:
