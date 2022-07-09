@@ -10,15 +10,15 @@ sys.path.append(corePath)
 
 currentFolder = Path(__file__).parent
 
-from api_init_manager import ApiInitManager
+from api_init_manager import OpenApi3InitManager
 
 def test():
     
     apiFilePath = os.path.join(currentFolder, 'apis.yaml')
     
-    apiIniter = ApiInitManager()
+    apiIniter = OpenApi3InitManager()
     
-    apiIniter.load_openapi3_yaml_file(apiFilePath)
+    apiIniter.load_openapi3_file(apiFilePath)
 
 if __name__ == '__main__':
     test()
