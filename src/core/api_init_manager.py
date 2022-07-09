@@ -38,16 +38,16 @@ class Api:
     verb: ApiVerb = ApiVerb.GET
     body = {}    
 
-class ApiInitManager:
+class OpenApi3InitManager:
     
-    def load_openapi3_yaml_file(self, file_path: str):
+    def load_openapi3_file(self, file_path: str):
         
         try:
             
             with open(file_path) as f:
-                specYaml = yaml.safe_load(f)
+                spec = yaml.safe_load(f)
                 
-            apiContext = self.create_apicontext_from_openapi3(specYaml)
+            apiContext = self.create_apicontext_from_openapi3(spec)
                              
         except Exception as e:
             print(e)

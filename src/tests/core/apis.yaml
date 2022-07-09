@@ -3,8 +3,34 @@ info:
   title: Simple API overview
   version: 2.0.0
 paths:
+  /multipart/nestedjson-1:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                simple: 
+                  type: string
+                complex:
+                  type: array
+                  items:
+                      type: object
+                      properties:
+                        key: 
+                          type: string
+                        size: 
+                          type: integer
+            encoding:
+              complex:
+                contentType: application/json
+      responses:
+        '200':
+          description: OK
+
   #multipart with nested json and file upload
-  /multipart/nestedjson:
+  /multipart/nestedjson-2:
     post:
       requestBody:
         content:
@@ -25,6 +51,10 @@ paths:
                 profileImage:  # Part 3 (an image)
                   type: string
                   format: binary
+      responses:
+        '200':
+          description: Nested object OK
+
   # post nested json
   /secure/oauth/services/v2/Nested:
     post:
