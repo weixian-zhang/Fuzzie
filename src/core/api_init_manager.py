@@ -1,7 +1,8 @@
+from pathlib import PureWindowsPath
+from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
 import enum
-import json
 
 class ApiVerb(enum.Enum):
     GET = 1
@@ -10,7 +11,18 @@ class ApiVerb(enum.Enum):
     PATCH = 4
     DELETE = 5
 
-#class ReqBodyComplexJsonValue:
+class RequestBodyPropertyValue:
+    type: str = ''
+    format: str = None
+    
+    def __init__(self, type, format) -> None:
+        self.type = type
+        self.format = format
+        
+    def is_file_upload() -> bool:
+        if type == 'string' and (format == 'binary' or format == 'base64'):
+            return True
+        return False
     
 class ApiContext:
     
@@ -24,9 +36,7 @@ class Api:
     path: str = '' #path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
-    body = {}
-    isFileUpload: bool = False
-    
+    body = {}    
 
 class ApiInitManager:
     
@@ -37,30 +47,29 @@ class ApiInitManager:
             with open(file_path) as f:
                 specYaml = yaml.safe_load(f)
                 
-            apiContext = self.create_apicontext_from_openapi3_structure(specYaml)
+            apiContext = self.create_apicontext_from_openapi3(specYaml)
                              
         except Exception as e:
             print(e)
             
             
-    def create_apicontext_from_openapi3_structure(self, openapiYaml) -> ApiContext:
+    def create_apicontext_from_openapi3(self, openapiYaml) -> ApiContext:
         
         try:
             
             apispec = OpenAPI(openapiYaml)
-            
-            
             
             apicontext = ApiContext()
             
             apicontext.title = apispec.info.title
             apicontext.version = apispec.info.version
             
+            #server info
             if not apispec.servers is None:
                 for server in apispec.servers:
                     apicontext.baseUrl.append(server.url)
                     
-                    
+            # paths
             if not apispec.paths is None:
                 for pathStr in apispec.paths:
                     
@@ -88,7 +97,6 @@ class ApiInitManager:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
-            api.hasGet = True
             
             return True, api
         
@@ -101,68 +109,30 @@ class ApiInitManager:
         #https://github.com/Dorthu/openapi3/blob/master/tests/ref_test.py
         
         #file upload
-        #https://swagger.io/docs/specification/describing-request-body/file-upload/
+        # https://stackoverflow.com/questions/14455408/how-to-post-files-in-swagger-openapi
+        # https://swagger.io/docs/specification/describing-request-body/file-upload/
         
         if not apiObj.post is None:
             
             api = Api()
             api.path = path
             api.verb = ApiVerb.POST
-            api.hasPost = True
             
-            contentBody = apiObj.post.requestBody.content
-            
-            if len(contentBody) > 0:
-                    
-                content = self.get_request_body_content(contentBody)
+            dictBody = self.get_postputpatch_content_properties(apiObj.post)
                 
-                if not jsonContent.schema is None:
-                    properties = jsonContent.schema.properties
-                    
-                    for n in properties:
-                        print(n)
-                        type = properties[n].type
-                        print(type)
-                
+            api.body = dictBody               
             
             return True, api
         
-        return False, None
-    
-    
-    def get_request_body_content(self, postPutPatchContent):
+        return False, None        
         
-        appJsonContentType = 'application/json'
-        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
-        multipartFormContentType = 'multipart/form-data' # single file or form + file or multiple files without form data
+    def get_nested_json_properties(self, props, jDict):
         
-        
-        if self.has_attribute(postPutPatchContent, appJsonContentType):
-            jsonContent = postPutPatchContent[appJsonContentType]
+        for propName in props:
             
-            props = jsonContent.schema.properties
-            
-            jDictResult = {}
-            
-            self.get_complex_json_properties(props, jDictResult)
-                
-        
-        if self.has_attribute(postPutPatchContent, formDataWWWFormContentType):
-            formDataWWWFormContent = postPutPatchContent[formDataWWWFormContentType] 
-        
-        
-        if self.has_attribute(postPutPatchContent, multipartFormContentType):
-            pass
-        
-        
-    def get_complex_json_properties(self, jsonProperty, jDict):
-        
-        
-        for propName in jsonProperty:
-            
-            propSchema = jsonProperty[propName]
-            
+            propSchema = props[propName]
             type = propSchema.type
+            format = propSchema.format
             
             #recurs case - if has more properties means nested json
             if type == 'object':
@@ -171,33 +141,79 @@ class ApiInitManager:
                 
                 jDict[propName] = newJDict
                 
-                self.get_complex_json_properties(propSchema.properties, newJDict)
+                self.get_nested_json_properties(propSchema.properties, newJDict)
             else:
                 #base case
-                jDict[propName]= type
-            
-            
-            
-            
-            
-            
-            
-            # if not propSchema.properties is None:
-            #     return self.get_complex_json_properties(newJDict, propSchema.properties)
-            
-            
-            
-            
-            #key = f'{propName}:{type}'
-            
+                jDict[propName]= RequestBodyPropertyValue(type, format)
                 
+    
+    def get_form_data_keyval(self, props, dict):
+        
+        for propName in props:
+            
+            propSchema = props[propName]
+            
+            type = propSchema.type
+            format = propSchema.format
+            
+            dict[propName]= RequestBodyPropertyValue(type, format)
             
             
-            # if self.has_attribute(propSchema, 'properties'):
-            #     moreJsonProp =  prop['properties']
-            #     self.get_json_complex_structure(moreJsonProp)
+    # requestBody and content are optional in OpenApi3 for Post/Put/Patch
+    # check for existence to prevent error
+    def get_postputpatch_content_properties(self, postPutPatchOperation) -> Dict:
+        
+        appJsonContentType = 'application/json'
+        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
+        multipartFormContentType = 'multipart/form-data' # single file or form + file or multiple files without form data
+        appPdfContentType = 'application/pdf'
+        imagePngContentType = 'image/png'
+        imageAllContentType = 'image/*'
+        
+        dictResult = {}
+        properties = None
+        
+        if not postPutPatchOperation.requestBody is None:
+            
+            if hasattr(postPutPatchOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
+                properties = postPutPatchOperation.requestBody.properties
+                self.get_nested_json_properties(properties, dictResult)
+                return dictResult
+            
+            if hasattr(postPutPatchOperation.requestBody, 'content'): # if content exists
                 
-        return jDict
+                content = postPutPatchOperation.requestBody.content
+                
+                if hasattr(content, appJsonContentType) or self.has_attribute(content, appJsonContentType): 
+                    jsonContent = content[appJsonContentType]
+                    properties = jsonContent.schema.properties
+                    
+                    self.get_nested_json_properties(properties, dictResult)
+                    
+                if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
+                    formContent = content[formDataWWWFormContentType] 
+                    properties = formContent.schema.properties
+                    self.get_form_data_keyval(properties, dictResult)
+                    
+                if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
+                    multipartFormContent = content[multipartFormContentType]
+                    properties = multipartFormContent.schema.properties
+                    self.get_nested_json_properties(properties, dictResult)
+                
+        return dictResult
+    
+    def get_postputpatch_content_props(self, content):
+        
+        props = None
+        
+        if hasattr(content, 'schema'):
+             if hasattr(content, 'properties'):
+                props = content.schema.properties
+        
+        if hasattr(content, 'properties'): # $ref: '#/components/name'
+            props = content.properties
+            
+        return props
     
     def has_attribute(self, obj, attrName):
         
