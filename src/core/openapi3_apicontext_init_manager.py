@@ -2,43 +2,10 @@ from pathlib import PureWindowsPath
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-import enum
+from apicontext import Api, ApiContext, ApiVerb, RequestBodyPropertyValue
 
-class ApiVerb(enum.Enum):
-    GET = 1
-    POST = 2
-    PUT = 3
-    PATCH = 4
-    DELETE = 5
 
-class RequestBodyPropertyValue:
-    type: str = ''
-    format: str = None
-    
-    def __init__(self, type, format) -> None:
-        self.type = type
-        self.format = format
-        
-    def is_file_upload() -> bool:
-        if type == 'string' and (format == 'binary' or format == 'base64'):
-            return True
-        return False
-    
-class ApiContext:
-    
-    baseUrl = []
-    title: str = ''
-    version: str = ''
-    apis = []
-
-class Api:
-    
-    path: str = '' #path includes querystring
-    operationId: str = ''
-    verb: ApiVerb = ApiVerb.GET
-    body = {}    
-
-class OpenApi3InitManager:
+class OpenApi3ApiInitManager:
     
     def load_openapi3_file(self, file_path: str):
         
@@ -97,10 +64,38 @@ class OpenApi3InitManager:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
+            api.querystring = self.get_querystring(apiObj.get)
             
             return True, api
         
         return False, None
+    
+    def get_querystring(self, getOperation) -> Dict:
+        
+        querystringParams = getOperation.parameters
+        
+        querystring = {}
+        
+        if len(querystringParams) > 0:
+            
+            for param in querystringParams:
+                
+                name = param.name
+                schema = param.schema
+                
+                if schema.type == 'object': # nested json object
+                    
+                    if hasattr(schema, 'properties'):
+                        nestedJsonProps = {}
+                        self.get_nested_json_properties(schema.properties, nestedJsonProps)
+                        querystring[name] = nestedJsonProps
+                        
+                else:
+                    type = schema.type
+                    querystring[name] = type
+                    
+        return querystring
+        
     
     def create_post_api(self, apiObj, path):
         

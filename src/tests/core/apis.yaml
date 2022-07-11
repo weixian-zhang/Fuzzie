@@ -3,6 +3,55 @@ info:
   title: Simple API overview
   version: 2.0.0
 paths:
+  #get query string
+  /users:
+    get:
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [user, poweruser, admin]
+          required: true
+      responses:
+        '200':
+          description: OK
+
+  #get query string - multiple params with nested json as value
+  /tickets:
+    get:
+      tags:
+      - tickets
+      summary: Send an JSON Object as a query param
+      parameters:
+      - in: query
+        name: userrole
+        schema:
+          type: string
+          enum: [user, poweruser, admin]
+      - name: tags
+        in: query
+        description: '{"type":"foo","color":"green"}'
+        required: true
+        schema:
+          type: object
+          properties:
+              simple: 
+                type: string
+              complex:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key: 
+                      type: string
+                    size: 
+                      type: integer
+      responses:
+        '200':
+          description: OK
+
+  # multipart form with nested Json
   /multipart/nestedjson-1:
     post:
       requestBody:
