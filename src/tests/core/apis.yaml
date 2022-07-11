@@ -1,0 +1,410 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+
+# To apply Basic auth to the whole API:
+security:
+  - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  #get query string
+  /users:
+    get:
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [user, poweruser, admin]
+          required: true
+      responses:
+        '200':
+          description: OK
+
+  #get query string - multiple params with nested json as value
+  /tickets:
+    get:
+      tags:
+      - tickets
+      summary: Send an JSON Object as a query param
+      parameters:
+      - in: query
+        name: userrole
+        schema:
+          type: string
+          enum: [user, poweruser, admin]
+      - name: tags
+        in: query
+        description: '{"type":"foo","color":"green"}'
+        required: true
+        schema:
+          type: object
+          properties:
+              simple: 
+                type: string
+              complex:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key: 
+                      type: string
+                    size: 
+                      type: integer
+      responses:
+        '200':
+          description: OK
+
+  # multipart form with nested Json
+  /multipart/nestedjson-1:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                simple: 
+                  type: string
+                complex:
+                  type: array
+                  items:
+                      type: object
+                      properties:
+                        key: 
+                          type: string
+                        size: 
+                          type: integer
+            encoding:
+              complex:
+                contentType: application/json
+      responses:
+        '200':
+          description: OK
+
+  #multipart with nested json and file upload
+  /multipart/nestedjson-2:
+    post:
+      requestBody:
+        content:
+          multipart/form-data: # Media type
+            schema:            # Request payload
+              type: object
+              properties:      # Request parts
+                id:            # Part 1 (string value)
+                  type: string
+                  format: uuid
+                address:       # Part2 (object)
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                profileImage:  # Part 3 (an image)
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Nested object OK
+
+  # post nested json
+  /secure/oauth/services/v2/Nested:
+    post:
+      summary: Try nested
+      description: Used to post Nested obj
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                type: object 
+                required:
+                - id
+                - nestedobj
+                properties:
+                    id:
+                      type: integer
+                      description: id of nested obj
+                    nestedobj:
+                      $ref: '#/components/schemas/nestedobj'
+      responses:
+        '200':
+          description: Nested object OK
+
+  # multiple media types
+  /employees:
+    get:
+      summary: Returns a list of employees.
+      responses:
+        '200':      # Response
+          description: OK
+          content:  # Response body
+            application/xml:    # Another media types
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  fullTime: 
+                    type: boolean
+            application/json:   # One of media types
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  fullTime: 
+                    type: boolean
+
+  #post + patch json
+  /pets:
+    #post without content type
+    post:
+      summary: Add a new pet
+      requestBody:
+        $ref: '#/components/schemas/Pet'
+      responses:
+        '200':
+          description: Created
+
+    #patch json
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Cat'
+                - $ref: '#/components/schemas/Dog'
+      responses:
+        '200':
+          description: Updated
+  #post for data www form
+  /survey:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:          # <!--- form field name
+                  type: string
+                fav_number:    # <!--- form field name
+                  type: integer
+              required:
+                - name
+                - email
+      responses:
+        '405':
+          description: Invalid input
+
+  #post Json with examples
+  /pet:
+    post:
+      tags:
+      - pet
+      summary: Add a new pet to the store
+      description: ''
+      operationId: addPet
+      requestBody:
+        description: Pet object that needs to be added to the store
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Pet"
+            examples:
+              Cat:
+                summary: An example of cat
+                description: An example of cat, using `value` property
+                value:
+                  id: 1
+                  category:
+                    id: 1
+                    name: cat
+                  name: fluffy
+                  photoUrls:
+                  - http://example.com/path/to/cat/1.jpg
+                  - http://example.com/path/to/cat/2.jpg
+                  tags:
+                  - id: 1
+                    name: cat
+                  status: available
+              Cat2:
+                summary: An example of cat
+                description: An example of cat, using `value` property, which value
+                  is an array
+                value:
+                - id: 1
+                  category:
+                    id: 1
+                    name: cat
+                  name: fluffy
+                  photoUrls:
+                  - http://example.com/path/to/cat/1.jpg
+                  - http://example.com/path/to/cat/2.jpg
+                  tags:
+                  - id: 1
+                    name: cat
+                  status: available
+              Dog:
+                summary: An example of dog
+                description: An example of dog, using `externalValue` property
+                externalValue: http://example.com/examples/dog.json
+          application/xml:
+            schema:
+              "$ref": "#/components/schemas/Pet"
+            examples:
+              Cat:
+                summary: An example of cat
+                description: An example of cat, using `value` property
+                value: "<xml></xml>"
+              Dog:
+                summary: An example of dog
+                description: An example of dog, using `externalValue` property
+                externalValue: http://example.com/examples/dog.xml
+      responses:
+        '405':
+          description: Invalid input
+
+  #query string example
+  /users/search/{name}/{age}:
+    get:
+      parameters:
+        - in: path
+          name: name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+            minimum: 1
+          description: The user name wildcard
+        - in: path
+          name: age   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: int
+            minimum: 1
+          description: The user age
+      responses:
+        '200':
+          description: |-
+            200 response
+  
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    element:
+      type: object
+      required:
+      - fieldArray1
+      properties:
+        fieldArray1:
+          type: string
+          description: field array
+        fieldArray2:
+          type: number
+    nestedobj:
+      type: object
+      required:
+      - field1
+      description: nested object
+      properties:
+        field1:
+          $ref: '#/components/schemas/woah'
+        field2:
+          type: string
+    woah:
+      type: object
+      required:
+      - woahthis
+      description: woah this
+      properties:
+        field3:
+          type: array
+          items:
+            $ref: '#/components/schemas/element'
+        woahthis:
+          type: number
+          description: numeber woah this
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+      xml:
+        name: Category
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+      xml:
+        name: Tag
+    Pet:
+      type: object
+      required:
+      - name
+      - photoUrls
+      properties:
+        id:
+          type: integer
+          format: int64
+        category:
+          "$ref": "#/components/schemas/Category"
+        name:
+          type: string
+          example: doggie
+        photoUrls:
+          type: array
+          xml:
+            name: photoUrl
+            wrapped: true
+          items:
+            type: string
+        tags:
+          type: array
+          xml:
+            name: tag
+            wrapped: true
+          items:
+            "$ref": "#/components/schemas/Tag"
+        status:
+          type: string
+          description: pet status in the store
+          enum:
+          - available
+          - pending
+          - sold
+      xml:
+        name: Pet
