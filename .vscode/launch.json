@@ -6,6 +6,14 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "debug fuzzie core",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/tests/core/main.py",
+			"console": "integratedTerminal",
+			"justMyCode": true
+		},
+		{
 			"name": "debug vscode",
 			"type": "extensionHost",
 			"request": "launch",
@@ -20,7 +28,7 @@
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {
 				"webpack://?:*/*": "${workspaceFolder}/src/clients/vscode/*"
-			  }
-		}
+			}
+		},
 	]
 }
