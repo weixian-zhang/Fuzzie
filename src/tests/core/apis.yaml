@@ -6,6 +6,8 @@ info:
 # To apply Basic auth to the whole API:
 security:
   - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
 
 paths:
   #get query string
