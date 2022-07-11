@@ -10,13 +10,13 @@ sys.path.append(corePath)
 
 currentFolder = Path(__file__).parent
 
-from api_init_manager import OpenApi3InitManager
+from openapi3_apicontext_init_manager import OpenApi3ApiInitManager
 
 def test():
     
     apiFilePath = os.path.join(currentFolder, 'apis.yaml')
     
-    apiIniter = OpenApi3InitManager()
+    apiIniter = OpenApi3ApiInitManager()
     
     apiIniter.load_openapi3_file(apiFilePath)
 
