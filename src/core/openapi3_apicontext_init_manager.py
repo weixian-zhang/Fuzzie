@@ -35,6 +35,10 @@ class OpenApi3ApiInitManager:
             if not apispec.servers is None:
                 for server in apispec.servers:
                     apicontext.baseUrl.append(server.url)
+            
+            if not apispec.security is None:
+                for authType in apispec.security:
+                    apicontext.authTypes.append(authType.name)
                     
             # paths
             if not apispec.paths is None:
@@ -64,6 +68,7 @@ class OpenApi3ApiInitManager:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
+            api.authTypes = self.discover_api_authTypes(apiObj.get)
             api.querystring = self.get_querystring(apiObj.get)
             
             return True, api
@@ -99,19 +104,13 @@ class OpenApi3ApiInitManager:
     
     def create_post_api(self, apiObj, path):
         
-        #https://swagger.io/docs/specification/describing-request-body/
-        #understand request-body structure, example/examples are part of spec
-        #https://github.com/Dorthu/openapi3/blob/master/tests/ref_test.py
-        
-        #file upload
-        # https://stackoverflow.com/questions/14455408/how-to-post-files-in-swagger-openapi
-        # https://swagger.io/docs/specification/describing-request-body/file-upload/
-        
         if not apiObj.post is None:
             
             api = Api()
             api.path = path
             api.verb = ApiVerb.POST
+            
+            api.authTypes = self.discover_api_authTypes(apiObj.post)
             
             dictBody = self.get_postputpatch_content_properties(apiObj.post)
                 
@@ -119,7 +118,22 @@ class OpenApi3ApiInitManager:
             
             return True, api
         
-        return False, None        
+        return False, None
+    
+    def discover_api_authTypes(self, apiOperation):
+        
+        authTypes = []
+        
+        if hasattr(apiOperation, 'security'):
+            
+            security = apiOperation.security
+            
+            for authType in security:
+                authTypes.append(authType.name)
+                
+        return authTypes
+            
+             
         
     def get_nested_json_properties(self, props, jDict):
         
