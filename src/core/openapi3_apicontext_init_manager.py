@@ -161,6 +161,7 @@ class OpenApi3ApiInitManager:
         appJsonContentType = 'application/json'
         formDataWWWFormContentType = 'application/x-www-form-urlencoded'
         multipartFormContentType = 'multipart/form-data' # single file or form + file or multiple files without form data
+        streamFileUploadContentType = 'application/octet-stream'
         appPdfContentType = 'application/pdf'
         imagePngContentType = 'image/png'
         imageAllContentType = 'image/*'
@@ -194,6 +195,13 @@ class OpenApi3ApiInitManager:
                     multipartFormContent = content[multipartFormContentType]
                     properties = multipartFormContent.schema.properties
                     self.get_nested_json_properties(properties, dictResult)
+                
+                # aassume file upload base on media type with no property name
+                if (hasattr(content, streamFileUploadContentType) or self.has_attribute(content, streamFileUploadContentType) or
+                    hasattr(content, appPdfContentType) or self.has_attribute(content, appPdfContentType) or
+                    hasattr(content, imagePngContentType) or self.has_attribute(content, imagePngContentType) or
+                    hasattr(content, imageAllContentType) or self.has_attribute(content, imageAllContentType)):
+                    dictResult['fileupload'] = RequestBodyPropertyValue('string', 'binary')
                 
         return dictResult
     
