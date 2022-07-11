@@ -6,13 +6,6 @@ class ApiVerb(enum.Enum):
     PUT = 3
     PATCH = 4
     DELETE = 5
-    
-# apiAuthType = {
-#     'basicAuth': BasicAuth = 1
-#     ApiKeyAuth = 2
-#     BearerAuth = 3
-#     NoAuth = 4
-# }
 
 class RequestBodyPropertyValue:
     type: str = ''
@@ -27,13 +20,12 @@ class RequestBodyPropertyValue:
             return True
         return False
     
-class ApiContext:
+class UserInput:
+    basicAuthUsername: str = ''
+    basicAuthPassword: str = ''
+    apiKeyAuthApiKey: str = ''
+    bearerAuthJwtToken: str = ''
     
-    baseUrl = []
-    title: str = ''
-    version: str = ''
-    authTypes = []
-    apis = []
 
 class Api:
     
@@ -43,3 +35,12 @@ class Api:
     authTypes = []
     body = {} # for post/put/patch only
     querystring = {}    
+    
+class ApiContext:
+    
+    baseUrl = []
+    title: str = ''
+    version: str = ''
+    authTypes = []
+    apis = []
+    userInput: UserInput = None
