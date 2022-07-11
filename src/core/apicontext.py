@@ -6,6 +6,13 @@ class ApiVerb(enum.Enum):
     PUT = 3
     PATCH = 4
     DELETE = 5
+    
+# apiAuthType = {
+#     'basicAuth': BasicAuth = 1
+#     ApiKeyAuth = 2
+#     BearerAuth = 3
+#     NoAuth = 4
+# }
 
 class RequestBodyPropertyValue:
     type: str = ''
@@ -25,6 +32,7 @@ class ApiContext:
     baseUrl = []
     title: str = ''
     version: str = ''
+    authTypes = []
     apis = []
 
 class Api:
@@ -32,5 +40,6 @@ class Api:
     path: str = '' #path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
+    authTypes = []
     body = {} # for post/put/patch only
     querystring = {}    
