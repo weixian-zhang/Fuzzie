@@ -11,14 +11,25 @@ sys.path.append(corePath)
 currentFolder = Path(__file__).parent
 
 from openapi3_apicontext_init_manager import OpenApi3ApiInitManager
+from data_factory import StorageManager
 
-def test():
+def test_openapi3_initer():
     
     apiFilePath = os.path.join(currentFolder, 'apis.yaml')
     
     apiIniter = OpenApi3ApiInitManager()
     
     apiIniter.load_openapi3_file(apiFilePath)
+    
+    
+def test_storagemanager():
+    
+    sm = StorageManager()
+    
+    sm.download_file_as_str('blns.json', 'naughty-strings')
+    
+    
 
 if __name__ == '__main__':
-    test()
+    # test_openapi3_initer()
+    test_storagemanager()
