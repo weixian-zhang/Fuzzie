@@ -1,13 +1,12 @@
 
 import os
-from io import BytesIO
-from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+from azure.storage.blob import BlobClient
 
 class StorageManager:
     
     def __init__(self, baseStorageUrl = 'https://strgfuzzie.blob.core.windows.net', fuzzDataContainer = 'fuzzdata') -> None:
-        baseStorageUrl = baseStorageUrl
-        fuzzDataContainer = fuzzDataContainer
+        self.baseStorageUrl = baseStorageUrl
+        self.fuzzDataContainer = fuzzDataContainer
         
         
     def download_file_as_str(self, fileName, directory = '') -> str:
@@ -22,3 +21,19 @@ class StorageManager:
        return data
        
        
+class DataFactory:
+       
+       def generate_naughty_string(self):
+           pass
+       
+       def generate_naughty_char(self):
+           pass
+       
+       def generate_naughty_integer(self):
+           pass
+       
+       def generate_naughty_files(self):
+           pass
+       
+       def generate_date_of_diff_formats(self):
+           pass
