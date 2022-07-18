@@ -1,17 +1,17 @@
 import os, sys
 from pathlib import Path
+import pandas as pd
+
 projPath = Path(__file__).parent.parent.parent # /src
 corePath = os.path.join(projPath, 'core')
-#projPath =str(projPath).replace('/', '\\')
-#print(corePath)
 sys.path.append(corePath)
-#print(sys.path)
-
+datafactoryPath = os.path.join(corePath, 'datafactory')
+sys.path.append(datafactoryPath)
 
 currentFolder = Path(__file__).parent
 
 from openapi3_apicontext_init_manager import OpenApi3ApiInitManager
-from data_factory import StorageManager
+from data_factory import DataFactory
 
 def test_openapi3_initer():
     
@@ -22,14 +22,14 @@ def test_openapi3_initer():
     apiIniter.load_openapi3_file(apiFilePath)
     
     
-def test_storagemanager():
+def test_data_factory():
     
-    sm = StorageManager()
+    dataf = DataFactory()
     
-    sm.download_file_as_str('blns.json', 'naughty-strings')
+    df = dataf.generate_fuzz_dataset()
     
     
 
 if __name__ == '__main__':
     # test_openapi3_initer()
-    test_storagemanager()
+    test_data_factory()
