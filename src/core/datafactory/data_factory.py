@@ -1,38 +1,29 @@
 
-import os
-from azure.storage.blob import BlobClient
+from naughty_string_generator import NaughtyStringGenerator
+import pandas as pd
 
-class StorageManager:
-    
-    def __init__(self, baseStorageUrl = 'https://strgfuzzie.blob.core.windows.net', fuzzDataContainer = 'fuzzdata') -> None:
-        self.baseStorageUrl = baseStorageUrl
-        self.fuzzDataContainer = fuzzDataContainer
-        
-        
-    def download_file_as_str(self, fileName, directory = '') -> str:
-        
-       if directory != '':
-            fileName = os.path.join(directory, fileName)
-            
-       blobClient = BlobClient(account_url=self.baseStorageUrl, container_name=self.fuzzDataContainer, blob_name=fileName)
-       
-       data = str(blobClient.download_blob().readall())
-       
-       return data
+class FileData:
+    fileName = ''
+    content = ''
        
        
 class DataFactory:
     
     def __init__(self) -> None:
+
         self.localDataDirectory = './' # directory location differs from clients. For e.g: vscode = vscode.workspace.workspaceFolders[0].uri.path
         self.fuzzdataDirectoryName = 'fuzzdata'
         self.dataRows = 10000 
     
-    def generate_fuzz_dataset(self):
-        pass
+    def generate_fuzz_dataset(self) -> pd.DataFrame:
+        df = self.generate_naughty_string()
+        return df
     
     def generate_naughty_string(self):
-        pass
+        
+        sg = NaughtyStringGenerator()
+        
+        df = sg.get_naughty_strings()
     
     def generate_char(self):
         pass
