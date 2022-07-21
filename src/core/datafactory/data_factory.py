@@ -28,6 +28,10 @@ class DataFactory:
     def generate_char(self):
         pass
     
+    def generate_bool(self):
+        bools = [True, False, None, 0, 1, 'true', 'false', 'yes', 'no', '1', '0', 't', 'f', 'T', 'F', 'TRUE', 'FALSE']
+        return bools
+    
     def generate_integer(self):
         pass
     
