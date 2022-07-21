@@ -10,13 +10,16 @@ class NaughtyStringGenerator:
         
     def get_naughty_strings(self) -> pd.DataFrame:
         
-        blns = self.get_blns()
         
-        xss = self.get_xss_strings()
+        self.get_all_naughty_strings()
         
-        merged = blns + xss
+        # blns = self.get_blns()
         
-        return merged 
+        # xss = self.get_xss_strings()
+        
+        # merged = blns + xss
+        
+        # return merged 
     
     
     def get_blns(self) -> List:
@@ -40,16 +43,30 @@ class NaughtyStringGenerator:
     def get_xss_strings(self) -> List:
         
         try:
-            brutelogicBinary = self.sm.download_file_as_str('XSS-BruteLogic.txt', 'naughty-strings', 'xss')
+            binaryData = self.sm.download_file_as_str('XSS-BruteLogic.txt', 'naughty-strings', 'xss')
             
-            blDecoded =  brutelogicBinary.decode("utf-8")
+            decoded =  binaryData.decode("utf-8")
             
-            blStrList = blDecoded.split("\n")
+            strList = decoded.split("\n")
             
-            return blStrList
+            return strList
         
         except Exception as e:
             # log with loguru
             raise
+        
+    def get_all_naughty_strings(self) -> List:
+        
+        fileNamePaths = self.sm.get_file_names_of_directory('naughty-strings/')
+        
+        if len(fileNamePaths) == 0:
+            return []
+        
+        for fnp in fileNamePaths:
+            content = self.sm.download_file_as_str(fnp)
+        
+        
+        
+    
         
         
