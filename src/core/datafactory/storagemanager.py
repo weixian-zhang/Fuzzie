@@ -17,9 +17,11 @@ class StorageManager:
               
        bbsvc = BlockBlobService(account_name=self.accountName, sas_token=self.sastoken)
         
-       blob = bbsvc.get_blob_to_text(self.fuzzDataContainer, blobNamePath)
+       blobBytes = bbsvc.get_blob_to_bytes(self.fuzzDataContainer, blobNamePath)
+       
+       encodedContent = blobBytes.content
               
-       return blob.content
+       return encodedContent
    
    
     def get_file_names_of_directory(self, startDir) -> list:
