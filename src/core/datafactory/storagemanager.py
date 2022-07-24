@@ -4,12 +4,9 @@ from numpy import append
 
 class StorageManager:
     
-    def __init__(self, 
-                 baseStorageUrl = 'https://strgfuzzie.blob.core.windows.net/fuzzdata?st=2022-07-21T14:24:08Z&se=2026-07-21T22:24:08Z&si=vscode-ext-readonly&spr=https&sv=2021-06-08&sr=c&sig=%2FGX0GIfi5BlJ3jazJRPDpwYT%2BOgmEAElfbUV9RGTpr8%3D', 
-                 fuzzDataContainer = 'fuzzdata') -> None:
+    def __init__(self, fuzzDataContainer = 'fuzzdata') -> None:
         self.accountName = 'strgfuzzie'
         self.sastoken = 'st=2022-07-21T14:26:38Z&se=2026-07-21T22:26:38Z&si=vscode-ext-readonly&spr=https&sv=2021-06-08&sr=c&sig=udVzijpNVJVNpm3B%2Bzj%2B5R%2FqMfNaElp%2FsjBC4nfy82I%3D'
-        self.baseStorageUrl = baseStorageUrl
         self.fuzzDataContainer = fuzzDataContainer
         
         
