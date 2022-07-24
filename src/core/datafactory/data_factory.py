@@ -11,6 +11,7 @@ class DataFactory:
     
     def __init__(self) -> None:
 
+        self.df = pd.DataFrame()
         self.localDataDirectory = './' # directory location differs from clients. For e.g: vscode = vscode.workspace.workspaceFolders[0].uri.path
         self.fuzzdataDirectoryName = 'fuzzdata'
         self.dataRows = 10000 
@@ -23,7 +24,9 @@ class DataFactory:
         
         sg = NaughtyStringGenerator()
         
-        df = sg.get_naughty_strings()
+        ns = sg.get_naughty_strings()
+        
+        self.df['naughtstrings'] = ns
     
     def generate_char(self):
         pass
