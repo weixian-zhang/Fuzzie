@@ -46,8 +46,8 @@ class DataFactory:
         self.df['float'] = floats
         
         # debugging only
-        for index, row in self.df.iterrows():
-            print(f" strings: {row['naughtystring']}, ints: {row['integer']}, floats: {row['float']}")
+        # for index, row in self.df.iterrows():
+        #     print(f" strings: {row['naughtystring']}, ints: {row['integer']}, floats: {row['float']}")
         
         return self.df
     
