@@ -102,3 +102,5 @@ dist
 
 # TernJS port file
 .tern-port
+src/core/datafactory/__pycache__/data_factory.cpython-310.pyc
+src/core/datafactory/__pycache__/data_factory.cpython-310.pyc
