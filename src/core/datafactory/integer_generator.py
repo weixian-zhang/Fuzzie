@@ -19,7 +19,13 @@ class IntegerGenerator:
         
         intData = self.load_integers_from_seclist()
         
-        dupList = ListUtils.pad_rows(intData, noOfRowsToPad)
+        rowsExcludeSuperLargeInt = noOfRowsToPad - 1
+        
+        dupList = ListUtils.pad_rows(intData, rowsExcludeSuperLargeInt)
+        
+        # prepend super large int only once in the list to prevent taking up too much memory as 1 large integer is 4MB
+        superLargeInt = self.load_superlarge_integer_from_seclist()
+        dupList.insert(0, superLargeInt)
 
         return dupList
     

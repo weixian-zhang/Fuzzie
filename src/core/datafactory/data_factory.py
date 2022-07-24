@@ -42,8 +42,8 @@ class DataFactory:
         self.df['integer'] = intdf
         
         # debugging only
-        # for index, row in self.df.iterrows():
-        #     print(row['naughtystring'], row['integer'])
+        for index, row in self.df.iterrows():
+            print(row['naughtystring'], row['integer'])
         
         return self.df
     
