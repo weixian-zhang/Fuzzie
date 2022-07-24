@@ -1,6 +1,7 @@
 
 from naughty_string_generator import NaughtyStringGenerator
 from integer_generator import IntegerGenerator
+from float_generator import FloatGenerator
 import pandas as pd
 
 class FileData:
@@ -32,18 +33,21 @@ class DataFactory:
     
     def generate_fuzz_dataset(self) -> pd.DataFrame:
         
-        nsdf = self.generate_naughty_string()
-        self.df['naughtystring'] = nsdf
+        ns = self.generate_naughty_string()
+        self.df['naughtystring'] = ns
         
-        nsLength = len(nsdf)
+        rowsToPadAgainstNaughtyStrings = 15273 #len(nsdf)
         
         # generate and pad integer data to be equal rows to naughty-strings 
-        intdf = self.generate_integer(nsLength)
-        self.df['integer'] = intdf
+        ints = self.generate_integer(rowsToPadAgainstNaughtyStrings)
+        self.df['integer'] = ints
+        
+        floats = self.generate_float(rowsToPadAgainstNaughtyStrings)
+        self.df['float'] = floats
         
         # debugging only
         for index, row in self.df.iterrows():
-            print(row['naughtystring'], row['integer'])
+            print(f" strings: {row['naughtystring']}, ints: {row['integer']}, floats: {row['float']}")
         
         return self.df
     
@@ -58,8 +62,8 @@ class DataFactory:
     def generate_integer(self, noOfRowsToPad) -> list:
         
         ig = IntegerGenerator()
-        intdf = ig.generate_integers(noOfRowsToPad)
-        return intdf
+        ints = ig.generate_integers(noOfRowsToPad)
+        return ints
     
     def generate_char(self):
         pass
@@ -69,8 +73,10 @@ class DataFactory:
         return bools
     
     
-    def generate_float(self):
-        pass
+    def generate_float(self, noOfRowsToPad):
+        fg = FloatGenerator()
+        floats = fg.generate_floats(noOfRowsToPad)
+        return floats
     
     def generate_naughty_files(self):
         pass
