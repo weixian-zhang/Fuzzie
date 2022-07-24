@@ -1,23 +1,22 @@
 from typing import List
 from storagemanager import StorageManager
-import pandas as pd
 import os
+import pandas as pd
 
 class NaughtyStringGenerator:
-    
-   
     
     def __init__(self) -> None:
         self.sm = StorageManager()
         self.blnsFileName = "blns.txt"
         
-    def get_naughty_strings(self) -> pd.DataFrame:
+    def generate_naughty_strings(self) -> pd.DataFrame:
         
-        naughtyStrings = self.get_all_naughty_strings()
-        
-        return naughtyStrings 
+        naughtyStrings = self.load_naughty_strings_from_seclist()
+        df = pd.DataFrame()
+        df['naughtystrings'] = naughtyStrings
+        return df 
     
-    def get_all_naughty_strings(self) -> List:
+    def load_naughty_strings_from_seclist(self) -> List:
         
         fileNamePaths = self.sm.get_file_names_of_directory('naughty-strings/')
         
@@ -54,10 +53,9 @@ class NaughtyStringGenerator:
         splitted = content.split("\r\n")
         
         # remove comments and empty strings in seclist
-        cleansed = [x for x in splitted if not (x.startswith('#') and x != '')] 
+        cleansed = [x for x in splitted if not x.startswith('#') and not x == ""] 
         
-        result = ['']
-        return result + cleansed
+        return cleansed
         
         
     
