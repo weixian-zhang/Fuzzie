@@ -1,7 +1,7 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext import Api, ApiContext, ApiVerb, RequestBodyPropertyValue
+from apicontext import Api, ApiContext, ApiVerb, ReqBodyContentPropValue
 import requests
 import validators
 
@@ -155,40 +155,106 @@ class OpenApi3ApiInitManager:
         
     def get_nested_json_properties(self, props, jDict):
         
+        # arrayList is not None when recursing over array data type
+        
         for propName in props:
             
-            propSchema = props[propName]
-            type = propSchema.type
-            format = propSchema.format
-            
-            
+            schema = props[propName]
+            type = schema.type
+            format = schema.format
             
             if type == "object":     #recurs case - if has more properties means nested json
                 
                 newJDict = {}
                 jDict[propName] = newJDict
                 
-                self.get_nested_json_properties(propSchema.properties, newJDict)
+                self.handle_complex_object_datatype(schema.properties)
+                
             else:
                 #base case
                 if not type == "array":
-                    jDict[propName]= RequestBodyPropertyValue(type, format)
-                else:
                     
-                    arrayDictKey = f"{propName}:array"
-                    
-                    items = propSchema.items # items is a class not iteratable
-                    
-                    if items.type == "object": #recurs case - if has more properties means nested json
+                    jDict[propName]= ReqBodyContentPropValue(propName, type, format=format)
+                    continue
                         
-                        newJDict = {}
-                        jDict[arrayDictKey] = newJDict
-                        self.get_nested_json_properties(items.properties, newJDict)
-                    else:
-                        #base case
-                        jDict[propName]= RequestBodyPropertyValue(type, format)
+                if type == "array": #handles array of either complex object or primitives
                     
+                    arrayResult = []
                     
+                    jDict[propName] = arrayResult
+                    
+                    items =  schema.items # items exist for array type and is a class not iteratable
+                    
+                    self.handle_array_datatype(items, arrayResult)
+                                    
+    
+    def handle_array_datatype(self, items, arrayResult: list):
+        
+        #array may contain complex object,
+        # calls handle_complex_object_datatype to recurse if object data type exist
+        
+        if items is None:
+            return []
+        
+        properties = items.properties
+        
+        if properties is None: # means array is primitive type
+            return []
+                    
+        for propName in properties:
+            
+            schema = properties[propName]
+            type = schema.type
+            
+            if type == "object": # 
+                
+                newJDict = {}
+                arrayResult.append(newJDict)
+                self.handle_complex_object_datatype(schema.properties, newJDict) #recurse complex object
+                continue # prevent adding duplicate prop:val
+            
+            if type == "array": # nested array
+                
+                isPrimitive, arrayValType = self.is_array_datatype_of_primitive_value(schema.items)
+            
+                if isPrimitive:
+                    arrayResult.append(ReqBodyContentPropValue(propName, arrayValType, isArray=True))
+                    continue
+                
+                nestedArray = []
+                arrayResult.append(nestedArray)
+                self.handle_array_datatype(schema.items, nestedArray)
+                
+            else:
+                arrayResult.append(ReqBodyContentPropValue(propName, type))
+                
+                
+    def handle_complex_object_datatype(self, properties, dictResult):
+        
+        for propName in properties:
+            
+            schema = properties[propName]
+            type = schema.type
+            format = schema.format
+            
+            if type == "object":
+        
+                newJDict = {}
+                dictResult[propName] = newJDict
+                
+                self.handle_complex_object_datatype(schema.properties, newJDict)
+            else:
+                dictResult[propName]= ReqBodyContentPropValue(propName, type, format=format)
+                
+    def is_array_datatype_of_primitive_value(self, schemaItems):
+        
+        arrayValType = schemaItems.type
+        
+        if arrayValType == "object":
+            return False, arrayValType
+        
+        return True, arrayValType
+                
     
     def get_form_data_keyval(self, props, dict):
         
@@ -205,7 +271,7 @@ class OpenApi3ApiInitManager:
             
             format = propSchema.format
             
-            dict[propName]= RequestBodyPropertyValue(type, format)
+            dict[propName]= ReqBodyContentPropValue(propName, type, format=format)
             
             
     # requestBody and content are optional in OpenApi3 for Post/Put/Patch
@@ -278,7 +344,9 @@ class OpenApi3ApiInitManager:
                     hasattr(content, appPdfContentType) or self.has_attribute(content, appPdfContentType) or
                     hasattr(content, imagePngContentType) or self.has_attribute(content, imagePngContentType) or
                     hasattr(content, imageAllContentType) or self.has_attribute(content, imageAllContentType)):
-                    dictResult['fileupload'] = RequestBodyPropertyValue('string', 'binary')
+                    
+                    propName = "fileupload" # fixed name for file
+                    dictResult[propName] = ReqBodyContentPropValue(propName, 'string', 'binary')
                 
         return dictResult
     

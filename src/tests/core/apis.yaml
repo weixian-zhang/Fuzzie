@@ -96,7 +96,11 @@ paths:
                           type: string
                         size: 
                           type: integer
-                        innerObjectArray:
+                        innerArray:
+                          type: array
+                          items:
+                            type: integer
+                        innerObject:
                           type: object
                           properties:      # Request parts
                             id:            # Part 1 (string value)
