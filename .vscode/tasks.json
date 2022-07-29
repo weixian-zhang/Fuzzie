@@ -42,6 +42,18 @@
 				"npm: watch-tests"
 			],
 			"problemMatcher": []
+		},
+		{
+			"label": "run openapi3 server background",
+			"type": "shell",
+			"command": "flask run",
+			"problemMatcher": [],
+			"options": {
+				"env": {
+					"FLASK_APP": "openapi3_server"
+				},
+				"cwd": "${workspaceFolder}/src/tests/core"
+			}
 		}
 	]
 }
