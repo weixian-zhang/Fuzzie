@@ -7,12 +7,16 @@ class ApiVerb(enum.Enum):
     PATCH = 4
     DELETE = 5
 
-class RequestBodyPropertyValue:
-    type: str = ''
+class ReqBodyContentPropValue:
+    propName: str = ""
+    type: str = ""
+    isArray: bool = False
     format: str = None
     
-    def __init__(self, type, format) -> None:
+    def __init__(self, propName, type, isArray=False, format = None) -> None:
+        self.propName = propName
         self.type = type
+        self.isArray = isArray
         self.format = format
         
     def is_file_upload() -> bool:
@@ -20,13 +24,14 @@ class RequestBodyPropertyValue:
             return True
         return False
     
+    
+    
 class UserInput:
     basicAuthUsername: str = ''
     basicAuthPassword: str = ''
     apiKeyAuthApiKey: str = ''
     bearerAuthJwtToken: str = ''
     
-
 class Api:
     
     path: str = '' #path includes querystring
