@@ -1,9 +1,9 @@
-from pathlib import PureWindowsPath
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
 from apicontext import Api, ApiContext, ApiVerb, RequestBodyPropertyValue
-
+import requests
+import validators
 
 class OpenApi3ApiInitManager:
     
@@ -15,10 +15,25 @@ class OpenApi3ApiInitManager:
                 spec = yaml.safe_load(f)
                 
             apiContext = self.create_apicontext_from_openapi3(spec)
+            
+            return apiContext
                              
         except Exception as e:
             print(e)
-            
+            raise
+        
+    def load_openapi3_url(self, url: str):
+        
+        if not validators.url(url):
+            raise Exception('Url is malformed')
+        
+        resp = requests.get(url)
+        specStr = resp.text
+        spec = yaml.safe_load(specStr)
+                
+        apiContext = self.create_apicontext_from_openapi3(spec)
+        
+        return apiContext
             
     def create_apicontext_from_openapi3(self, openapiYaml) -> ApiContext:
         
@@ -70,6 +85,9 @@ class OpenApi3ApiInitManager:
             api.verb = ApiVerb.GET
             api.authTypes = self.discover_api_authTypes(apiObj.get)
             api.querystring = self.get_querystring(apiObj.get)
+            
+            #handle query vs path
+                #handle array as item
             
             return True, api
         
@@ -143,26 +161,48 @@ class OpenApi3ApiInitManager:
             type = propSchema.type
             format = propSchema.format
             
-            #recurs case - if has more properties means nested json
-            if type == 'object':
+            
+            
+            if type == "object":     #recurs case - if has more properties means nested json
                 
                 newJDict = {}
-                
                 jDict[propName] = newJDict
                 
                 self.get_nested_json_properties(propSchema.properties, newJDict)
             else:
                 #base case
-                jDict[propName]= RequestBodyPropertyValue(type, format)
-                
+                if not type == "array":
+                    jDict[propName]= RequestBodyPropertyValue(type, format)
+                else:
+                    
+                    arrayDictKey = f"{propName}:array"
+                    
+                    items = propSchema.items # items is a class not iteratable
+                    
+                    if items.type == "object": #recurs case - if has more properties means nested json
+                        
+                        newJDict = {}
+                        jDict[arrayDictKey] = newJDict
+                        self.get_nested_json_properties(items.properties, newJDict)
+                    else:
+                        #base case
+                        jDict[propName]= RequestBodyPropertyValue(type, format)
+                    
+                    
     
     def get_form_data_keyval(self, props, dict):
         
         for propName in props:
             
+            type = propSchema.type
+            
+            if type == "array":
+                items = propSchema.items
+                self.handleSchemaIsArray(items, dict)
+            
             propSchema = props[propName]
             
-            type = propSchema.type
+            
             format = propSchema.format
             
             dict[propName]= RequestBodyPropertyValue(type, format)
@@ -179,6 +219,7 @@ class OpenApi3ApiInitManager:
         appPdfContentType = 'application/pdf'
         imagePngContentType = 'image/png'
         imageAllContentType = 'image/*'
+        sameForOthersContentType = "*/*" #https://swagger.io/docs/specification/media-types/
         
         dictResult = {}
         properties = None
@@ -194,6 +235,23 @@ class OpenApi3ApiInitManager:
                 
                 content = postPutPatchOperation.requestBody.content
                 
+                if hasattr(content, sameForOthersContentType) or self.has_attribute(content, sameForOthersContentType): 
+                    sameForOthers = content[sameForOthersContentType]
+                    
+                    schema = sameForOthers.schema
+                    
+                    #TODO: test array
+                    
+                    #handle array params
+                    if schema.type == "array":
+                        self.handleSchemaIsArray(schema.items, dictResult)
+                    else:
+                        properties = sameForOthers.schema.properties
+                    
+                        if not properties is None:
+                            self.get_form_data_keyval(properties, dictResult) #same handling as for keyval
+                            
+                            
                 if hasattr(content, appJsonContentType) or self.has_attribute(content, appJsonContentType): 
                     jsonContent = content[appJsonContentType]
                     properties = jsonContent.schema.properties
@@ -204,11 +262,16 @@ class OpenApi3ApiInitManager:
                     formContent = content[formDataWWWFormContentType] 
                     properties = formContent.schema.properties
                     self.get_form_data_keyval(properties, dictResult)
+                     
+                    #TODO: test array in form
+                    
                     
                 if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
                     multipartFormContent = content[multipartFormContentType]
                     properties = multipartFormContent.schema.properties
                     self.get_nested_json_properties(properties, dictResult)
+                    
+                    #TODO: test array in json
                 
                 # aassume file upload base on media type with no property name
                 if (hasattr(content, streamFileUploadContentType) or self.has_attribute(content, streamFileUploadContentType) or
@@ -218,6 +281,18 @@ class OpenApi3ApiInitManager:
                     dictResult['fileupload'] = RequestBodyPropertyValue('string', 'binary')
                 
         return dictResult
+    
+    def handleSchemaIsArray(self, items, dictResult):
+        
+        if not items is None: 
+                                        
+            if not items.properties is None: # if properties is not None, is array of complex object
+                
+                self.get_form_data_keyval(items.properties, dictResult)
+                return dictResult
+            
+            else:
+                dictResult["array"] = items.type #array of primitive tpye            
     
     def get_postputpatch_content_props(self, content):
         

@@ -13,13 +13,21 @@ currentFolder = Path(__file__).parent
 from openapi3_apicontext_init_manager import OpenApi3ApiInitManager
 from data_factory import DataFactory
 
-def test_openapi3_initer():
+def test_openapi3_file_initer():
     
     apiFilePath = os.path.join(currentFolder, 'apis.yaml')
     
     apiIniter = OpenApi3ApiInitManager()
     
     apiIniter.load_openapi3_file(apiFilePath)
+    
+def test_openapi3_url_initer():
+    
+    url = 'http://localhost:5000/swagger/yaml'
+    
+    apiIniter = OpenApi3ApiInitManager()
+    
+    apiIniter.load_openapi3_url(url)
     
     
 def test_data_factory():
@@ -32,4 +40,6 @@ def test_data_factory():
 
 if __name__ == '__main__':
     # test_openapi3_initer()
-    test_data_factory()
+    # test_data_factory()
+    #test_openapi3_url_initer()
+    test_openapi3_file_initer()
