@@ -280,7 +280,7 @@ class OpenApi3ApiInitManager:
         
         appJsonContentType = 'application/json'
         formDataWWWFormContentType = 'application/x-www-form-urlencoded'
-        multipartFormContentType = 'multipart/form-data' # single file or form + file or multiple files without form data
+        multipartFormContentType = 'multipart/form-data' # single file upload, multi-files upload, or Json data + file upload
         streamFileUploadContentType = 'application/octet-stream'
         appPdfContentType = 'application/pdf'
         imagePngContentType = 'image/png'
