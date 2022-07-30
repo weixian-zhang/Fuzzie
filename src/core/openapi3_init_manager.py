@@ -75,6 +75,7 @@ class OpenApi3ApiInitManager:
             print(e)
             raise
         
+        
     def create_get_api(self, apiObj, path):
         
         if not apiObj.get is None:
@@ -110,7 +111,7 @@ class OpenApi3ApiInitManager:
                     
                     if hasattr(schema, 'properties'):
                         nestedJsonProps = {}
-                        self.get_nested_json_properties(schema.properties, nestedJsonProps)
+                        self.get_nested_content_properties(schema.properties, nestedJsonProps)
                         querystring[name] = nestedJsonProps
                         
                 else:
@@ -153,7 +154,7 @@ class OpenApi3ApiInitManager:
             
              
         
-    def get_nested_json_properties(self, props, jDict):
+    def get_nested_content_properties(self, props, jDict):
         
         # arrayList is not None when recursing over array data type
         
@@ -163,12 +164,12 @@ class OpenApi3ApiInitManager:
             type = schema.type
             format = schema.format
             
-            if type == "object":     #recurs case - if has more properties means nested json
+            if type == "object":     #recursive case - if has more properties means nested json
                 
                 newJDict = {}
                 jDict[propName] = newJDict
                 
-                self.handle_complex_object_datatype(schema.properties)
+                self.get_contentprops_complex_object_datatype(schema.properties, newJDict)
                 
             else:
                 #base case
@@ -185,23 +186,30 @@ class OpenApi3ApiInitManager:
                     
                     items =  schema.items # items exist for array type and is a class not iteratable
                     
-                    self.handle_array_datatype(items, arrayResult)
+                    self.get_contentprops_array_datatype(items, arrayResult, propName)
                                     
     
-    def handle_array_datatype(self, items, arrayResult: list):
+    def get_contentprops_array_datatype(self, items, arrayResult: list, propertyName=""):
         
         #array may contain complex object,
-        # calls handle_complex_object_datatype to recurse if object data type exist
+        # calls get_contentprops_complex_object_datatype to recurse if object data type exist
+        #property name is used only when array is of primitive type
         
         if items is None:
             return []
         
         properties = items.properties
         
-        if properties is None: # means array is primitive type
-            return []
+        if properties is None: # array contains primitive type only
+            isPrimitive, arrayValType = self.is_array_datatype_of_primitive_value(items)
+            
+            if isPrimitive:
+                arrayResult.append(ReqBodyContentPropValue(propertyName, arrayValType, isArray=True))
+                return arrayResult
+            else:
+                return [] # should not be the case until use case is found
                     
-        for propName in properties:
+        for propName in properties: # compelx object in array
             
             schema = properties[propName]
             type = schema.type
@@ -210,7 +218,7 @@ class OpenApi3ApiInitManager:
                 
                 newJDict = {}
                 arrayResult.append(newJDict)
-                self.handle_complex_object_datatype(schema.properties, newJDict) #recurse complex object
+                self.get_contentprops_complex_object_datatype(schema.properties, newJDict) #recurse complex object
                 continue # prevent adding duplicate prop:val
             
             if type == "array": # nested array
@@ -223,13 +231,13 @@ class OpenApi3ApiInitManager:
                 
                 nestedArray = []
                 arrayResult.append(nestedArray)
-                self.handle_array_datatype(schema.items, nestedArray)
+                self.get_contentprops_array_datatype(schema.items, nestedArray)
                 
             else:
                 arrayResult.append(ReqBodyContentPropValue(propName, type))
                 
                 
-    def handle_complex_object_datatype(self, properties, dictResult):
+    def get_contentprops_complex_object_datatype(self, properties, dictResult):
         
         for propName in properties:
             
@@ -242,7 +250,7 @@ class OpenApi3ApiInitManager:
                 newJDict = {}
                 dictResult[propName] = newJDict
                 
-                self.handle_complex_object_datatype(schema.properties, newJDict)
+                self.get_contentprops_complex_object_datatype(schema.properties, newJDict)
             else:
                 dictResult[propName]= ReqBodyContentPropValue(propName, type, format=format)
                 
@@ -294,7 +302,7 @@ class OpenApi3ApiInitManager:
             
             if hasattr(postPutPatchOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
                 properties = postPutPatchOperation.requestBody.properties
-                self.get_nested_json_properties(properties, dictResult)
+                self.get_nested_content_properties(properties, dictResult)
                 return dictResult
             
             if hasattr(postPutPatchOperation.requestBody, 'content'): # if content exists
@@ -322,20 +330,20 @@ class OpenApi3ApiInitManager:
                     jsonContent = content[appJsonContentType]
                     properties = jsonContent.schema.properties
                     
-                    self.get_nested_json_properties(properties, dictResult)
+                    self.get_nested_content_properties(properties, dictResult)
                     
                 if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
                     formContent = content[formDataWWWFormContentType] 
                     properties = formContent.schema.properties
-                    self.get_form_data_keyval(properties, dictResult)
-                     
+                    #self.get_form_data_keyval(properties, dictResult)
+                    self.get_nested_content_properties(properties, dictResult)
                     #TODO: test array in form
                     
                     
                 if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
                     multipartFormContent = content[multipartFormContentType]
                     properties = multipartFormContent.schema.properties
-                    self.get_nested_json_properties(properties, dictResult)
+                    self.get_nested_content_properties(properties, dictResult)
                     
                     #TODO: test array in json
                 
