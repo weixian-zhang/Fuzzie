@@ -10,7 +10,7 @@ sys.path.append(datafactoryPath)
 
 currentFolder = Path(__file__).parent
 
-from openapi3_apicontext_init_manager import OpenApi3ApiInitManager
+from openapi3_init_manager import OpenApi3ApiInitManager
 from data_factory import DataFactory
 
 def test_openapi3_file_initer():

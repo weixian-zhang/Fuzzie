@@ -77,77 +77,124 @@ paths:
 # post
 
   #multipart form with nested Json
-  /multipart/nestedjson-1:
+  # /multipart-form-data/nestedjson-1:
+  #   post:
+  #     requestBody:
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               simple: 
+  #                 type: string
+  #               complex:
+  #                 type: array
+  #                 items:
+  #                     type: object
+  #                     properties:
+  #                       key: 
+  #                         type: string
+  #                       size: 
+  #                         type: integer
+  #                       innerArray:
+  #                         type: array
+  #                         items:
+  #                           type: integer
+  #                       innerObject:
+  #                         type: object
+  #                         properties:      # Request parts
+  #                           id:            # Part 1 (string value)
+  #                             type: string
+  #                             format: uuid
+  #                           address:       # Part2 (object)
+  #                             type: object
+  #                             properties:
+  #                               street:
+  #                                 type: string
+  #                               city:
+  #                                 type: string
+  #                           profileImage:  # Part 3 (an image)
+  #                             type: string
+  #                             format: binary
+  #           encoding:
+  #             complex:
+  #               contentType: application/json
+  #     responses:
+  #       '200':
+  #         description: OK
+
+  /x-www-form/simple-object-keyvalue:
     post:
       requestBody:
+        required: true
         content:
-          multipart/form-data:
+          application/x-www-form-urlencoded:
             schema:
               type: object
               properties:
-                simple: 
+                name:          # <!--- form field name
                   type: string
-                complex:
+                fav_number:    # <!--- form field name
+                  type: integer
+                color:
                   type: array
                   items:
-                      type: object
-                      properties:
-                        key: 
-                          type: string
-                        size: 
-                          type: integer
-                        innerArray:
-                          type: array
-                          items:
-                            type: integer
-                        innerObject:
-                          type: object
-                          properties:      # Request parts
-                            id:            # Part 1 (string value)
-                              type: string
-                              format: uuid
-                            address:       # Part2 (object)
-                              type: object
-                              properties:
-                                street:
-                                  type: string
-                                city:
-                                  type: string
-                            profileImage:  # Part 3 (an image)
-                              type: string
-                              format: binary
-            encoding:
-              complex:
-                contentType: application/json
+                    type: string
+                message:     # <--- form field that contains the JSON message
+                  $ref: '#/components/schemas/Message'
+              required:
+                - name
+                - email
       responses:
         '200':
           description: OK
 
   # multipart with nested json and file upload
-  /multipart/nestedjson-2:
-    post:
-      requestBody:
-        content:
-          multipart/form-data: # Media type
-            schema:            # Request payload
-              type: object
-              properties:      # Request parts
-                id:            # Part 1 (string value)
-                  type: string
-                  format: uuid
-                address:       # Part2 (object)
-                  type: object
-                  properties:
-                    street:
-                      type: string
-                    city:
-                      type: string
-                profileImage:  # Part 3 (an image)
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Nested object OK
+  # /x-www-form/nested-object-array:
+  #   post:
+  #     requestBody:
+  #       content:
+  #         application/x-www-form-urlencoded:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               simple: 
+  #                 type: string
+  #               complex:
+  #                 type: array
+  #                 items:
+  #                     type: object
+  #                     properties:
+  #                       key: 
+  #                         type: string
+  #                       size: 
+  #                         type: integer
+  #                       innerArray:
+  #                         type: array
+  #                         items:
+  #                           type: integer
+  #                       innerObject:
+  #                         type: object
+  #                         properties:      # Request parts
+  #                           id:            # Part 1 (string value)
+  #                             type: string
+  #                             format: uuid
+  #                           address:       # Part2 (object)
+  #                             type: object
+  #                             properties:
+  #                               street:
+  #                                 type: string
+  #                               city:
+  #                                 type: string
+  #                           profileImage:  # Part 3 (an image)
+  #                             type: string
+  #                             format: binary
+  #           encoding:
+  #             complex:
+  #               contentType: application/json
+  #     responses:
+  #       '200':
+  #         description: OK
 
   # # post nested json
   # /secure/oauth/services/v2/Nested:
@@ -357,6 +404,16 @@ components:
       name: X-API-Key
 
   schemas:
+    Message:
+      title: A Slack message
+      type: object
+      properties:
+        text:
+          type: string
+          description: Message text
+      required:
+        - text
+
     element:
       type: object
       required:
