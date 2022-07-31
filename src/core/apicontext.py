@@ -7,16 +7,22 @@ class ApiVerb(enum.Enum):
     PATCH = 4
     DELETE = 5
 
-class ReqBodyContentPropValue:
-    propName: str = ""
+# format - generally for file property and format is binary
+class ContentPropValue:
+    propertyName: str = ""
     type: str = ""
     isArray: bool = False
+    arrayItemType: any = None 
+    nestedObjectsContent: dict = None
     format: str = None
     
-    def __init__(self, propName, type, isArray=False, format = None) -> None:
-        self.propName = propName
+    def __init__(self, propertyName, type, nestedObjectsContent: any = None, 
+                 arrayItemType: any = None, isArray:bool = False, format: str = None) -> None:
+        
+        self.propertyName = propertyName
         self.type = type
-        self.isArray = isArray
+        self.nestedObjectsContent = nestedObjectsContent
+        self.arrayItemType = arrayItemType
         self.format = format
         
     def is_file_upload() -> bool:
@@ -34,18 +40,20 @@ class UserInput:
     
 class Api:
     
-    path: str = '' #path includes querystring
+    path: str = ''        # path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
     authTypes = []
-    body = {} # for post/put/patch only
-    querystring = {}    
+    body = {}             # for post/put/patch only
+    isQueryString = True  # for get request only
+    querystring = {}
+    path = {}   
     
 class ApiContext:
     
     baseUrl = []
     title: str = ''
     version: str = ''
-    authTypes = []
+    authTypes = []   # 
     apis = []
     userInput: UserInput = None

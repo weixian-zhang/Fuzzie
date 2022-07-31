@@ -10,8 +10,8 @@ security:
   - ApiKeyAuth: []
 
 paths:
-  # # array of primitive type
-  # /getarray:
+  # array of primitive type
+  # /get-query-array:
   #   get:
   #     parameters:
   #     - in: query
@@ -76,78 +76,86 @@ paths:
 
 # post
 
-  #multipart form with nested Json
-  # /multipart-form-data/nestedjson-1:
-  #   post:
-  #     requestBody:
-  #       content:
-  #         multipart/form-data:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               simple: 
-  #                 type: string
-  #               complex:
-  #                 type: array
-  #                 items:
-  #                     type: object
-  #                     properties:
-  #                       key: 
-  #                         type: string
-  #                       size: 
-  #                         type: integer
-  #                       innerArray:
-  #                         type: array
-  #                         items:
-  #                           type: integer
-  #                       innerObject:
-  #                         type: object
-  #                         properties:      # Request parts
-  #                           id:            # Part 1 (string value)
-  #                             type: string
-  #                             format: uuid
-  #                           address:       # Part2 (object)
-  #                             type: object
-  #                             properties:
-  #                               street:
-  #                                 type: string
-  #                               city:
-  #                                 type: string
-  #                           profileImage:  # Part 3 (an image)
-  #                             type: string
-  #                             format: binary
-  #           encoding:
-  #             complex:
-  #               contentType: application/json
-  #     responses:
-  #       '200':
-  #         description: OK
-
-  /x-www-form/simple-object-keyvalue:
+  # multipart form with nested Json
+  /multipart-form-data/nestedjson-1:
     post:
       requestBody:
-        required: true
         content:
-          application/x-www-form-urlencoded:
+          multipart/form-data:
             schema:
               type: object
               properties:
-                name:          # <!--- form field name
+                simple: 
                   type: string
-                fav_number:    # <!--- form field name
-                  type: integer
-                color:
+                complex:
                   type: array
                   items:
-                    type: string
-                message:     # <--- form field that contains the JSON message
-                  $ref: '#/components/schemas/Message'
-              required:
-                - name
-                - email
+                      type: object
+                      properties:
+                        key: 
+                          type: string
+                        size: 
+                          type: integer
+                        nestyArrays1:
+                          type: array
+                          items:
+                            type: array
+                            items:
+                              type: string
+                                # items:
+                                #   nestedArray3:
+                                #     type: array
+                                #     items:
+                                #       nestedArray4:
+                                #         type: string
+                        innerObject:
+                          type: object
+                          properties:      # Request parts
+                            id:            # Part 1 (string value)
+                              type: string
+                              format: uuid
+                            address:       # Part2 (object)
+                              type: object
+                              properties:
+                                street:
+                                  type: string
+                                city:
+                                  type: string
+                            profileImage:  # Part 3 (an image)
+                              type: string
+                              format: binary
+            encoding:
+              complex:
+                contentType: application/json
       responses:
         '200':
           description: OK
+
+  # /x-www-form/simple-object-keyvalue:
+  #   post:
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/x-www-form-urlencoded:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               name:          # <!--- form field name
+  #                 type: string
+  #               fav_number:    # <!--- form field name
+  #                 type: integer
+  #               color:
+  #                 type: array
+  #                 items:
+  #                   type: string
+  #               message:     # <--- form field that contains the JSON message
+  #                 $ref: '#/components/schemas/Message'
+  #             required:
+  #               - name
+  #               - email
+  #     responses:
+  #       '200':
+  #         description: OK
 
   # multipart with nested json and file upload
   # /x-www-form/nested-object-array:
