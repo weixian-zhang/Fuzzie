@@ -1,7 +1,7 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext import Api, ApiContext, ApiVerb, ReqBodyContentPropValue
+from apicontext import Api, ApiContext, ApiVerb, ContentPropValue
 import requests
 import validators
 
@@ -85,7 +85,7 @@ class OpenApi3ApiInitManager:
             api.path = path
             api.verb = ApiVerb.GET
             api.authTypes = self.discover_api_authTypes(apiObj.get)
-            api.querystring = self.get_querystring(apiObj.get)
+            api.querystring = self.obtain_get_parameters(apiObj.get, api)
             
             #handle query vs path
                 #handle array as item
@@ -94,29 +94,46 @@ class OpenApi3ApiInitManager:
         
         return False, None
     
-    def get_querystring(self, getOperation) -> Dict:
+    def obtain_get_parameters(self, getOperation, api: Api) -> Dict:
         
-        querystringParams = getOperation.parameters
+        params = getOperation.parameters
         
         querystring = {}
         
-        if len(querystringParams) > 0:
+        if len(params) > 0:
             
-            for param in querystringParams:
+            for param in params:
                 
                 name = param.name
                 schema = param.schema
+                type = schema.type
+                api.isQueryString = True if param.in_ == "query" else False
                 
-                if schema.type == 'object': # nested json object
+                dictParams = {}
+                
+                if api.isQueryString:
+                    api.querystring = dictParams
+                else: api.path = dictParams
+                
+                # nested json object
+                if type == 'object': 
                     
                     if hasattr(schema, 'properties'):
-                        nestedJsonProps = {}
-                        self.get_nested_content_properties(schema.properties, nestedJsonProps)
-                        querystring[name] = nestedJsonProps
+                        complexObjDict = {}
+                        self.get_nested_content_properties(schema.properties, complexObjDict)
+                        dictParams[name] = complexObjDict
+                        
+                        api.querystring = querystring
+                        
+                elif type ==  "array":
+                    items = schema.items
+                    array = []
+                    self.get_items_in_array_datatype(items, array, name)
+                    
+                    dictParams[name] = ContentPropValue(name, type, True)
                         
                 else:
-                    type = schema.type
-                    querystring[name] = type
+                    dictParams[name] = ContentPropValue(name, type)
                     
         return querystring
         
@@ -164,80 +181,106 @@ class OpenApi3ApiInitManager:
             type = schema.type
             format = schema.format
             
+            # complex object
             if type == "object":     #recursive case - if has more properties means nested json
                 
-                newJDict = {}
-                jDict[propName] = newJDict
+                complexObjDict = {}
+                jDict[propName] = ContentPropValue(propName, type, complexObjDict)
                 
-                self.get_contentprops_complex_object_datatype(schema.properties, newJDict)
+                self.get_complex_object_datatype(schema.properties, complexObjDict)
                 
             else:
-                #base case
+                #base case - primitive type
                 if not type == "array":
                     
-                    jDict[propName]= ReqBodyContentPropValue(propName, type, format=format)
+                    jDict[propName]= ContentPropValue(propName, type=type, format=format)
                     continue
                         
                 if type == "array": #handles array of either complex object or primitives
                     
-                    arrayResult = []
-                    
-                    jDict[propName] = arrayResult
-                    
                     items =  schema.items # items exist for array type and is a class not iteratable
                     
-                    self.get_contentprops_array_datatype(items, arrayResult, propName)
+                    cp = ContentPropValue(propName, type="array", isArray=True)
+                    jDict[propName] = cp
+                    
+                    contentProp = self.get_items_in_array_datatype(items, propName, contentProp=cp)        
+                    
                                     
     
-    def get_contentprops_array_datatype(self, items, arrayResult: list, propertyName=""):
+    def get_items_in_array_datatype(self, items, propertyName="", contentProp: ContentPropValue = None) -> ContentPropValue:
         
-        #array may contain complex object,
-        # calls get_contentprops_complex_object_datatype to recurse if object data type exist
+        # array can contain complex object,
+        # calls get_complex_object_datatype to recurse if object data type exist
         #property name is used only when array is of primitive type
         
+        if contentProp is None:
+            raise Exception("contentProp is None for array items")
+        
         if items is None:
-            return []
+            cp = ContentPropValue(propertyName=propertyName, type="string") # default to string not such use case of item=None may not be possible
+            contentProp.nestedObjectsContent = cp
         
-        properties = items.properties
+        isPrimitive, itemType = self.is_array_item_primitive_type(items)
+
+        # handles array item is of primitive type
+        if isPrimitive:
+            contentProp.arrayItemType = itemType       
         
-        if properties is None: # array contains primitive type only
-            isPrimitive, arrayValType = self.is_array_datatype_of_primitive_value(items)
+        if itemType == "object":
             
-            if isPrimitive:
-                arrayResult.append(ReqBodyContentPropValue(propertyName, arrayValType, isArray=True))
-                return arrayResult
-            else:
-                return [] # should not be the case until use case is found
+            # TODO: should complexObj be dict or content prop
+            
+            complexObjDict = {}
+            
+            cp = ContentPropValue(propertyName, itemType, complexObjDict)
+            
+            contentProp.nestedObjectsContent = cp
                     
-        for propName in properties: # compelx object in array
+            self.get_complex_object_datatype(items.properties, complexObjDict) 
+        
+        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
+        if itemType == "array":
             
-            schema = properties[propName]
-            type = schema.type
+            if not items.items is None: # has nested array
+                contentProp = ContentPropValue(propertyName, type="array", isArray=True)
             
-            if type == "object": # 
-                
-                newJDict = {}
-                arrayResult.append(newJDict)
-                self.get_contentprops_complex_object_datatype(schema.properties, newJDict) #recurse complex object
-                continue # prevent adding duplicate prop:val
             
-            if type == "array": # nested array
-                
-                isPrimitive, arrayValType = self.is_array_datatype_of_primitive_value(schema.items)
+            pass
             
-                if isPrimitive:
-                    arrayResult.append(ReqBodyContentPropValue(propName, arrayValType, isArray=True))
-                    continue
+            #if not items.items is None:
                 
-                nestedArray = []
-                arrayResult.append(nestedArray)
-                self.get_contentprops_array_datatype(schema.items, nestedArray)
+            
+        
+                    
+        # for propName in properties: # complex object in array
+            
+        #     schema = properties[propName]
+        #     type = schema.type
+            
+        #     if type == "object": # complex object
                 
-            else:
-                arrayResult.append(ReqBodyContentPropValue(propName, type))
+        #         complexObjDict = {}
+        #         complexObjDict[propName] = ContentPropValue(propName, type, complexObjDict)
+                
+        #         self.get_complex_object_datatype(schema.properties, complexObjDict) #recurse complex object
+                
+        #         continue # prevent adding duplicate prop:val
+            
+        #     if type == "array": # nested array
+                
+        #         isPrimitive, arrayValType = self.is_array_item_primitive_type(schema.items)
+            
+        #         if isPrimitive:
+        #             arrayResult.append(ContentPropValue(propName, arrayValType, isArray=True))
+        #             continue
+                
+        #         s
+                
+        #     else:
+        #         arrayResult.append(ContentPropValue(propName, type))
                 
                 
-    def get_contentprops_complex_object_datatype(self, properties, dictResult):
+    def get_complex_object_datatype(self, properties, dictResult):
         
         for propName in properties:
             
@@ -247,22 +290,26 @@ class OpenApi3ApiInitManager:
             
             if type == "object":
         
-                newJDict = {}
-                dictResult[propName] = newJDict
+                complexObj = {}
+                contentProp = ContentPropValue(propertyName=propName, type=type, nestedObjectsContent=complexObj)
+                dictResult[propName] = contentProp
                 
-                self.get_contentprops_complex_object_datatype(schema.properties, newJDict)
+                self.get_complex_object_datatype(schema.properties, complexObj)
+                
+            elif type == "array":
+                
+                contentProp = self.get_items_in_array_datatype(schema.items, propName) #recursive method
+                dictResult[propName] = contentProp
+                
             else:
-                dictResult[propName]= ReqBodyContentPropValue(propName, type, format=format)
-                
-    def is_array_datatype_of_primitive_value(self, schemaItems):
+                dictResult[propName]= ContentPropValue(propName, type, format=format)
+    
+    def is_array_item_primitive_type(self, items):
+        if not items.type == "object" and "array":
+            return True, items.type
         
-        arrayValType = schemaItems.type
-        
-        if arrayValType == "object":
-            return False, arrayValType
-        
-        return True, arrayValType
-                
+        return False, items.type
+                    
     
     def get_form_data_keyval(self, props, dict):
         
@@ -279,7 +326,7 @@ class OpenApi3ApiInitManager:
             
             format = propSchema.format
             
-            dict[propName]= ReqBodyContentPropValue(propName, type, format=format)
+            dict[propName]= ContentPropValue(propName, type, format=format)
             
             
     # requestBody and content are optional in OpenApi3 for Post/Put/Patch
@@ -354,7 +401,7 @@ class OpenApi3ApiInitManager:
                     hasattr(content, imageAllContentType) or self.has_attribute(content, imageAllContentType)):
                     
                     propName = "fileupload" # fixed name for file
-                    dictResult[propName] = ReqBodyContentPropValue(propName, 'string', 'binary')
+                    dictResult[propName] = ContentPropValue(propName, 'string', 'binary')
                 
         return dictResult
     

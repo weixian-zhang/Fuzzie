@@ -5,6 +5,10 @@ import pandas as pd
 projPath = Path(__file__).parent.parent.parent # /src
 corePath = os.path.join(projPath, 'core')
 sys.path.append(corePath)
+
+initmanagerPath = os.path.join(corePath, 'api-initmanager')
+sys.path.append(initmanagerPath)
+
 datafactoryPath = os.path.join(corePath, 'datafactory')
 sys.path.append(datafactoryPath)
 
