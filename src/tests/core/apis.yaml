@@ -10,6 +10,8 @@ security:
   - ApiKeyAuth: []
 
 paths:
+  
+
   # array of primitive type
   # /get-query-array:
   #   get:
@@ -77,53 +79,53 @@ paths:
 # post
 
   # multipart form with nested Json
-  /multipart-form-data/nestedjson-1:
-    post:
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                simple: 
-                  type: string
-                complex:
-                  type: array
-                  items:
-                      type: object
-                      properties:
-                        key: 
-                          type: string
-                        size: 
-                          type: integer
-                        nestyArrays1:
-                          type: array
-                          items:
-                            type: array
-                            items:
-                              type: string
-                        innerObject:
-                          type: object
-                          properties:      # Request parts
-                            id:            # Part 1 (string value)
-                              type: string
-                              format: uuid
-                            address:       # Part2 (object)
-                              type: object
-                              properties:
-                                street:
-                                  type: string
-                                city:
-                                  type: string
-                            profileImage:  # Part 3 (an image)
-                              type: string
-                              format: binary
-            encoding:
-              complex:
-                contentType: application/json
-      responses:
-        '200':
-          description: OK
+  # /multipart-form-data/nestedjson-1:
+  #   post:
+  #     requestBody:
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               simple: 
+  #                 type: string
+  #               complex:
+  #                 type: array
+  #                 items:
+  #                     type: object
+  #                     properties:
+  #                       key: 
+  #                         type: string
+  #                       size: 
+  #                         type: integer
+  #                       nestyArrays1:
+  #                         type: array
+  #                         items:
+  #                           type: array
+  #                           items:
+  #                             type: string
+  #                       innerObject:
+  #                         type: object
+  #                         properties:      # Request parts
+  #                           id:            # Part 1 (string value)
+  #                             type: string
+  #                             format: uuid
+  #                           address:       # Part2 (object)
+  #                             type: object
+  #                             properties:
+  #                               street:
+  #                                 type: string
+  #                               city:
+  #                                 type: string
+  #                           profileImage:  # Part 3 (an image)
+  #                             type: string
+  #                             format: binary
+  #           encoding:
+  #             complex:
+  #               contentType: application/json
+  #     responses:
+  #       '200':
+  #         description: OK
 
   # /x-www-form/simple-object-keyvalue:
   #   post:

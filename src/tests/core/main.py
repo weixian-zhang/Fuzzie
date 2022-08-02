@@ -19,7 +19,7 @@ from data_factory import DataFactory
 
 def test_openapi3_file_initer():
     
-    apiFilePath = os.path.join(currentFolder, 'apis.yaml')
+    apiFilePath = os.path.join(currentFolder, 'sample-linode-openapi.yaml')
     
     apiIniter = OpenApi3ApiInitManager()
     
