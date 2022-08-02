@@ -10,8 +10,82 @@ security:
   - ApiKeyAuth: []
 
 paths:
-  # # array of primitive type
-  # /getarray:
+  /get/path/param/object/and/array{complexObject}/{doubleParam}/{singleArray}:
+    get:
+      tags:
+      - tickets
+      summary: Send an JSON Object as a query param
+      parameters:
+      - name: complexObject
+        in: path
+        description: '{"type":"foo","color":"green"}'
+        required: true
+        schema:
+          type: object
+          properties:
+            type:
+              type: "string"
+            color:
+              type: "string"
+      - name: doubleParam
+        in: path
+        required: true
+        schema:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+      - name: singleArray
+        in: path
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  # /get/query/param/array/and/object:
+  #   get:
+  #     tags:
+  #     - tickets
+  #     summary: Send an JSON Object as a query param
+  #     parameters:
+  #     - name: complexObject
+  #       in: query
+  #       description: '{"type":"foo","color":"green"}'
+  #       required: true
+  #       schema:
+  #         type: object
+  #         properties:
+  #           type:
+  #             type: "string"
+  #           color:
+  #             type: "string"
+  #     - name: doubleParam
+  #       in: query
+  #       required: true
+  #       schema:
+  #         type: array
+  #         items:
+  #           type: array
+  #           items:
+  #             type: integer
+  #     - name: singleArray
+  #       in: query
+  #       required: true
+  #       schema:
+  #         type: array
+  #         items:
+  #           type: string
+  #     responses:
+  #       '200':
+  #         description: OK
+
+  # array of primitive type
+  # /get-query-array:
   #   get:
   #     parameters:
   #     - in: query
@@ -76,7 +150,7 @@ paths:
 
 # post
 
-  #multipart form with nested Json
+  # multipart form with nested Json
   # /multipart-form-data/nestedjson-1:
   #   post:
   #     requestBody:
@@ -96,10 +170,12 @@ paths:
   #                         type: string
   #                       size: 
   #                         type: integer
-  #                       innerArray:
+  #                       nestyArrays1:
   #                         type: array
   #                         items:
-  #                           type: integer
+  #                           type: array
+  #                           items:
+  #                             type: string
   #                       innerObject:
   #                         type: object
   #                         properties:      # Request parts
@@ -123,31 +199,31 @@ paths:
   #       '200':
   #         description: OK
 
-  /x-www-form/simple-object-keyvalue:
-    post:
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                name:          # <!--- form field name
-                  type: string
-                fav_number:    # <!--- form field name
-                  type: integer
-                color:
-                  type: array
-                  items:
-                    type: string
-                message:     # <--- form field that contains the JSON message
-                  $ref: '#/components/schemas/Message'
-              required:
-                - name
-                - email
-      responses:
-        '200':
-          description: OK
+  # /x-www-form/simple-object-keyvalue:
+  #   post:
+  #     requestBody:
+  #       required: true
+  #       content:
+  #         application/x-www-form-urlencoded:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               name:          # <!--- form field name
+  #                 type: string
+  #               fav_number:    # <!--- form field name
+  #                 type: integer
+  #               color:
+  #                 type: array
+  #                 items:
+  #                   type: string
+  #               message:     # <--- form field that contains the JSON message
+  #                 $ref: '#/components/schemas/Message'
+  #             required:
+  #               - name
+  #               - email
+  #     responses:
+  #       '200':
+  #         description: OK
 
   # multipart with nested json and file upload
   # /x-www-form/nested-object-array:

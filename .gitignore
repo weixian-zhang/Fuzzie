@@ -6,6 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+core/__pycache__
+*.py[cod]
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
@@ -109,3 +112,9 @@ src/core/__pycache__/openapi3_apicontext_init_manager.cpython-310.pyc
 src/core/datafactory/__pycache__/data_factory.cpython-310.pyc
 src/core/datafactory/__pycache__/naughty_string_generator.cpython-310.pyc
 src/core/datafactory/__pycache__/storagemanager.cpython-310.pyc
+src/core/__pycache__/apicontext.cpython-310.pyc
+src/core/datafactory/__pycache__/data_factory.cpython-310.pyc
+src/core/datafactory/__pycache__/naughty_string_generator.cpython-310.pyc
+src/core/datafactory/__pycache__/storagemanager.cpython-310.pyc
+src/core/__pycache__/apicontext.cpython-310.pyc
+src/core/__pycache__/openapi3_apicontext_init_manager.cpython-310.pyc
