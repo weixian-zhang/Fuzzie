@@ -5,6 +5,10 @@ import pandas as pd
 projPath = Path(__file__).parent.parent.parent # /src
 corePath = os.path.join(projPath, 'core')
 sys.path.append(corePath)
+
+initmanagerPath = os.path.join(corePath, 'api-initmanager')
+sys.path.append(initmanagerPath)
+
 datafactoryPath = os.path.join(corePath, 'datafactory')
 sys.path.append(datafactoryPath)
 
@@ -15,7 +19,7 @@ from data_factory import DataFactory
 
 def test_openapi3_file_initer():
     
-    apiFilePath = os.path.join(currentFolder, 'apis.yaml')
+    apiFilePath = os.path.join(currentFolder, 'apis.yaml') #'sample-linode-openapi.yaml')
     
     apiIniter = OpenApi3ApiInitManager()
     
