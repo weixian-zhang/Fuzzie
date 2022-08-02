@@ -34,13 +34,15 @@ class ArrayItem:
     # this class is mainly to handle future deeply nested array scenario
     # if itemType is object then itemContent is dict.
     # if itemType is primitive type, itemContent is None
-    # if itemType is array type, itemContent is the type of the item in nested array. E.g: integer in the below case
+    # if itemType is array type, innerArrayItemType is the type of the item in nested array. E.g: integer in the below case
         # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
-    itemType: str = ""          
+    itemType: str = ""    
+    innerArrayItemType: str = ""      
     itemContent: any = None
     
-    def __init__(self, itemType, itemContent = None) -> None:
+    def __init__(self, itemType, innerArrayItemType= "", itemContent = None) -> None:
         self.itemType = itemType
+        self.innerArrayItemType = innerArrayItemType
         self.itemContent = itemContent
     
 class UserInput:
