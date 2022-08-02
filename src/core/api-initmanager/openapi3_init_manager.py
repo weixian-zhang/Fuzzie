@@ -85,13 +85,13 @@ class OpenApi3ApiInitManager:
             api.path = path
             api.verb = ApiVerb.GET
             api.authTypes = self.discover_api_authTypes(apiObj.get)
-            api.parameters = self.obtain_get_parameters(apiObj.get, api)
+            api.parameters = self.obtain_querystring_path_parameters(apiObj.get, api)
             
             return True, api
         
         return False, None
     
-    def obtain_get_parameters(self, getOperation, api: Api) -> Dict:
+    def obtain_querystring_path_parameters(self, getOperation, api: Api) -> Dict:
                 
         apiParams = []
         
@@ -118,10 +118,10 @@ class OpenApi3ApiInitManager:
                         
                 elif type ==  "array":
                     items = schema.items
-                    array = []
-                    self.get_items_in_array_datatype(items, array, name)
                     
-                    cp = ContentProp(propertyName=name, type=type, isArray=True)
+                    ai: ArrayItem = self.get_items_in_array_datatype(items, name)
+                    
+                    cp = ContentProp(propertyName=name, type=type, isArray=True, nestedContent=ai)
                     
                     apiParams.append(cp)
                         
@@ -279,12 +279,12 @@ class OpenApi3ApiInitManager:
             if not items.items is None: # has nested array
                 nestedArrayItemType = items.items.type   
                 
-                if nestedArrayItemType is "array":
+                if nestedArrayItemType == "array":
                     nestedArrayItemType = "string"  # defaults to string if inner array is still an array   
             else:
                 nestedArrayItemType =  items.type
             
-            ai = ArrayItem(itemType="array", itemContent=nestedArrayItemType) 
+            ai = ArrayItem(itemType="array", innerArrayItemType=nestedArrayItemType) 
             return ai
                               
     
