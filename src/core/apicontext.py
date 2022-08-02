@@ -8,20 +8,19 @@ class ApiVerb(enum.Enum):
     DELETE = 5
 
 # format - generally for file property and format is binary
-class ContentPropValue:
+class ContentProp:
     propertyName: str = ""
     type: str = ""
     isArray: bool = False
-    arrayItemType: any = None 
-    nestedObjectsContent: dict = None
+    nestedContent: dict = None
     format: str = None
     
-    def __init__(self, propertyName, type, nestedObjectsContent: any = None, 
+    def __init__(self, propertyName, type, nestedContent: any = None, 
                  arrayItemType: any = None, isArray:bool = False, format: str = None) -> None:
         
         self.propertyName = propertyName
         self.type = type
-        self.nestedObjectsContent = nestedObjectsContent
+        self.nestedContent = nestedContent
         self.arrayItemType = arrayItemType
         self.format = format
         
@@ -29,8 +28,20 @@ class ContentPropValue:
         if type == 'string' and (format == 'binary' or format == 'base64'):
             return True
         return False
+
+class ArrayItem:
     
+    # this class is mainly to handle future deeply nested array scenario
+    # if itemType is object then itemContent is dict.
+    # if itemType is primitive type, itemContent is None
+    # if itemType is array type, itemContent is the type of the item in nested array. E.g: integer in the below case
+        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
+    type: str = ""          
+    itemContent: any = None
     
+    def __init__(self, type, itemContent = None) -> None:
+        self.type = type
+        self.itemContent = itemContent
     
 class UserInput:
     basicAuthUsername: str = ''
