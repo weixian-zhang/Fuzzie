@@ -36,11 +36,11 @@ class ArrayItem:
     # if itemType is primitive type, itemContent is None
     # if itemType is array type, itemContent is the type of the item in nested array. E.g: integer in the below case
         # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
-    type: str = ""          
+    itemType: str = ""          
     itemContent: any = None
     
-    def __init__(self, type, itemContent = None) -> None:
-        self.type = type
+    def __init__(self, itemType, itemContent = None) -> None:
+        self.itemType = itemType
         self.itemContent = itemContent
     
 class UserInput:
@@ -57,8 +57,7 @@ class Api:
     authTypes = []
     body = {}             # for post/put/patch only
     isQueryString = True  # for get request only
-    querystring = {}
-    path = {}   
+    parameters = [] 
     
 class ApiContext:
     

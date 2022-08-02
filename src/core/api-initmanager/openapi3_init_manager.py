@@ -11,7 +11,7 @@ class OpenApi3ApiInitManager:
         
         try:
             
-            with open(file_path) as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 spec = yaml.safe_load(f)
                 
             apiContext = self.create_apicontext_from_openapi3(spec)
@@ -85,20 +85,17 @@ class OpenApi3ApiInitManager:
             api.path = path
             api.verb = ApiVerb.GET
             api.authTypes = self.discover_api_authTypes(apiObj.get)
-            api.querystring = self.obtain_get_parameters(apiObj.get, api)
-            
-            #handle query vs path
-                #handle array as item
+            api.parameters = self.obtain_get_parameters(apiObj.get, api)
             
             return True, api
         
         return False, None
     
     def obtain_get_parameters(self, getOperation, api: Api) -> Dict:
+                
+        apiParams = []
         
         params = getOperation.parameters
-        
-        querystring = {}
         
         if len(params) > 0:
             
@@ -109,33 +106,29 @@ class OpenApi3ApiInitManager:
                 type = schema.type
                 api.isQueryString = True if param.in_ == "query" else False
                 
-                dictParams = {}
-                
-                if api.isQueryString:
-                    api.querystring = dictParams
-                else: api.path = dictParams
-                
-                # nested json object
                 if type == 'object': 
                     
-                    if hasattr(schema, 'properties'):
-                        complexObjDict = {}
-                        self.get_nested_content_properties(schema.properties, complexObjDict)
-                        dictParams[name] = complexObjDict
-                        
-                        api.querystring = querystring
+                    complexObj = []
+                
+                    self.get_complex_object_datatype(schema, complexObj)
+                    
+                    cp = ContentProp(propertyName=name, type="object", nestedContent=complexObj)
+                    
+                    apiParams.append(cp)
                         
                 elif type ==  "array":
                     items = schema.items
                     array = []
                     self.get_items_in_array_datatype(items, array, name)
                     
-                    dictParams[name] = ContentProp(name, type, True)
+                    cp = ContentProp(propertyName=name, type=type, isArray=True)
+                    
+                    apiParams.append(cp)
                         
                 else:
-                    dictParams[name] = ContentProp(name, type)
-                    
-        return querystring
+                    apiParams.append(ContentProp(name, type))
+                                     
+        return apiParams
         
     
     def create_post_api(self, apiObj, path):
@@ -186,9 +179,9 @@ class OpenApi3ApiInitManager:
                 
                 complexObj = []
                 
-                self.get_complex_object_datatype(schema.properties, complexObj)
+                self.get_complex_object_datatype(schema, complexObj)
                 
-                cp = ContentProp(propName=propName, type="object", nestedContent=complexObj)
+                cp = ContentProp(propertyName=propName, type="object", nestedContent=complexObj)
                 
                 continue
                 
@@ -196,7 +189,7 @@ class OpenApi3ApiInitManager:
                 #base case - primitive type
                 if not type == "array":
                     
-                    cp = ContentProp(propName, type=type, format=format)
+                    cp = ContentProp(propertyName=propName, type=type, format=format)
                     result.append(cp)
                     continue
                         
@@ -206,11 +199,23 @@ class OpenApi3ApiInitManager:
                     
                     arrayItem = self.get_items_in_array_datatype(items, propName)
                     
-                    cp = ContentProp(propName, type="array", isArray=True, nestedContent=arrayItem)
+                    cp = ContentProp(propertyName=propName, type="array", isArray=True, nestedContent=arrayItem)
                     result.append(cp)   
     
-    def get_complex_object_datatype(self, properties, result: list):
+    def get_complex_object_datatype(self, schema, result: list):
                 
+        # roadmap: support getting parameters from example in addition to properties
+        # if properties is None:
+        #     example = schema.example
+        #     if not example is None:
+        #         for e in example:
+        #             print(e)
+        
+        properties = schema.properties
+        
+        if properties is None:
+            return []
+             
         for propName in properties:
             
             schema = properties[propName]
@@ -221,21 +226,21 @@ class OpenApi3ApiInitManager:
         
                 nestedObj = []
                 
-                self.get_complex_object_datatype(schema.properties, nestedObj) #recursively look for complex object
+                self.get_complex_object_datatype(schema, nestedObj) #recursively look for complex object
                 
-                cp = ContentProp(propName, type, nestedContent=nestedObj)
+                cp = ContentProp(propertyName=propName, type="object", nestedContent=nestedObj)
                 
                 result.append(cp)
                 
             elif type == "array":
                 
                 arrayItem = self.get_items_in_array_datatype(schema.items, propName) #recursive method
-                cp = ContentProp(propName, type="array", nestedContent=arrayItem)
+                cp = ContentProp(propertyName=propName, type="array", nestedContent=arrayItem)
                 result.append(cp)
             
             # is primitive type
             else:
-                cp = ContentProp(propName, type, format=format)
+                cp = ContentProp(propertyName=propName, type=type, format=format)
                 result.append(cp)
                                     
     # contentProp.nestedContent will be populated with new ContentProp of item in array
@@ -247,7 +252,7 @@ class OpenApi3ApiInitManager:
         
        
         if items is None:
-            ai = ArrayItem(isPrimitive=True, type="string") # default to string not such use case of item=None may not be possible
+            ai = ArrayItem(itemType="string") # default to string not such use case of item=None may not be possible
             return ai
         
         isPrimitive, itemType = self.is_array_item_primitive_type(items)
@@ -261,9 +266,9 @@ class OpenApi3ApiInitManager:
                         
             nestedObj = []
                     
-            self.get_complex_object_datatype(items.properties, nestedObj) 
+            self.get_complex_object_datatype(items, nestedObj) # items is of Schema type
             
-            ai = ArrayItem(type=itemType, itemContent=nestedObj) 
+            ai = ArrayItem(itemType=itemType, itemContent=nestedObj) 
             return ai
         
         # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
@@ -279,7 +284,7 @@ class OpenApi3ApiInitManager:
             else:
                 nestedArrayItemType =  items.type
             
-            ai = ArrayItem(type="array", itemContent=nestedArrayItemType) 
+            ai = ArrayItem(itemType="array", itemContent=nestedArrayItemType) 
             return ai
                               
     
@@ -373,7 +378,7 @@ class OpenApi3ApiInitManager:
                     
                     #TODO: test array in json
                 
-                # aassume file upload base on media type with no property name
+                # assume file upload base on media type with no property name
                 if (hasattr(content, streamFileUploadContentType) or self.has_attribute(content, streamFileUploadContentType) or
                     hasattr(content, appPdfContentType) or self.has_attribute(content, appPdfContentType) or
                     hasattr(content, imagePngContentType) or self.has_attribute(content, imagePngContentType) or
