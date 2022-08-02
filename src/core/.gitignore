@@ -1,7 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-datafactory/__pycache__/*.py[cod]
-init-manager/__pycache__/*.py[cod]
+datafactory/__pycache__/
+init-manager/__pycache__/
 *.py[cod]
 *$py.class
 
