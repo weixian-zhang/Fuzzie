@@ -16,6 +16,7 @@ currentFolder = Path(__file__).parent
 
 from openapi3_init_manager import OpenApi3ApiInitManager
 from data_factory import DataFactory
+from fuzzie_core import Fuzzie
 
 def test_openapi3_file_initer():
     
