@@ -102,12 +102,6 @@ paths:
                             type: array
                             items:
                               type: string
-                                # items:
-                                #   nestedArray3:
-                                #     type: array
-                                #     items:
-                                #       nestedArray4:
-                                #         type: string
                         innerObject:
                           type: object
                           properties:      # Request parts
