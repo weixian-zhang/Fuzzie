@@ -22,7 +22,7 @@ There are several ways for Fuzzie to discover your API schemas
   * File path to a list of Request-Texts in a text file e.g: request-texts.fuzzie
   * supports as many request-texts in a single file as you like
   * Supported data types
-    * string
+    * string - courtesy from [Big List of Naughty Strings](https://github.com/minimaxir/big-list-of-naughty-strings) and [SecList](https://github.com/danielmiessler/SecLists)
     * integer
     * float
     * datetime
