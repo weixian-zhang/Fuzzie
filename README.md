@@ -2,9 +2,19 @@
 
 Fuzzie is a Rest API fuzz testing tool available first as a VSCode extension, later in the roadmap it will be made available as a command-line tool and also an Azure DevOps Task. These Fuzzie clients provides flexibility to insert Fuzzie in different SDLC stages.  
 
+### Benefits of Fuzzing in IDE  
+
+<br />
+
+### Architecture Design  
+*subjected to change  
+![image](https://user-images.githubusercontent.com/43234101/182792518-79eb27b2-e50a-440c-92b3-59299e35753c.png)
+
+
 ### How Fuzzie Works  
 
-Fuzzie needs to know the schema of your APIs so that it can generate inputs to invoke them. There are several ways for Fuzzie to discover your API schemas
+Fuzzie needs to know the schema of your APIs so that it understands the parameters in order to generate data to invoke them.  
+There are several ways for Fuzzie to discover your API schemas
 * Url to [OpenAPI 3](https://editor.swagger.io/) specification
 * File path to OpenAPI 3 specification
 * Request-Text (inspired from [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
