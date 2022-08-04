@@ -10,6 +10,7 @@ Fuzzie needs to know the schema of your API so that it can generate inputs to in
 * Request-Text (inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
   * Input a single Request-Text in VSCode to instruct Fuzzie to fuzz test a single API
   * File path to a list of Request-Texts in a text file e.g: request-texts.fuzzie
+  * supports as many request-texts in a single file as you like
   * Supported data types
     * string
     * integer
@@ -17,11 +18,11 @@ Fuzzie needs to know the schema of your API so that it can generate inputs to in
     * datetime
     * [username](https://github.com/danielmiessler/SecLists) - common and cracked user names from SecList
     * [password](https://github.com/danielmiessler/SecLists) - common and hacked passwords from SecList
-
+    * 
+  <br/>
   Examples: 
   <br/>
-  <br/>
-  
+
   * single Post Request-Text with OAuth bearer token
     ```
     POST https://example.com/comments HTTP/1.1
@@ -33,11 +34,13 @@ Fuzzie needs to know the schema of your API so that it can generate inputs to in
     }
     ```
   
-  * Single GET Querystring Request-Text and one POST Request-Text  
+  * Single GET Request-Text, fuzzing querystring parameters, username and password
   
     ```
     GET https://httpbin.org/get
-     ?name={{string}}&startDate={{datetime}}&endDate={{datetime}}
+     ?name={{string}}
+     &startDate={{datetime}}
+     &endDate={{datetime}}
     content-type: application/json
-    Authorization: Basic base64|username:password
+    Authorization: Basic base64|{{username}}:{{password}}
     ```
