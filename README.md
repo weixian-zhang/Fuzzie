@@ -23,24 +23,37 @@ Fuzzie needs to know the schema of your API so that it can generate inputs to in
   Examples: 
   <br/>
 
-  * single Post Request-Text with OAuth bearer token
+  * Post Request-Text, OAuth bearer token and Json body
     ```
     POST https://example.com/comments HTTP/1.1
     content-type: application/json
     Authorization: Bearer AbCdEf123456
+    
     {
         "name": {{string}},
         "time": {{datetime}}
     }
     ```
   
-  * Single GET Request-Text, fuzzing querystring parameters, username and password
+  * GET Request-Text, fuzzing querystring parameters, username and password
   
     ```
     GET https://httpbin.org/get
      ?name={{string}}
      &startDate={{datetime}}
      &endDate={{datetime}}
+     
+    content-type: application/json
+    Authorization: Basic base64|{{username}}:{{password}}
+    ```
+  * GET Request-Text, fuzzing path parameters, username and password
+  
+    ```
+    GET https://httpbin.org/get
+     ?name={{string}}
+     &startDate={{datetime}}
+     &endDate={{datetime}}
+     
     content-type: application/json
     Authorization: Basic base64|{{username}}:{{password}}
     ```
