@@ -23,7 +23,7 @@ Fuzzie needs to know the schema of your APIs so that it can generate inputs to i
   <br/>
   Examples: 
   <br/>
-
+ 
   * Post Request-Text, OAuth bearer token and Json body
     ```
     POST https://example.com/comments HTTP/1.1
