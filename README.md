@@ -16,7 +16,7 @@ Fuzzie needs to know the schema of your APIs so that it can generate inputs to i
     * integer
     * float
     * datetime
-    * [payload]((https://github.com/danielmiessler/SecLists)) - naughty files, images and zip bombs from SecList
+    * [payload](https://github.com/danielmiessler/SecLists) - naughty files, images and zip bombs from SecList
     * [username](https://github.com/danielmiessler/SecLists) - common and cracked user names from SecList
     * [password](https://github.com/danielmiessler/SecLists) - common and hacked passwords from SecList
     
