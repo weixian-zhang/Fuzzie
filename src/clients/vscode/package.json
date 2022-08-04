@@ -11,14 +11,29 @@
 	],
 	"activationEvents": [
 		"*",
-        "onCommand:wxz-fuzzie.helloWorld"
+        "onCommand:fuzzie.apischema.openapi3.url",
+		"onCommand:fuzzie.apischema.openapi3.filepath",
+		"onCommand:fuzzie.apischema.requesttext.single",
+		"onCommand:fuzzie.apischema.requesttext.filepath"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "wxz-fuzzie.helloWorld",
-				"title": "Hello World"
+				"command": "fuzzie.apischema.openapi3.url",
+				"title": "Fuzzie: Read OpenAPI 3 Url"
+			},
+			{
+				"command": "fuzzie.apischema.openapi3.filepath",
+				"title": "Fuzzie: Read OpenAPI 3 File Path"
+			},
+			{
+				"command": "fuzzie.apischema.requesttext.single",
+				"title": "Fuzzie: Read Single Request Text"
+			},
+			{
+				"command": "fuzzie.apischema.requesttext.filepath",
+				"title": "Fuzzie: Request Text File Path"
 			}
 		]
 	},

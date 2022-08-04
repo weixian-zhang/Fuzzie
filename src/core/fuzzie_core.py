@@ -12,15 +12,16 @@ class TestCase:
 
 class Fuzzie:
     
-    def __init__(self, openapiUrl = "", openapiFilePath="", fuzzieTextualApiFilePath="", textualApiString="") -> None:
-        openapiUrl: str = ""
-        openapiFilePath: str = ""
-        fuzzieTextualApiFilePath: str = ""
-        textualApiString: str = ""
+    def __init__(self, openapiUrl = "", openapiFilePath="", requestTextFilePath="", requestTextSingleString="") -> None:
+        self.openapiUrl: str = ""
+        self.openapiFilePath: str = ""
+        self.requestTextFilePath: str = ""
+        self.requestTextSingleString: str = ""
     
     
     def fuzz(self):
-        pass
+        
+        print(f'discover API schema with OpenApi3 Url: {self.openapiUrl}')
     
 #TODO
 
