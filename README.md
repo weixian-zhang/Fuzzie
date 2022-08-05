@@ -10,6 +10,9 @@ Fuzzie is a Rest API fuzz testing tool available first as a VSCode extension, la
 *subjected to change  
 ![image](https://user-images.githubusercontent.com/43234101/182792518-79eb27b2-e50a-440c-92b3-59299e35753c.png)
 
+### Roadmap  
+* HTML WebForm fuzzing
+
 
 ### How Fuzzie Works  
 
