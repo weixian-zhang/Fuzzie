@@ -1,9 +1,11 @@
 ## Fuzzie (work in progress)  
 
-Fuzzie is a Rest API fuzz testing tool available as VSCode extension. The ability to fuzz test your freshly written APIs right in the IDE brings about several advantages:  
-* Run fuzz tests as easy as running unit tests
-* the ability to fuzz test very early in the SDLC rather than waiting for feedbacks from DevSecOps process
-* fuzzing tool or fuzzer became a "personal tool" and developers can fuzz test any one or more API at the time of code completion.  
+Fuzzie is a Rest API fuzz testing tool available as VSCode extension.  
+The ability to fuzz test your freshly made APIs right in the IDE brings about several advantages:
+
+* fuzz tests as easy as running unit tests
+* the ability to fuzz test very early in the SDLC rather than waiting for feedbacks later in SDLC
+* fuzzing tool becomes a <i>personal tool</i> and developers can fuzz test any one or more API at any time and convenience
 
 <img src="https://user-images.githubusercontent.com/43234101/184052538-5770d77e-6872-426a-ac28-cd79161790c6.png" width="600px" height="200" />
 
