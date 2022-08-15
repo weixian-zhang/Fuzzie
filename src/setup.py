@@ -1,7 +1,6 @@
-from codecs import ignore_errors
-from dataclasses import replace
+
+
 from setuptools import setup, find_packages
-import os
 
 with open('requirements.txt', 'rb') as f:
     required = f.read()
@@ -18,6 +17,10 @@ setup(
    author_email='',
    url="",
    packages=find_packages(),  #same as name
-   install_requires=required, #external packages as dependencies
-   scripts=[]
+   install_requires=required,  #external packages as dependencies
+    entry_points={
+        'console_scripts': [
+            'main = main:fuzz',
+        ],
+    }
 )
