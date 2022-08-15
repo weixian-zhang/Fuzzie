@@ -1,7 +1,7 @@
 
 import sys
 
-sys.path.insert(0, './api-initmanager')
+sys.path.append('./api-initmanager')
 from openapi3_init_manager import OpenApi3ApiInitManager
 
 class TestCase:
@@ -10,7 +10,7 @@ class TestCase:
     response = {}
     
 
-class Fuzzie:
+class DefaultFuzzer:
     
     def __init__(self, openapiUrl = "", openapiFilePath="", requestTextFilePath="", requestTextSingleString="") -> None:
         self.openapiUrl: str = ""
@@ -21,7 +21,7 @@ class Fuzzie:
     
     def fuzz(self):
         
-        print(f'discover API schema with OpenApi3 Url: {self.openapiUrl}')
+        print(f'In DefaultFuzzer, discover API schema with OpenApi3 Url: {self.openapiUrl}')
     
 #TODO
 

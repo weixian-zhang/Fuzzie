@@ -23,6 +23,22 @@
 				},
 				"cwd": "${workspaceFolder}/src/tests/core"
 			}
+		},
+		{
+			"label": "package core as python zip",
+			"type": "shell",
+			"command": " shiv -o dist/fuzzie.pyz -e main:fuzz --root . .",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core"
+			}
+		},
+		{
+			"label": "run python zip",
+			"type": "shell",
+			"command": "py fuzzie.pyz",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/dist"
+			}
 		}
 	]
 }
