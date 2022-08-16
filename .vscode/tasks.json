@@ -27,7 +27,7 @@
 		{
 			"label": "python shiv core",
 			"type": "shell",
-			"command": "shiv -o ./core/dist/fuzzie.pyz --site-packages ./core -e core.main:fuzz --root . .",
+			"command": "shiv -o ./dist/fuzzie.pyz --site-packages core -e core.main:fuzz --root . .",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core"
 			}
@@ -37,7 +37,7 @@
 			"type": "shell",
 			"command": "python fuzzie.pyz",
 			"options": {
-				"cwd": "${workspaceFolder}/src/core/core/dist"
+				"cwd": "${workspaceFolder}/src/core/dist"
 			}
 		}
 	]
