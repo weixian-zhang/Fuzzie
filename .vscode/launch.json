@@ -5,23 +5,23 @@
 {
 	"version": "0.2.0",
 	"configurations": [
-		// {
-		// 	"name": "debug openapi3 server",
-		// 	"type": "python",
-		// 	"request": "launch",
-		// 	"module": "flask",
-		// 	"env": {
-		// 		"FLASK_APP": "openapi3_server",
-		// 		"FLASK_ENV": "development"
-		// 	},
-		// 	"args": [
-		// 		"run",
-		// 		"--no-debugger"
-		// 	],
-		// 	"jinja": true,
-		// 	"justMyCode": true,
-		// 	"cwd": "${workspaceFolder}/src/tests/core"
-		// },
+		{
+			"name": "debug test - openapi3 server",
+			"type": "python",
+			"request": "launch",
+			"module": "flask",
+			"env": {
+				"FLASK_APP": "openapi3_server",
+				"FLASK_ENV": "development"
+			},
+			"args": [
+				"run",
+				"--no-debugger"
+			],
+			"jinja": true,
+			"justMyCode": true,
+			"cwd": "${workspaceFolder}/src/tests/core"
+		},
 		{
 			"name": "debug fuzzie core",
 			"type": "python",
@@ -31,7 +31,7 @@
 			"justMyCode": true
 		},
 		{
-			"name": "debug vscode",
+			"name": "debug fuzzie client - vscode",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -40,7 +40,8 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			"preLaunchTask": "vscode npm watch",
+			//"preLaunchTask": "vscode ext - npm run watch",
+			
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {
