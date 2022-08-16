@@ -1,12 +1,4 @@
-
-import sys
-
-import os
-executionPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(executionPath + './api-initmanager')
-sys.path.insert(0, './api-initmanager') 
-
-from openapi3_init_manager import OpenApi3ApiInitManager
+from api_recognition.openapi3_init_manager import OpenApi3ApiInitManager
 
 
 class TestCase:

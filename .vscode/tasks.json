@@ -25,19 +25,19 @@
 			}
 		},
 		{
-			"label": "package core as python zip",
+			"label": "python shiv core",
 			"type": "shell",
-			"command": " shiv -o dist/fuzzie.pyz -e main:fuzz --root . .",
+			"command": "shiv -o ./core/dist/fuzzie.pyz --site-packages ./core -e core.main:fuzz --root . .",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core"
 			}
 		},
 		{
-			"label": "run python zip",
+			"label": "run python zipapp",
 			"type": "shell",
-			"command": "py fuzzie.pyz",
+			"command": "python fuzzie.pyz",
 			"options": {
-				"cwd": "${workspaceFolder}/src/core/dist"
+				"cwd": "${workspaceFolder}/src/core/core/dist"
 			}
 		}
 	]

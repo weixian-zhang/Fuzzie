@@ -7,11 +7,9 @@ import sys, os
 
 def fuzz():
     
-    # fuzzie = DefaultFuzzer(openapiUrl="")
-    # fuzzie.fuzz()
-    
-    executionPath = os.path.dirname(os.path.realpath(__file__))
-    print('hello, project path = ' + executionPath + './api-initmanager')
+    from default_fuzzer import DefaultFuzzer
+    fuzzie = DefaultFuzzer(openapiUrl="")
+    fuzzie.fuzz()
     
     
 if __name__ == "__main__":

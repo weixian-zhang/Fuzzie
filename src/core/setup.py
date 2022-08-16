@@ -17,10 +17,5 @@ setup(
    author_email='',
    url="",
    packages=find_packages(),  #same as name
-   install_requires=required,  #external packages as dependencies
-    entry_points={
-        'console_scripts': [
-            'main = main:fuzz',
-        ],
-    }
+   install_requires=required  #external packages as dependencies
 )
