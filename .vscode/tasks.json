@@ -27,15 +27,26 @@
 		{
 			"label": "python shiv core",
 			"type": "shell",
-			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core -e core.main:fuzz --root . .",
+			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core -e core.main:startup --root . .",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core"
+			},
+			"dependsOn": [
+				"dependencytask- pip freeze"
+			]
+		},
+		{
+			"label": "dependencytask- pip freeze",
+			"type": "shell",
+			"command": " py -3.10 -m pip freeze > requirements.txt",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/core"
 			}
 		},
 		{
-			"label": "run python zipapp",
+			"label": "run fuzzie-fuzzer.pyz",
 			"type": "shell",
-			"command": "python fuzzie.pyz",
+			"command": "python fuzzie-fuzzer.pyz",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/dist"
 			}
