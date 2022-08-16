@@ -1,12 +1,37 @@
-# print([f'./{name}' for name in os.listdir(".") if os.path.isdir(name)])
-# sys.path.extend([f'./{name}' for name in os.listdir(".") if os.path.isdir(name)])
+usage = '''
 
-#from default_fuzzer import DefaultFuzzer
+Fuzzie Fuzzer Cli
+
+Usage:
+    main.py fuzz [--openapi-url=<url>] [--openapi-path=<filepath>] [--rt=<request-text-string>] [--rt-path=<request-text-path>] 
+'''
+
+from docopt import docopt
+from default_fuzzer import DefaultFuzzer
 
 def fuzz():
     
-    from default_fuzzer import DefaultFuzzer
-    fuzzie = DefaultFuzzer(openapiUrl="")
+    args = docopt(usage)
+    
+    print(args)
+    
+    openapiUrl = args['--openapi-url']
+    openapiFilePath = args['--openapi-path']
+    requestTextSingleString = args['--rt']
+    requestTextFilePath = args['--rt-path']
+    
+    if (not openapiUrl 
+        and not openapiFilePath 
+        and not requestTextSingleString
+        and not requestTextFilePath):
+        print('fuzzie fuzzer receive empty arguments')
+        return
+    
+    
+    fuzzie = DefaultFuzzer(openapiUrl=openapiUrl, 
+                           openapiFilePath=openapiFilePath,
+                           requestTextFilePath=requestTextSingleString,
+                           requestTextSingleString=requestTextFilePath)
     fuzzie.fuzz()
     
     

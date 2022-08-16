@@ -23,12 +23,14 @@
 			"cwd": "${workspaceFolder}/src/tests/core"
 		},
 		{
-			"name": "debug fuzzie core",
+			"name": "debug fuzzie fuzzer",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/src/tests/core/main.py",
+			"program": "main.py",
+			"args": ["fuzz", "--openapi-url=http://hello.com"],
 			"console": "integratedTerminal",
-			"justMyCode": true
+			"justMyCode": true,
+			"cwd": "${workspaceFolder}/src/core/core"
 		},
 		{
 			"name": "debug fuzzie client - vscode",
