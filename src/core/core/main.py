@@ -1,5 +1,3 @@
-#import all sub directories
-import sys, os
 # print([f'./{name}' for name in os.listdir(".") if os.path.isdir(name)])
 # sys.path.extend([f'./{name}' for name in os.listdir(".") if os.path.isdir(name)])
 
