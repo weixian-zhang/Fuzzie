@@ -4,44 +4,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"label": "vscode npm watch",
-			"script": "watch",
-			// "problemMatcher": [
-			// 	"$ts-webpack-watch",
-			// 	"$tslint-webpack-watch"
-			// ],
-			// "isBackground": true,
-			// "presentation": {
-			// 	"reveal": "never",
-			
-			// 	"group": "watchers"
-			// },
-			// "group": {
-			// 	"kind": "build",
-			// 	"isDefault": true
-			// },
-			"path": "src/clients/vscode"
-		},
-		{
-			"type": "npm",
-			"script": "watch-tests",
-			"problemMatcher": "$tsc-watch",
+			"label": "vscode ext - npm run watch",
+			"type": "shell",
+			"command": "npm run watch",
 			"isBackground": true,
-			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
-			},
-			"group": "build",
-			"path": "src/clients/vscode"
-		},
-		{
-			"label": "vscode npm watch-tests",
-			"dependsOn": [
-				"npm: watch",
-				"npm: watch-tests"
-			],
-			"problemMatcher": []
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			}
 		},
 		{
 			"label": "run openapi3 server background",
@@ -53,6 +22,22 @@
 					"FLASK_APP": "openapi3_server"
 				},
 				"cwd": "${workspaceFolder}/src/tests/core"
+			}
+		},
+		{
+			"label": "python shiv core",
+			"type": "shell",
+			"command": "shiv -o ./dist/fuzzie.pyz --site-packages core -e core.main:fuzz --root . .",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core"
+			}
+		},
+		{
+			"label": "run python zipapp",
+			"type": "shell",
+			"command": "python fuzzie.pyz",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/dist"
 			}
 		}
 	]

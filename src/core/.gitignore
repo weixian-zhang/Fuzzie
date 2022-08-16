@@ -1,7 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-datafactory/__pycache__/
-init-manager/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -110,6 +108,10 @@ ipython_config.py
 #   in version control.
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
+
+dist
+
+build
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
