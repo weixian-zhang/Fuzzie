@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug test - openapi3 server",
+			"name": "debug flask openapi3 server",
 			"type": "python",
 			"request": "launch",
 			"module": "flask",
@@ -23,15 +23,32 @@
 			"cwd": "${workspaceFolder}/src/tests/core"
 		},
 		{
-			"name": "debug fuzzie fuzzer",
+			"name": "debug flask fuzzie fuzzer",
 			"type": "python",
 			"request": "launch",
-			"program": "main.py",
-			"args": ["fuzz", "--openapi-url=http://hello.com"],
-			"console": "integratedTerminal",
+			"module": "flask",
+			"env": {
+				"FLASK_APP": "main",
+				"FLASK_ENV": "development"
+			},
+			"args": [
+				"run",
+				"--no-debugger"
+			],
+			"jinja": true,
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}/src/core/core"
 		},
+		// {
+		// 	"name": "debug fuzzie fuzzer",
+		// 	"type": "python",
+		// 	"request": "launch",
+		// 	"program": "main.py",
+		// 	"args": ["fuzz", "--openapi-url=http://hello.com"],
+		// 	"console": "integratedTerminal",
+		// 	"justMyCode": true,
+		// 	"cwd": "${workspaceFolder}/src/core/core"
+		// },
 		{
 			"name": "debug fuzzie client - vscode",
 			"type": "extensionHost",
