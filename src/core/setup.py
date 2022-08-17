@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-with open('requirements.txt', 'rb') as f:
+with open('core/requirements.txt', 'rb') as f:
     required = f.read()
     required = required.decode("utf-16")
     print(required)
