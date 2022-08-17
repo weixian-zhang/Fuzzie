@@ -25,20 +25,54 @@
 			}
 		},
 		{
-			"label": "python shiv core",
+			"label": "run fuzzie-fuzzer.pyz",
 			"type": "shell",
-			"command": "shiv -o ./dist/fuzzie.pyz --site-packages core -e core.main:fuzz --root . .",
-			"options": {
-				"cwd": "${workspaceFolder}/src/core"
-			}
-		},
-		{
-			"label": "run python zipapp",
-			"type": "shell",
-			"command": "python fuzzie.pyz",
+			"command": "python fuzzie-fuzzer.pyz",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/dist"
 			}
-		}
+		},
+		
+		//shiv bundle and copy fuzzie-fuzzer.pyz tasks
+		{
+			"label": "python shiv fuzzie fuzzer",
+			"type": "shell",
+			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core --compressed  -e core.main:startup --root . .",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core"
+			},
+			"dependsOn": [
+				"dependency- del core/dist files",
+				"dependency- pip freeze"
+			]
+		},
+		
+		{
+			"label": "dependency- pip freeze",
+			"type": "shell",
+			"command": " py -3.10 -m pip freeze > requirements.txt",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/core"
+			}
+		},
+		{
+			"label": "dependency- del core/dist files",
+			"type": "shell",
+			"command": "del",
+			"args": [ "-Recurse", "-Force", "${workspaceFolder}/src/core/dist/*"],
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/dist"
+			}
+		},
+		{
+			"label": "shiv/bundle/copy fuzzie-fuzzer.pyz",
+			"type": "shell",
+			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzziefuzzer",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/dist"
+			},
+			"dependsOn": ["python shiv fuzzie fuzzer"]
+		},
+		//end shiv bundle and copy
 	]
 }
