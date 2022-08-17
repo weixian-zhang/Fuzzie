@@ -23,18 +23,14 @@
 			"cwd": "${workspaceFolder}/src/tests/core"
 		},
 		{
-			"name": "debug flask fuzzie fuzzer",
+			"name": "flask fuzzie fuzzer",
 			"type": "python",
 			"request": "launch",
 			"module": "flask",
 			"env": {
-				"FLASK_APP": "main",
-				"FLASK_ENV": "development"
+				"FLASK_APP": "main.py"
 			},
-			"args": [
-				"run",
-				"--no-debugger"
-			],
+			"args": ["run", "-p 50001"],
 			"jinja": true,
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}/src/core/core"

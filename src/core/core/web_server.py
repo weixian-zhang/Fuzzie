@@ -2,11 +2,10 @@
 from flask import jsonify, request
 from flask_classful import FlaskView, route
 
-class WebServer(FlaskView):
-              
+class FuzzerWebServer(FlaskView):
     
-    @route('status', methods = ['GET'])
-    def fuzzie_ready(self):
+    @route('/status', methods = ['GET'])
+    def get_status(self):
         
         status = {
             'isReady': True
@@ -15,16 +14,16 @@ class WebServer(FlaskView):
         return jsonify(status)
     
     
-    @route('fuzz', methods = ['POST'])
-    def fuzzie_ready(self):
+    @route('/fuzz', methods = ['POST'])
+    def start_fuzz(self):
         
         result = {}
         
         return jsonify(result)
     
     
-    @route('fuzzreport', methods = ['GET'])
-    def fuzzie_ready(self):
+    @route('/fuzzreport', methods = ['GET'])
+    def get_fuzz_report(self):
         
         result = {}
         

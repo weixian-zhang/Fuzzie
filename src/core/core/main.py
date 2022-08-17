@@ -8,18 +8,65 @@
 
 #from docopt import docopt
 from default_fuzzer import DefaultFuzzer
-from web_server import WebServer
-from flask import Flask
+#from web_server import FuzzerWebServer
+from flask import  Flask, jsonify, request
+
+import atexit
 
 app = Flask(__name__)
-
-WebServer.register(app, route_base='/')
+host='localhost'
+webserverPort = 50001
 
 def startup():
     
     print('starting Fuzzie Fuzzer')
     
     print('Fuzzie Fuzzer started')
+    
+
+def on_exit():
+    print("Fuzzie Fuzzer closing")
+    
+atexit.register(on_exit)
+
+
+@app.route('/api/status', methods = ['GET'])
+def get_status():
+    
+    status = {
+        'isReady': True
+    }
+    
+    return jsonify(status)
+
+
+@app.route('/api/fuzz', methods = ['POST'])
+def start_fuzz():
+    
+    result = {}
+    
+    return jsonify(result)
+
+
+@app.route('/api/fuzzreport', methods = ['GET'])
+def get_fuzz_report():
+    
+    result = {}
+    
+    return jsonify(result)
+    
+
+print(__name__)
+
+if __name__ == "__main__" or __name__ == "core.main": #name is core.main when doing python fuzzie-fuzzer.pyz
+    startup()
+    print('starting Fuzzie web server')
+    app.run(port=webserverPort)
+    print("Fuzzie-Fuzzer web server closing")
+    
+    
+    
+    
     
 # def fuzz():
     
@@ -47,7 +94,4 @@ def startup():
 
 # nodejs forever run python flask app
 # https://stackoverflow.com/questions/36465899/how-to-run-flask-server-in-the-background
-    
-if __name__ == "__main__":
-    startup()
-    app.run(host="0.0.0.0", port=50001, debug=True)   
+
