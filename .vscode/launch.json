@@ -35,18 +35,8 @@
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}/src/core/core"
 		},
-		// {
-		// 	"name": "debug fuzzie fuzzer",
-		// 	"type": "python",
-		// 	"request": "launch",
-		// 	"program": "main.py",
-		// 	"args": ["fuzz", "--openapi-url=http://hello.com"],
-		// 	"console": "integratedTerminal",
-		// 	"justMyCode": true,
-		// 	"cwd": "${workspaceFolder}/src/core/core"
-		// },
 		{
-			"name": "debug fuzzie client - vscode",
+			"name": "debug vscode extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -55,7 +45,7 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			//"preLaunchTask": "vscode ext - npm run watch",
+			"preLaunchTask": "vscode ext - npm run watch",
 			
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound

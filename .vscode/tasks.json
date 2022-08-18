@@ -67,7 +67,7 @@
 		{
 			"label": "shiv/bundle/copy fuzzie-fuzzer.pyz",
 			"type": "shell",
-			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzziefuzzer",
+			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzzer/fuzzie-fuzzer.pyz",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/dist"
 			},
