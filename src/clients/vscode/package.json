@@ -10,8 +10,8 @@
     "Other"
   ],
   "activationEvents": [
-    "*",
     "onCommand:fuzzie.activate",
+    "onCommand:fuzzie.deactivate",
     "onCommand:fuzzie.apirecognition.openapi3.url",
     "onCommand:fuzzie.apirecognition.openapi3.filepath",
     "onCommand:fuzzie.apirecognition.requesttext.single",
@@ -25,20 +25,20 @@
         "title": "Fuzzie: Activate"
       },
       {
+        "command": "fuzzie.deactivate",
+        "title": "Fuzzie: Deactivate"
+      },
+      {
         "command": "fuzzie.apirecognition.openapi3.url",
-        "title": "Fuzzie: Read OpenAPI 3 Url"
+        "title": "Fuzzie: OpenAPI 3 Url"
       },
       {
         "command": "fuzzie.apirecognition.openapi3.filepath",
-        "title": "Fuzzie: Read OpenAPI 3 File Path"
-      },
-      {
-        "command": "fuzzie.apirecognition.requesttext.single",
-        "title": "Fuzzie: Read Single Request Text"
+        "title": "Fuzzie: OpenAPI 3 File Path"
       },
       {
         "command": "fuzzie.apirecognition.requesttext.filepath",
-        "title": "Fuzzie: Request Text File Path"
+        "title": "Fuzzie: Request Text File Path .http .rest"
       }
     ]
   },
