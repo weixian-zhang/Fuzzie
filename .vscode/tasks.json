@@ -43,6 +43,7 @@
 			},
 			"dependsOn": [
 				"dependency- del core/dist files",
+				"dependency- del vscode fuzzie",
 				"dependency- pip freeze"
 			]
 		},
@@ -62,6 +63,15 @@
 			"args": [ "-Recurse", "-Force", "${workspaceFolder}/src/core/dist/*"],
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/dist"
+			}
+		},
+		{
+			"label": "dependency- del vscode fuzzie",
+			"type": "shell",
+			"command": "del",
+			"args": [ "-Recurse", "-Force", "${workspaceFolder}/src/clients/vscode/dist/fuzzer/*"],
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/dist/fuzzer"
 			}
 		},
 		{

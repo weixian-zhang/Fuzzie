@@ -15,46 +15,82 @@ export function activate(context: vscode.ExtensionContext) {
 	log('Fuzzie is initializing');
 
 	appcontext = new AppContext();
-	appcontext.fuzzerPYZPath = initFuzzerPYZPath(context);
 
-	log(`Fuzzer file path detected at ${appcontext.fuzzerPYZPath}`);
+	initFuzzerPYZPath(context, appcontext);
 
-	let disposableOp3Url = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.url', gatherUserInputs);
+	log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
-	context.subscriptions.push(disposableOp3Url);
+	let activate = vscode.commands.registerCommand('fuzzie.activate', activateFuzzie);
+	let deactivate = vscode.commands.registerCommand('fuzzie.deactivate', deactivateFuzzie);
+	let op3Url = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.url', getOpenApiUrl);
+	let op3FilePath = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.filepath', getOpenApiFilePath);
+	let rtFilePath = vscode.commands.registerCommand('fuzzie.apirecognition.requesttext.filepath', getRequestTextFilePath);
 
-	log("starting up Fuzzie Fuzzer")
-
-	startFuzzer();
+	context.subscriptions.push(activate);
+	context.subscriptions.push(deactivate);
+	context.subscriptions.push(op3Url);
+	context.subscriptions.push(op3FilePath);
+	context.subscriptions.push(rtFilePath);
 }
 
-async function gatherUserInputs(apiSchemaSource: string) {
-	var inputOpenApi3Url: any = await vscode.window.showInputBox({
-		placeHolder: "Enter OpenAPI 3 spec Url",
+// this method is called when your extension is deactivated
+export function deactivate() {
+	deactivateFuzzie();
+}
+
+
+async function activateFuzzie()
+{
+	log("starting up Fuzzie Fuzzer. First time startup will take longer.")
+
+	startFuzzer(appcontext);
+}
+
+async function deactivateFuzzie()
+{
+	log("deactivating Fuzzie: performing clean up");
+
+	if(appcontext.pythonChildProcess != undefined) {
+		appcontext.pythonChildProcess.kill();
+	}
+}
+
+async function getOpenApiUrl() {
+	var inputboxValue: any = await vscode.window.showInputBox({
+		placeHolder: "OpenAPI 3 spec Url",
 	  });
 
-	if(inputOpenApi3Url !== undefined){
-
-		vscode.window.showInformationMessage(inputOpenApi3Url);
-
-	  }
+	if(inputboxValue !== undefined){
+		vscode.window.showInformationMessage(inputboxValue);
+	}
 }
 
-async function startFuzzer() {
+async function getOpenApiFilePath() {
+	var inputboxValue: any = await vscode.window.showInputBox({
+		placeHolder: "OpenAPI 3 spec file path",
+	  });
 
-	const wsedit = new vscode.WorkspaceEdit();
-    const workspaceFolders = vscode.workspace?.workspaceFolders;
-
-	if(workspaceFolders != undefined && workspaceFolders.length > 0) {
-		const path = workspaceFolders[0].uri.fsPath;
-		log(path)
+	if(inputboxValue !== undefined){
+		vscode.window.showInformationMessage(inputboxValue);
 	}
+}
 
-	const cmd = `python ${appcontext.fuzzerPYZPath}`;
+async function getRequestTextFilePath() {
+	var inputboxValue: any = await vscode.window.showInputBox({
+		placeHolder: "request text file path",
+	  });
 
-	let spawnOptions = { cwd: "c:\\Weixian\\Projects\\Fuzzie\\src\\clients\\vscode\\dist\\fuzzer"};
-	var pythonProcess = cp.spawn("python" , ["c:\\Weixian\\Projects\\Fuzzie\\src\\clients\\vscode\\dist\\fuzzer\\fuzzie-fuzzer.pyz"], spawnOptions);
+	if(inputboxValue !== undefined){
+		vscode.window.showInformationMessage(inputboxValue);
+	}
+}
 
+
+function startFuzzer(appcontext: AppContext) {
+
+	let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
+	var pythonProcess: cp.ChildProcessWithoutNullStreams = cp.spawn("python" , [appcontext.fuzzerPYZFilePath], spawnOptions);
+	
 	if(pythonProcess != undefined) {
 		pythonProcess.stderr?.on('data', (data: Uint8Array) => {
 			log(`Fuzzer: ${data}`);
@@ -62,68 +98,25 @@ async function startFuzzer() {
 		pythonProcess.stdout?.on('data', (data: Uint8Array) => {
 			log(`Fuzzer: ${data}`);
 		});
+		pythonProcess.on('SIGINT',function(code){
+			log(`Fuzzer: exiting ${code}`);
+		});
 		pythonProcess.on('close', function(code){
 			log(`Fuzzer: exiting ${code}`);
 		});
 	}
 	
-
-
-	// var msg = cp.exec(cmd, (err, stdout) => {
-    //     console.log('result', err, stdout)
-	// })
-
-	// const pythonProcess = cp.spawnSync(cmd, {
-	// 	shell: true,
-	// 	encoding: 'utf8',
-	//   });
-
-	// var stdoutMsg = pythonProcess.stdout.toString();
-
-	// while (stdoutMsg != "") {
-	// 	log(`Fuzzer: ${stdoutMsg}`);
-	// 	stdoutMsg = pythonProcess.stdout.toString();
-	// }
-
-	// const process = cp.spawnSync(cmd, {
-	// 	shell: true,
-	// 	encoding: 'utf8',
-	//   });
-	
-	//   process.stdout.toString();
-
-	// log("executing Fuzzer")
-	// const pyFuzzer = spawn("python", []);
-
-	// pyFuzzer.stderr.on("data", function(data) {
-	// 	log(data.toString());
-	// });
-
-	// pyFuzzer.stdout.on("data", function(data) {
-	// 	log(data.toString());
-	// });
-
-	// pyFuzzer.on('close', (code) => {
-	// 	log(`Fuzzie Fuzzer exited with code ${code}`);
-	//   });
-
 }
 
-const execShell = (cmd: string) =>
-    new Promise<string>((resolve, reject) => {
-        cp.exec(cmd, (err, out) => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(out);
-        });
-    });
 
-function initFuzzerPYZPath(context: vscode.ExtensionContext) {
-	var distFolder: string = "dist";
-	var fuzzerPYZFileName : string = "fuzzer/fuzzie-fuzzer.pyz";
-	var fuzzerPYZPath = path.join(context.extensionPath, distFolder, fuzzerPYZFileName);
-	return fuzzerPYZPath;
+function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: AppContext) {
+	var distFuzzerFolder: string = "dist/fuzzer";
+	var fuzzerPYZFileName : string = "fuzzie-fuzzer.pyz";
+	var cmdWorkingDir = path.join(vscodeContext.extensionPath, distFuzzerFolder )
+	var fuzzerPYZFilePath = path.join(vscodeContext.extensionPath, distFuzzerFolder, fuzzerPYZFileName);
+
+	appcontext.fuzzerPYZFilePath = fuzzerPYZFilePath;
+	appcontext.fuzzerPYZFolderPath = cmdWorkingDir;
 }
 
 function log(message: string) {
@@ -133,5 +126,4 @@ function log(message: string) {
 		_outputWindow.appendLine(message);
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {}
+

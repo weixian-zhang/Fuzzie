@@ -1,6 +1,10 @@
 
+import {ChildProcess} from "child_process";
 
 export class AppContext
 {
-    fuzzerPYZPath: string = "";
+    fuzzerPYZFolderPath: string = "";
+    fuzzerPYZFilePath: string = "";
+    pythonChildProcess: ChildProcess = new ChildProcess();
+    sqliteFilePath: string = "";
 }
