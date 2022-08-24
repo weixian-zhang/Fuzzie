@@ -25,6 +25,8 @@ export function activate(context: vscode.ExtensionContext) {
 	let op3Url = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.url', getOpenApiUrl);
 	let op3FilePath = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.filepath', getOpenApiFilePath);
 	let rtFilePath = vscode.commands.registerCommand('fuzzie.apirecognition.requesttext.filepath', getRequestTextFilePath);
+	let rtSingle = vscode.commands.registerCommand('fuzzie.fuzzie.apirecognition.requesttext.single', getSingleRequestText);
+	
 
 	context.subscriptions.push(activate);
 	context.subscriptions.push(deactivate);
@@ -75,6 +77,10 @@ async function getOpenApiFilePath() {
 	}
 }
 
+async function getSingleRequestText() {
+	return;
+}
+
 async function getRequestTextFilePath() {
 	var inputboxValue: any = await vscode.window.showInputBox({
 		placeHolder: "request text file path",
@@ -89,7 +95,7 @@ async function getRequestTextFilePath() {
 function startFuzzer(appcontext: AppContext) {
 
 	let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
-	var pythonProcess: cp.ChildProcessWithoutNullStreams = cp.spawn("python" , [appcontext.fuzzerPYZFilePath], spawnOptions);
+	var pythonProcess: cp.ChildProcessWithoutNullStreams = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
 	
 	if(pythonProcess != undefined) {
 		pythonProcess.stderr?.on('data', (data: Uint8Array) => {
