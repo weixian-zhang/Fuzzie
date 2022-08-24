@@ -1,67 +1,78 @@
 {
   "name": "wxz-fuzzie",
-	"displayName": "Fuzzie",
-	"description": "Fuzzie",
-	"version": "0.0.1",
-	"engines": {
-		"vscode": "^1.68.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-		"*",
-        "onCommand:fuzzie.apischema.openapi3.url",
-		"onCommand:fuzzie.apischema.openapi3.filepath",
-		"onCommand:fuzzie.apischema.requesttext.single",
-		"onCommand:fuzzie.apischema.requesttext.filepath"
-	],
-	"main": "./dist/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "fuzzie.apischema.openapi3.url",
-				"title": "Fuzzie: Read OpenAPI 3 Url"
-			},
-			{
-				"command": "fuzzie.apischema.openapi3.filepath",
-				"title": "Fuzzie: Read OpenAPI 3 File Path"
-			},
-			{
-				"command": "fuzzie.apischema.requesttext.single",
-				"title": "Fuzzie: Read Single Request Text"
-			},
-			{
-				"command": "fuzzie.apischema.requesttext.filepath",
-				"title": "Fuzzie: Request Text File Path"
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run package",
-		"compile": "webpack",
-		"watch": "webpack --watch",
-		"package": "webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "tsc -p . --outDir out",
-		"watch-tests": "tsc -p . -w --outDir out",
-		"pretest": "npm run compile-tests && npm run compile && npm run lint",
-		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.68.0",
-		"@types/glob": "^7.2.0",
-		"@types/mocha": "^9.1.1",
-		"@types/node": "16.x",
-		"@typescript-eslint/eslint-plugin": "^5.27.0",
-		"@typescript-eslint/parser": "^5.27.0",
-		"eslint": "^8.16.0",
-		"glob": "^8.0.3",
-		"mocha": "^10.0.0",
-		"typescript": "^4.7.2",
-		"ts-loader": "^9.3.0",
-		"webpack": "^5.72.1",
-		"webpack-cli": "^4.9.2",
-		"@vscode/test-electron": "^2.1.3"
-	}
+  "displayName": "Fuzzie",
+  "description": "Fuzzie",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.68.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:fuzzie.activate",
+    "onCommand:fuzzie.deactivate",
+    "onCommand:fuzzie.apirecognition.openapi3.url",
+    "onCommand:fuzzie.apirecognition.openapi3.filepath",
+    "onCommand:fuzzie.apirecognition.requesttext.single",
+    "onCommand:fuzzie.apirecognition.requesttext.filepath",
+    "onCommand:fuzzie.apirecognition.requesttext.single"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "fuzzie.activate",
+        "title": "Fuzzie: Activate"
+      },
+      {
+        "command": "fuzzie.deactivate",
+        "title": "Fuzzie: Deactivate"
+      },
+      {
+        "command": "fuzzie.apirecognition.openapi3.url",
+        "title": "Fuzzie: OpenAPI 3 Url"
+      },
+      {
+        "command": "fuzzie.apirecognition.openapi3.filepath",
+        "title": "Fuzzie: OpenAPI 3 File Path"
+      },
+      {
+        "command": "fuzzie.apirecognition.requesttext.filepath",
+        "title": "Fuzzie: Request Text File Path .http .rest"
+      },
+      {
+        "command": "fuzzie.apirecognition.requesttext.single",
+        "title": "Fuzzie: single Request Text input"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.68.0",
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "@vscode/test-electron": "^2.1.3",
+    "eslint": "^8.16.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.0.0",
+    "raw-loader": "^4.0.2",
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.7.2",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2"
+  }
 }

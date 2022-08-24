@@ -35,8 +35,16 @@ const extensionConfig = {
         use: [
           {
             loader: 'ts-loader'
-          }
+          },
+          
         ]
+      },
+      {
+        test:/\.pyz$/i,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+        }
       }
     ]
   },
