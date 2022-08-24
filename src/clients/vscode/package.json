@@ -15,7 +15,8 @@
     "onCommand:fuzzie.apirecognition.openapi3.url",
     "onCommand:fuzzie.apirecognition.openapi3.filepath",
     "onCommand:fuzzie.apirecognition.requesttext.single",
-    "onCommand:fuzzie.apirecognition.requesttext.filepath"
+    "onCommand:fuzzie.apirecognition.requesttext.filepath",
+    "onCommand:fuzzie.apirecognition.requesttext.single"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -39,6 +40,10 @@
       {
         "command": "fuzzie.apirecognition.requesttext.filepath",
         "title": "Fuzzie: Request Text File Path .http .rest"
+      },
+      {
+        "command": "fuzzie.apirecognition.requesttext.single",
+        "title": "Fuzzie: single Request Text input"
       }
     ]
   },
