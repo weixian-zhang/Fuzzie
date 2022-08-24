@@ -6,7 +6,7 @@ Usage:
 '''
 
 from docopt import docopt
-from default_fuzzer import DefaultFuzzer
+from fuzz_manager import FuzzManager
 #from web_server import FuzzerWebServer
 from flask import  Flask, jsonify, request
 
@@ -50,9 +50,9 @@ def get_status():
 @app.route('/api/fuzz', methods = ['POST'])
 def start_fuzz():
     
-    result = {}
+    json = request.json
     
-    return jsonify(result)
+    return jsonify(json)
 
 
 @app.route('/api/fuzzreport', methods = ['GET'])
