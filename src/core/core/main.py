@@ -50,9 +50,9 @@ def get_status():
 @app.route('/api/fuzz', methods = ['POST'])
 def start_fuzz():
     
-    request.json
+    json = request.json
     
-    return jsonify(result)
+    return jsonify(json)
 
 
 @app.route('/api/fuzzreport', methods = ['GET'])
