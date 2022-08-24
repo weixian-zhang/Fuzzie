@@ -1,12 +1,11 @@
-# usage = '''
+'''
+Usage:
+    main.py
+    main.py webserver (start)
+    main.py fuzz [--openapi-url=<url>] [--openapi-path=<filepath>] [--rt=<request-text-string>] [--rt-path=<request-text-path>] 
+'''
 
-# Fuzzie Fuzzer Cli
-
-# Usage:
-#     main.py fuzz [--openapi-url=<url>] [--openapi-path=<filepath>] [--rt=<request-text-string>] [--rt-path=<request-text-path>] 
-# '''
-
-#from docopt import docopt
+from docopt import docopt
 from default_fuzzer import DefaultFuzzer
 #from web_server import FuzzerWebServer
 from flask import  Flask, jsonify, request
@@ -21,7 +20,15 @@ def startup():
     
     print('starting Fuzzie Fuzzer')
     
-    print('Fuzzie Fuzzer started')
+    args = docopt(__doc__)
+    
+    if args['webserver']:
+        print('starting Fuzzie web server')
+        print('Fuzzie Fuzzer started')
+        app.run(port=webserverPort)
+        print("Fuzzie-Fuzzer web server closing")
+    else:
+        print('Fuzzie Fuzzer started')
     
 
 def on_exit():
@@ -60,9 +67,7 @@ print(__name__)
 
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when doing python fuzzie-fuzzer.pyz
     startup()
-    print('starting Fuzzie web server')
-    app.run(port=webserverPort)
-    print("Fuzzie-Fuzzer web server closing")
+    
     
     
     
