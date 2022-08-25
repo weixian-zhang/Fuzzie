@@ -1,6 +1,13 @@
-import enum
+from enum import Enum
 
-class ApiVerb(enum.Enum):
+class SupportedAuthnType(Enum):
+    Anonymous = "Anonymous",
+    Basic = "Basic",
+    Bearer = "Bearer",
+    ApiKey = "ApiKey",
+    ApiKeyCookie = "ApiKeyCookie"
+
+class ApiVerb(Enum):
     GET = 1
     POST = 2
     PUT = 3
@@ -56,17 +63,37 @@ class Api:
     path: str = ''        # path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
-    authTypes = []
+    authTypes = []        # not in use, instead use authn type from ApiContext
     body = {}             # for post/put/patch only
     isQueryString = True  # for get request only
     parameters: list[ContentProp] = [] 
     headerParameters: list[ContentProp] = []
+
+class ApiAuthnBasic:
+    username = ""
+    password = ""
+    
+class ApiAuthnBearerToken:
+    token = ""
+    
+class ApiAuthnApiKey:
+    headerName = ""
+    apikey = ""
+    
+class ApiAuthnApiKeyCookie:
+    cookieName = ""
+    cookieValue = ""
     
 class ApiContext:
     
     baseUrl = []
     title: str = ''
     version: str = ''
-    authTypes = []   # 
+    #authTypes = []      # to be removed permanantly. User will input the choice of authn
     apis = []
     userInput: UserInput = None
+    authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
+    basicAuthn: ApiAuthnBasic = None
+    bearerTokenAuthn: ApiAuthnBearerToken = None
+    apikeyAuthn: ApiAuthnApiKey = None
+    apikeyCookieAuthn: ApiAuthnApiKeyCookie = None
