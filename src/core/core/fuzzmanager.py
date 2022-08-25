@@ -1,25 +1,13 @@
-from api_recognition.openapi3_init_manager import OpenApi3ApiInitManager
+from api_recognition.openapi3_api_recognizer import OpenApi3ApiRecognizer
 
 import validators
-
-class TestCase:
-    data = {}
-    request = {}
-    response = {}
-
-class FuzzContext:
-    
-    def __init__(self) -> None:
-        
-        self.openapiUrl = ""
-        self.openapiFilePath = ""
-        self.requestTextFilePath = ""
-        self.requestTextSingle = ""
-        self.workingDirectory = ""
+from fuzzcontext import FuzzContext
+from eventstore import EventStore
 
 class FuzzManager:
     
-    def __init__(self, 
+    def __init__(self,
+                 eventstore: EventStore,
                  openapiUrl = "", 
                  openapiFilePath="", 
                  requestTextFilePath="", 
@@ -27,6 +15,8 @@ class FuzzManager:
                  workingDirectory = "") -> None:
         
         self.fuzzContext: None
+        
+        self.eventstore = eventstore
     
     
     def fuzz(self, json):
@@ -62,4 +52,6 @@ class FuzzManager:
             
         # call data factory prepare data
         
-        #fuzz
+        #fuzzing
+        
+        #update progress

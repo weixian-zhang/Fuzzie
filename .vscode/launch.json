@@ -10,7 +10,7 @@
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
-			"args": ["fuzz", "--openapi-url=https://aaa.com/openapi"],
+			"args": ["webserver", "start"],
 			"console": "integratedTerminal",
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}/src/core/core"
