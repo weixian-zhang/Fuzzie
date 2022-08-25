@@ -1,10 +1,51 @@
 from enum import Enum
-from typing import List
+from apicontext import ApiContext, ApiVerb, ContentProp
 
-class TestCase:
+class FuzzProgressState(Enum):
+    NOTSTARTED = "not started"
+    FUZZING = "still fuzzing"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+class SupportedAuthnType(Enum):
+    Anonymous = "Anonymous",
+    Basic = "Basic",
+    Bearer = "Bearer",
+    ApiKey = "ApiKey",
+    CookieApiKey = "CookieApiKey"
+
+class FuzzCaseGroup:
+    id: str = ""
+    path: str = ''        # path includes querystring
+    verb: ApiVerb = ApiVerb.GET
+    parameters: list[ContentProp]
+    postBody: dict = {}
+
+# describes a HTTP request header, Url and/or body with hydrated with seclist data 
+# A materialized request info object ready to make a HTTP call with
+class FuzzRequest:
+    url: str = ""
+    headers = {}
+    body = {}       # send as Json string 
+
+class FuzzResponse:
+    httpVersion: str = ""
+    status: str = ""
+    headers = {}
+    body = str      # Json string    
+     
+class FuzzCase:
+    id: str = ""
     data = {}
     request = {}
     response = {}
+    state: FuzzProgressState = FuzzProgressState.NOTSTARTED
+    
+class FuzzReport:
+    host: str   #domain or IP include port if not default 443/80
+    title: str
+    requiredAuthnTypes: list[str] = []
+    fuzzcaseGroups: list[FuzzCaseGroup] = []
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
 class FuzzContext:
@@ -16,15 +57,11 @@ class FuzzContext:
         self.requestTextFilePath : str = ""
         self.requestTextSingle : str = ""
         
-        self.workingDirectory : str = ""
+        self.apicontext: ApiContext = None
+        self.testreport : FuzzReport = None
         
-        self.testcases : list[TestCase] = []
-        
-class FuzzProgressState(Enum):
-    NOTSTARTED = "not started"
-    FUZZING = "still fuzzing"
-    SUCCESS = "complete"
-    FAILED = "failed"
+    
+
     
 # Used by GUI clients to update fuzzing progress on each API
 class FuzzProgress:

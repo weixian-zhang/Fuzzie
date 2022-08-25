@@ -16,6 +16,8 @@ class FuzzManager:
         
         self.fuzzContext: None
         
+        self.workingDirectory = workingDirectory
+        
         self.eventstore = eventstore
     
     
