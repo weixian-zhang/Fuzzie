@@ -56,7 +56,7 @@ def startup():
             
         es.emitErr("hi I am an exceptional being")
         
-        app.run(port=webserverPort)
+        app.run(port=webserverPort, threaded=True)
         
         es.emitInfo("Fuzzie-Fuzzer web server closing")
     else:
