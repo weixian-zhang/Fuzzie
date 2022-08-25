@@ -51,9 +51,10 @@ class OpenApi3ApiRecognizer:
                 for server in apispec.servers:
                     apicontext.baseUrl.append(server.url)
             
-            if not apispec.security is None:
-                for authType in apispec.security:
-                    apicontext.authTypes.append(authType.name)
+            # to be removed permanantly. User will input the choice of authn
+            # if not apispec.security is None:
+            #     for authType in apispec.security:
+            #         apicontext.authTypes.append(authType.name)
                     
             # paths
             if not apispec.paths is None:
@@ -84,8 +85,10 @@ class OpenApi3ApiRecognizer:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
-            api.authTypes = self.discover_api_authTypes(apiObj.get)
             api.parameters = self.obtain_querystring_path_parameters(apiObj.get, api)
+            
+            # to be removed. User will select authn option
+            #api.authTypes = self.discover_api_authTypes(apiObj.get)
             
             return True, api
         
@@ -139,7 +142,8 @@ class OpenApi3ApiRecognizer:
             api.path = path
             api.verb = ApiVerb.POST
             
-            api.authTypes = self.discover_api_authTypes(apiObj.post)
+            # to be removed. User will select authn option
+            #api.authTypes = self.discover_api_authTypes(apiObj.post)
             
             dictBody = self.get_postputpatch_content_properties(apiObj.post)
                 
@@ -149,18 +153,19 @@ class OpenApi3ApiRecognizer:
         
         return False, None
     
-    def discover_api_authTypes(self, apiOperation):
+    # to be removed. User will select authn option
+    # def discover_api_authTypes(self, apiOperation):
         
-        authTypes = []
+    #     authTypes = []
         
-        if hasattr(apiOperation, 'security'):
+    #     if hasattr(apiOperation, 'security'):
             
-            security = apiOperation.security
+    #         security = apiOperation.security
             
-            for authType in security:
-                authTypes.append(authType.name)
+    #         for authType in security:
+    #             authTypes.append(authType.name)
                 
-        return authTypes
+    #     return authTypes
             
              
         
