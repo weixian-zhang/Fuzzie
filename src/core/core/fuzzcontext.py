@@ -33,6 +33,7 @@ class FuzzCase:
     data = {}
     request = {}
     response = {}
+    error: str = ""
     state: FuzzProgressState = FuzzProgressState.NOTSTARTED
     
 class FuzzReport:
