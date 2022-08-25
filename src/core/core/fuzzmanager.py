@@ -1,4 +1,4 @@
-from api_recognition.openapi3_api_recognizer import OpenApi3ApiRecognizer
+from apirecog.openapi3_apirecognizer import OpenApi3ApiRecognizer
 
 import validators
 from fuzzcontext import FuzzContext
