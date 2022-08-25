@@ -59,7 +59,8 @@ class Api:
     authTypes = []
     body = {}             # for post/put/patch only
     isQueryString = True  # for get request only
-    parameters = [] 
+    parameters: list[ContentProp] = [] 
+    headerParameters: list[ContentProp] = []
     
 class ApiContext:
     
