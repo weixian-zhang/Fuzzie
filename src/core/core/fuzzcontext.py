@@ -1,5 +1,5 @@
 from enum import Enum
-from apicontext import ApiContext, ApiVerb, ContentProp
+from apicontext import ApiContext, ApiVerb, ContentProp, SupportedAuthnType
 
 class FuzzProgressState(Enum):
     NOTSTARTED = "not started"
@@ -7,19 +7,13 @@ class FuzzProgressState(Enum):
     SUCCESS = "success"
     FAILED = "failed"
 
-class SupportedAuthnType(Enum):
-    Anonymous = "Anonymous",
-    Basic = "Basic",
-    Bearer = "Bearer",
-    ApiKey = "ApiKey",
-    CookieApiKey = "CookieApiKey"
-
 class FuzzCaseGroup:
     id: str = ""
     path: str = ''        # path includes querystring
     verb: ApiVerb = ApiVerb.GET
     parameters: list[ContentProp]
-    postBody: dict = {}
+    postBody: dict = {},
+    authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
 
 # describes a HTTP request header, Url and/or body with hydrated with seclist data 
 # A materialized request info object ready to make a HTTP call with
@@ -39,6 +33,7 @@ class FuzzCase:
     data = {}
     request = {}
     response = {}
+    error: str = ""
     state: FuzzProgressState = FuzzProgressState.NOTSTARTED
     
 class FuzzReport:
