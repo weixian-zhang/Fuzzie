@@ -5,7 +5,7 @@ from apicontext import Api, ApiContext, ApiVerb, ContentProp, ArrayItem
 import requests
 import validators
 
-class OpenApi3ApiInitManager:
+class OpenApi3ApiRecognizer:
     
     def load_openapi3_file(self, file_path: str):
         

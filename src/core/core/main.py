@@ -6,37 +6,65 @@ Usage:
 '''
 
 from docopt import docopt
-from fuzz_manager import FuzzManager
-#from web_server import FuzzerWebServer
-from flask import  Flask, jsonify, request
-
+from flask import  Flask, jsonify, request, Response
 import atexit
+from eventstore import EventStore
+from fuzzmanager import FuzzManager
 
+# disable Flask logging
+import logging
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
+#init Flask app
 app = Flask(__name__)
 host='localhost'
 webserverPort = 50001
 
+# runs when program exits
+def on_exit():
+    eventstore.info("Fuzzie Fuzzer closing")
+atexit.register(on_exit)
+
+# declare and init own modules
+es = EventStore()
+fuzzmanager = FuzzManager(es)
+
+
+#main entry point and startup
 def startup():
-    
-    print('starting Fuzzie Fuzzer')
     
     args = docopt(__doc__)
     
+    global eventstore
+    
     if args['webserver']:
-        print('starting Fuzzie web server')
-        print('Fuzzie Fuzzer started')
+        
+        
+        es.supportExternalClientConsumeEvents = True
+        
+        es.emitInfo('starting Fuzzie Fuzzer')
+        
+        es.emitInfo('starting Fuzzie web server')
+        es.emitInfo('Fuzzie Fuzzer started')
+        
+        try:
+            1 / 0
+            #raise Exception("on purpose")
+        except Exception as e:
+            es.emitErr(e)
+            
+        es.emitErr("hi I am an exceptional being")
+        
         app.run(port=webserverPort)
-        print("Fuzzie-Fuzzer web server closing")
+        
+        es.emitInfo("Fuzzie-Fuzzer web server closing")
     else:
-        print('Fuzzie Fuzzer started')
+        es.emitInfo('Fuzzie Fuzzer started')
+    
     
 
-def on_exit():
-    print("Fuzzie Fuzzer closing")
-    
-atexit.register(on_exit)
-
-
+# flask request handlers
 @app.route('/api/status', methods = ['GET'])
 def get_status():
     
@@ -52,51 +80,27 @@ def start_fuzz():
     
     json = request.json
     
-    return jsonify(json)
+    fuzzmanager.fuzz(json)
 
 
-@app.route('/api/fuzzreport', methods = ['GET'])
+@app.route('/api/fuzz/progress', methods = ['GET'])
+def get_fuzz_progress():
+    
+    return jsonify({})
+
+@app.route('/api/events', methods = ['GET'])
+def get_events():
+    
+    events = es.getGeneralEventsByBatch()
+    
+    return jsonify(events)
+
+@app.route('/api/fuzz/report', methods = ['GET'])
 def get_fuzz_report():
     
-    result = {}
-    
-    return jsonify(result)
-    
+    return jsonify({})
 
-print(__name__)
 
-if __name__ == "__main__" or __name__ == "core.main": #name is core.main when doing python fuzzie-fuzzer.pyz
+if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     startup()
-    
-    
-    
-    
-    
-    
-# def fuzz():
-    
-#     # args = docopt(usage)
-#     # print(args)
-    
-#     openapiUrl = args['--openapi-url']
-#     openapiFilePath = args['--openapi-path']
-#     requestTextSingleString = args['--rt']
-#     requestTextFilePath = args['--rt-path']
-    
-#     if (not openapiUrl 
-#         and not openapiFilePath 
-#         and not requestTextSingleString
-#         and not requestTextFilePath):
-#         print('fuzzie fuzzer receive empty arguments')
-#         return
-    
-    
-#     fuzzie = DefaultFuzzer(openapiUrl=openapiUrl, 
-#                            openapiFilePath=openapiFilePath,
-#                            requestTextFilePath=requestTextSingleString,
-#                            requestTextSingleString=requestTextFilePath)
-#     fuzzie.fuzz()
-
-# nodejs forever run python flask app
-# https://stackoverflow.com/questions/36465899/how-to-run-flask-server-in-the-background
 
