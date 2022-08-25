@@ -1,4 +1,4 @@
-## Fuzzie (work in progress)  
+## Fuzzie (in development)  
 
 Fuzzie is a Rest API fuzz testing tool available as VSCode extension.  
 The ability to fuzz test your freshly made APIs right in the IDE brings about several advantages:
