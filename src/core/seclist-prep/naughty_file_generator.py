@@ -4,6 +4,7 @@ from typing import List
 from storagemanager import StorageManager
 import os
 import pandas as pd
+import base64
 
 class NaughtyFilesGenerator:
     
@@ -33,11 +34,12 @@ class NaughtyFilesGenerator:
             if self.isPartOfExcludeFolder(fp):
                 continue
             
-            filename = os.path.basename(fp)
-            content = self.sm.download_file_as_bytes(fp)
+            newRow = {
+                        "filename": os.path.basename(fp),
+                        "content":  base64.b64encode(self.sm.download_file_as_bytes(fp))
+                      }
             
-            df["filename"] = filename
-            df["content"] = content
+            df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
             
         return df
             
