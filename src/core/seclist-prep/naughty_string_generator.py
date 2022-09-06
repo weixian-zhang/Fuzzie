@@ -20,10 +20,10 @@ class NaughtyStringGenerator:
         
         fileNamePaths = self.sm.get_file_names_of_directory('naughty-strings/')
         
-        if len(fileNamePaths) == 0:
+        if len(fileNamePaths.items) == 0:
             return []
         
-        merged = []
+        df = pd.DataFrame()
         
         for fnp in fileNamePaths:
             encodedContent = self.sm.download_file_as_str(fnp)
@@ -37,9 +37,16 @@ class NaughtyStringGenerator:
             else:
                 splitted = decoded.split("\n")
             
-            merged += splitted
+            for ns in splitted:
+                newRow = { "content": ns }
+                df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
+                
+                break
             
-        return merged
+            break
+            
+
+        return df
             
             
             

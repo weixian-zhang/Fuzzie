@@ -109,6 +109,8 @@ ipython_config.py
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
 
+seclist-prep/*.sqlite3
+
 dist
 
 build

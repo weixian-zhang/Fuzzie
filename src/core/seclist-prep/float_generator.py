@@ -1,5 +1,5 @@
 import numpy
-from data_factory_utils import DataFactoryUtils
+from data_prep_utils import DataFactoryUtils
 
 class FloatGenerator:
     
