@@ -12,8 +12,10 @@ The ability to fuzz test your freshly made APIs right in the IDE brings about se
 <br />
 
 ### Software Architecture Design  
-*subjected to change  
-![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)
+*subjected to change, diagram from another hobby project [Azure Workbench](https://www.azureworkbench.com/?id=IsxyrPUWclTXMoDPuAtK)
+![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)  
+
+
 
 
 
