@@ -7,14 +7,8 @@ class FuzzProgressState(Enum):
     SUCCESS = "success"
     FAILED = "failed"
 
-class FuzzCaseGroup:
-    id: str = ""
-    path: str = ''        # path includes querystring
-    verb: ApiVerb = ApiVerb.GET
-    parameters: list[ContentProp]
-    postBody: dict = {},
-    authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
-
+    
+    
 # describes a HTTP request header, Url and/or body with hydrated with seclist data 
 # A materialized request info object ready to make a HTTP call with
 class FuzzRequest:
@@ -26,15 +20,24 @@ class FuzzResponse:
     httpVersion: str = ""
     status: str = ""
     headers = {}
-    body = str      # Json string    
-     
+    body = str      # Json string   
+    error: str = ""
+
 class FuzzCase:
     id: str = ""
     data = {}
-    request = {}
-    response = {}
-    error: str = ""
+    request: FuzzRequest = {}
+    response: FuzzResponse = {}
     state: FuzzProgressState = FuzzProgressState.NOTSTARTED
+    
+class FuzzCaseGroup:
+    id: str = ""
+    path: str = ''        # path includes querystring
+    verb: ApiVerb = ApiVerb.GET
+    parameters: list[ContentProp]
+    postBody: dict = {},
+    authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
+    fuzzcases: list[FuzzCase] = []
     
 class FuzzReport:
     host: str   #domain or IP include port if not default 443/80
@@ -52,7 +55,7 @@ class FuzzContext:
         self.requestTextFilePath : str = ""
         self.requestTextSingle : str = ""
         
-        self.apicontext: ApiContext = None
+        self.apicontext: ApiContext = None  # from Api-Recognizer module
         self.testreport : FuzzReport = None
         
     
