@@ -29,7 +29,7 @@ class StorageManager:
        
        blobNames = bbsvc.list_blob_names(self.fuzzDataContainer, prefix=startDir)
        
-       return blobNames.items
+       return blobNames
            
       except Exception as e:
           #TODO: logging
@@ -37,3 +37,21 @@ class StorageManager:
    
     def get_last_modified_datetime(self):
         pass
+    
+    
+    def download_file_as_bytes(self, blobNamePath) -> bytes:
+              
+       bbsvc = BlockBlobService(account_name=self.accountName, sas_token=self.sastoken)
+        
+       blob= bbsvc.get_blob_to_bytes(self.fuzzDataContainer, blobNamePath)
+       
+       return blob.content
+   
+   
+    def get_blob_metadata(self, blobNamePath):
+              
+       bbsvc = BlockBlobService(account_name=self.accountName, sas_token=self.sastoken)
+        
+       metadata = bbsvc.get_blob_metadata(self.fuzzDataContainer, blobNamePath)
+       
+       return metadata
