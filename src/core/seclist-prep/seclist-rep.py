@@ -1,7 +1,9 @@
 from naughty_file_generator import NaughtyFilesGenerator
+from naughty_string_generator import NaughtyStringGenerator
+from numeric_generator import NumericGenerator
+
 import pandas as pd
 import sqlite3
-from contextlib import closing
 import os
 #create all tables
 
@@ -56,9 +58,33 @@ def prepare_naughty_files(conn: sqlite3.Cursor):
                     insert into NaughtyFile (Name, Content)
                     values ("{filename}", "{content}")
                     ''')
+        
+def prepare_naughty_string() -> pd.DataFrame:
+    nsgen = NaughtyStringGenerator()
+    df =  nsgen.generate_naughty_strings()
+    return df
+
+def prepare_naughty_integers() -> pd.DataFrame:
+    ngen = NumericGenerator()
+    df =  ngen.generate_numeric_values()
+    return df
+    
+
+def mergeData():
+    #nsDF = prepare_naughty_string()
+    
+    numericDF = prepare_naughty_integers()
+    
+    mergedDF = pd.DataFrame()
+    
+    #mergedDF = pd.concat([mergedDF, nsDF])
+    
+    print(mergedDF)
 
 
-prepare_naughty_files(cursor)
+#prepare_naughty_files(cursor)
+
+mergeData()
 
 #*** naughty files prep complete
 
