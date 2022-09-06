@@ -13,7 +13,9 @@ The ability to fuzz test your freshly made APIs right in the IDE brings about se
 
 ### Software Architecture Design  
 *subjected to change  
-![image](https://user-images.githubusercontent.com/43234101/182792518-79eb27b2-e50a-440c-92b3-59299e35753c.png)
+![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)
+
+
 
 ### Roadmap  
 * HTML WebForm fuzzing
@@ -25,11 +27,12 @@ Fuzzie needs to know the schema of your APIs so that it understands the paramete
 There are several ways for Fuzzie to discover your API schemas
 * Url to [OpenAPI 3](https://editor.swagger.io/) specification
 * File path to OpenAPI 3 specification
-* Request-Text (inspired from [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
-  * Input a single Request-Text in VSCode to instruct Fuzzie to fuzz test a single API
-  * File path to a list of Request-Texts in a text file e.g: request-texts.fuzzie
-  * supports as many request-texts in a single file as you like
-  * Supported data types
+* Request-Message (inspired from [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
+  * Input a single Request-Message in VSCode to instruct Fuzzie to fuzz test a single API
+  * File path to a list of Request-Messages in text file e.g: request-messages.fuzzie
+  * supports unlimited request-messages in a single file
+  * You can use the following supported data types as case-sensitive variables in Request-Message
+  
     * string - courtesy from [Big List of Naughty Strings](https://github.com/minimaxir/big-list-of-naughty-strings) and [SecList](https://github.com/danielmiessler/SecLists)
     * integer
     * float
@@ -42,7 +45,7 @@ There are several ways for Fuzzie to discover your API schemas
   Examples: 
   <br/>
  
-  * Post Request-Text, OAuth bearer token and Json body
+  * Post Request-Message, OAuth bearer token and Json body
     ```
     POST https://example.com/comments HTTP/1.1
     content-type: application/json
@@ -54,7 +57,7 @@ There are several ways for Fuzzie to discover your API schemas
     }
     ```
   
-  * GET Request-Text, fuzzing querystring parameters, username and password
+  * GET Request-Message, fuzzing querystring parameters, username and password
   
     ```
     GET https://httpbin.org/get
@@ -65,7 +68,7 @@ There are several ways for Fuzzie to discover your API schemas
     content-type: application/json
     Authorization: Basic base64|{{username}}:{{password}}
     ```
-  * GET Request-Text, fuzzing path parameters, username and password
+  * GET Request-Message, fuzzing path parameters, username and password
   
     ```
     GET https://httpbin.org/get/{{string}}/{{datetime}}/{{datetime}}
