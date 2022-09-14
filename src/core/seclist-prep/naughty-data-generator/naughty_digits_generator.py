@@ -11,9 +11,7 @@ class NumericGenerator:
     def __init__(self):
         
         self.sm = StorageManager()
-        self.specialData = [-1.7976931348623157e+308, 
-                            1.7976931348623157e+308, # min, max floats
-                            0.1000000000000000055511151231257827021181583404541015625]
+        self.specialData = [0.1000000000000000055511151231257827021181583404541015625]
         
         self.piLargerIntegerFileName = 'digit/pi-large.txt'
         
@@ -31,23 +29,9 @@ class NumericGenerator:
         
         mergedDF = pd.concat([mergedDF, numericDF, largePIIDF])
         
+        
+        
         return mergedDF
-        
-        # data contains some floats
-        #intData = DataFactoryUtils.load_bad_integers_from_seclist()
-        
-        # if noOfRowsToPad <= len(intData):
-        #     return intData
-        
-        # rowsExcludeSuperLargeInt = noOfRowsToPad - 1
-        
-        # dupList = DataFactoryUtils.pad_rows(intData, rowsExcludeSuperLargeInt)
-        
-        # # prepend super large int only once in the list to prevent taking up too much memory as 1 large integer is 4MB
-        # superLargeInt = self.load_superlarge_integer_from_seclist()
-        # dupList.insert(0, superLargeInt)
-
-        # return dupList    
     
     def load_numerics_from_seclist(self, df: pd.DataFrame):
         

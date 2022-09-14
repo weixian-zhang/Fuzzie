@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS NaughtyFile (
 
 # files with metadata isLongFileName has no content but with very long file name to break systems that cannot
 # handle very long file names
-
 # exclude zipbombs
 
 create_db_table_seclist = '''
