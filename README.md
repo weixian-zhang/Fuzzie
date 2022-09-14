@@ -25,10 +25,10 @@ The ability to fuzz test your freshly made APIs right in the IDE brings about se
 
 ### How Fuzzie Works  
 
-Fuzzie needs to know the schema of your APIs so that it understands the parameters in order to generate data to invoke them.  
-There are several ways for Fuzzie to discover your API schemas
-* Url to [OpenAPI 3](https://editor.swagger.io/) specification
-* File path to OpenAPI 3 specification
+Fuzzie needs to know the schema of your APIs before any fuzz test can happen, and here are several ways for Fuzzie to discover your API schemas
+* [OpenAPI 3](https://editor.swagger.io/) specification
+  * HTTP Url
+  * File path
 * Request-Message (inspired from [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
   * Input a single Request-Message in VSCode to instruct Fuzzie to fuzz test a single API
   * File path to a list of Request-Messages in text file e.g: request-messages.fuzzie
