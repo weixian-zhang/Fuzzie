@@ -2,23 +2,21 @@
 import random
 
 
-def generate_random_float(rowsToGen = 10) -> list[int]:
+def generate_random_float(rowsToGen = 10, lowerLimit = -10000, upperLimit=10000) -> list[int]:
     
     result = []
     for x in range(0, rowsToGen):
-        minInt = random.randint(-10000, 10000)
-        maxInt = random.randint(10001, 100000)
-        min = str(minInt) + ".1"
-        max = str(maxInt) + ".9"
+        min = str(lowerLimit) + ".1"
+        max = str(upperLimit) + ".9"
         result.append(random.uniform(float(min), float(max)))
         
     return result
 
-def generate_random_int(rowsToGen = 10) -> list[int]:
+def generate_random_int(rowsToGen = 10, lowerLimit = -10000, upperLimit=10000) -> list[int]:
     
     result = []
     for x in range(0, rowsToGen):
-        randint = random.randint(-100000, 100000)
+        randint = random.randint(lowerLimit, upperLimit)
         result.append(randint)
         
     return result
@@ -85,5 +83,6 @@ def generate_random_meaningless_string(length=100, rows=50, includeSpecialChar=F
     
 
 if __name__ == '__main__':
-    a = generate_random_meaningless_string(includeSpecialChar=False)
+    #a = generate_random_meaningless_string(includeSpecialChar=False)
+    a = generate_random_float()
     print(a)
