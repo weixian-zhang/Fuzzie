@@ -16,6 +16,7 @@ setup(
    author='Man Foo',
    author_email='',
    url="",
+   data_files=["data/*"],     #contains sqlite.db and other data files
    packages=find_packages(),  #same as name
    install_requires=required  #external packages as dependencies
 )
