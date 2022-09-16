@@ -1,6 +1,6 @@
 
 import sys
-from data_generator import DataGenerator
+from datagen import DataGenerator
 
 class NumericGenerator(DataGenerator):
     

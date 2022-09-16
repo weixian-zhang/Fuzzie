@@ -88,7 +88,7 @@
 		{
 			"label": "python unittest datafactory",
 			"type": "shell",
-			"command": "python -m unittest discover",
+			"command": "python -m unittest discover -s . -p 'test_*.py'",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/core/datafactory"
 			}

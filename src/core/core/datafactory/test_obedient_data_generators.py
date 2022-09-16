@@ -50,7 +50,7 @@ class TestObedientDataGenerator(unittest.TestCase):
            self.assertIsNotNone(val)
            self.assertTrue(len(val) == 1)
            
-    def test_obedient_char_gen(self):
+    def test_obedient_string_gen(self):
             
         g = ObedientStringGenerator()
         
