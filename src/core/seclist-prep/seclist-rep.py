@@ -52,10 +52,10 @@ sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 
 cursor = sqliteconn.cursor()
 
-cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
+# cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
 cursor.execute("DROP TABLE IF EXISTS NaughtyString;")
-cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
-cursor.execute("DROP TABLE IF EXISTS NaughtyPassword;")
+# cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
+# cursor.execute("DROP TABLE IF EXISTS NaughtyPassword;")
 
 cursor.execute(create_db_table_naughtyfile)
 cursor.execute(create_db_table_naughtystring)
@@ -83,6 +83,7 @@ def prepare_naughty_string():
     
     for index, row in df.iterrows():
         content = row['Content']
+        content = removeDoubleQuotes(content)
         rowNum = row['RowNumber']
         
         try:
@@ -95,6 +96,7 @@ def prepare_naughty_string():
 
 def prepare_naughty_username():
     generator = NaughtyUsernameGenerator()
+    content = removeDoubleQuotes(content)
     df = generator.generate_naughty_usernames()
     
     for index, row in df.iterrows():
@@ -111,6 +113,7 @@ def prepare_naughty_username():
 
 def prepare_naughty_password():
     generator = NaughtyPasswordGenerator()
+    content = removeDoubleQuotes(content)
     df = generator.generate_naughty_password()
     
     for index, row in df.iterrows():
@@ -125,12 +128,16 @@ def prepare_naughty_password():
         except Exception as e:
             print(e)
 
+def removeDoubleQuotes(content: str):
+    r = content.replace('"', '')
+    return r
 
 if __name__ == '__main__':
+    
     prepare_naughty_string()
-    prepare_naughty_files()
-    prepare_naughty_username()
-    prepare_naughty_password()
+    # prepare_naughty_files()
+    # prepare_naughty_username()
+    # prepare_naughty_password()
     sqliteconn.close()
     
     print("data loading completed")

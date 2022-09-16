@@ -53,6 +53,15 @@ class NaughtyDateTimeGenerator(DataGenerator):
         # %j: Day of the year as a zero-padded decimal number.
         # %U: Week number of the year (Sunday as the first day of the week) as a zero
         
+        dateFormats = [
+            "%B  %d, %Y %A, %H:%M:%S",
+            "%B %A, %H:%M:%S",
+            "%A %B, %H:%M:%S",
+            "%d, %H:%M:%S",
+            "%d %B %A, %H:%M:%S",
+            "%d %A %B, %H:%M:%S",
+            ]
+        
         dtFormat1 = datetime.now().strftime("%B  %d, %Y %A, %H:%M:%S") #'December 29, 2019 Sunday, 00:57:34'
         self.data.append()
         
