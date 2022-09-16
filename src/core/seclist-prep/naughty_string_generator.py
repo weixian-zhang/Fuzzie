@@ -2,6 +2,7 @@ from typing import List
 from storagemanager import StorageManager
 import os
 import pandas as pd
+import numpy as np
 
 class NaughtyStringGenerator:
     
@@ -11,12 +12,11 @@ class NaughtyStringGenerator:
         
     def generate_naughty_strings(self) -> pd.DataFrame:
         
-        naughtyStrings = self.load_naughty_strings_from_seclist()
-        df = pd.DataFrame()
-        df['naughtystrings'] = naughtyStrings
+        df = self.load_naughty_strings_from_seclist()
+        df['RowNumber'] = np.arange(len(df))
         return df 
     
-    def load_naughty_strings_from_seclist(self) -> List:
+    def load_naughty_strings_from_seclist(self) -> pd.DataFrame:
         
         fileNamePaths = self.sm.get_file_names_of_directory('naughty-strings/')
         
@@ -38,14 +38,9 @@ class NaughtyStringGenerator:
                 splitted = decoded.split("\n")
             
             for ns in splitted:
-                newRow = { "content": ns }
+                newRow = { "Content": ns }
                 df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
-                
-                break
-            
-            break
-            
-
+        
         return df
             
             
@@ -71,6 +66,6 @@ class NaughtyStringGenerator:
         
         
         
-    
-        
+
+
         

@@ -5,6 +5,7 @@ from storagemanager import StorageManager
 import os
 import pandas as pd
 import base64
+import numpy as np
 
 class NaughtyFilesGenerator:
     
@@ -12,11 +13,15 @@ class NaughtyFilesGenerator:
         self.sm = StorageManager()
         self.blnsFileName = "blns.txt"
         self.startFolder = "payload/"
-        self.folderToExclude = ["zipbombs"]
+        self.folderToExclude = ["zipbombs", "max-length"]
+        self.longFilenameText = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        self.longFilenameGif = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.php.gif"
+        
         
     def generate_naughty_files(self) -> pd.DataFrame:
         
         df = self.load_naughty_files_from_seclist()
+        
         return df 
     
     
@@ -35,12 +40,28 @@ class NaughtyFilesGenerator:
                 continue
             
             newRow = {
-                        "filename": os.path.basename(fp),
-                        "content":  base64.b64encode(self.sm.download_file_as_bytes(fp))
-                      }
+                        "Filename": os.path.basename(fp),
+                        "Content":  base64.b64encode(self.sm.download_file_as_bytes(fp))
+                     }
             
             df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
             
+        
+        df = df.append(
+                    {
+                        "Filename": self.longFilenameText,
+                        "Content":  ""
+                     }, ignore_index=True,verify_integrity=False, sort=None)
+        
+        df = df.append(
+                     {
+                        "Filename": self.longFilenameGif,
+                        "Content":  ""
+                     }, ignore_index=True,verify_integrity=False, sort=None)
+        
+        #set running number from 1
+        df['RowNumber'] = np.arange(len(df))
+        
         return df
             
             
