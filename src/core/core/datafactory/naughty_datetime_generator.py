@@ -12,7 +12,7 @@ from datetime import date, time, datetime
 
 #max date, min date
 
-from data_generator import DataGenerator
+from datagen import DataGenerator
 
 class NaughtyDateTimeGenerator(DataGenerator):
     
@@ -26,7 +26,7 @@ class NaughtyDateTimeGenerator(DataGenerator):
             datetime.time(23, 59, 59, 999999),
             datetime.datetime(1, 1, 1, 0, 0),
             datetime.datetime(9999, 12, 31, 23, 59, 59, 999999),
-            datetime.now().date()
+            datetime.now().date(),
             datetime.now().time()
         ]
         
