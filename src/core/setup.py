@@ -1,6 +1,10 @@
 
 
 from setuptools import setup, find_packages
+import os
+
+sqlitedb = os.getcwd() + "\core\datafactory\data\seclist.sqlite"
+pilargefile = os.getcwd() + "\core\datafactory\data\pi-large.txt"
 
 with open('core/requirements.txt', 'rb') as f:
     required = f.read()
@@ -16,7 +20,11 @@ setup(
    author='Man Foo',
    author_email='',
    url="",
-   data_files=["data/*"],     #contains sqlite.db and other data files
+   data_files=[sqlitedb, pilargefile],     #contains sqlite.db and other data files
    packages=find_packages(),  #same as name
    install_requires=required  #external packages as dependencies
 )
+
+
+
+    
