@@ -52,9 +52,9 @@ sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 
 cursor = sqliteconn.cursor()
 
-# cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
+#cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
 cursor.execute("DROP TABLE IF EXISTS NaughtyString;")
-# cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
+#cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
 # cursor.execute("DROP TABLE IF EXISTS NaughtyPassword;")
 
 cursor.execute(create_db_table_naughtyfile)
@@ -96,11 +96,11 @@ def prepare_naughty_string():
 
 def prepare_naughty_username():
     generator = NaughtyUsernameGenerator()
-    content = removeDoubleQuotes(content)
     df = generator.generate_naughty_usernames()
     
     for index, row in df.iterrows():
         content = row['Content']
+        content = removeDoubleQuotes(content)
         rowNum = row['RowNumber']
         
         try:
@@ -113,11 +113,11 @@ def prepare_naughty_username():
 
 def prepare_naughty_password():
     generator = NaughtyPasswordGenerator()
-    content = removeDoubleQuotes(content)
     df = generator.generate_naughty_password()
     
     for index, row in df.iterrows():
         content = row['Content']
+        content = removeDoubleQuotes(content)
         rowNum = row['RowNumber']
         
         try:

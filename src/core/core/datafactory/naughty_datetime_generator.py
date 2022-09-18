@@ -1,4 +1,5 @@
 from datetime import date, time, datetime
+from dateutil import parser
 
 #datetime formats
 #https://medium.com/analytics-vidhya/dealing-with-date-time-of-different-formats-in-python-f1f973d8cdb
@@ -18,20 +19,23 @@ class NaughtyDateTimeGenerator(DataGenerator):
     
     def __init__(self):
         
+        
         self.data = [
-                date.min,
-            datetime.date(1, 1, 1),
-            datetime.date(9999, 12, 31),
-            datetime.time(0, 0),
-            datetime.time(23, 59, 59, 999999),
-            datetime.datetime(1, 1, 1, 0, 0),
-            datetime.datetime(9999, 12, 31, 23, 59, 59, 999999),
+            date.min,
+            date(1, 1, 1),
+            date(9999, 12, 31),
+            time(0, 0),
+            time(23, 59, 59, 999999),
+            datetime(1, 1, 1, 0, 0),
+            datetime(9999, 12, 31, 23, 59, 59, 999999),
             datetime.now().date(),
             datetime.now().time()
         ]
         
+        self.generate_datetime_formats()
+        
     
-    def generate_datetime_formats():
+    def generate_datetime_formats(self):
         
         # %a: Weekday as locale’s abbreviated name. sun , mon
         # %A : Weekday as locale’s full name.Sunday, Monday, …
@@ -54,15 +58,37 @@ class NaughtyDateTimeGenerator(DataGenerator):
         # %U: Week number of the year (Sunday as the first day of the week) as a zero
         
         dateFormats = [
-            "%B  %d, %Y %A, %H:%M:%S",
-            "%B %A, %H:%M:%S",
-            "%A %B, %H:%M:%S",
+            # "%B %d, %Y %A, %H:%M:%S",
+            #"%B %A %d %Y, %H:%M:%S",
+            #"%A %B, %H:%M:%S",
             "%d, %H:%M:%S",
             "%d %B %A, %H:%M:%S",
             "%d %A %B, %H:%M:%S",
+            
+            "%d-%m-%y %H:%M:%S",
+            "%m-%d-%y %H:%M:%S",
+            "%y-%m-%d %H:%M:%S",
+            "%d/%m/%y %H:%M:%S",
+            "%m/%d/%y %H:%M:%S",
+            "%y/%m/%d %H:%M:%S",
+            
+            # "%d-%m-%Y %H:%M:%S",
+            # "%m-%d-%Y %H:%M:%S",
+            # "%Y-%m-%d %H:%M:%S",
+            # "%d/%m/%Y %H:%M:%S",
+            # "%m/%d/%Y %H:%M:%S",
+            # "%Y/%m/%d %H:%M:%S",
+            
+            #time only
+            "%H:%M:%S",
+            "%I:%M:%S",
+            "%H:%M:%S %f",
+            "%I:%M:%S %f",
             ]
         
-        dtFormat1 = datetime.now().strftime("%B  %d, %Y %A, %H:%M:%S") #'December 29, 2019 Sunday, 00:57:34'
-        self.data.append()
-        
-        pass
+        for df in dateFormats:
+            newDF = datetime.now().strftime(df)
+            print(newDF)
+            
+            newDFDateTime = parser.parse(newDF)
+            self.data.append(newDFDateTime)

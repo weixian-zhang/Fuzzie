@@ -2,8 +2,6 @@ import sys, os
 parentPath = os.getcwd() + "\core\core\datafactory"
 sys.path.append(parentPath)
 
-print(parentPath)
-
 import unittest
 from obedient_data_generators import (ObedientBoolGenerator, 
                                       ObedientIntegerGenerator, 
