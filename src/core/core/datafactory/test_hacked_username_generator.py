@@ -11,8 +11,6 @@ class TestHackedUsernameGenerator(unittest.TestCase):
             val = g.NextData()
             self.assertIsNotNone(val)
             self.assertTrue(isinstance(val, str))
-            
-            print(val)
         
         
 if __name__ == '__main__':
