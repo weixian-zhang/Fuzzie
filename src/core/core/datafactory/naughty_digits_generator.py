@@ -1,6 +1,6 @@
 
 import sys
-from data_generator import DataGenerator
+from datagen import DataGenerator
 
 class NumericGenerator(DataGenerator):
     
@@ -28,7 +28,7 @@ class NumericGenerator(DataGenerator):
                             float('NaN'),
                             "79228162514264337593543950336L",
                             "79228162514264337593543950336l",
-                           "79228162514264337593543950336B"
+                            "79228162514264337593543950336B"
                            
         ]
         

@@ -5,11 +5,13 @@ from datagen import DataGenerator
 class ObedientBoolGenerator(DataGenerator):
     
     def __init__(self) -> None:
+        super().__init__()
         self.data = [True, False, None, 0, 1, 'true', 'false', 'yes', 'no', '1', '0', 't', 'f', 'T', 'F', 'TRUE', 'FALSE']
     
 class ObedientFloatGenerator(DataGenerator):
     
     def __init__(self) -> None:
+        super().__init__()
         self.lowerLimit = -100000
         self.upperLimit = 100000
         
@@ -21,6 +23,7 @@ class ObedientFloatGenerator(DataGenerator):
 class ObedientIntegerGenerator(DataGenerator):
     
     def __init__(self) -> None:
+        super().__init__()
         self.lowerLimit = -100000
         self.upperLimit = 100000
         
@@ -30,7 +33,7 @@ class ObedientIntegerGenerator(DataGenerator):
 class ObedientCharGenerator(DataGenerator):
     
     def __init__(self) -> None:
-        
+        super().__init__()
         self.lowLowercaseLetterAscii = 65
         self.highExtendedAscii = 255
     
@@ -41,6 +44,8 @@ class ObedientCharGenerator(DataGenerator):
 class ObedientStringGenerator(DataGenerator):
     
     def __init__(self) -> None:
+        super().__init__()
+        self.strLength = 100
         self.lowLowercaseLetterAscii = 65
         self.highLowercaseLetterAscii = 90
         self.lowLetterAscii= 97
@@ -83,31 +88,57 @@ class ObedientStringGenerator(DataGenerator):
         }
         
         randomHighLimit = 3
+            
+        rs = ""
+        for c in range(0, self.strLength ):
+            rs = rs + str(randomer[random.randint(0, randomHighLimit)]())
+            
+        return rs
         
-        return randomer[random.randint(0, randomHighLimit)]()
-        
-        # if includeSpecialChar:
-        #     randomHighLimit = 3
-            
-        # result = [];
-        # for x in range(0,rows):
-            
-        #     rs = ""
-            
-        #     #str part 1
-        #     for c in range(0, length):
-        #         rs = rs + str(randomer[random.randint(0, randomHighLimit)]())
-                
-                
-        #     result.append(rs);
-            
-        # return result
-        
-if __name__ == '__main':
-    a = ObedientBoolGenerator()
-    b = ObedientCharGenerator()
-    c = ObedientFloatGenerator()
-    d = ObedientIntegerGenerator()
-    f = ObedientStringGenerator()
+# if __name__ == '__main__':
+#     pass
+#     a = ObedientBoolGenerator()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+#     r1 = a.NextData()
+    
+    
+#     b = ObedientCharGenerator()
+#     r2 = b.NextData()
+#     r2 = b.NextData()
+#     r2 = b.NextData()
+#     r2 = b.NextData()
+#     r2 = b.NextData()
+    
+#     c = ObedientFloatGenerator()
+#     r3 = c.NextData()
+#     r3 = c.NextData()
+#     r3 = c.NextData()
+#     r3 = c.NextData()
+#     r3 = c.NextData()
+#     r3 = c.NextData()
+    
+    
+#     d = ObedientIntegerGenerator()
+#     r4 = d.NextData()
+#     r4 = d.NextData()
+#     r4 = d.NextData()
+#     r4 = d.NextData()
+#     r4 = d.NextData()
+    
+    
+#     f = ObedientStringGenerator()
+#     r5 = f.NextData()
+#     r5 = f.NextData()
+#     r5 = f.NextData()
+#     r5 = f.NextData()
+#     r5 = f.NextData()
+#     r5 = f.NextData()
         
 
