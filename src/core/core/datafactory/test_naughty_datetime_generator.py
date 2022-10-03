@@ -7,7 +7,10 @@ class TestNaughtyDateTimeGenerator(unittest.TestCase):
         
         g = NaughtyDateTimeGenerator()
         
-        df = g.NextData()
+        count = 0
+        while count <= 100:   
+            print(g.NextData())
+            count += 1
         
         
         
