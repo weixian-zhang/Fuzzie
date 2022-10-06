@@ -1,5 +1,6 @@
 from datetime import date, time, datetime
 from random import random
+from typing import List
 from dateutil import parser
 import time as tTime
 import random
@@ -98,20 +99,69 @@ class NaughtyDateTimeGenerator(DataGenerator):
         
         dtFormatTokens = ['%a','%A','%w','%d','%b','%B','%m','%y','%Y','%H','%I','%p','%M','%S','%f','%z','%Z','%j','%U']
         
-        currentSize = 0
+        dtFormatCombinations = []
+        dtFormatCombinations = self.generate_combinations(dtFormatTokens, 0, dtFormatCombinations)
         
-        while currentSize <= self.naughtyDateTimeSize:
+        stStrsList = []
+        dtStrs = ''
         
-            for i, element in enumerate(dtFormatTokens):
-                nformat = f'''{dtFormatTokens[self.random_num(len(dtFormatTokens))]}, {dtFormatTokens[self.random_num(len(dtFormatTokens))]}, {dtFormatTokens[self.random_num(len(dtFormatTokens))]} {dtFormatTokens[self.random_num(len(dtFormatTokens))]} {dtFormatTokens[self.random_num(len(dtFormatTokens))]} {dtFormatTokens[self.random_num(len(dtFormatTokens))]}'''
-                nDateTime = newDF = datetime.now().strftime(nformat)
-
-                self.data.append(nDateTime)
+        for comboList in dtFormatCombinations:
+            for index, cl in enumerate(comboList):
+                if index != len(comboList) - 1:  #if not last index
+                    dtStrs += f'{cl}, '
+                else:
+                    dtStrs += f' {cl}'
+                    
+            nDateTime = datetime.now().strftime(dtStrs)
             
-            currentSize += 1
+            self.data.append(nDateTime)
+            
+            dtStrs = ''
+            
                 
-    def random_num(self, dataLength):
-        return random.randint(0, dataLength - 1) #-1 for list 0 index
+    # def random_num(self, dataLength):
+    #     return random.randint(0, dataLength - 1) #-1 for list 0 index
+    
+    #recursively generate all possible combinations with formats not more than length of *6*
+    def generate_combinations(self, dtFormats, i, result: List[List]):
+        
+        try:
+            
+            if len(dtFormats) == 0:     #base case, result is empty list at last func call in recursion
+                result.append([])
+                return result
+        
+            firstElement = dtFormats[0]
+            
+            i = i + 1
+            
+            slice = dtFormats[1:]
+            
+            result = self.generate_combinations(slice, i, result)
+            
+            newComboCollection = []
+            newCombo = []
+            for r in result:
+                
+                if(len(r) <= 5):
+                    newCombo = r + [firstElement]
+                    
+                    newComboCollection.append(newCombo)
+            
+            result = newComboCollection + result
+            
+            return result
+        
+        except Exception as e:
+            raise e
+        
+        
+            
+            
+        
+        
+        
+        
                 
                 
     
