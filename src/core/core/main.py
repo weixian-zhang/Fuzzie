@@ -6,7 +6,11 @@ Usage:
 '''
 
 from docopt import docopt
+
+import graphene
 from flask import  Flask, jsonify, request, Response
+
+from fuzzcontext import ApiFuzzContext
 import atexit
 from eventstore import EventStore
 from fuzzmanager import FuzzManager
@@ -48,13 +52,6 @@ def startup():
         es.emitInfo('starting Fuzzie web server')
         es.emitInfo('Fuzzie Fuzzer started')
         
-        try:
-            1 / 0
-            #raise Exception("on purpose")
-        except Exception as e:
-            es.emitErr(e)
-            
-        es.emitErr("hi I am an exceptional being")
         
         app.run(port=webserverPort, threaded=True)
         
