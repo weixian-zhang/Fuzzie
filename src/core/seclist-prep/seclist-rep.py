@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS NaughtyPassword (
 );
 '''
 
-dbpath = os.getcwd() + "\src\core\core\datafactory\data\seclist.sqlite"
+dbpath = os.getcwd() + "\src\core\core\datafactory\data\fuzzie.sqlite"
 
 sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 
