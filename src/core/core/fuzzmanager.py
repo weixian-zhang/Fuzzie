@@ -1,7 +1,7 @@
-from apirecog.openapi3_apirecognizer import OpenApi3ApiRecognizer
+from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 
 import validators
-from fuzzcontext import FuzzContext
+from fuzzcontext_model import ApiFuzzContext
 from eventstore import EventStore
 
 class FuzzManager:

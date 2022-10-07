@@ -5,7 +5,7 @@ from apicontext_model import Api, ApiContext, ApiVerb, ContentProp, ArrayItem
 import requests
 import validators
 
-class OpenApi3ApiRecognizer:
+class OpenApi3ApiDiscover:
     
     def load_openapi3_file(self, file_path: str):
         
