@@ -29,7 +29,6 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         paramProp2 = api.parameters[1]
         paramProp3 = api.parameters[2]
         
-        
         self.assertEqual(paramProp1.getApiParamIn, 'path')
         self.assertEqual(paramProp1.propertyName, 'complexObject')
         self.assertEqual(paramProp1.parameters[0].propertyName ,'foo')
@@ -46,6 +45,87 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         self.assertEqual(paramProp3.propertyName, 'singleArray')
         self.assertEqual(paramProp3.type , 'array')
         self.assertEqual(paramProp3.arrayProp.type, 'string')
+        
+    
+    # post_multipart-form-data
+    def test_openapi3_post_multipart_form_data(self):
+        
+        apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post_multipart-form-data.yaml') 
+    
+        openapi3 = OpenApi3ApiDiscover()
+        
+        apicontext = openapi3.load_openapi3_file(apiFilePath)
+        
+        self.assertTrue(apicontext is not None)
+        
+        self.assertTrue(len(apicontext.apis) == 1)
+        
+        api1 = apicontext.apis[0]
+        
+        apiParam1 = api1.parameters[0]
+        apiParam2 = api1.parameters[1]
+    
+        self.assertEqual(api1.path, '/multipart-form-data/nestedjson-1')
+        
+        self.assertTrue(len(api1.parameters) == 2)
+        
+        self.assertEqual(apiParam1.propertyName, 'simple')
+        self.assertEqual(apiParam1.type, 'string')
+        
+        self.assertEqual(apiParam2.propertyName, 'complex')
+        self.assertEqual(apiParam2.type, 'array')
+        self.assertEqual(apiParam2.arrayProp.type, 'object')
+        
+        # array containing complext object type
+        arrayComplexObj = apiParam2.arrayProp.parameters
+        
+        self.assertTrue(len(arrayComplexObj) == 4)
+        
+        arrayComplexObjParam1 = arrayComplexObj[0]
+        arrayComplexObjParam2 = arrayComplexObj[1]
+        arrayComplexObjParam3 = arrayComplexObj[2]
+        arrayComplexObjinnerObject = arrayComplexObj[3]
+        
+        self.assertEqual(arrayComplexObjParam1.propertyName, 'key')
+        self.assertEqual(arrayComplexObjParam1.type, 'string')
+        
+        self.assertEqual(arrayComplexObjParam2.propertyName, 'size')
+        self.assertEqual(arrayComplexObjParam2.type, 'integer')
+        
+        self.assertEqual(arrayComplexObjParam3.propertyName, 'nestyArrays1')
+        self.assertEqual(arrayComplexObjParam3.type, 'array')
+        self.assertEqual(arrayComplexObjParam3.arrayProp.type, 'string')
+        
+        self.assertEqual(arrayComplexObjinnerObject.propertyName, 'innerObject')
+        self.assertEqual(arrayComplexObjinnerObject.type, 'object')
+        
+        innerNestedComplexObjectId = arrayComplexObjinnerObject.parameters[0]
+        innerNestedComplexObjectAddress= arrayComplexObjinnerObject.parameters[1]
+        innerNestedComplexObjectProfileImage = arrayComplexObjinnerObject.parameters[2]
+        
+        self.assertEqual(innerNestedComplexObjectId.propertyName, 'id')
+        self.assertEqual(innerNestedComplexObjectId.type, 'string')
+        self.assertEqual(innerNestedComplexObjectId.format, 'uuid')
+        
+        self.assertEqual(innerNestedComplexObjectAddress.propertyName, 'address')
+        self.assertEqual(innerNestedComplexObjectAddress.type, 'object')
+        self.assertEqual(innerNestedComplexObjectAddress.parameters[0].propertyName, 'street')
+        self.assertEqual(innerNestedComplexObjectAddress.parameters[0].type, 'string')
+        self.assertEqual(innerNestedComplexObjectAddress.parameters[1].propertyName, 'city')
+        self.assertEqual(innerNestedComplexObjectAddress.parameters[1].type, 'string')
+        
+        self.assertEqual(innerNestedComplexObjectProfileImage.propertyName, 'profileImage')
+        self.assertEqual(innerNestedComplexObjectProfileImage.type, 'string')
+        self.assertEqual(innerNestedComplexObjectProfileImage.format, 'binary')
+        
+
+        
+        
+        
+        
+
+        
+        
         
         
     
