@@ -11,7 +11,7 @@ class NaughtyStringGenerator(DataGenerator):
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
 
-        self.dbpath = os.path.join(os.path.dirname(__file__), "data\seclist.sqlite")
+        self.dbpath = os.path.join(os.path.dirname(__file__), "data\fuzzie.sqlite")
 
         self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
         

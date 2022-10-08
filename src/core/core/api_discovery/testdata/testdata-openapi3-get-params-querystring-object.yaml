@@ -1,0 +1,50 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+
+# To apply Basic auth to the whole API:
+security:
+  - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /get/query/param/array/and/object:
+    get:
+      tags:
+      - tickets
+      summary: Send an JSON Object as a query param
+      parameters:
+      - name: complexObject
+        in: query
+        description: '{"type":"foo","color":"green"}'
+        required: true
+        schema:
+          type: object
+          properties:
+            foo:
+              type: "string"
+            color:
+              type: "string"
+      - name: doubleParam
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+      - name: singleArray
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  

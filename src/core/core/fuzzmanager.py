@@ -1,7 +1,7 @@
-from apirecog.openapi3_apirecognizer import OpenApi3ApiRecognizer
+from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 
 import validators
-from fuzzcontext import FuzzContext
+from api_discovery.fuzzcontext_model import ApiFuzzContext
 from eventstore import EventStore
 
 class FuzzManager:
@@ -37,7 +37,7 @@ class FuzzManager:
             return
         
         
-        self.fuzzContext = FuzzContext(openapiUrl, openapiFilePath, requestTextFilePath, requestTextSingle, workingDirectory)
+        self.fuzzContext = ApiFuzzContext(openapiUrl, openapiFilePath, requestTextFilePath, requestTextSingle, workingDirectory)
     
         #TODO
 
