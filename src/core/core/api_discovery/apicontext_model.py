@@ -19,31 +19,23 @@ class ArrayItem:
     # this class is mainly to handle future deeply nested array scenario
     # if itemType is object then parameters is dict.
     # if itemType is primitive type, parameters is None
-        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
-    type: str = ""       
-    parameters: dict = {}      #for objects in array
     
     def __init__(self, type, parameters = None) -> None:
         self.type = type
-        self.parameters = parameters
+        self.parameters = parameters    #for complex object only
 
 # format - generally for file property and format is binary
 class ParamProp:
-    propertyName: str = ""
-    type: str = ""
-    arrayProp: ArrayItem = None
-    parameters: dict = None
-    format: str = None
-    getApiParamIn: str = '' #only for GetApi, determines parameter In path, query, cookie, header
     
     def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, getApiParamIn = '') -> None:
         
         self.propertyName = propertyName
         self.type = type
+        self.arrayProp = arrayProp
         self.parameters = parameters
         self.format = format
-        self.getApiParamIn = getApiParamIn
-        self.arrayProp = arrayProp
+        self.getApiParamIn = getApiParamIn  #only for GetApi, determines parameter In path, query, cookie, header
+        
         
     def is_file_upload() -> bool:
         if type == 'string' and (format == 'binary' or format == 'base64'):
@@ -53,61 +45,68 @@ class ParamProp:
 
     
 class UserInput:
-    basicAuthUsername: str = ''
-    basicAuthPassword: str = ''
-    apiKeyAuthApiKey: str = ''
-    bearerAuthJwtToken: str = ''
+    def __init__(self) -> None:
+        self.basicAuthUsername: str = ''
+        self.basicAuthPassword: str = ''
+        self.apiKeyAuthApiKey: str = ''
+        self.bearerAuthJwtToken: str = ''
 
 class BaseApi:
-    path: str = ''        # path includes querystring
-    operationId: str = ''
-    verb: ApiVerb = ApiVerb.GET
-    authTypes = []   
-    headerParameters: list[ParamProp] = []
+    def __init__(self) -> None:
+        self.path: str = ''        # path includes querystring
+        self.operationId: str = ''
+        self.verb: ApiVerb = ApiVerb.GET
+        self.authTypes = []   
+        self.headerParameters: list[ParamProp] = []
     
 class GetApi(BaseApi):
-    paramIn: str = ''
-    parameters: list[ParamProp] = []
+    def __init__(self) -> None:
+        self.paramIn: str = ''
+        self.parameters: list[ParamProp] = []
     
 class MutatorApi(BaseApi):
-    body = {} 
+    def __init__(self) -> None:
+        self.body = {} 
     
 class Api:
-    
-    path: str = ''        # path includes querystring
-    operationId: str = ''
-    verb: ApiVerb = ApiVerb.GET
-         # not in use, instead use authn type from ApiContext
-    body = {}             # for post/put/patch only
-    isQueryString = True  # for get request only
-    parameters: list[ParamProp] = [] 
-    headerParameters: list[ParamProp] = []
+    def __init__(self) -> None:
+        self.path: str = ''        # path includes querystring
+        self.operationId: str = ''
+        self.verb: ApiVerb = ApiVerb.GET
+        self.body = {}             # for post/put/patch only
+        self.isQueryString = True  # for get request only
+        self.parameters: list[ParamProp] = [] 
+        self.headerParameters: list[ParamProp] = []
 
 class ApiAuthnBasic:
-    username = ""
-    password = ""
+    def __init__(self) -> None:
+        self.username = ''
+        self.password = ''
     
 class ApiAuthnBearerToken:
-    token = ""
+    def __init__(self) -> None:
+        self.token = ''
     
 class ApiAuthnApiKey:
-    headerName = ""
-    apikey = ""
+    def __init__(self) -> None:
+        self.headerName = ''
+        self.apikey = ''
     
 class ApiAuthnApiKeyCookie:
-    cookieName = ""
-    cookieValue = ""
+    
+    def __init__(self) -> None:
+        self.cookieName = ''
+        self.cookieValue = ''
     
 class ApiContext:
-    
-    baseUrl = []
-    title: str = ''
-    version: str = ''
-    #authTypes = []      # to be removed permanantly. User will input the choice of authn
-    apis = []
-    userInput: UserInput = None
-    authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
-    basicAuthn: ApiAuthnBasic = None
-    bearerTokenAuthn: ApiAuthnBearerToken = None
-    apikeyAuthn: ApiAuthnApiKey = None
-    apikeyCookieAuthn: ApiAuthnApiKeyCookie = None
+    def __init__(self) -> None:
+        self.baseUrl = []
+        self.title: str = ''
+        self.version: str = ''
+        self.apis = []
+        self.userInput: UserInput = None
+        self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
+        self.basicAuthn: ApiAuthnBasic = None
+        self.bearerTokenAuthn: ApiAuthnBearerToken = None
+        self.apikeyAuthn: ApiAuthnApiKey = None
+        self.apikeyCookieAuthn: ApiAuthnApiKeyCookie = None

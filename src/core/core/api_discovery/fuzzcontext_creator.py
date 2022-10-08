@@ -1,4 +1,7 @@
 
+# how to serialize parameters
+# https://swagger.io/docs/specification/serialization/
+
 
 class FuzzContextCreator:
     
