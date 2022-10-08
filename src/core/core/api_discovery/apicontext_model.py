@@ -8,66 +8,80 @@ class SupportedAuthnType(Enum):
     ApiKeyCookie = "ApiKeyCookie"
 
 class ApiVerb(Enum):
-    GET = 1
-    POST = 2
-    PUT = 3
-    PATCH = 4
-    DELETE = 5
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    PATCH = "PATCH"
+    DELETE = "DELETE"
+    
+class ArrayItem:
+    
+    # this class is mainly to handle future deeply nested array scenario
+    # if itemType is object then parameters is dict.
+    # if itemType is primitive type, parameters is None
+        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
+    type: str = ""       
+    parameters: dict = {}      #for objects in array
+    
+    def __init__(self, type, parameters = None) -> None:
+        self.type = type
+        self.parameters = parameters
 
 # format - generally for file property and format is binary
-class ContentProp:
+class ParamProp:
     propertyName: str = ""
     type: str = ""
-    isArray: bool = False
-    nestedContent: dict = None
+    arrayProp: ArrayItem = None
+    parameters: dict = None
     format: str = None
+    getApiParamIn: str = '' #only for GetApi, determines parameter In path, query, cookie, header
     
-    def __init__(self, propertyName, type, nestedContent: any = None, 
-                 arrayItemType: any = None, isArray:bool = False, format: str = None) -> None:
+    def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, getApiParamIn = '') -> None:
         
         self.propertyName = propertyName
         self.type = type
-        self.nestedContent = nestedContent
-        self.arrayItemType = arrayItemType
+        self.parameters = parameters
         self.format = format
+        self.getApiParamIn = getApiParamIn
+        self.arrayProp = arrayProp
         
     def is_file_upload() -> bool:
         if type == 'string' and (format == 'binary' or format == 'base64'):
             return True
         return False
 
-class ArrayItem:
-    
-    # this class is mainly to handle future deeply nested array scenario
-    # if itemType is object then itemContent is dict.
-    # if itemType is primitive type, itemContent is None
-    # if itemType is array type, innerArrayItemType is the type of the item in nested array. E.g: integer in the below case
-        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
-    itemType: str = ""    
-    innerArrayItemType: str = ""      
-    itemContent: any = None
-    
-    def __init__(self, itemType, innerArrayItemType= "", itemContent = None) -> None:
-        self.itemType = itemType
-        self.innerArrayItemType = innerArrayItemType
-        self.itemContent = itemContent
+
     
 class UserInput:
     basicAuthUsername: str = ''
     basicAuthPassword: str = ''
     apiKeyAuthApiKey: str = ''
     bearerAuthJwtToken: str = ''
+
+class BaseApi:
+    path: str = ''        # path includes querystring
+    operationId: str = ''
+    verb: ApiVerb = ApiVerb.GET
+    authTypes = []   
+    headerParameters: list[ParamProp] = []
+    
+class GetApi(BaseApi):
+    paramIn: str = ''
+    parameters: list[ParamProp] = []
+    
+class MutatorApi(BaseApi):
+    body = {} 
     
 class Api:
     
     path: str = ''        # path includes querystring
     operationId: str = ''
     verb: ApiVerb = ApiVerb.GET
-    authTypes = []        # not in use, instead use authn type from ApiContext
+         # not in use, instead use authn type from ApiContext
     body = {}             # for post/put/patch only
     isQueryString = True  # for get request only
-    parameters: list[ContentProp] = [] 
-    headerParameters: list[ContentProp] = []
+    parameters: list[ParamProp] = [] 
+    headerParameters: list[ParamProp] = []
 
 class ApiAuthnBasic:
     username = ""

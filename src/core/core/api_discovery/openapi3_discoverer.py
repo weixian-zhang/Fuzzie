@@ -1,7 +1,7 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext_model import Api, ApiContext, ApiVerb, ContentProp, ArrayItem
+from apicontext_model import GetApi, MutatorApi, Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 import requests
 import validators
 
@@ -50,12 +50,7 @@ class OpenApi3ApiDiscover:
             if not apispec.servers is None:
                 for server in apispec.servers:
                     apicontext.baseUrl.append(server.url)
-            
-            # to be removed permanantly. User will input the choice of authn
-            # if not apispec.security is None:
-            #     for authType in apispec.security:
-            #         apicontext.authTypes.append(authType.name)
-                    
+                                
             # paths
             if not apispec.paths is None:
                 for pathStr in apispec.paths:
@@ -80,21 +75,18 @@ class OpenApi3ApiDiscover:
     def create_get_api(self, apiObj, path):
         
         if not apiObj.get is None:
-            api = Api()
+            api = GetApi()
             if not apiObj.get.operationId is None:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
-            api.parameters = self.obtain_querystring_path_parameters(apiObj.get, api)
-            
-            # to be removed. User will select authn option
-            #api.authTypes = self.discover_api_authTypes(apiObj.get)
-            
+            api.parameters = self.obtain_get_parameters(apiObj.get, api)
+                        
             return True, api
         
         return False, None
     
-    def obtain_querystring_path_parameters(self, getOperation, api: Api) -> Dict:
+    def obtain_get_parameters(self, getOperation, api: GetApi) -> Dict:
                 
         apiParams = []
         
@@ -107,7 +99,7 @@ class OpenApi3ApiDiscover:
                 name = param.name
                 schema = param.schema
                 type = schema.type
-                api.isQueryString = True if param.in_ == "query" else False
+                api.paramIn = param.in_
                 
                 if type == 'object': 
                     
@@ -115,7 +107,7 @@ class OpenApi3ApiDiscover:
                 
                     self.get_complex_object_datatype(schema, complexObj)
                     
-                    cp = ContentProp(propertyName=name, type="object", nestedContent=complexObj)
+                    cp = ParamProp(propertyName=name, type="object", parameters=complexObj, getApiParamIn=param.in_)
                     
                     apiParams.append(cp)
                         
@@ -124,12 +116,12 @@ class OpenApi3ApiDiscover:
                     
                     ai: ArrayItem = self.get_items_in_array_datatype(items, name)
                     
-                    cp = ContentProp(propertyName=name, type=type, isArray=True, nestedContent=ai)
+                    cp = ParamProp(propertyName=name, type=type, arrayProp=ai, getApiParamIn=param.in_)
                     
                     apiParams.append(cp)
                         
                 else:
-                    apiParams.append(ContentProp(name, type))
+                    apiParams.append(ParamProp(name, type, getApiParamIn=param.in_))
                                      
         return apiParams
         
@@ -138,35 +130,18 @@ class OpenApi3ApiDiscover:
         
         if not apiObj.post is None:
             
-            api = Api()
+            api = MutatorApi()
             api.path = path
             api.verb = ApiVerb.POST
             
-            # to be removed. User will select authn option
-            #api.authTypes = self.discover_api_authTypes(apiObj.post)
-            
-            dictBody = self.get_postputpatch_content_properties(apiObj.post)
+            dictBody = self.get_mutatorapi_body_props(apiObj.post)
                 
-            api.body = dictBody               
+            api.parameters = dictBody               
             
             return True, api
         
         return False, None
-    
-    # to be removed. User will select authn option
-    # def discover_api_authTypes(self, apiOperation):
-        
-    #     authTypes = []
-        
-    #     if hasattr(apiOperation, 'security'):
-            
-    #         security = apiOperation.security
-            
-    #         for authType in security:
-    #             authTypes.append(authType.name)
-                
-    #     return authTypes
-            
+           
              
         
     def get_nested_content_properties(self, props, result: list):
@@ -186,7 +161,7 @@ class OpenApi3ApiDiscover:
                 
                 self.get_complex_object_datatype(schema, complexObj)
                 
-                cp = ContentProp(propertyName=propName, type="object", nestedContent=complexObj)
+                cp = ParamProp(propertyName=propName, type="object", parameters=complexObj)
                 
                 continue
                 
@@ -194,7 +169,7 @@ class OpenApi3ApiDiscover:
                 #base case - primitive type
                 if not type == "array":
                     
-                    cp = ContentProp(propertyName=propName, type=type, format=format)
+                    cp = ParamProp(propertyName=propName, type=type, format=format)
                     result.append(cp)
                     continue
                         
@@ -204,18 +179,14 @@ class OpenApi3ApiDiscover:
                     
                     arrayItem = self.get_items_in_array_datatype(items, propName)
                     
-                    cp = ContentProp(propertyName=propName, type="array", isArray=True, nestedContent=arrayItem)
+                    cp = ParamProp(propertyName=propName, type="array", parameters=None, arrayProp=arrayItem)
                     result.append(cp)   
     
     def get_complex_object_datatype(self, schema, result: list):
                 
-        # roadmap: support getting parameters from example in addition to properties
-        # if properties is None:
-        #     example = schema.example
-        #     if not example is None:
-        #         for e in example:
-        #             print(e)
-        
+        # complex object type can be nested complex objects, array or primitive type
+        # *roadmap: support getting parameters from example in addition to properties
+          
         properties = schema.properties
         
         if properties is None:
@@ -233,63 +204,45 @@ class OpenApi3ApiDiscover:
                 
                 self.get_complex_object_datatype(schema, nestedObj) #recursively look for complex object
                 
-                cp = ContentProp(propertyName=propName, type="object", nestedContent=nestedObj)
+                cp = ParamProp(propertyName=propName, type="object", parameters=nestedObj)
                 
                 result.append(cp)
                 
             elif type == "array":
                 
                 arrayItem = self.get_items_in_array_datatype(schema.items, propName) #recursive method
-                cp = ContentProp(propertyName=propName, type="array", nestedContent=arrayItem)
+                cp = ParamProp(propertyName=propName, type="array", arrayProp=arrayItem)
                 result.append(cp)
             
             # is primitive type
             else:
-                cp = ContentProp(propertyName=propName, type=type, format=format)
+                cp = ParamProp(propertyName=propName, type=type, format=format)
                 result.append(cp)
                                     
-    # contentProp.nestedContent will be populated with new ContentProp of item in array
+    # ParamProp.parameters will be populated with new ParamProp of item in array
     def get_items_in_array_datatype(self, items, propertyName="") -> ArrayItem:
         
-        # array can contain complex object,
-        # calls get_complex_object_datatype to recurse if object data type exist
-        #property name is used only when array is of primitive type
+        # array can contain complex object or primitive type
+        # does not currently support for nested array
         
-       
         if items is None:
-            ai = ArrayItem(itemType="string") # default to string not such use case of item=None may not be possible
+            ai = ArrayItem(type="string") # default to string not such use case of item=None may not be possible
             return ai
         
-        isPrimitive, itemType = self.is_array_item_primitive_type(items)
+        isPrimitive, type = self.is_array_item_primitive_type(items)
 
         # handles array item is of primitive type
         if isPrimitive:
-            ai = ArrayItem(itemType=itemType) 
+            ai = ArrayItem(type=type) 
             return ai
         
-        if itemType == "object":
+        if type == "object":
                         
-            nestedObj = []
+            complexObject = []
                     
-            self.get_complex_object_datatype(items, nestedObj) # items is of Schema type
+            self.get_complex_object_datatype(items, complexObject) # items is of Schema type
             
-            ai = ArrayItem(itemType=itemType, itemContent=nestedObj) 
-            return ai
-        
-        # supports only 1 level of array item for now. [[1,2,3], [4,5,6]]
-        if itemType == "array":
-            
-            nestedArrayItemType = None
-            
-            if not items.items is None: # has nested array
-                nestedArrayItemType = items.items.type   
-                
-                if nestedArrayItemType == "array":
-                    nestedArrayItemType = "string"  # defaults to string if inner array is still an array   
-            else:
-                nestedArrayItemType =  items.type
-            
-            ai = ArrayItem(itemType="array", innerArrayItemType=nestedArrayItemType) 
+            ai = ArrayItem(type=type, parameters=complexObject) 
             return ai
                               
     
@@ -314,15 +267,19 @@ class OpenApi3ApiDiscover:
             
             format = propSchema.format
             
-            result.append(ContentProp(propName, type, format=format))
+            result.append(ParamProp(propName, type, format=format))
             
             
     # requestBody and content are optional in OpenApi3 for Post/Put/Patch
     # check for existence to prevent error
-    def get_postputpatch_content_properties(self, postPutPatchOperation) -> list:
+    def get_mutatorapi_body_props(self, mutatorOperation) -> list:
         
         appJsonContentType = 'application/json'
         formDataWWWFormContentType = 'application/x-www-form-urlencoded'
+        
+        # Multipart requests combine one or more sets of data into a single body, separated by boundaries.
+        # Typically use these requests for file uploads and for transferring data of several types in a single request
+        # (for example, a file along with a JSON object)
         multipartFormContentType = 'multipart/form-data' # single file upload, multi-files upload, or Json data + file upload
         streamFileUploadContentType = 'application/octet-stream'
         appPdfContentType = 'application/pdf'
@@ -333,25 +290,23 @@ class OpenApi3ApiDiscover:
         contentResult = []
         properties = None
         
-        if not postPutPatchOperation.requestBody is None:
+        if not mutatorOperation.requestBody is None:
             
-            if hasattr(postPutPatchOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
-                properties = postPutPatchOperation.requestBody.properties
+            if hasattr(mutatorOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
+                properties = mutatorOperation.requestBody.properties
                 self.get_nested_content_properties(properties, contentResult)
                 return contentResult
             
-            if hasattr(postPutPatchOperation.requestBody, 'content'): # if content exists
+            if hasattr(mutatorOperation.requestBody, 'content'): # if content exists
                 
-                content = postPutPatchOperation.requestBody.content
+                content = mutatorOperation.requestBody.content
                 
                 # */*
                 if hasattr(content, sameForOthersContentType) or self.has_attribute(content, sameForOthersContentType): 
                     sameForOthers = content[sameForOthersContentType]
                     
                     schema = sameForOthers.schema
-                    
-                    #TODO: test array
-                    
+                                      
                     #handle array params
                     if schema.type == "array":
                         self.get_items_in_array_datatype(schema.items, "")
@@ -361,27 +316,29 @@ class OpenApi3ApiDiscover:
                         if not properties is None:
                             self.get_form_data_keyval(properties, contentResult) #same handling as for keyval
                             
-                            
+                # application/json
                 if hasattr(content, appJsonContentType) or self.has_attribute(content, appJsonContentType): 
                     jsonContent = content[appJsonContentType]
                     properties = jsonContent.schema.properties
                     
-                    self.get_nested_content_properties(properties, contentResult)
-                    
+                    if not properties is None:
+                        self.get_nested_content_properties(properties, contentResult)
+                
+                # application/x-www-form-urlencoded
                 if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
                     formContent = content[formDataWWWFormContentType] 
                     properties = formContent.schema.properties
-                    #self.get_form_data_keyval(properties, dictResult)
-                    self.get_nested_content_properties(properties, contentResult)
-                    #TODO: test array in form
                     
-                    
+                    if not properties is None:
+                        self.get_nested_content_properties(properties, contentResult)
+                   
+                # multipart/form-data
                 if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
                     multipartFormContent = content[multipartFormContentType]
                     properties = multipartFormContent.schema.properties
-                    self.get_nested_content_properties(properties, contentResult)
                     
-                    #TODO: test array in json
+                    if not properties is None:
+                        self.get_nested_content_properties(properties, contentResult)
                 
                 # assume file upload base on media type with no property name
                 if (hasattr(content, streamFileUploadContentType) or self.has_attribute(content, streamFileUploadContentType) or
@@ -390,7 +347,7 @@ class OpenApi3ApiDiscover:
                     hasattr(content, imageAllContentType) or self.has_attribute(content, imageAllContentType)):
                     
                     propName = "fileupload" # fixed name for file
-                    contentResult.append(ContentProp(propName, 'string', 'binary'))
+                    contentResult.append(ParamProp(propName, 'string', 'binary'))
                 
         return contentResult
     

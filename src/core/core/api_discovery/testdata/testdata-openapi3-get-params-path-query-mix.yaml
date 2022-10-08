@@ -1,0 +1,53 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+
+# To apply Basic auth to the whole API:
+security:
+  - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
+
+
+paths:
+
+  #query string example
+  /users/search/{name}/{age}:
+    get:
+      parameters:
+        - in: path
+          name: name   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: string
+            minimum: 1
+          description: The user name wildcard
+        - in: path
+          name: age   # Note the name is the same as in the path
+          required: true
+          schema:
+            type: int
+            minimum: 1
+          description: The user age
+      responses:
+        '200':
+          description: |-
+            200 response
+
+
+  #get query string
+  /users:
+    get:
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [user, poweruser, admin]
+          required: true
+      responses:
+        '200':
+          description: OK

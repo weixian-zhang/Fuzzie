@@ -1,5 +1,5 @@
 from enum import Enum
-from apicontext_model import ApiContext, ApiVerb, ContentProp, SupportedAuthnType
+from apicontext_model import ApiContext, ApiVerb, ParamProp, SupportedAuthnType
 
 class FuzzProgressState(Enum):
     NOTSTARTED = "not started"
@@ -26,30 +26,44 @@ class ApiFuzzResponse:
     body = str      # Json string   
     error: str = ""
 
-# each 
-class ApiFuzzCase:
+# each "fuzz data set" is one ApiFuzzCase
+class ApiFuzzDataCase:
     id: str = ""
     data = {}
     request: ApiFuzzRequest = {}
     response: ApiFuzzResponse = {}
     state: FuzzProgressState = FuzzProgressState.NOTSTARTED
 
-#each set is a unque http verb + path
-class ApiFuzzCaseSet:     
+class ApiFuzzCaseSet:    
     id: str = ""
     selected: bool = True
     path: str = ''        # path includes querystring
     verb: ApiVerb = ApiVerb.GET
-    parameters: list[ContentProp]
-    postBody: dict = {},
     authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
-    fuzzcases: list[ApiFuzzCase] = []
+    fuzzDataCases: list[ApiFuzzDataCase] = []
+    
+    #* important property
+    #all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
+    # property name and value as data-type. Base on data-type fuzzer calls DataFactory.{data type} to generate tjhe correct
+    # fuzz data for that data-type
+    paramDataTemplate = {}                      
+    
+#each set is a unque http verb + path
+class GetApiFuzzCaseSet(ApiFuzzCaseSet):     
+    paramIn: str = 'path'
+    paramProperties = list[ParamProp]
+    verb: ApiVerb = ApiVerb.POST
+    
+class MutatorApiFuzzCaseSet(ApiFuzzCaseSet):     
+    bodyParamProperties: list[ParamProp] = []
+    verb: ApiVerb = ApiVerb.GET
+    
     
 class ApiFuzzReport:
     host: str   #domain or IP include port if not default 443/80
     title: str
     requiredAuthnTypes: list[str] = []
-    fuzzcaseGroups: list[ApiFuzzCaseSet] = []
+    fuzzcaseSet: list[ApiFuzzCaseSet] = []
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
 class ApiFuzzContext:
@@ -65,7 +79,7 @@ class ApiFuzzContext:
         self.port: int
         self.fuzzMode: FuzzMode = FuzzMode.Quick         
         self.fuzzcaseToExec = 50              # default 50
-        self.ApiFuzzCases: list[ApiFuzzCaseSet] = []
+        self.apiFuzzCaseSet: list[ApiFuzzCaseSet] = []
         
         self.determine_fuzzcases()
         
