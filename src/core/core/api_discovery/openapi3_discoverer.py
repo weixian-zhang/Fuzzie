@@ -1,7 +1,7 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext_model import GetApi, MutatorApi, Api, ApiContext, ApiVerb, ParamProp, ArrayItem
+from apicontext_model import GetApi, MutatorApi, BaseApi, ApiContext, ApiVerb, ParamProp, ArrayItem
 import requests
 import validators
 
@@ -80,17 +80,17 @@ class OpenApi3ApiDiscover:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
-            api.parameters = self.obtain_get_parameters(apiObj.get, api)
+            api.parameters = self.obtain_parameters(apiObj.get)
                         
             return True, api
         
-        return False, None
-    
-    def obtain_get_parameters(self, getOperation, api: GetApi) -> Dict:
+        return False, None        
+        
+    def obtain_parameters(self, operation) -> Dict:
                 
         apiParams = []
         
-        params = getOperation.parameters
+        params = operation.parameters
         
         if len(params) > 0:
             
@@ -99,7 +99,6 @@ class OpenApi3ApiDiscover:
                 name = param.name
                 schema = param.schema
                 type = schema.type
-                api.paramIn = param.in_
                 
                 if type == 'object': 
                     
@@ -134,9 +133,10 @@ class OpenApi3ApiDiscover:
             api.path = path
             api.verb = ApiVerb.POST
             
-            dictBody = self.get_mutatorapi_body_props(apiObj.post)
+            api.parameters = self.obtain_parameters(apiObj.post)
+            api.body = self.get_mutatorapi_body_props(apiObj.post)
                 
-            api.parameters = dictBody               
+            #api.parameters = dictBody               
             
             return True, api
         

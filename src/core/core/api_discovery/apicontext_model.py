@@ -61,11 +61,11 @@ class BaseApi:
     
 class GetApi(BaseApi):
     def __init__(self) -> None:
-        self.paramIn: str = ''
         self.parameters: list[ParamProp] = []
     
 class MutatorApi(BaseApi):
     def __init__(self) -> None:
+        self.parameters: list[ParamProp] = []
         self.body = {} 
     
 class Api:
@@ -77,26 +77,6 @@ class Api:
         self.isQueryString = True  # for get request only
         self.parameters: list[ParamProp] = [] 
         self.headerParameters: list[ParamProp] = []
-
-class ApiAuthnBasic:
-    def __init__(self) -> None:
-        self.username = ''
-        self.password = ''
-    
-class ApiAuthnBearerToken:
-    def __init__(self) -> None:
-        self.token = ''
-    
-class ApiAuthnApiKey:
-    def __init__(self) -> None:
-        self.headerName = ''
-        self.apikey = ''
-    
-class ApiAuthnApiKeyCookie:
-    
-    def __init__(self) -> None:
-        self.cookieName = ''
-        self.cookieValue = ''
     
 class ApiContext:
     def __init__(self) -> None:
@@ -105,8 +85,4 @@ class ApiContext:
         self.version: str = ''
         self.apis = []
         self.userInput: UserInput = None
-        self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
-        self.basicAuthn: ApiAuthnBasic = None
-        self.bearerTokenAuthn: ApiAuthnBearerToken = None
-        self.apikeyAuthn: ApiAuthnApiKey = None
-        self.apikeyCookieAuthn: ApiAuthnApiKeyCookie = None
+        

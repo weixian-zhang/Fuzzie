@@ -62,12 +62,12 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         api1 = apicontext.apis[0]
         
-        apiParam1 = api1.parameters[0]
-        apiParam2 = api1.parameters[1]
+        apiParam1 = api1.body[0]
+        apiParam2 = api1.body[1]
     
         self.assertEqual(api1.path, '/multipart-form-data/nestedjson-1')
         
-        self.assertTrue(len(api1.parameters) == 2)
+        self.assertTrue(len(api1.body) == 2)
         
         self.assertEqual(apiParam1.propertyName, 'simple')
         self.assertEqual(apiParam1.type, 'string')
@@ -118,6 +118,17 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         self.assertEqual(innerNestedComplexObjectProfileImage.type, 'string')
         self.assertEqual(innerNestedComplexObjectProfileImage.format, 'binary')
         
+    
+    # post_multipart-form-data
+    def test_openapi3_post_requestbody_with_parameters(self):
+        
+        apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post-requestbody-with-parameters.yaml') 
+    
+        openapi3 = OpenApi3ApiDiscover()
+        
+        apicontext = openapi3.load_openapi3_file(apiFilePath)
+        
+        self.assertTrue(True == True)
 
         
         
