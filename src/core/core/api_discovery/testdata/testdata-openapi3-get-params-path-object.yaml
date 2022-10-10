@@ -10,14 +10,19 @@ security:
   - ApiKeyAuth: []
 
 paths:
-  /get/path/param/object/and/array{complexObject}/{doubleParam}/{singleArray}:
+  /get/path/param/{id}:
     get:
       tags:
       - tickets
       summary: Send an JSON Object as a query param
       parameters:
-      - name: complexObject
+      - name: id
         in: path
+        required: true
+        schema:
+          type: string
+      - name: complexObject
+        in: query
         description: '{"type":"foo","color":"green"}'
         required: true
         schema:
@@ -28,7 +33,7 @@ paths:
             color:
               type: "string"
       - name: doubleParam
-        in: path
+        in: query
         required: true
         schema:
           type: array
@@ -36,7 +41,7 @@ paths:
             type: integer
 
       - name: singleArray
-        in: path
+        in: query
         required: true
         schema:
           type: array

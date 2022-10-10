@@ -9,7 +9,7 @@ class DB:
     
     def __init__(self) -> None:
         
-        self.dbpath = os.path.join(os.path.dirname(__file__), "fuzzie.sqlite")
+        self.dbpath = os.path.join(os.path.dirname(__file__), "data\\fuzzie.sqlite")
 
         self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
         

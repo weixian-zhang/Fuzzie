@@ -2,7 +2,6 @@
 
 from multiprocessing import Event
 import jsonpickle
-from fuzzcontext import FuzzProgress
 from pymitter import EventEmitter
 import datetime
 
@@ -26,7 +25,6 @@ class Message(object):
 class EventStore:
     
     GeneralEventTopic = "event_general"
-    FuzzProgressEventTopic = "fuzz_progress"
     
     def __init__(self) -> None:
         
@@ -35,8 +33,7 @@ class EventStore:
         self.fuzzProgress = []
         
         self.ee = EventEmitter()
-        self.ee.on(EventStore.GeneralEventTopic, self.handleGenLogs)
-        self.ee.on(EventStore.FuzzProgressEventTopic, self.handleFuzzProgress)
+        self.ee.on(EventStore.GeneralEventTopic, self.handleGeneralLogs)
         
     @property
     def supportExternalClientConsumeEvents(self):
@@ -89,23 +86,15 @@ class EventStore:
             return
         
         self.ee.emit(EventStore.GeneralEventTopic, m.json())
+        
     
-    
-    def emitFuzzProgress(self,  progress: FuzzProgress) -> None:
-        pass
-    
-    
-    def handleGenLogs(self, msg: str):
+    def handleGeneralLogs(self, msg: str):
         
         print(msg)
         
         #support external GUI clients to collect logs from fuzzer core
         if self.ExternalClientConsumeEvents:
             self.genlogs.append(msg)
-    
-    
-    def handleFuzzProgress(self, progress: str):
-        pass
     
     
     #used mainly by external GUI clients to get all general events happening in fuzzer core

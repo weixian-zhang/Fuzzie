@@ -1,7 +1,7 @@
 from pathlib import Path
 import unittest
 from openapi3_discoverer import OpenApi3ApiDiscover
-from apicontext_model import GetApi, MutatorApi
+from apicontext_model import Api
 import os
 from pathlib import Path
 
@@ -29,19 +29,19 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         paramProp2 = api.parameters[1]
         paramProp3 = api.parameters[2]
         
-        self.assertEqual(paramProp1.getApiParamIn, 'path')
+        self.assertEqual(paramProp1.paramType, 'path')
         self.assertEqual(paramProp1.propertyName, 'complexObject')
         self.assertEqual(paramProp1.parameters[0].propertyName ,'foo')
         self.assertEqual(paramProp1.parameters[0].type , 'string')
         self.assertEqual(paramProp1.parameters[1].propertyName, 'color')
         self.assertEqual(paramProp1.parameters[1].type, 'string')
         
-        self.assertEqual(paramProp2.getApiParamIn, 'path')
+        self.assertEqual(paramProp2.paramType, 'path')
         self.assertEqual(paramProp2.propertyName, 'doubleParam')
         self.assertEqual(paramProp2.type , 'array')
         self.assertEqual(paramProp2.arrayProp.type, 'integer')
         
-        self.assertEqual(paramProp3.getApiParamIn, 'path')
+        self.assertEqual(paramProp3.paramType, 'path')
         self.assertEqual(paramProp3.propertyName, 'singleArray')
         self.assertEqual(paramProp3.type , 'array')
         self.assertEqual(paramProp3.arrayProp.type, 'string')
