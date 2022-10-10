@@ -12,7 +12,14 @@ class ApiVerb(Enum):
     POST = "POST"
     PUT = "PUT"
     PATCH = "PATCH"
-    DELETE = "DELETE"
+    DELETE = 'DELETE'
+    
+    
+class ParameterType(Enum):
+    Path = 'path'
+    Query = 'query'
+    Header = 'header'
+    Cookie = 'cookie'
     
 class ArrayItem:
     
@@ -27,14 +34,14 @@ class ArrayItem:
 # format - generally for file property and format is binary
 class ParamProp:
     
-    def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, getApiParamIn = '') -> None:
+    def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, paramType: str = '') -> None:
         
         self.propertyName = propertyName
         self.type = type
         self.arrayProp = arrayProp
         self.parameters = parameters
         self.format = format
-        self.getApiParamIn = getApiParamIn  #only for GetApi, determines parameter In path, query, cookie, header
+        self.paramType = paramType 
         
         
     def is_file_upload() -> bool:
@@ -43,7 +50,6 @@ class ParamProp:
         return False
 
 
-    
 class UserInput:
     def __init__(self) -> None:
         self.basicAuthUsername: str = ''
@@ -51,38 +57,38 @@ class UserInput:
         self.apiKeyAuthApiKey: str = ''
         self.bearerAuthJwtToken: str = ''
 
-class BaseApi:
-    def __init__(self) -> None:
-        self.path: str = ''        # path includes querystring
-        self.operationId: str = ''
-        self.verb: ApiVerb = ApiVerb.GET
-        self.authTypes = []   
-        self.headerParameters: list[ParamProp] = []
-    
-class GetApi(BaseApi):
-    def __init__(self) -> None:
-        self.parameters: list[ParamProp] = []
-    
-class MutatorApi(BaseApi):
-    def __init__(self) -> None:
-        self.parameters: list[ParamProp] = []
-        self.body = {} 
-    
 class Api:
     def __init__(self) -> None:
         self.path: str = ''        # path includes querystring
         self.operationId: str = ''
         self.verb: ApiVerb = ApiVerb.GET
-        self.body = {}             # for post/put/patch only
-        self.isQueryString = True  # for get request only
-        self.parameters: list[ParamProp] = [] 
-        self.headerParameters: list[ParamProp] = []
+        self.authTypes = []
+        self.parameters: list[ParamProp] = []
+        self.body = {} 
+    
+# class GetApi(BaseApi):
+#     def __init__(self) -> None:
+        
+    
+# class MutatorApi(BaseApi):
+#     def __init__(self) -> None:
+#         self.parameters: list[ParamProp] = []
+        
+    
+# class Api:
+#     def __init__(self) -> None:
+#         self.path: str = ''        # path includes querystring
+#         self.operationId: str = ''
+#         self.verb: ApiVerb = ApiVerb.GET
+#         self.body = {}             # for post/put/patch only
+#         self.isQueryString = True  # for get request only
+#         self.parameters: list[ParamProp] = [] 
     
 class ApiContext:
     def __init__(self) -> None:
         self.baseUrl = []
         self.title: str = ''
         self.version: str = ''
-        self.apis = []
+        self.apis: list[Api] = []
         self.userInput: UserInput = None
         
