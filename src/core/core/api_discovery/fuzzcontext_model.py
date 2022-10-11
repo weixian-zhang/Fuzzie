@@ -16,14 +16,17 @@ class FuzzMode(Enum):
 # A materialized request info object ready to make a HTTP call with
 class ApiFuzzRequest:
     def __init__(self) -> None:  
-        self.url: str = ''
+        self.fuzzDataCaseId: str = ''
+        self.path: str = ''
         self.querystring: str = ''
+        self.url: str = ''
         self.headers = {}
         self.cookies = {}
         self.body = {}       # json string 
 
 class ApiFuzzResponse:
-    def __init__(self) -> None:  
+    def __init__(self) -> None:
+        self.fuzzDataCaseId: str = ''
         self.httpVersion: str = ''
         self.statusCode: str = ''
         self.headers = {}
@@ -34,7 +37,6 @@ class ApiFuzzResponse:
 class ApiFuzzDataCase:
     def __init__(self) -> None:  
         self.id: str = ''
-        self.data = {}
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
         self.state: FuzzProgressState = FuzzProgressState.NOTSTARTED
@@ -43,11 +45,11 @@ class ApiFuzzCaseSet:
     def __init__(self) -> None:  
         self.id: str = ''
         self.selected: bool = True
-        self.path: str = '' 
-        self.querystring: str = ''
-        self.headers = {}
-        self.cookie = {}
-        self.body: str = ''
+        # self.path: str = '' 
+        # # self.querystring: str = ''
+        # # self.headers = {}
+        # # self.cookie = {}
+        # # self.body: str = ''
         self.verb: ApiVerb = ApiVerb.GET
         self.authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
@@ -55,24 +57,16 @@ class ApiFuzzCaseSet:
         # all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
         # property name and value as data-type. Base on data-type fuzzer calls DataFactory.{data type} to generate tjhe correct
         # fuzz data for that data-type
-        self.pathDataTemplate = {}
-        self.querystringDataTemplate = {}
-        self.headergDataTemplate = {}
-        self.cookieDataTemplate = {}
-        self.bodyDataTemplate = {}
-    
-#each set is a unque http verb + path
-# class GetApiFuzzCaseSet(ApiFuzzCaseSet): 
-#     def __init__(self) -> None:    
-#         self.paramIn: str = 'path'
-#         self.paramProperties = list[ParamProp]
-#         self.verb: ApiVerb = ApiVerb.POST
-    
-# class MutatorApiFuzzCaseSet(ApiFuzzCaseSet):
-#     def __init__(self) -> None:
-#         self.bodyParamProperties: list[ParamProp] = []
-#         self.verb: ApiVerb = ApiVerb.GET
-    
+        self.pathDataTemplate: str = ''
+        self.querystringDataTemplate: str = ''
+        self.headerDataTemplate = []
+        self.cookieDataTemplate = []
+        self.bodyDataTemplate: str = ''
+        
+    # path + querystring data templates combined
+    def get_url_datatemplate(self):
+        return self.pathDataTemplate + self.querystringDataTemplate
+        
 class ApiAuthnBasic:
     def __init__(self) -> None:
         self.username = ''
