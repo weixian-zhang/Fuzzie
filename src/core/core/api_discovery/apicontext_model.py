@@ -65,25 +65,7 @@ class Api:
         self.authTypes = []
         self.parameters: list[ParamProp] = []
         self.body = {} 
-    
-# class GetApi(BaseApi):
-#     def __init__(self) -> None:
         
-    
-# class MutatorApi(BaseApi):
-#     def __init__(self) -> None:
-#         self.parameters: list[ParamProp] = []
-        
-    
-# class Api:
-#     def __init__(self) -> None:
-#         self.path: str = ''        # path includes querystring
-#         self.operationId: str = ''
-#         self.verb: ApiVerb = ApiVerb.GET
-#         self.body = {}             # for post/put/patch only
-#         self.isQueryString = True  # for get request only
-#         self.parameters: list[ParamProp] = [] 
-    
 class ApiContext:
     def __init__(self) -> None:
         self.baseUrl = []

@@ -42,7 +42,7 @@ class FuzzManager:
                                                         apikeyAuthnKey=apikeyAuthnKey)
         
     
-    def create_fuzz_context_from_openapi3_spec_file(self, filePath):
+    def create_fuzzcontext_from_openapi3_spec_file(self, filePath):
         
         openapi3Loader = OpenApi3ApiDiscover(self.eventstore)
         apicontext = openapi3Loader.load_openapi3_file(filePath)
@@ -61,7 +61,7 @@ class FuzzManager:
     
         
     
-    def create_fuzz_context_from_openapi3_url(self, url):
+    def create_fuzzcontext_from_openapi3_url(self, url):
         pass
     
     def load_existing_fuzzcontext(fuzzcontextId: str):

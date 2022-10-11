@@ -58,28 +58,18 @@ class FuzzContextCreator:
         for api in apis:
             
             fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
+            fuzzcaseSet.querystringDataTemplate = self.create_querystring_data_template(api)
+            fuzzcaseSet.bodyDataTemplate = self.create_body_data_template(api)
+            fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
+            fuzzcaseSet.cookieDataTemplate = self.create_cookie_data_template(api)
             
             self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
-        return self.fuzzcontext
-                
-    def isGet(self, verb):
-        if verb.lower() == ApiVerb.GET.value.lower():
-            return True
-        return False
-    
-    def isMutator(self, verb):
-        if (verb.lower() == ApiVerb.POST.value.lower() or
-            verb.lower() == ApiVerb.PATCH.value.lower() or
-            verb.lower() == ApiVerb.DELETE.value.lower() or
-            verb.lower() == ApiVerb.PUT.lower()):
-            return True
-        return False
-    
+        return self.fuzzcontext  
    
     
-    # does not support array in path, array is supported only in querystring
-    def create_path_data_template(self, api: Api) -> dict:
+    # does not support array in path, array is only supported in querystring
+    def create_path_data_template(self, api: Api) -> str:
         
         resultMap = {}
         
@@ -92,7 +82,6 @@ class FuzzContextCreator:
                 
                 if param.type == 'object':
                     resultMap[param.propertyName] = self.create_object_micro_data_template(param.parameters, resultMap)
-                    
                 else:
                     resultMap[param.propertyName] = self.create_jinja_micro_template(param.type)
                     
@@ -102,15 +91,91 @@ class FuzzContextCreator:
         
         return api.path
     
-    def create_querystring_data_template(self, api: Api):
-                        # elif param.type == 'array':
-                #     microTemplate = self.create_array_micro_data_template(param)
+    def create_querystring_data_template(self, api: Api) -> str:
+        
+        resultMap = {}
+        querystring = ''
+        
+        if len(api.parameters) == 0:
+            return querystring
+        
+        for param in api.parameters:
+        
+            if self.is_querystring_param(param.paramType):
                 
-                #     arrayQSTemplate = self.create_querystring_array_data_template(param, microTemplate, 5)
+                if param.type == 'object':
+                    complexObject = {}
+                    self.create_object_micro_data_template(param.parameters, complexObject)
+                    objectJsonStr = json.dumps(complexObject)
+                    querystring = querystring + f'{param.propertyName}={objectJsonStr}&' 
                     
-                #     resultMap[param.propertyName] = arrayQSTemplate
-        pass
+                elif param.type == 'array':
+                    arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
+                    querystring = querystring + f'{param.propertyName}={arrayQSTemplate}&'
+                    
+                else:
+                    querystring = querystring + f'{param.propertyName}={self.create_jinja_micro_template(param.type)}&'
+                    
+        if len(querystring) > 0:     
+            querystring = '?' + querystring
+            if querystring.endswith('&'):
+                querystring = querystring.rstrip(querystring[-1])
+        
+        return querystring
+    
+    # body wil be serialize to json string format
+    def create_body_data_template(self, api: Api) -> str:
+        
+        body = {}
+        
+        if len(api.body) == 0:
+            return body
+        
+        for param in api.body:
+        
+            if param.type == 'object':
+                complexObjectDict = {}
+                self.create_object_micro_data_template(param.parameters, complexObjectDict)
+                body[param.propertyName] = complexObjectDict
                 
+            elif param.type == 'array':
+                arrayOfDataTemplates = self.create_array_data_template_for_body(param, 5)
+                body[param.propertyName] = arrayOfDataTemplates
+            else:
+                body[param.propertyName] = self.create_jinja_micro_template(param.type)
+                
+                
+                    
+        jsonBody = json.dumps(body)
+        return jsonBody
+    
+    def create_header_data_template(self, api: Api) -> dict[str]:
+        
+        headers = {}
+        
+        if len(api.parameters) == 0:
+            return headers
+        
+        for param in api.parameters:
+            if self.is_header_param(param.paramType):
+                headers[param.propertyName] = param.type
+                  
+        return headers
+    
+    def create_cookie_data_template(self, api: Api) -> dict[str]:
+        
+        cookies = {}
+        
+        if len(api.parameters) == 0:
+            return cookies
+        
+        for param in api.parameters:
+            if self.is_cookie_param(param.paramType):
+                cookies[param.propertyName] = param.type
+                  
+        return cookies
+    
+    # data template helpers   
     def create_object_micro_data_template(self, parameters: list[ParamProp], resultMap: dict) -> dict:
         
         if parameters == None:
@@ -123,65 +188,64 @@ class FuzzContextCreator:
                 
             elif param.type == 'array':
                 
-                microTemplate = self.create_array_micro_data_template(param)
-                
-                arrayQSTemplate = self.create_querystring_array_data_template(param, microTemplate, 5)
+                arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
                 
                 resultMap[param.propertyName] = arrayQSTemplate
 
             else:
                 resultMap[param.propertyName] = self.create_jinja_micro_template(param.type)
     
-    #example: #?foo[]=bar&foo[]=qux 
-    def create_querystring_array_data_template(self, param: ParamProp, microTemplate: str, arraySize=5):
+    #example: #?foo[]=bar&foo[]=qux
+    #OpenApi3 does not support object
+    def create_array_data_template_for_querystring(self, param: ParamProp, arraySize=5):
+        
+        arrayMicroTemplate = self.create_jinja_micro_template(param.arrayProp.type)
+        
         propName = param.propertyName
         
-        template = f'?'
+        template = ''
         for x in range(arraySize):
             
             if x == arraySize - 1:
-                template = template + f'{propName}[]={microTemplate}'
+                template = template + f'{propName}[]={arrayMicroTemplate}'
             else:  
-                template = template + f'{propName}[]={microTemplate}&'
+                template = template + f'{propName}[]={arrayMicroTemplate}&'
                 
         return template
         
+    def create_array_data_template_for_body(self, param: ParamProp, arraySize=5) -> list[str]:
         
+        array = []
+        arrayMicroTemplate = self.create_jinja_micro_template(param.arrayProp.type)
     
-    def create_body_array_data_template(microTemplate: str, arraySize=5):
-        pass
-    
-    # following OpenAPI3 standard, array item only supports primitive type, object is not supported.
-    def create_array_micro_data_template(self, param: ParamProp):
-        
-        dataTemplate = self.create_jinja_micro_template(param.arrayProp.type)
-        # if param.arrayProp.type == 'object':
-                    
-        #     arrayComplexObj = {}
-        #     self.get_nested_parameters(param.arrayProp.parameters, arrayComplexObj)
-        #     dataTemplate = json.dumps(arrayComplexObj)
-        # else:   
-        #     dataTemplate = self.create_jinja_micro_template(param.arrayProp.type)
-            
-        return dataTemplate
+        for x in range(arraySize):
+            array.append(arrayMicroTemplate)
                 
+        return array
+                    
     
     def create_jinja_micro_template(self, type: str):
-        return f'{{{{ getFuzzData({type}) }}}}'
+        return f'{{{{getFuzzData({type})}}}}'
     
     def is_path_param(self, paramType):
-        
         if paramType.lower() == ParameterType.Path.value.lower():
             return True
         return False
     
-    def is_param_array(paramType: str) -> bool:
-        
-        if paramType.startswith('array:'):
-            arrayType = paramType.split(':')[0]
-            return True, arrayType
-        
-        return False, ''
+    def is_querystring_param(self, paramType):
+        if paramType.lower() == ParameterType.Query.value.lower():
+            return True
+        return False
+    
+    def is_header_param(self, paramType):
+        if paramType.lower() == ParameterType.Header.value.lower():
+            return True
+        return False
+    
+    def is_cookie_param(self, paramType):
+        if paramType.lower() == ParameterType.Cookie.value.lower():
+            return True
+        return False
         
         
         
