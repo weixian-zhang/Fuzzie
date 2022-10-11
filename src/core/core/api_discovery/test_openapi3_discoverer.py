@@ -1,11 +1,15 @@
 from pathlib import Path
 import unittest
 from openapi3_discoverer import OpenApi3ApiDiscover
-from apicontext_model import Api
-import os
+import os, sys
 from pathlib import Path
 
+parentDir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, parentDir)
+from eventstore import EventStore
+
 projectDirPath = os.path.dirname(Path(__file__))
+sys.path.insert(0, projectDirPath)
 
 class TestOpenApi3ApiDiscover(unittest.TestCase):
     
@@ -13,7 +17,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-get-params-path-object.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover()
+        openapi3 = OpenApi3ApiDiscover(EventStore())
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
@@ -23,25 +27,25 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         api = apicontext.apis[0]
         
-        self.assertTrue(len(api.parameters) == 3)
+        self.assertTrue(len(api.parameters) == 4)
         
-        paramProp1 = api.parameters[0]
-        paramProp2 = api.parameters[1]
-        paramProp3 = api.parameters[2]
+        paramProp1 = api.parameters[1]
+        paramProp2 = api.parameters[2]
+        paramProp3 = api.parameters[3]
         
-        self.assertEqual(paramProp1.paramType, 'path')
+        self.assertEqual(paramProp1.paramType, 'query')
         self.assertEqual(paramProp1.propertyName, 'complexObject')
         self.assertEqual(paramProp1.parameters[0].propertyName ,'foo')
         self.assertEqual(paramProp1.parameters[0].type , 'string')
         self.assertEqual(paramProp1.parameters[1].propertyName, 'color')
         self.assertEqual(paramProp1.parameters[1].type, 'string')
         
-        self.assertEqual(paramProp2.paramType, 'path')
+        self.assertEqual(paramProp2.paramType, 'query')
         self.assertEqual(paramProp2.propertyName, 'doubleParam')
         self.assertEqual(paramProp2.type , 'array')
         self.assertEqual(paramProp2.arrayProp.type, 'integer')
         
-        self.assertEqual(paramProp3.paramType, 'path')
+        self.assertEqual(paramProp3.paramType, 'query')
         self.assertEqual(paramProp3.propertyName, 'singleArray')
         self.assertEqual(paramProp3.type , 'array')
         self.assertEqual(paramProp3.arrayProp.type, 'string')
@@ -52,7 +56,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post_multipart-form-data.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover()
+        openapi3 = OpenApi3ApiDiscover(EventStore())
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
@@ -124,7 +128,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post-requestbody-with-parameters.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover()
+        openapi3 = OpenApi3ApiDiscover(EventStore())
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
