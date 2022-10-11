@@ -1,8 +1,6 @@
-from api_discovery.apicontext_model import ApiContext
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.fuzzcontext_creator import FuzzContextCreator
-from api_discovery.fuzzcontext_model import FuzzExecutionConfig, FuzzMode
-from api_discovery.fuzzcontext_model import ApiFuzzCaseSet, ApiFuzzContext
+from api_discovery.fuzzcontext import FuzzMode
 from eventstore import EventStore
 
 class ServiceManager:
@@ -16,7 +14,7 @@ class ServiceManager:
         
         self.fuzzcontextCreator = FuzzContextCreator()
         
-    def set_fuzzExecConfig(self,
+    def new_fuzzcontext(self,
                  hostname: str, 
                  port: int, 
                  fuzzMode: str = FuzzMode.Quick.value, 
@@ -29,7 +27,7 @@ class ServiceManager:
                  apikeyAuthnHeaderName = '',
                  apikeyAuthnKey = ''):
         
-        self.fuzzcontextCreator.set_fuzzExecutionConfig(hostname=hostname,
+        self.fuzzcontextCreator.new_fuzzcontext(hostname=hostname,
                                                         port=port,
                                                         fuzzMode=fuzzMode,
                                                         numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,

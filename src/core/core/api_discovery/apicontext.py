@@ -4,8 +4,7 @@ class SupportedAuthnType(Enum):
     Anonymous = "Anonymous",
     Basic = "Basic",
     Bearer = "Bearer",
-    ApiKey = "ApiKey",
-    ApiKeyCookie = "ApiKeyCookie"
+    ApiKey = "ApiKey"
 
 class ApiVerb(Enum):
     GET = "GET"

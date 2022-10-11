@@ -1,5 +1,5 @@
 from enum import Enum
-from apicontext_model import ApiContext, ApiVerb, ParamProp, SupportedAuthnType
+from apicontext import ApiVerb, SupportedAuthnType
 import shortuuid
 
 class FuzzProgressState(Enum):
@@ -72,15 +72,31 @@ class ApiAuthnBasic:
     def __init__(self) -> None:
         self.username = ''
         self.password = ''
+        
+    def has_cred(self):
+        if self.username != '' and self.password != '':
+            return True
+        return False
     
 class ApiAuthnBearerToken:
     def __init__(self) -> None:
+        self.headerName = 'Authorization'
         self.token = ''
+    
+    def has_cred(self):
+        if  self.headerName != '' and self.token != '':
+            return True
+        return False
     
 class ApiAuthnApiKey:
     def __init__(self) -> None:
         self.headerName = ''
         self.apikey = ''
+        
+    def has_cred(self):
+        if self.headerName != '' and self.apikey != '':
+            return True
+        return False
     
 class ApiAuthnApiKeyCookie:
     
@@ -88,14 +104,33 @@ class ApiAuthnApiKeyCookie:
         self.cookieName = ''
         self.cookieValue = ''
         
+    def has_cred(self):
+        if self.cookieName != '' and self.cookieValue != '':
+            return True
+        return False
+        
 class SecuritySchemes:
     
     def __init__(self) -> None:
         self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
+        self.isAnonymous = False
         self.basicAuthn: ApiAuthnBasic = None
         self.bearerTokenAuthn: ApiAuthnBearerToken = None
         self.apikeyAuthn: ApiAuthnApiKey = None
-        self.apikeyCookieAuthn: ApiAuthnApiKeyCookie = None
+        
+    def get_security_scheme(self) -> SupportedAuthnType:
+        if self.isAnonymous == True:
+            return SupportedAuthnType.Anonymous
+        elif self.basicAuthn.has_cred():
+            return SupportedAuthnType.Basic
+        elif self.bearerTokenAuthn.has_cred():
+            return SupportedAuthnType.Bearer
+        elif self.apikeyAuthn.has_cred():
+            return SupportedAuthnType.ApiKey
+        else:
+            return SupportedAuthnType.Anonymous
+        
+        
           
 class ApiFuzzReport:
     def __init__(self) -> None:
