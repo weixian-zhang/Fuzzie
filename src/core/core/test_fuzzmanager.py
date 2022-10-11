@@ -1,15 +1,18 @@
-import unittest
-from pathlib import Path
-import os, sys, json
-from eventstore import EventStore
 
+import os, sys
+from pathlib import Path
 projectDirPath = os.path.dirname(Path(__file__))
+sys.path.insert(0, os.path.join(projectDirPath, 'api_discovery'))
+
+from eventstore import EventStore
+import unittest
+from servicemanager import ServiceManager
+
 hostname = 'http://localhost'
 port = 5000
 
-sys.path.insert(0, os.path.join(projectDirPath, 'api_discovery'))
 
-from fuzzmanager import FuzzManager
+
 
 class TestFuzzManager(unittest.TestCase):
     
@@ -18,9 +21,9 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-get-params-path-object.yaml') 
         
-        fm = FuzzManager(EventStore())
+        fm = ServiceManager(EventStore())
     
-        fm.set_fuzzExecConfig(hostname=hostname, port=port, isAnonymous=True)
+        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
         
         fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         
@@ -29,9 +32,9 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-post_multipart-form-data.yaml') 
         
-        fm = FuzzManager(EventStore())
+        fm = ServiceManager(EventStore())
     
-        fm.set_fuzzExecConfig(hostname=hostname, port=port, isAnonymous=True)
+        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
         
         fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         
@@ -44,9 +47,9 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-GET-headers-cookies-params.yaml') 
         
-        fm = FuzzManager(EventStore())
+        fm = ServiceManager(EventStore())
     
-        fm.set_fuzzExecConfig(hostname=hostname, port=port, isAnonymous=True)
+        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
         
         fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         

@@ -4,19 +4,18 @@
 
 import json
 from sre_parse import fix_flags
-from apicontext_model import ApiContext, ApiVerb, ParameterType, ParamProp, Api, ArrayItem
-from api_discovery.fuzzcontext_model import FuzzExecutionConfig, ApiFuzzCaseSet
-from fuzzcontext_model import ApiFuzzContext, FuzzMode, SecuritySchemes
+from apicontext import ApiContext, ApiVerb, ParameterType, ParamProp, Api
+from api_discovery.fuzzcontext import FuzzExecutionConfig, ApiFuzzCaseSet
+from fuzzcontext import ApiFuzzContext, FuzzMode, SecuritySchemes
 import json
-import shortuuid
 
 class FuzzContextCreator:
     
-    def __init__(self):
+    def __init__(self, ):
         self.apicontext = None
         self.fuzzcontext = ApiFuzzContext()
         
-    def set_fuzzExecutionConfig(self,
+    def new_fuzzcontext(self,
                  hostname: str, 
                  port: int,
                  fuzzMode: str, 
@@ -28,6 +27,8 @@ class FuzzContextCreator:
                  apikeyAuthnHeaderName = '',
                  apikeyAuthnKey = ''):
         
+        self.fuzzcontext = ApiFuzzContext()
+        
         self.fuzzcontext.fuzzExecutionConfig = FuzzExecutionConfig()
         
         self.fuzzcontext.fuzzExecutionConfig.hostname = hostname
@@ -37,6 +38,7 @@ class FuzzContextCreator:
         
         #security schemes
         self.fuzzcontext.fuzzExecutionConfig.securitySchemes = SecuritySchemes()
+        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.isAnonymous = isAnonymous
         self.fuzzcontext.fuzzExecutionConfig.securitySchemes.basicAuthnUserName = basicAuthnUserName
         self.fuzzcontext.fuzzExecutionConfig.securitySchemes.basicAuthnPassword = basicAuthnPassword
         self.fuzzcontext.fuzzExecutionConfig.securitySchemes.bearerTokenHeaderName = bearerTokenHeaderName
@@ -49,12 +51,13 @@ class FuzzContextCreator:
         
     def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
         
+        if self.fuzzcontext  is None:
+            raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
+        
         apis = apicontext.apis
         
         if apis == None or len(apis) == 0:
             return ApiFuzzContext()
-        
-        fuzzcontext = ApiFuzzContext()
         
         for api in apis:
             
@@ -65,9 +68,9 @@ class FuzzContextCreator:
             fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
             fuzzcaseSet.cookieDataTemplate = self.create_cookie_data_template(api)
                     
-            fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
+            self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
-        return fuzzcontext  
+        return self.fuzzcontext  
    
     
     # does not support array in path, array is only supported in querystring
