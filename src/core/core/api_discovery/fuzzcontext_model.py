@@ -1,5 +1,6 @@
 from enum import Enum
 from apicontext_model import ApiContext, ApiVerb, ParamProp, SupportedAuthnType
+import shortuuid
 
 class FuzzProgressState(Enum):
     NOTSTARTED = "not started"
@@ -36,14 +37,14 @@ class ApiFuzzResponse:
 # each "fuzz data set" is one ApiFuzzCase
 class ApiFuzzDataCase:
     def __init__(self) -> None:  
-        self.id: str = ''
+        self.id: str = shortuuid.uuid()
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
         self.state: FuzzProgressState = FuzzProgressState.NOTSTARTED
 
 class ApiFuzzCaseSet:
     def __init__(self) -> None:  
-        self.id: str = ''
+        self.Id: str = shortuuid.uuid()
         self.selected: bool = True
         # self.path: str = '' 
         # # self.querystring: str = ''
@@ -117,7 +118,7 @@ class FuzzExecutionConfig:
 class ApiFuzzContext:
     
     def __init__(self) -> None:
-        
+        self.Id: str = shortuuid.uuid()
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
         self.fuzzExecutionConfig: FuzzExecutionConfig
         

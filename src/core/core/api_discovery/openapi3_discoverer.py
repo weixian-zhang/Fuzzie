@@ -1,7 +1,7 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext_model import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
+from apicontext import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 import requests
 import validators
 

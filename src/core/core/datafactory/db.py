@@ -29,5 +29,5 @@ class DB:
     
         result = self.cursor.fetchmany()
         
-    def insert(self, tsql: str):
+    def execute(self, tsql: str):
         self.cursor.execute(tsql)

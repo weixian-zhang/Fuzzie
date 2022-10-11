@@ -8,6 +8,7 @@ from apicontext_model import ApiContext, ApiVerb, ParameterType, ParamProp, Api,
 from api_discovery.fuzzcontext_model import FuzzExecutionConfig, ApiFuzzCaseSet
 from fuzzcontext_model import ApiFuzzContext, FuzzMode, SecuritySchemes
 import json
+import shortuuid
 
 class FuzzContextCreator:
     
@@ -53,19 +54,20 @@ class FuzzContextCreator:
         if apis == None or len(apis) == 0:
             return ApiFuzzContext()
         
-        fuzzcaseSet = ApiFuzzCaseSet()
+        fuzzcontext = ApiFuzzContext()
         
         for api in apis:
             
+            fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
             fuzzcaseSet.querystringDataTemplate = self.create_querystring_data_template(api)
             fuzzcaseSet.bodyDataTemplate = self.create_body_data_template(api)
             fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
             fuzzcaseSet.cookieDataTemplate = self.create_cookie_data_template(api)
+                    
+            fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
-            self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
-            
-        return self.fuzzcontext  
+        return fuzzcontext  
    
     
     # does not support array in path, array is only supported in querystring
