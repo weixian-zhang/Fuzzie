@@ -9,7 +9,7 @@ from docopt import docopt
 
 from flask import  Flask, jsonify, request, Response
 from flask_graphql import GraphQLView
-from graphql_schema import schema
+from graphql import schema
 
 import atexit
 from eventstore import EventStore
