@@ -38,27 +38,26 @@ class ParameterType(graphene.Enum):
     Header = 'header'
     Cookie = 'cookie'
 
-class ApiAuthnBasic(graphene.ObjectType):
+class AuthnBasic(graphene.ObjectType):
     username = graphene.String()
     password = graphene.String()
         
     
-class ApiAuthnBearerToken(graphene.ObjectType):
+class AuthnBearerToken(graphene.ObjectType):
     headerName = graphene.String()
     token = graphene.String()
     
-class ApiAuthnApiKey(graphene.ObjectType):
+class AuthnApiKey(graphene.ObjectType):
     headerName = graphene.String()
     apikey = graphene.String()
 
 class SecuritySchemes(graphene.ObjectType):
-    
-    def __init__(self) -> None:
-        self.authnType = graphene.Field(SupportedAuthnType)
-        self.isAnonymous = False
-        self.basicAuthn: ApiAuthnBasic = None
-        self.bearerTokenAuthn: ApiAuthnBearerToken = None
-        self.apikeyAuthn: ApiAuthnApiKey = None
+    authnType = graphene.Field(SupportedAuthnType)
+    isAnonymous = graphene.Boolean()
+    basicAuthn = graphene.Field(AuthnBasic)
+    bearerTokenAuthn = graphene.Field(AuthnBearerToken)
+    apikeyAuthn = graphene.Field(AuthnBearerToken)
+        
         
 class ApiFuzzRequest(graphene.ObjectType):
     Id = graphene.String()
@@ -85,42 +84,41 @@ class ApiFuzzResponse(graphene.ObjectType):
         
 
 # each "fuzz data set" is one ApiFuzzCase
-# class ApiFuzzDataCase(graphene.ObjectType):
-#    id = graphene.String()
-#    fuzzcaseId = graphene.String()
-#    request = graphene.Field(ApiFuzzRequest)
-#    response = graphene.Field(ApiFuzzResponse)
-#    state = graphene.Field(FuzzProgressState)
+class ApiFuzzDataCase(graphene.ObjectType):
+   id = graphene.String()
+   fuzzcaseId = graphene.String()
+   request = graphene.Field(ApiFuzzRequest)
+   response = graphene.Field(ApiFuzzResponse)
+   state = graphene.Field(FuzzProgressState)
         
     
-# class ApiFuzzCaseSet(graphene.ObjectType):
-#     Id = graphene.String()
-#     selected = graphene.Boolean()
-#     verb = graphene.Field(ApiVerb) 
-#     authnType = graphene.Field(SupportedAuthnType)
-#     fuzzDataCases = graphene.List(graphene.Field(ApiFuzzDataCase))
+class ApiFuzzCaseSet(graphene.ObjectType):
+    Id = graphene.String()
+    selected = graphene.Boolean()
+    verb = graphene.Field(ApiVerb) 
+    authnType = graphene.Field(SupportedAuthnType)
+    fuzzDataCases = graphene.List(graphene.Field(ApiFuzzDataCase))
 
-# class FuzzExecutionConfig(graphene.ObjectType):
-    
-#     hostname = graphene.String()
-#     port = graphene.Int()
-#     fuzzMode =graphene.Field(ApiVerb)
-#     fuzzcaseToExec = graphene.Int(default_value=50)
-#     securitySchemes = graphene.Field(SecuritySchemes)
+class FuzzExecutionConfig(graphene.ObjectType):
+    hostname = graphene.String()
+    port = graphene.Int()
+    fuzzMode =graphene.Field(ApiVerb)
+    fuzzcaseToExec = graphene.Int(default_value=50)
+    securitySchemes = graphene.Field(SecuritySchemes)
         
         
-# class ApiFuzzContext(graphene.ObjectType):
-#     Id: str = graphene.String()
-#     datetime: graphene.DateTime()
-#     fuzzcaseSets: graphene.List(graphene.Field(ApiFuzzCaseSet))
-#     fuzzExecutionConfig = graphene.Field(FuzzExecutionConfig)
+class ApiFuzzContext(graphene.ObjectType):
+    Id: str = graphene.String()
+    datetime: graphene.DateTime()
+    fuzzcaseSets: graphene.List(graphene.Field(ApiFuzzCaseSet))
+    fuzzExecutionConfig = graphene.Field(FuzzExecutionConfig)
     
 class Query(graphene.ObjectType):
     
-    fuzzcontexts = graphene.List(graphene.String)
+    fuzzcontexts = graphene.List(ApiFuzzContext)
     
     def resolve_fuzzcontexts(self,info):
-        return ['']
+        return [None]
     
     
     
