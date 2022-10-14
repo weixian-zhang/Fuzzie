@@ -71,7 +71,7 @@ class ApiFuzzCaseSet:
     def get_url_datatemplate(self):
         return self.pathDataTemplate + self.querystringDataTemplate
         
-class ApiAuthnBasic:
+class AuthnBasic:
     def __init__(self) -> None:
         self.username = ''
         self.password = ''
@@ -81,7 +81,7 @@ class ApiAuthnBasic:
             return True
         return False
     
-class ApiAuthnBearerToken:
+class AuthnBearerToken:
     def __init__(self) -> None:
         self.headerName = 'Authorization'
         self.token = ''
@@ -91,7 +91,7 @@ class ApiAuthnBearerToken:
             return True
         return False
     
-class ApiAuthnApiKey:
+class AuthnApiKey:
     def __init__(self) -> None:
         self.headerName = ''
         self.apikey = ''
@@ -107,9 +107,9 @@ class SecuritySchemes:
     def __init__(self) -> None:
         self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
         self.isAnonymous = False
-        self.basicAuthn: ApiAuthnBasic = None
-        self.bearerTokenAuthn: ApiAuthnBearerToken = None
-        self.apikeyAuthn: ApiAuthnApiKey = None
+        self.basicAuthn: AuthnBasic = None
+        self.bearerTokenAuthn: AuthnBearerToken = None
+        self.apikeyAuthn: AuthnApiKey = None
         
     def get_security_scheme(self) -> SupportedAuthnType:
         if self.isAnonymous == True:

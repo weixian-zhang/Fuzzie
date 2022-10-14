@@ -58,7 +58,6 @@ class SecuritySchemes(graphene.ObjectType):
     bearerTokenAuthn = graphene.Field(AuthnBearerToken)
     apikeyAuthn = graphene.Field(AuthnBearerToken)
         
-        
 class ApiFuzzRequest(graphene.ObjectType):
     Id = graphene.String()
     datetime = graphene.DateTime()
