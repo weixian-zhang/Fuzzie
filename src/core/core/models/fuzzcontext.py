@@ -70,58 +70,30 @@ class ApiFuzzCaseSet:
     # path + querystring data templates combined
     def get_url_datatemplate(self):
         return self.pathDataTemplate + self.querystringDataTemplate
+            
         
-class AuthnBasic:
-    def __init__(self) -> None:
-        self.username = ''
-        self.password = ''
+# class SecuritySchemes:
+    
+#     def __init__(self) -> None:
+#         self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
+#         self.isAnonymous = False
+#         self.basicUsername = ''
+#         self.basicPassword  = ''
+#         self.bearerToken  = ''
+#         self.apikeyHeader  = ''
+#         self.apikey  = ''
         
-    def has_cred(self):
-        if self.username != '' and self.password != '':
-            return True
-        return False
-    
-class AuthnBearerToken:
-    def __init__(self) -> None:
-        self.headerName = 'Authorization'
-        self.token = ''
-    
-    def has_cred(self):
-        if  self.headerName != '' and self.token != '':
-            return True
-        return False
-    
-class AuthnApiKey:
-    def __init__(self) -> None:
-        self.headerName = ''
-        self.apikey = ''
-        
-    def has_cred(self):
-        if self.headerName != '' and self.apikey != '':
-            return True
-        return False
-    
-        
-class SecuritySchemes:
-    
-    def __init__(self) -> None:
-        self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
-        self.isAnonymous = False
-        self.basicAuthn: AuthnBasic = None
-        self.bearerTokenAuthn: AuthnBearerToken = None
-        self.apikeyAuthn: AuthnApiKey = None
-        
-    def get_security_scheme(self) -> SupportedAuthnType:
-        if self.isAnonymous == True:
-            return SupportedAuthnType.Anonymous
-        elif self.basicAuthn.has_cred():
-            return SupportedAuthnType.Basic
-        elif self.bearerTokenAuthn.has_cred():
-            return SupportedAuthnType.Bearer
-        elif self.apikeyAuthn.has_cred():
-            return SupportedAuthnType.ApiKey
-        else:
-            return SupportedAuthnType.Anonymous
+#     def get_security_scheme(self) -> SupportedAuthnType:
+#         if self.isAnonymous == True:
+#             return SupportedAuthnType.Anonymous
+#         elif self.basicUsername != '' and self.basicPassword != '':
+#             return SupportedAuthnType.Basic
+#         elif self.bearerToken != '':
+#             return SupportedAuthnType.Bearer
+#         elif self.apikeyHeader != '' and self.apikey != '':
+#             return SupportedAuthnType.ApiKey
+#         else:
+#             return SupportedAuthnType.Anonymous
         
         
           
@@ -132,14 +104,14 @@ class ApiFuzzReport:
         self.requiredAuthnTypes: list[str] = []
         self.fuzzcaseSet: list[ApiFuzzCaseSet] = []
         
-class FuzzExecutionConfig:
+# class FuzzExecutionConfig:
     
-    def __init__(self) -> None:
-        self.hostname: str = ''
-        self.port: int
-        self.fuzzMode: FuzzMode = FuzzMode.Quick         
-        self.fuzzcaseToExec = 50              # default 50
-        self.securitySchemes: SecuritySchemes = SecuritySchemes()
+#     def __init__(self) -> None:
+#         self.hostname: str = ''
+#         self.port: int
+#         self.fuzzMode: FuzzMode = FuzzMode.Quick         
+#         self.fuzzcaseToExec = 50
+#         self.securitySchemes: SecuritySchemes = SecuritySchemes()
 
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
@@ -148,20 +120,65 @@ class ApiFuzzContext:
     def __init__(self) -> None:
         self.Id: str = shortuuid.uuid()
         self.datetime: datetime
+        self.name = ''
+        
+        # execution
+        self.hostname: str = ''
+        self.port: int
+        self.fuzzMode: FuzzMode = FuzzMode.Quick         
+        self.fuzzcaseToExec = 50
+        
+        #security schemes
+        self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
+        self.isAnonymous = False
+        self.basicUsername = ''
+        self.basicPassword  = ''
+        self.bearerTokenHeader = ''
+        self.bearerToken  = ''
+        self.apikeyHeader  = ''
+        self.apikey  = ''
+        
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
-        self.fuzzExecutionConfig: FuzzExecutionConfig
+        #self.fuzzExecutionConfig: FuzzExecutionConfig
         
         #self.determine_num_of_fuzzcases(self.fuzzExecutionConfig)
     
-    def determine_numof_fuzzcases_to_run(self):
+    def get_fuzzcases_to_run(self):
         
         if self.fuzzExecutionConfig.fuzzMode == FuzzMode.Quick .value:
             self.fuzzExecutionConfig.fuzzcaseToExec = 50
         elif self.fuzzExecutionConfig.fuzzMode == FuzzMode.Full.value:
             self.fuzzExecutionConfig.fuzzcaseToExec = 50000
         elif self.fuzzExecutionConfig.fuzzMode == FuzzMode.Custom.value:
-            if self.fuzzExecutionConfig.fuzzcaseToExec <= 0:     # default to 50 if no value
+            if self.fuzzExecutionConfig.fuzzcaseToExec <= 0:
                 self.fuzzExecutionConfig.fuzzcaseToExec = 50
+                
+    def is_basic_authn(self):
+        if self.get_security_scheme() == SupportedAuthnType.Basic:
+            return True
+        return False
+    
+    def is_bearertoken_authn(self):
+        if self.get_security_scheme() == SupportedAuthnType.Bearer:
+            return True
+        return False
+    
+    def is_apikey_authn(self):
+        if self.get_security_scheme() == SupportedAuthnType.ApiKey:
+            return True
+        return False
+                
+    def get_security_scheme(self) -> SupportedAuthnType:
+        if self.isAnonymous == True:
+            return SupportedAuthnType.Anonymous
+        elif self.basicUsername != '' and self.basicPassword != '':
+            return SupportedAuthnType.Basic
+        elif self.bearerToken != '':
+            return SupportedAuthnType.Bearer
+        elif self.apikeyHeader != '' and self.apikey != '':
+            return SupportedAuthnType.ApiKey
+        else:
+            return SupportedAuthnType.Anonymous
             
 
     

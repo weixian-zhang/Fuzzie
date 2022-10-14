@@ -5,13 +5,14 @@
 import json
 from sre_parse import fix_flags
 import shortuuid
+from datetime import datetime
 
 import os,sys
 from pathlib import Path
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
-from apicontext import ApiContext, ApiVerb, ParameterType, ParamProp, Api
+from apicontext import ApiContext, ParameterType, ParamProp, Api
 from fuzzcontext import FuzzExecutionConfig, ApiFuzzCaseSet
 from fuzzcontext import ApiFuzzContext, SecuritySchemes
 
@@ -23,19 +24,23 @@ class FuzzContextCreator:
         self.fuzzcontext = ApiFuzzContext()
         
     def new_fuzzcontext(self,
+                 name: str ,
                  hostname: str, 
                  port: int,
                  fuzzMode: str, 
                  numberOfFuzzcaseToExec: int = 50, 
                  isAnonymous = False,
                  basicAuthnUserName = '', basicAuthnPassword = '',
-                 bearerTokenHeaderName = 'Authorization',
+                 bearerTokenHeader = 'Authorization',
                  bearerToken = '', 
-                 apikeyAuthnHeaderName = '',
-                 apikeyAuthnKey = ''):
+                 apikeyHeader = '',
+                 apikey = ''):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
+        if self.name == '':
+            self.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        self.fuzzcontext.datetime = datetime.now()
         
         self.fuzzcontext.fuzzExecutionConfig = FuzzExecutionConfig()
         
@@ -45,14 +50,13 @@ class FuzzContextCreator:
         self.fuzzcontext.fuzzExecutionConfig.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
         
         #security schemes
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes = SecuritySchemes()
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.isAnonymous = isAnonymous
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.basicAuthnUserName = basicAuthnUserName
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.basicAuthnPassword = basicAuthnPassword
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.bearerTokenHeaderName = bearerTokenHeaderName
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.bearerToken = bearerToken
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.apikeyAuthnHeaderName = apikeyAuthnHeaderName
-        self.fuzzcontext.fuzzExecutionConfig.securitySchemes.apikeyAuthnKey = apikeyAuthnKey
+        self.fuzzcontext.isAnonymous = isAnonymous
+        self.fuzzcontext.basicUsername = basicAuthnUserName
+        self.fuzzcontext.basicPassword = basicAuthnPassword
+        self.fuzzcontext.bearerTokenHeader = bearerTokenHeader
+        self.fuzzcontext.bearerToken = bearerToken
+        self.fuzzcontext.apikeyHeader = apikeyHeader
+        self.fuzzcontext.apikey = apikey
         
         #determine number of fuzz tets runs base on Quick Mode, Full Mode or Custom Mode
         self.fuzzcontext.determine_numof_fuzzcases_to_run()

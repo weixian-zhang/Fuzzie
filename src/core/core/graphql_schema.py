@@ -38,25 +38,14 @@ class ParameterType(graphene.Enum):
     Header = 'header'
     Cookie = 'cookie'
 
-class AuthnBasic(graphene.ObjectType):
-    username = graphene.String()
-    password = graphene.String()
-        
-    
-class AuthnBearerToken(graphene.ObjectType):
-    headerName = graphene.String()
-    token = graphene.String()
-    
-class AuthnApiKey(graphene.ObjectType):
-    headerName = graphene.String()
-    apikey = graphene.String()
-
 class SecuritySchemes(graphene.ObjectType):
     authnType = graphene.Field(SupportedAuthnType)
     isAnonymous = graphene.Boolean()
-    basicAuthn = graphene.Field(AuthnBasic)
-    bearerTokenAuthn = graphene.Field(AuthnBearerToken)
-    apikeyAuthn = graphene.Field(AuthnBearerToken)
+    basiccUsername = graphene.String()
+    basicPassword = graphene.String()
+    bearerToken = graphene.String()
+    apikeyHeader = graphene.String()
+    apikey = graphene.String()
         
 class ApiFuzzRequest(graphene.ObjectType):
     Id = graphene.String()
@@ -107,18 +96,86 @@ class FuzzExecutionConfig(graphene.ObjectType):
         
         
 class ApiFuzzContext(graphene.ObjectType):
-    Id: str = graphene.String()
+    Id = graphene.String()
+    name = graphene.String()
     datetime: graphene.DateTime()
+    
+    hostname = graphene.String()
+    port = graphene.Int()
+    fuzzMode = graphene.Field(FuzzMode)
+    fuzzcaseToExec = graphene.Int(default_value=50)
+    
+    #security schemes
+    authnType = graphene.Field(SupportedAuthnType)
+    isAnonymous = graphene.Boolean()
+    basicUsername = graphene.String()
+    basicPassword  = graphene.String()
+    bearerToken  = graphene.String()
+    apikeyHeader  = graphene.String()
+    apikey  = graphene.String()
+    
     fuzzcaseSets: graphene.List(graphene.Field(ApiFuzzCaseSet))
     fuzzExecutionConfig = graphene.Field(FuzzExecutionConfig)
-    
+
+# queries
 class Query(graphene.ObjectType):
     
     fuzzcontexts = graphene.List(ApiFuzzContext)
     
+    fuzzContext = graphene.Field(type=ApiFuzzContext, fuzzcontextId=graphene.String())
+    
     def resolve_fuzzcontexts(self,info):
         return [None]
     
+    def resolve_fuzzContext(self,info, fuzzcontextId):
+        r = ApiFuzzContext()
+        r.name = fuzzcontextId
+        return r
+
+# mutations
+class DiscoverOpenApi3ByFilePath(graphene.Mutation):
+    
+    class Arguments:
+        name = graphene.String()
+        hostname = graphene.String()
+        port = graphene.Int()
+        isAnonymous = graphene.Boolean()
+        username = graphene.String()
+        password = graphene.String()
+        bearerTokenHeader = graphene.String()
+        bearerToken = graphene.String()
+        apikeyHeader = graphene.String()
+        apikey = graphene.String()
+    
+    ok = graphene.Boolean()
+    apiFuzzContext = graphene.Field(ApiFuzzContext)
+    
+    def mutate(self, info, name, hostname, port, isAnonymous, username='', password='', bearerToken='', apikeyHeader='', apikey=''):
+        apiFuzzContext = ApiFuzzContext()
+        apiFuzzContext.name = name
+        apiFuzzContext.hostname = hostname
+        apiFuzzContext.port = port
+        
+        ok = True
+        return DiscoverOpenApi3ByFilePath(apiFuzzContext=apiFuzzContext, ok=ok)
+    
+class Mutation(graphene.ObjectType):
+    
+    discover_by_openapi3_file_path = DiscoverOpenApi3ByFilePath.Field()
+    
+    #discoverByOpenAPI3FilePath(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
+    
+    #discoverByOpenAPI3Url(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
+    
+    #discoverBySingleRequestText(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
+    
+    #discoverByRequestTextFilePath(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
+    
+
+# subscription
+# only used when a fuzz test happens as Fuzzie needs to report to GUI client, the status of each API in fuzz-operation
+class Subscription(graphene.ObjectType):
+    pass
     
     
-schema = graphene.Schema(query=Query)
+schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)
