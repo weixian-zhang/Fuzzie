@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from apicontext import ApiVerb, SupportedAuthnType
 import shortuuid
@@ -16,8 +17,11 @@ class FuzzMode(Enum):
 # describes a HTTP request header, Url and/or body with hydrated with seclist data 
 # A materialized request info object ready to make a HTTP call with
 class ApiFuzzRequest:
-    def __init__(self) -> None:  
+    def __init__(self) -> None:
+        self.Id: str = ''
+        self.datetime: datetime 
         self.fuzzDataCaseId: str = ''
+        self.datetime: datetime
         self.path: str = ''
         self.querystring: str = ''
         self.url: str = ''
@@ -27,6 +31,8 @@ class ApiFuzzRequest:
 
 class ApiFuzzResponse:
     def __init__(self) -> None:
+        self.Id: str = ''
+        self.datetime: datetime
         self.fuzzDataCaseId: str = ''
         self.httpVersion: str = ''
         self.statusCode: str = ''
@@ -34,23 +40,20 @@ class ApiFuzzResponse:
         self.body = str      # json string   
         self.error: str = ''
 
-# each "fuzz data set" is one ApiFuzzCase
+# each fuzz data case is a unique verb + path + fuzz data
 class ApiFuzzDataCase:
     def __init__(self) -> None:  
-        self.id: str = shortuuid.uuid()
+        self.Id: str = ''
+        self.fuzzcaseId: str = ''
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
         self.state: FuzzProgressState = FuzzProgressState.NOTSTARTED
 
+# each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
     def __init__(self) -> None:  
         self.Id: str = shortuuid.uuid()
         self.selected: bool = True
-        # self.path: str = '' 
-        # # self.querystring: str = ''
-        # # self.headers = {}
-        # # self.cookie = {}
-        # # self.body: str = ''
         self.verb: ApiVerb = ApiVerb.GET
         self.authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
@@ -98,16 +101,6 @@ class ApiAuthnApiKey:
             return True
         return False
     
-class ApiAuthnApiKeyCookie:
-    
-    def __init__(self) -> None:
-        self.cookieName = ''
-        self.cookieValue = ''
-        
-    def has_cred(self):
-        if self.cookieName != '' and self.cookieValue != '':
-            return True
-        return False
         
 class SecuritySchemes:
     
@@ -154,6 +147,7 @@ class ApiFuzzContext:
     
     def __init__(self) -> None:
         self.Id: str = shortuuid.uuid()
+        self.datetime: datetime
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
         self.fuzzExecutionConfig: FuzzExecutionConfig
         

@@ -7,13 +7,12 @@ Usage:
 
 from docopt import docopt
 
-import graphene
 from flask import  Flask, jsonify, request, Response
+from flask_graphql import GraphQLView
+from graphql_schema import schema
 
-from fuzzcontext import ApiFuzzContext
 import atexit
 from eventstore import EventStore
-from fuzzmanager import FuzzManager
 
 # disable Flask logging
 import logging
@@ -25,15 +24,23 @@ app = Flask(__name__)
 host='localhost'
 webserverPort = 50001
 
+#init flask-graphql
+app.add_url_rule(
+    '/graphql',
+    view_func=GraphQLView.as_view(
+        'graphql',
+        schema=schema,
+        graphiql=True # for having the GraphiQL interface
+    )
+)
+
 # runs when program exits
 def on_exit():
-    eventstore.info("Fuzzie Fuzzer closing")
+    eventstore.emitInfo("Fuzzie stopping")
 atexit.register(on_exit)
 
 # declare and init own modules
-es = EventStore()
-fuzzmanager = FuzzManager(es)
-
+eventstore = EventStore()
 
 #main entry point and startup
 def startup():
@@ -45,59 +52,25 @@ def startup():
     if args['webserver']:
         
         
-        es.supportExternalClientConsumeEvents = True
+        eventstore.supportExternalClientConsumeEvents = True
         
-        es.emitInfo('starting Fuzzie Fuzzer')
+        eventstore.emitInfo('starting Fuzzie')
         
-        es.emitInfo('starting Fuzzie web server')
-        es.emitInfo('Fuzzie Fuzzer started')
+        eventstore.emitInfo('starting Fuzzie web server')
+        eventstore.emitInfo('Fuzzie Fuzzer started')
         
         
         app.run(port=webserverPort, threaded=True)
         
-        es.emitInfo("Fuzzie-Fuzzer web server closing")
+        eventstore.emitInfo("Fuzzie-Fuzzer web server closing")
     else:
-        es.emitInfo('Fuzzie Fuzzer started')
-    
+        eventstore.emitInfo('Fuzzie Fuzzer started')
     
 
-# flask request handlers
-@app.route('/api/status', methods = ['GET'])
-def get_status():
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
     
-    status = {
-        'isReady': True
-    }
-    
-    return jsonify(status)
-
-
-@app.route('/api/fuzz', methods = ['POST'])
-def start_fuzz():
-    
-    json = request.json
-    
-    fuzzmanager.fuzz(json)
-
-
-@app.route('/api/fuzz/progress', methods = ['GET'])
-def get_fuzz_progress():
-    
-    return jsonify({})
-
-@app.route('/api/events', methods = ['GET'])
-def get_events():
-    
-    events = es.getGeneralEventsByBatch()
-    
-    return jsonify(events)
-
-@app.route('/api/fuzz/report', methods = ['GET'])
-def get_fuzz_report():
-    
-    return jsonify({})
-
-
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     startup()
 

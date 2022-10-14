@@ -1,7 +1,6 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 import requests
 import validators
 
@@ -10,6 +9,9 @@ from pathlib import Path
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 from eventstore import EventStore
+
+sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
+from apicontext import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 
 class OpenApi3ApiDiscover:
     

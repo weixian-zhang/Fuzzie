@@ -1,6 +1,6 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.fuzzcontext_creator import FuzzContextCreator
-from api_discovery.fuzzcontext import FuzzMode
+from models.fuzzcontext import FuzzMode
 from eventstore import EventStore
 
 class ServiceManager:

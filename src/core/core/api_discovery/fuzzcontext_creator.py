@@ -4,10 +4,17 @@
 
 import json
 from sre_parse import fix_flags
+import shortuuid
+
+import os,sys
+from pathlib import Path
+parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
+
 from apicontext import ApiContext, ApiVerb, ParameterType, ParamProp, Api
-from api_discovery.fuzzcontext import FuzzExecutionConfig, ApiFuzzCaseSet
-from fuzzcontext import ApiFuzzContext, FuzzMode, SecuritySchemes
-import json
+from fuzzcontext import FuzzExecutionConfig, ApiFuzzCaseSet
+from fuzzcontext import ApiFuzzContext, SecuritySchemes
+
 
 class FuzzContextCreator:
     
@@ -28,6 +35,7 @@ class FuzzContextCreator:
                  apikeyAuthnKey = ''):
         
         self.fuzzcontext = ApiFuzzContext()
+        self.fuzzcontext.Id = shortuuid.uuid()
         
         self.fuzzcontext.fuzzExecutionConfig = FuzzExecutionConfig()
         
