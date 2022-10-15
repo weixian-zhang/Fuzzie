@@ -135,7 +135,7 @@ class FuzzContextCreator:
         return querystring
     
     # body wil be serialize to json string format
-    def create_body_data_template(self, api: Api) -> str:
+    def create_body_data_template(self, api: Api)  -> dict[str]:
         
         body = {}
         
@@ -156,9 +156,7 @@ class FuzzContextCreator:
                 body[param.propertyName] = self.create_jinja_micro_template(param.type)
                 
                 
-                    
-        jsonBody = json.dumps(body)
-        return jsonBody
+        return body
     
     def create_header_data_template(self, api: Api) -> dict[str]:
         
