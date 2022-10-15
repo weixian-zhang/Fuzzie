@@ -1,0 +1,81 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+
+# To apply Basic auth to the whole API:
+security:
+  - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /get/path/param/{id}:
+    get:
+      tags:
+      - tickets
+      summary: Send an JSON Object as a query param
+
+      #header param
+      parameters:
+      - in: header
+        name: X-Request-ID
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: header
+        name: CustomHeader-2
+        schema:
+          type: integer
+        required: true
+
+      #cookie params
+      - in: cookie
+        name: debug
+        schema:
+          type: integer
+          enum: [0, 1]
+          default: 0
+      - in: cookie
+        name: csrftoken
+        schema:
+          type: string
+
+      #path params
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: complexObject
+        in: query
+        description: '{"type":"foo","color":"green"}'
+        required: true
+        schema:
+          type: object
+          properties:
+            foo:
+              type: "string"
+            color:
+              type: "string"
+      - name: doubleParam
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+
+      - name: singleArray
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: OK
+
+  
