@@ -13,8 +13,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 from apicontext import ApiContext, ParameterType, ParamProp, Api
-from fuzzcontext import FuzzExecutionConfig, ApiFuzzCaseSet
-from fuzzcontext import ApiFuzzContext, SecuritySchemes
+from fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext
 
 
 class FuzzContextCreator:
@@ -42,11 +41,9 @@ class FuzzContextCreator:
             self.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
         self.fuzzcontext.datetime = datetime.now()
         
-        self.fuzzcontext.fuzzExecutionConfig = FuzzExecutionConfig()
-        
-        self.fuzzcontext.fuzzExecutionConfig.hostname = hostname
-        self.fuzzcontext.fuzzExecutionConfig.port = port
-        self.fuzzcontext.fuzzExecutionConfig.fuzzMode = fuzzMode
+        self.fuzzcontext.hostname = hostname
+        self.fuzzcontext.port = port
+        self.fuzzcontext.fuzzMode = fuzzMode
         self.fuzzcontext.fuzzExecutionConfig.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
         
         #security schemes

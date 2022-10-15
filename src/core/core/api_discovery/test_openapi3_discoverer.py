@@ -1,13 +1,12 @@
 from pathlib import Path
 import unittest
 from openapi3_discoverer import OpenApi3ApiDiscover
+
 import os, sys
 from pathlib import Path
-
 parentDir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentDir)
 from eventstore import EventStore
-
 projectDirPath = os.path.dirname(Path(__file__))
 sys.path.insert(0, projectDirPath)
 

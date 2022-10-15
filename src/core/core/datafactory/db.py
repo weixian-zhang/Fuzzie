@@ -1,33 +1,49 @@
+import sqlalchemy as db
 
-import sqlite3
-import os
+import os, sys
+from pathlib import Path
+parentDir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, os.path.join(parentDir, 'models'))
+from models.fuzzcontext import ApiFuzzContext
 
-# sqlite json extension
-#https://www.youtube.com/watch?v=yxuroInnJNs
+dbEngine=db.create_engine('sqlite:////data/fuzzie.sqlite')
 
-class DB:
-    
-    def __init__(self) -> None:
-        
-        self.dbpath = os.path.join(os.path.dirname(__file__), "data\\fuzzie.sqlite")
+connection = dbEngine.connect()
 
-        self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
-        
-        self.cursor = self.sqliteconn.cursor()
+
+
+
+
+
+# import sqlite3
+# import os
+
+# # sqlite json extension
+# #https://www.youtube.com/watch?v=yxuroInnJNs
+
+# class DB:
     
-    def fetch_one(self, tsql: str):
+#     def __init__(self) -> None:
         
-        self.cursor.execute(tsql)
+#         self.dbpath = os.path.join(os.path.dirname(__file__), "data\\fuzzie.sqlite")
+
+#         self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
         
-        result = self.cursor.fetchone()[0]
-        
-        return result
+#         self.cursor = self.sqliteconn.cursor()
     
-    def fetch_many(self, tsql: str):
+#     def fetch_one(self, tsql: str):
         
-        self.cursor.execute(tsql)
+#         self.cursor.execute(tsql)
+        
+#         result = self.cursor.fetchone()[0]
+        
+#         return result
     
-        result = self.cursor.fetchmany()
+#     def fetch_many(self, tsql: str):
         
-    def execute(self, tsql: str):
-        self.cursor.execute(tsql)
+#         self.cursor.execute(tsql)
+    
+#         result = self.cursor.fetchmany()
+        
+#     def execute(self, tsql: str):
+#         self.cursor.execute(tsql)
