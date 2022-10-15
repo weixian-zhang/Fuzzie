@@ -1,11 +1,22 @@
 from typing import Dict
 from openapi3 import OpenAPI
 import yaml   
-from apicontext_model import GetApi, MutatorApi, Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 import requests
 import validators
 
+import os,sys
+from pathlib import Path
+parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, parentFolderOfThisFile)
+from eventstore import EventStore
+
+sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
+from apicontext import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
+
 class OpenApi3ApiDiscover:
+    
+    def __init__(self, eventstore: EventStore) -> None:
+        self.eventstore = eventstore
     
     def load_openapi3_file(self, file_path: str):
         
@@ -61,36 +72,36 @@ class OpenApi3ApiDiscover:
                   if hasGet:
                       apicontext.apis.append(getApi)
                   
-                  hasPost, postApi = self.create_post_api(apiObj, pathStr)
+                  hasPost, postApi = self.create_mutator_api(apiObj, pathStr)
                   if hasPost:
                       apicontext.apis.append(postApi)
                     
             return apicontext
         
         except Exception as e:
-            print(e)
+            self.eventstore.emitErr(e)
             raise
         
         
     def create_get_api(self, apiObj, path):
         
         if not apiObj.get is None:
-            api = GetApi()
+            api = Api()
             if not apiObj.get.operationId is None:
                 api.operationId = apiObj.get.operationId
             api.path = path
             api.verb = ApiVerb.GET
-            api.parameters = self.obtain_get_parameters(apiObj.get, api)
+            api.parameters = self.obtain_parameters(apiObj.get)
                         
             return True, api
         
-        return False, None
-    
-    def obtain_get_parameters(self, getOperation, api: GetApi) -> Dict:
+        return False, None        
+        
+    def obtain_parameters(self, operation) -> Dict:
                 
         apiParams = []
         
-        params = getOperation.parameters
+        params = operation.parameters
         
         if len(params) > 0:
             
@@ -99,7 +110,6 @@ class OpenApi3ApiDiscover:
                 name = param.name
                 schema = param.schema
                 type = schema.type
-                api.paramIn = param.in_
                 
                 if type == 'object': 
                     
@@ -107,7 +117,7 @@ class OpenApi3ApiDiscover:
                 
                     self.get_complex_object_datatype(schema, complexObj)
                     
-                    cp = ParamProp(propertyName=name, type="object", parameters=complexObj, getApiParamIn=param.in_)
+                    cp = ParamProp(propertyName=name, type="object", parameters=complexObj, paramType=param.in_)
                     
                     apiParams.append(cp)
                         
@@ -116,27 +126,26 @@ class OpenApi3ApiDiscover:
                     
                     ai: ArrayItem = self.get_items_in_array_datatype(items, name)
                     
-                    cp = ParamProp(propertyName=name, type=type, arrayProp=ai, getApiParamIn=param.in_)
+                    cp = ParamProp(propertyName=name, type=type, arrayProp=ai, paramType=param.in_)
                     
                     apiParams.append(cp)
                         
                 else:
-                    apiParams.append(ParamProp(name, type, getApiParamIn=param.in_))
+                    apiParams.append(ParamProp(name, type, paramType=param.in_))
                                      
         return apiParams
         
     
-    def create_post_api(self, apiObj, path):
+    def create_mutator_api(self, apiObj, path):
         
         if not apiObj.post is None:
             
-            api = MutatorApi()
+            api = Api()
             api.path = path
             api.verb = ApiVerb.POST
             
-            dictBody = self.get_mutatorapi_body_props(apiObj.post)
-                
-            api.parameters = dictBody               
+            api.parameters = self.obtain_parameters(apiObj.post)
+            api.body = self.get_mutatorapi_body_props(apiObj.post)         
             
             return True, api
         

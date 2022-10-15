@@ -15,7 +15,34 @@ paths:
       tags:
       - tickets
       summary: Send an JSON Object as a query param
+
+      #header param
       parameters:
+      - in: header
+        name: X-Request-ID
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: header
+        name: CustomHeader-2
+        schema:
+          type: integer
+        required: true
+
+      #cookie params
+      - in: cookie
+        name: debug
+        schema:
+          type: integer
+          enum: [0, 1]
+          default: 0
+      - in: cookie
+        name: csrftoken
+        schema:
+          type: string
+
+      #path params
       - name: id
         in: path
         required: true

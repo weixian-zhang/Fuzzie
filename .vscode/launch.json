@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug Fuzzer no flask",
+			"name": "debug Fuzzie flask_graphql",
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
@@ -31,22 +31,6 @@
 			"jinja": true,
 			"justMyCode": true,
 			"cwd": "${workspaceFolder}/src/tests/core"
-		},
-		{
-			"name": "flask fuzzie fuzzer",
-			"type": "python",
-			"request": "launch",
-			"module": "flask",
-			"env": {
-				"FLASK_APP": "main.py"
-			},
-			"args": [
-				"run",
-				"-p 50001"
-			],
-			"jinja": true,
-			"justMyCode": true,
-			"cwd": "${workspaceFolder}/src/core/core"
 		},
 		{
 			"name": "debug vscode extension",
