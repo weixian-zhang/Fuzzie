@@ -23,7 +23,6 @@ class FuzzContextCreator:
         self.fuzzcontext = ApiFuzzContext()
         
     def new_fuzzcontext(self,
-                 name: str ,
                  hostname: str, 
                  port: int,
                  fuzzMode: str, 
@@ -33,18 +32,19 @@ class FuzzContextCreator:
                  bearerTokenHeader = 'Authorization',
                  bearerToken = '', 
                  apikeyHeader = '',
-                 apikey = ''):
+                 apikey = '',
+                 name = ''):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
-        if self.name == '':
-            self.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        if self.fuzzcontext.name == '':
+            self.fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
         self.fuzzcontext.datetime = datetime.now()
         
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
         self.fuzzcontext.fuzzMode = fuzzMode
-        self.fuzzcontext.fuzzExecutionConfig.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
+        self.fuzzcontext.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
         
         #security schemes
         self.fuzzcontext.isAnonymous = isAnonymous
@@ -54,9 +54,6 @@ class FuzzContextCreator:
         self.fuzzcontext.bearerToken = bearerToken
         self.fuzzcontext.apikeyHeader = apikeyHeader
         self.fuzzcontext.apikey = apikey
-        
-        #determine number of fuzz tets runs base on Quick Mode, Full Mode or Custom Mode
-        self.fuzzcontext.determine_numof_fuzzcases_to_run()
         
     def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
         
