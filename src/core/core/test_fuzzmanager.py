@@ -4,9 +4,10 @@ from pathlib import Path
 projectDirPath = os.path.dirname(Path(__file__))
 sys.path.insert(0, os.path.join(projectDirPath, 'api_discovery'))
 
+from openapi3_fuzzcontext_creator import FuzzContextCreator
+from models.fuzzcontext import ApiFuzzContext, FuzzMode
 from eventstore import EventStore
 import unittest
-from servicemanager import ServiceManager
 
 hostname = 'http://localhost'
 port = 5000
@@ -21,22 +22,40 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-get-params-path-object.yaml') 
         
-        fm = ServiceManager(EventStore())
-    
-        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
+        fcc = FuzzContextCreator()
+        fcc.new_fuzzcontext(hostname=hostname,
+                            port=port,
+                            fuzzMode= FuzzMode.Quick,
+                            numberOfFuzzcaseToExec=50,
+                            isAnonymous=True,
+                            basicAuthnUserName='',
+                            basicAuthnPassword='',
+                            bearerTokenHeaderName='',
+                            bearerToken='',
+                            apikeyAuthnHeaderName='',
+                            apikeyAuthnKey='')
         
-        fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
+        fuzzcontext = fcc.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         
         
     def test_openapi3_POST_multipartform(self):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-post_multipart-form-data.yaml') 
         
-        fm = ServiceManager(EventStore())
-    
-        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
+        fcc = FuzzContextCreator()
+        fcc.new_fuzzcontext(hostname=hostname,
+                            port=port,
+                            fuzzMode= FuzzMode.Quick,
+                            numberOfFuzzcaseToExec=50,
+                            isAnonymous=True,
+                            basicAuthnUserName='',
+                            basicAuthnPassword='',
+                            bearerTokenHeaderName='',
+                            bearerToken='',
+                            apikeyAuthnHeaderName='',
+                            apikeyAuthnKey='')
         
-        fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
+        fuzzcontext = fcc.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         
         self.assertGreater(len(fuzzcontext.fuzzcaseSets), 0)
         
@@ -47,11 +66,20 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(projectDirPath, 'api_discovery\\testdata\\testdata-openapi3-GET-headers-cookies-params.yaml') 
         
-        fm = ServiceManager(EventStore())
-    
-        fm.new_fuzzcontext(hostname=hostname, port=port, isAnonymous=True)
+        fcc = FuzzContextCreator()
+        fcc.new_fuzzcontext(hostname=hostname,
+                            port=port,
+                            fuzzMode= FuzzMode.Quick,
+                            numberOfFuzzcaseToExec=50,
+                            isAnonymous=True,
+                            basicAuthnUserName='',
+                            basicAuthnPassword='',
+                            bearerTokenHeaderName='',
+                            bearerToken='',
+                            apikeyAuthnHeaderName='',
+                            apikeyAuthnKey='')
         
-        fuzzcontext = fm.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
+        fuzzcontext = fcc.create_fuzzcontext_from_openapi3_spec_file(openapi3Yaml)
         
         self.assertGreater(len(fuzzcontext.fuzzcaseSets), 0)
         
