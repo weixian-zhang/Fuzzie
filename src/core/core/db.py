@@ -41,12 +41,12 @@ api_fuzzcaseset_table = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
                             Column('verb', String),
-                            Column('pathDataTemplate', String),
-                            Column('querystringDataTemplate', String),
-                            Column('headerDataTemplate', String),
-                            Column('cookieDataTemplate', Integer),
-                            Column('bodyDataTemplate', String),
-                            Column('fuzzcontextId', Integer, ForeignKey(f'{apifuzzcontext_TableName}.Id')),
+                            Column('pathDataTemplate', String, nullable=True),
+                            Column('querystringDataTemplate', String, nullable=True),
+                            Column('headerDataTemplate', String, nullable=True),
+                            Column('cookieDataTemplate', String, nullable=True),
+                            Column('bodyDataTemplate', String, nullable=True),
+                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
 
@@ -64,7 +64,7 @@ api_fuzzRequest_table = Table(apifuzzRequest_TableName, metadata,
                             Column('headers', String),
                             Column('cookies', Integer),
                             Column('body', String),
-                            Column('fuzzDataCaseId', Integer, ForeignKey(f'{api_fuzzdatacase_table}.Id'))
+                            Column('fuzzDataCaseId', String, ForeignKey(f'{api_fuzzdatacase_table}.Id'))
                             )
 
 api_fuzzResponse_table = Table(apifuzzResponse_TableName, metadata,
@@ -74,7 +74,7 @@ api_fuzzResponse_table = Table(apifuzzResponse_TableName, metadata,
                             Column('reasonPharse', String),
                             Column('headers', String),
                             Column('body', String),
-                            Column('fuzzDataCaseId', Integer, ForeignKey(f'{apifuzzResponse_TableName}.Id'))
+                            Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id'))
                             )
                             
     

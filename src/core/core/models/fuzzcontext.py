@@ -96,7 +96,7 @@ class ApiFuzzCaseSet:
         self.Id: str = ''
         self.selected: bool = True
         self.verb: ApiVerb = ApiVerb.GET
-        self.authnType: SupportedAuthnType = SupportedAuthnType.Anonymous
+        self.fuzzcontextId = ''
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
     
         # all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
