@@ -13,9 +13,9 @@ dbconn = engine.connect()
 metadata = MetaData(engine)
 
 apifuzzcontext_TableName = 'ApiFuzzContext'
+apifuzzcontextSet_TableName = 'ApiFuzzCaseSet'
 
-
-api_fuzzcontex_table = Table(apifuzzcontext_TableName, metadata,
+api_fuzzcontext_table = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('name', String),
@@ -32,9 +32,22 @@ api_fuzzcontex_table = Table(apifuzzcontext_TableName, metadata,
                             Column('apikeyHeader', String),
                             Column('apikey', String)
                             )
+    
+api_fuzzcontextSet_table = Table(apifuzzcontextSet_TableName, metadata,
+                            Column('Id', String, primary_key=True),
+                            Column('selected', Boolean),
+                            Column('verb', String),
+                            Column('pathDataTemplate', String),
+                            Column('querystringDataTemplate', String),
+                            Column('headerDataTemplate', String),
+                            Column('cookieDataTemplate', Integer),
+                            Column('bodyDataTemplate', String),
+                            Column('fuzzcontextId', Integer, ForeignKey(f'{apifuzzcontext_TableName}.Id')),
+
+                            )
 
 
-    # create table if not exist
+# create tables if not exist
 metadata.create_all()
     
 # if not engine.dialect.has_table(engine, table_name):
