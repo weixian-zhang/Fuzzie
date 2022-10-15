@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlalchemy
 from sqlalchemy import *
 from sqlalchemy.sql import select
@@ -13,7 +14,10 @@ dbconn = engine.connect()
 metadata = MetaData(engine)
 
 apifuzzcontext_TableName = 'ApiFuzzContext'
-apifuzzcontextSet_TableName = 'ApiFuzzCaseSet'
+apifuzzCaseSet_TableName = 'ApiFuzzCaseSet'
+apifuzzDataCase_TableName = 'ApiFuzzDataCase'
+apifuzzRequest_TableName = 'ApiFuzzRequest'
+apifuzzResponse_TableName = 'ApiFuzzResponse'
 
 api_fuzzcontext_table = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
@@ -33,7 +37,7 @@ api_fuzzcontext_table = Table(apifuzzcontext_TableName, metadata,
                             Column('apikey', String)
                             )
     
-api_fuzzcontextSet_table = Table(apifuzzcontextSet_TableName, metadata,
+api_fuzzcaseset_table = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
                             Column('verb', String),
@@ -43,22 +47,38 @@ api_fuzzcontextSet_table = Table(apifuzzcontextSet_TableName, metadata,
                             Column('cookieDataTemplate', Integer),
                             Column('bodyDataTemplate', String),
                             Column('fuzzcontextId', Integer, ForeignKey(f'{apifuzzcontext_TableName}.Id')),
-
                             )
 
 
+api_fuzzdatacase_table = Table(apifuzzDataCase_TableName, metadata,
+                            Column('Id', String, primary_key=True),
+                            Column('fuzzCaseSetId', Integer, ForeignKey(f'{apifuzzDataCase_TableName}.Id')),
+                            )
+
+api_fuzzRequest_table = Table(apifuzzRequest_TableName, metadata,
+                            Column('Id', String, primary_key=True),
+                            Column('datetime', DateTime),
+                            Column('path', String),
+                            Column('querystring', String),
+                            Column('url', String),
+                            Column('headers', String),
+                            Column('cookies', Integer),
+                            Column('body', String),
+                            Column('fuzzDataCaseId', Integer, ForeignKey(f'{api_fuzzdatacase_table}.Id'))
+                            )
+
+api_fuzzResponse_table = Table(apifuzzResponse_TableName, metadata,
+                            Column('Id', String, primary_key=True),
+                            Column('datetime', DateTime),
+                            Column('statusCode', String),
+                            Column('reasonPharse', String),
+                            Column('headers', String),
+                            Column('body', String),
+                            Column('fuzzDataCaseId', Integer, ForeignKey(f'{apifuzzResponse_TableName}.Id'))
+                            )
+                            
+    
 # create tables if not exist
 metadata.create_all()
-    
-# if not engine.dialect.has_table(engine, table_name):
-#    # Added to models.tables the new table I needed ( format Table as written above )
-#    table_models = importlib.import_module('models.tables')
-
-#    # Grab the class that represents the new table
-#    # table_name = 'NewTableC'
-#    ORMTable = getattr(table_models, table_name)            
-
-#    # checkfirst=True to make sure it doesn't exists
-#    ORMTable.__table__.create(bind=engine, checkfirst=True)
 
 

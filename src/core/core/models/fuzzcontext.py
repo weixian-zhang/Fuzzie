@@ -2,14 +2,14 @@ from datetime import datetime
 from enum import Enum
 from apicontext import ApiVerb, SupportedAuthnType
 
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
-from sqlalchemy.orm import relationship, backref, object_session
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
+# from sqlalchemy.orm import relationship, backref, object_session
+# from sqlalchemy.ext.declarative import declarative_base
 
 #sqlalchemy query from Model itself
 #ref: https://stackoverflow.com/questions/14337244/how-to-query-inside-a-class-in-sqlalchemy
 
-SqlAlchemyBase = declarative_base()
+# SqlAlchemyBase = declarative_base()
 
 class FuzzProgressState(Enum):
     NOTSTARTED = "not started"
@@ -21,22 +21,24 @@ class FuzzMode(Enum):
     Quick = 'quick'
     Full = 'full'
     Custom = 'custom'
-    
+
+# rfc 2616
+# https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
 # describes a HTTP request header, Url and/or body with hydrated with seclist data 
 # A materialized request info object ready to make a HTTP call with
-class ApiFuzzRequest(SqlAlchemyBase):
+class ApiFuzzRequest:
     
-    __tablename__ = 'ApiFuzzRequest'
-    Id = Column(String, primary_key=True)
-    datetime = Column(DateTime)
-    path = Column(String)
-    querystring = Column(String)
-    url = Column(String)
-    headers = Column(String)
-    cookies = Column(String)
-    body = Column(String)
+    # __tablename__ = 'ApiFuzzRequest'
+    # Id = Column(String, primary_key=True)
+    # datetime = Column(DateTime)
+    # path = Column(String)
+    # querystring = Column(String)
+    # url = Column(String)
+    # headers = Column(String)
+    # cookies = Column(String)
+    # body = Column(String)
     
-    fuzzDataCaseId = Column(Integer, ForeignKey("ApiFuzzDataCase.Id"))
+    # fuzzDataCaseId = Column(Integer, ForeignKey("ApiFuzzDataCase.Id"))
     
     def __init__(self) -> None:
         self.Id: str = ''
@@ -50,25 +52,24 @@ class ApiFuzzRequest(SqlAlchemyBase):
         self.cookies = {}    # json 
         self.body = {}       # json 
 
-class ApiFuzzResponse(SqlAlchemyBase):
+# rfc 2616
+# https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6
+class ApiFuzzResponse:
     def __init__(self) -> None:
         self.Id: str = ''
         self.datetime: datetime
         self.fuzzDataCaseId: str = ''
-        self.httpVersion: str = ''
         self.statusCode: str = ''
-        self.headers = {}    # json 
-        self.cookies = {}    # json 
-        self.body = {}       # json 
+        self.reasonPharse: str = ''
+        self.headers = {}    # json
         self.body = str      # json   
-        self.error: str = ''
 
 # each fuzz data case is a unique verb + path + fuzz data
-class ApiFuzzDataCase(SqlAlchemyBase):
+class ApiFuzzDataCase:
     
-    __tablename__ = 'ApiFuzzDataCase'
-    Id = Column(String, primary_key=True)
-    fuzzCaseSetId = Column(Integer, ForeignKey("ApiFuzzCaseSet.Id"))
+    # __tablename__ = 'ApiFuzzDataCase'
+    # Id = Column(String, primary_key=True)
+    # fuzzCaseSetId = Column(Integer, ForeignKey("ApiFuzzCaseSet.Id"))
     
     def __init__(self) -> None:  
         self.Id: str = ''
@@ -78,18 +79,18 @@ class ApiFuzzDataCase(SqlAlchemyBase):
         self.state: FuzzProgressState = FuzzProgressState.NOTSTARTED
 
 # each "fuzz data set" is one a unique verb + path
-class ApiFuzzCaseSet(SqlAlchemyBase):
+class ApiFuzzCaseSet:
     
-    __tablename__ = 'ApiFuzzCaseSet'
-    Id = Column(String, primary_key=True)
-    selected = Column(Boolean)
-    verb = Column(String)
-    pathDataTemplate = Column(String)
-    querystringDataTemplate = Column(String)
-    headerDataTemplate = Column(String)         # json
-    cookieDataTemplate = Column(String)         # json
-    bodyDataTemplate = Column(String)           # json
-    fuzzcontextId = Column(Integer, ForeignKey("ApiFuzzContext.Id"))
+    # __tablename__ = 'ApiFuzzCaseSet'
+    # Id = Column(String, primary_key=True)
+    # selected = Column(Boolean)
+    # verb = Column(String)
+    # pathDataTemplate = Column(String)
+    # querystringDataTemplate = Column(String)
+    # headerDataTemplate = Column(String)         # json
+    # cookieDataTemplate = Column(String)         # json
+    # bodyDataTemplate = Column(String)           # json
+    # fuzzcontextId = Column(Integer, ForeignKey("ApiFuzzContext.Id"))
     
     def __init__(self) -> None:  
         self.Id: str = ''
@@ -113,24 +114,24 @@ class ApiFuzzCaseSet(SqlAlchemyBase):
 
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
-class ApiFuzzContext(SqlAlchemyBase):
+class ApiFuzzContext:
     
-    __tablename__ = 'ApiFuzzContext'
-    Id = Column(String, primary_key=True)
-    datetime = Column(DateTime)
-    name = Column(String)
-    hostname = Column(String)
-    port = Column(String)
-    fuzzMode = Column(String)
-    fuzzcaseToExec = Column(Integer)
-    authnType = Column(String)
-    isAnonymous = Column(Boolean)
-    basicUsername = Column(String)
-    basicPassword  = Column(String)
-    bearerTokenHeader = Column(String)
-    bearerToken  = Column(String)
-    apikeyHeader  = Column(String)
-    apikey  = Column(String)
+    # __tablename__ = 'ApiFuzzContext'
+    # Id = Column(String, primary_key=True)
+    # datetime = Column(DateTime)
+    # name = Column(String)
+    # hostname = Column(String)
+    # port = Column(String)
+    # fuzzMode = Column(String)
+    # fuzzcaseToExec = Column(Integer)
+    # authnType = Column(String)
+    # isAnonymous = Column(Boolean)
+    # basicUsername = Column(String)
+    # basicPassword  = Column(String)
+    # bearerTokenHeader = Column(String)
+    # bearerToken  = Column(String)
+    # apikeyHeader  = Column(String)
+    # apikey  = Column(String)
     
     def __init__(self) -> None:
         self.Id: str = ''
