@@ -33,7 +33,9 @@ class FuzzContextCreator:
                  bearerToken = '', 
                  apikeyHeader = '',
                  apikey = '',
-                 name = ''):
+                 name = '',
+                 filePath = '',
+                 url = ''):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
@@ -41,6 +43,8 @@ class FuzzContextCreator:
             self.fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
         self.fuzzcontext.datetime = datetime.now()
         
+        self.fuzzcontext.filePath = filePath
+        self.fuzzcontext.url = url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
         self.fuzzcontext.fuzzMode = fuzzMode
@@ -68,6 +72,7 @@ class FuzzContextCreator:
         for api in apis:
             
             fuzzcaseSet = ApiFuzzCaseSet()
+            fuzzcaseSet.verb = api.verb
             fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
             fuzzcaseSet.querystringDataTemplate = self.create_querystring_data_template(api)
             fuzzcaseSet.bodyDataTemplate = self.create_body_data_template(api)

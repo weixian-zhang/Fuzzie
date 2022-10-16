@@ -18,7 +18,8 @@ class TestFuzzManager(unittest.TestCase):
     
     def test_openapi3_GET_path_object(self):
         
-        openapi3Yaml = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-get-params-path-object.yaml')
+        filePath = 'testdata\\testdata-openapi3-get-params-path-object.yaml'
+        openapi3Yaml = os.path.join(projectDirPath, filePath)
         
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
@@ -35,9 +36,14 @@ class TestFuzzManager(unittest.TestCase):
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
-                            apikey='')
+                            apikey='',
+                            filePath=filePath)
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
+        
+        self.assertEqual(len(fuzzcontext.fuzzcaseSets), 1)
+        
+        self.assertGreaterEqual(len(fuzzcontext.fuzzcaseSets[0].pathDataTemplate), 0)
         
         
     def test_openapi3_POST_multipartform(self):
@@ -58,7 +64,8 @@ class TestFuzzManager(unittest.TestCase):
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
-                            apikey='')
+                            apikey='',
+                            filePath='testdata\\testdata-openapi3-post_multipart-form-data.yaml')
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
@@ -67,9 +74,38 @@ class TestFuzzManager(unittest.TestCase):
         self.assertGreater(len(fuzzcontext.fuzzcaseSets[0].bodyDataTemplate), 0)
         
     
+    def test_openapi3_by_Url_1(self):
+        
+        url = 'https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/link-example.yaml'
+        
+        openapi3Dis = OpenApi3ApiDiscover(EventStore())
+        apicontext = openapi3Dis.load_openapi3_url(url)
+        
+        fcc = FuzzContextCreator()
+        fcc.new_fuzzcontext(hostname=hostname,
+                            port=port,
+                            fuzzMode= FuzzMode.Quick,
+                            numberOfFuzzcaseToExec=50,
+                            isAnonymous=True,
+                            basicAuthnUserName='',
+                            basicAuthnPassword='',
+                            bearerTokenHeader='',
+                            bearerToken='',
+                            apikeyHeader='',
+                            apikey='',
+                            url=url)
+        
+        fuzzcontext = fcc.create_fuzzcontext(apicontext)
+        
+        self.assertEqual(len(fuzzcontext.fuzzcaseSets), 6)
+        
+        self.assertGreater(len(fuzzcontext.fuzzcaseSets[5].pathDataTemplate), 0)
+        
+    
     def test_openapi3_GET_headers_cookies_params(self):
         
-        openapi3Yaml = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-GET-headers-cookies-params.yaml') 
+        filePath = 'testdata\\testdata-openapi3-GET-headers-cookies-params.yaml'
+        openapi3Yaml = os.path.join(projectDirPath, filePath) 
         
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
@@ -85,7 +121,8 @@ class TestFuzzManager(unittest.TestCase):
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
-                            apikey='')
+                            apikey='',
+                            filePath=filePath)
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
