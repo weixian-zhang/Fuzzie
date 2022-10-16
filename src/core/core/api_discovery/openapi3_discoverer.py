@@ -15,8 +15,8 @@ from apicontext import Api, ApiContext, ApiVerb, ParamProp, ArrayItem
 
 class OpenApi3ApiDiscover:
     
-    def __init__(self, eventstore: EventStore) -> None:
-        self.eventstore = eventstore
+    def __init__(self) -> None:
+        self.eventstore = EventStore()
     
     def load_openapi3_file(self, file_path: str):
         

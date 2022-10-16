@@ -1,6 +1,6 @@
 import unittest
 
-from db import api_fuzzcontext_table, api_fuzzcaseset_table, dbconn, metadata
+from db import FuzzContextTable, FuzzCaseSetTable, dbconn, metadata
 from sqlalchemy.sql import select, insert
 import json
 
@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 openapi3TestDataYamlPath = os.path.join(os.path.dirname(Path(__file__)), 'api_discovery\\testdata')
 
+
 class TestFuzzManager(unittest.TestCase):
     
     def setUp(self):
@@ -25,7 +26,7 @@ class TestFuzzManager(unittest.TestCase):
         
         
     def test_query_apifuzzcontext_join_fuzzCaseSet(self):
-        query = select([api_fuzzcontext_table])
+        query = select([FuzzContextTable])
         results = dbconn.execute(query)
         results.fetchall()
         
@@ -33,7 +34,7 @@ class TestFuzzManager(unittest.TestCase):
         
         openapi3Yaml = os.path.join(openapi3TestDataYamlPath, 'testdata-openapi3-get-params-path-object.yaml')
         
-        openapi3Dis = OpenApi3ApiDiscover(EventStore())
+        openapi3Dis = OpenApi3ApiDiscover()
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
         
         fcc = OpenApi3FuzzContextCreator()
@@ -43,8 +44,8 @@ class TestFuzzManager(unittest.TestCase):
                             fuzzMode= FuzzMode.Quick,
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
-                            basicAuthnUserName='',
-                            basicAuthnPassword='',
+                            basicUsername='',
+                            basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
@@ -53,15 +54,16 @@ class TestFuzzManager(unittest.TestCase):
         fuzzcontext: ApiFuzzContext = fcc.create_fuzzcontext(apicontext)
         
         securityScheme = fuzzcontext.get_security_scheme().name
-        fcId = shortuuid.uuid()
+
         fuzzcontextStmt = (
-            insert(api_fuzzcontext_table).
-            values(Id=fcId, 
+            insert(FuzzContextTable).
+            values(
+                   Id=fuzzcontext.Id, 
                    datetime=datetime.now(),
                    name = fuzzcontext.name,
                     hostname = fuzzcontext.hostname,
                     port = fuzzcontext.port,
-                    fuzzMode = fuzzcontext.fuzzMode.name,
+                    fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
                     authnType = securityScheme,
                     isAnonymous = fuzzcontext.isAnonymous,
@@ -83,21 +85,24 @@ class TestFuzzManager(unittest.TestCase):
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
-                    insert(api_fuzzcaseset_table).
+                    insert(FuzzCaseSetTable).
                     values(
-                        Id=shortuuid.uuid(), 
+                        Id=fcset.Id, 
                         selected = fcset.selected,
-                        verb = fcset.verb.name,
+                        verb = fcset.verb,
+                        path = fcset.path,
+                        querystringNonTemplate = fcset.querystringNonTemplate,
+                        bodyNonTemplate = fcset.bodyNonTemplate,
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = header,
                         cookieDataTemplate = cookies,
                         bodyDataTemplate =  body,
-                        fuzzcontextId = fcId
+                        fuzzcontextId = fuzzcontext.Id
                         )
                 )
                 
-                dbconn.execute(fcSetStmt)    
+                dbconn.execute(fcSetStmt)   
     
 
 if __name__ == '__main__':
