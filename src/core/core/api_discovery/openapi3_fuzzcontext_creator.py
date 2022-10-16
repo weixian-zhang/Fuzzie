@@ -50,12 +50,7 @@ class OpenApi3FuzzContextCreator:
             
         self.fuzzcontext.datetime = datetime.now()
         
-        if fuzzMode == FuzzMode.Quick.name:
-            self.fuzzcontext.fuzzMode = FuzzMode.Quick
-        elif fuzzMode == FuzzMode.Full.name:
-            self.fuzzcontext.fuzzMode = FuzzMode.Full
-        else:
-             self.fuzzcontext.fuzzMode = FuzzMode.Custom
+        self.fuzzcontext.fuzzMode = self.get_fuzzmode(fuzzMode)
         
         self.fuzzcontext.filePath = filePath
         self.fuzzcontext.url = url
@@ -86,7 +81,7 @@ class OpenApi3FuzzContextCreator:
             
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
-            fuzzcaseSet.verb = api.verb
+            fuzzcaseSet.verb = api.verb.name
             
             fuzzcaseSet.path = api.path
             
@@ -293,6 +288,15 @@ class OpenApi3FuzzContextCreator:
         if paramType.lower() == ParameterType.Cookie.value.lower():
             return True
         return False
+    
+    def get_fuzzmode(self, fuzzmode: str):
+        
+        if fuzzmode == FuzzMode.Quick.name:
+            return FuzzMode.Quick.name
+        elif fuzzmode == FuzzMode.Full.name:
+            return FuzzMode.Full.name
+        else:
+             return FuzzMode.Custom.name
         
         
         
