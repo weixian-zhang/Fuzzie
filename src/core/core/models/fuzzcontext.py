@@ -81,24 +81,18 @@ class ApiFuzzDataCase:
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
     
-    # __tablename__ = 'ApiFuzzCaseSet'
-    # Id = Column(String, primary_key=True)
-    # selected = Column(Boolean)
-    # verb = Column(String)
-    # pathDataTemplate = Column(String)
-    # querystringDataTemplate = Column(String)
-    # headerDataTemplate = Column(String)         # json
-    # cookieDataTemplate = Column(String)         # json
-    # bodyDataTemplate = Column(String)           # json
-    # fuzzcontextId = Column(Integer, ForeignKey("ApiFuzzContext.Id"))
-    
     def __init__(self) -> None:  
         self.Id: str = ''
-        self.selected: bool = True
+        self.selected: bool = True          # to be use in future to support GUI select 1 or more API to fuzz instead of default all APIs
         self.verb: ApiVerb = ApiVerb.GET
         self.fuzzcontextId = ''
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
-    
+        
+        # "original" non jinja data template strings
+        self.path = ''
+        self.querystringNonTemplate = ''
+        self.bodyNonTemplate = ''
+        
         # all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
         # property name and value as data-type. Base on data-type fuzzer calls DataFactory.{data type} to generate tjhe correct
         # fuzz data for that data-type
@@ -115,23 +109,6 @@ class ApiFuzzCaseSet:
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
 class ApiFuzzContext:
-    
-    # __tablename__ = 'ApiFuzzContext'
-    # Id = Column(String, primary_key=True)
-    # datetime = Column(DateTime)
-    # name = Column(String)
-    # hostname = Column(String)
-    # port = Column(String)
-    # fuzzMode = Column(String)
-    # fuzzcaseToExec = Column(Integer)
-    # authnType = Column(String)
-    # isAnonymous = Column(Boolean)
-    # basicUsername = Column(String)
-    # basicPassword  = Column(String)
-    # bearerTokenHeader = Column(String)
-    # bearerToken  = Column(String)
-    # apikeyHeader  = Column(String)
-    # apikey  = Column(String)
     
     def __init__(self) -> None:
         self.Id: str = ''

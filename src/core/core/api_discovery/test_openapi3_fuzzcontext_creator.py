@@ -5,7 +5,7 @@ projectDirPath = os.path.dirname(Path(__file__))
 # sys.path.insert(0, os.path.join(projectDirPath, 'api_discovery'))
 
 from openapi3_discoverer import OpenApi3ApiDiscover
-from openapi3_fuzzcontext_creator import FuzzContextCreator
+from openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.fuzzcontext import FuzzMode
 from eventstore import EventStore
 import unittest
@@ -24,15 +24,15 @@ class TestFuzzManager(unittest.TestCase):
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
         
-        fcc = FuzzContextCreator()
+        fcc = OpenApi3FuzzContextCreator(EventStore())
         fcc.new_fuzzcontext(
                             hostname=hostname,
                             port=port,
-                            fuzzMode= FuzzMode.Quick,
+                            fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
-                            basicAuthnUserName='',
-                            basicAuthnPassword='',
+                            basicUsername='',
+                            basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
@@ -53,14 +53,14 @@ class TestFuzzManager(unittest.TestCase):
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
         
-        fcc = FuzzContextCreator()
+        fcc = OpenApi3FuzzContextCreator(EventStore())
         fcc.new_fuzzcontext(hostname=hostname,
                             port=port,
-                            fuzzMode= FuzzMode.Quick,
+                            fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
-                            basicAuthnUserName='',
-                            basicAuthnPassword='',
+                            basicUsername='',
+                            basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
@@ -81,14 +81,14 @@ class TestFuzzManager(unittest.TestCase):
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_url(url)
         
-        fcc = FuzzContextCreator()
+        fcc = OpenApi3FuzzContextCreator(EventStore())
         fcc.new_fuzzcontext(hostname=hostname,
                             port=port,
-                            fuzzMode= FuzzMode.Quick,
+                            fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
-                            basicAuthnUserName='',
-                            basicAuthnPassword='',
+                            basicUsername='',
+                            basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
@@ -110,14 +110,14 @@ class TestFuzzManager(unittest.TestCase):
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
         
-        fcc = FuzzContextCreator()
+        fcc = OpenApi3FuzzContextCreator(EventStore())
         fcc.new_fuzzcontext(hostname=hostname,
                             port=port,
-                            fuzzMode= FuzzMode.Quick,
+                            fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
-                            basicAuthnUserName='',
-                            basicAuthnPassword='',
+                            basicUsername='',
+                            basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',

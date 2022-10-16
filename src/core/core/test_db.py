@@ -5,7 +5,7 @@ from sqlalchemy.sql import select, insert
 import json
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
-from api_discovery.openapi3_fuzzcontext_creator import FuzzContextCreator
+from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.fuzzcontext import FuzzMode, ApiFuzzContext
 from eventstore import EventStore
 
@@ -36,7 +36,7 @@ class TestFuzzManager(unittest.TestCase):
         openapi3Dis = OpenApi3ApiDiscover(EventStore())
         apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
         
-        fcc = FuzzContextCreator()
+        fcc = OpenApi3FuzzContextCreator()
         fcc.new_fuzzcontext(
                             hostname='http://localhost',
                             port=50001,
