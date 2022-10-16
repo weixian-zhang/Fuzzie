@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug Fuzzie flask_graphql",
+			"name": "debug Fuzzie flask graphql",
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
