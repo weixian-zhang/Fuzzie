@@ -1,7 +1,7 @@
 import graphene
 
 from servicemanager import ServiceManager
-# _sm = ServiceManager(eventstore)
+from eventstore import EventStore
 
 # import sys, os
 # from pathlib import Path
@@ -9,14 +9,6 @@ from servicemanager import ServiceManager
 # sys.path.insert(0, os.path.join(projectDirPath, 'models'))
 # from apicontext import SupportedAuthnType, ApiVerb
 # from fuzzcontext import FuzzProgressState 
-
-from eventstore import EventStore
-_eventstore: EventStore = None
-_servicemanager = None
-
-def init_flaskgql(eventstore):
-    _eventstore = eventstore
-    _servicemanager = ServiceManager(eventstore)
 
 class FuzzMode(graphene.Enum):
     Quick = 'quick'
