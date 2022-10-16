@@ -137,6 +137,8 @@ class ApiFuzzContext:
         self.Id: str = ''
         self.datetime: datetime
         self.name = ''
+        self.filePath = ''
+        self.url = ''
         
         # execution
         self.hostname: str = ''
