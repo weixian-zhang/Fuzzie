@@ -122,7 +122,10 @@ class Query(graphene.ObjectType):
     fuzzContext = graphene.Field(type=ApiFuzzContext, fuzzcontextId=graphene.String())
     
     def resolve_fuzzcontexts(self,info):
-        return [None]
+        
+        sm = ServiceManager()
+        result = sm.get_fuzzcontexts()
+        return result
     
     def resolve_fuzzContext(self,info, fuzzcontextId):
         r = ApiFuzzContext()
@@ -150,7 +153,7 @@ class DiscoverOpenApi3ByFilePath(graphene.Mutation):
     
     def mutate(self, info, hostname, port, filePath, name='', isAnonymous=True, fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, basicUsername='', basicPassword='', bearerTokenHeader = '', bearerToken='', apikeyHeader='', apikey=''):
         
-        sm = ServiceManager(EventStore())
+        sm = ServiceManager()
         
         fuzzcontext = sm.discover_openapi3_by_filepath(hostname=hostname,
                             port=port,
@@ -192,7 +195,7 @@ class DiscoverOpenApi3ByUrl(graphene.Mutation):
    
     def mutate(self, info, name, hostname, port, filePath, isAnonymous, fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, basicUsername='', basicPassword='', bearerTokenHeader = '', bearerToken='', apikeyHeader='', apikey=''):
         
-        sm = ServiceManager(EventStore())
+        sm = ServiceManager()
         
         fuzzcontext = sm.discover_openapi3_by_filepath(
                             name = name,

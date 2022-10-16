@@ -1,13 +1,13 @@
 from datetime import datetime
 import sqlalchemy
 from sqlalchemy import *
-from sqlalchemy.sql import select
 import os
 from pathlib import Path
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data/fuzzie.sqlite')
 #dbPath = dbPath.replace('\\','/')
-connStr = f'sqlite:///{dbPath}'
+connStr = f'sqlite:///{dbPath}?check_same_thread=False'
 engine = create_engine(connStr)
 dbconn = engine.connect()
 
@@ -19,7 +19,7 @@ apifuzzDataCase_TableName = 'ApiFuzzDataCase'
 apifuzzRequest_TableName = 'ApiFuzzRequest'
 apifuzzResponse_TableName = 'ApiFuzzResponse'
 
-api_fuzzcontext_table = Table(apifuzzcontext_TableName, metadata,
+FuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('name', String),
@@ -37,10 +37,13 @@ api_fuzzcontext_table = Table(apifuzzcontext_TableName, metadata,
                             Column('apikey', String)
                             )
     
-api_fuzzcaseset_table = Table(apifuzzCaseSet_TableName, metadata,
+FuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
                             Column('verb', String),
+                            Column('path', String),
+                            Column('querystringNonTemplate', String),
+                            Column('bodyNonTemplate', String),
                             Column('pathDataTemplate', String, nullable=True),
                             Column('querystringDataTemplate', String, nullable=True),
                             Column('headerDataTemplate', String, nullable=True),

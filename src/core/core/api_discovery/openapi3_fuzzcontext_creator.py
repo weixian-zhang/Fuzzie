@@ -20,10 +20,10 @@ from eventstore import EventStore
 
 class OpenApi3FuzzContextCreator:
     
-    def __init__(self, eventstore: EventStore):
+    def __init__(self):
         self.apicontext = None
         self.fuzzcontext = ApiFuzzContext()
-        self.eventstore = eventstore
+        self.eventstore = EventStore()
         
     def new_fuzzcontext(self,
                  hostname: str, 
