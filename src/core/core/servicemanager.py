@@ -102,6 +102,22 @@ class ServiceManager:
                 fuzzcontexts.append(fuzzcontext)
         
         return fuzzcontexts
+    
+    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+        j = FuzzContextTable.join(FuzzCaseSetTable,
+                FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
+        stmt = (
+                select(FuzzContextTable, FuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), FuzzCaseSetTable)
+                .where(FuzzContextTable.c.Id == Id)
+                .select_from(j)
+               )
+        results = dbconn.execute(stmt)
+        fcRow = results.fetchone()
+        
+        if fcRow is None:
+            self.eventstore.emitErr('Cannot get fuzz context with Id: {Id}')
+            
+        return fcRow
         
     def is_data_exist_in_fuzzcontexts(self, fuzzcontextId: str, fuzzcontexts: list[ApiFuzzContext]):
         for fc in fuzzcontexts:
