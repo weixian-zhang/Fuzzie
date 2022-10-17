@@ -131,48 +131,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
-        self.assertTrue(True == True)
-
-        
-        
-        
-        
-
-        
-        
-        
-        
-    
-    # def get_nested_parameters(self, api) -> dict:
-    #     dict = {}
-        
-    #     for p in api.parameters:
-            
-    #         if p.type is not 'object':
-    #             dict[p.name] = p.type
-    #         elif p.type == 'object':
-    #              dict[p.name] = self.get_nested_parameters_handler(p.parameters, {})
-            
-    
-    # def get_nested_parameters_handler(self, parameters, dict):
-        
-    #     if paramProp is None:
-    #         return dict
-        
-    #     for p in paramProp.parameters:
-            
-    #         if p.type == 'object':
-                
-    #             innerParam = p.parameters
-    #             while innerParam is not None:
-                    
-                    
-    #         dict[p.name] = p.type
-            
-        
-            
-    #     return dict
-    
+        self.assertTrue(True == True)   
 
 
 if __name__ == '__main__':
