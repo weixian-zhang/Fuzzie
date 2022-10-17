@@ -28,18 +28,6 @@ class FuzzMode(Enum):
 # A materialized request info object ready to make a HTTP call with
 class ApiFuzzRequest:
     
-    # __tablename__ = 'ApiFuzzRequest'
-    # Id = Column(String, primary_key=True)
-    # datetime = Column(DateTime)
-    # path = Column(String)
-    # querystring = Column(String)
-    # url = Column(String)
-    # headers = Column(String)
-    # cookies = Column(String)
-    # body = Column(String)
-    
-    # fuzzDataCaseId = Column(Integer, ForeignKey("ApiFuzzDataCase.Id"))
-    
     def __init__(self) -> None:
         self.Id: str = ''
         self.datetime: datetime 
@@ -114,8 +102,10 @@ class ApiFuzzContext:
         self.Id: str = ''
         self.datetime: datetime
         self.name = ''
-        self.filePath = ''
-        self.url = ''
+        self.requestMessageSingle = ''
+        self.requestMessageFilePath = ''
+        self.openapi3FilePath = ''
+        self.openapi3Url = ''
         
         # execution
         self.hostname: str = ''

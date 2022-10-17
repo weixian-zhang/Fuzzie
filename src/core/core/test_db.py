@@ -6,7 +6,7 @@ import json
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
-from models.fuzzcontext import FuzzMode, ApiFuzzContext
+from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
 from eventstore import EventStore
 
 import shortuuid
@@ -14,7 +14,6 @@ from datetime import datetime
 import os
 from pathlib import Path
 openapi3TestDataYamlPath = os.path.join(os.path.dirname(Path(__file__)), 'api_discovery\\testdata')
-
 
 class TestFuzzManager(unittest.TestCase):
     

@@ -6,7 +6,7 @@ projectDirPath = os.path.dirname(Path(__file__))
 
 from openapi3_discoverer import OpenApi3ApiDiscover
 from openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
-from models.fuzzcontext import FuzzMode
+from models.webapi_fuzzcontext import FuzzMode
 from eventstore import EventStore
 import unittest
 
