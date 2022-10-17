@@ -19,14 +19,12 @@ class ServiceManager:
         self.eventstore = EventStore()
     
         
-    def discover_openapi3_by_filepath(self,
+    def discover_openapi3_by_filepath_or_url(self,
                             hostname,
                             port,
-                            openapi3FilePath,
                             name='',
+                            openapi3FilePath = '',
                             openapi3Url = '',
-                            requestMessageSingle = '',
-                            requestMessageFilePath = '',
                             fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
@@ -38,15 +36,20 @@ class ServiceManager:
                             apikey=''):
         
         openapi3Dis = OpenApi3ApiDiscover()
-        apicontext = openapi3Dis.load_openapi3_file(openapi3FilePath)
+        apicontext= None
+        
+        if openapi3FilePath != '':
+            apicontext = openapi3Dis.load_openapi3_file(openapi3FilePath)
+        else:
+            apicontext = openapi3Dis.load_openapi3_url(openapi3Url)
         
         fcc = OpenApi3FuzzContextCreator()
         fcc.new_fuzzcontext(
                             name=name,
                             hostname=hostname,
                             port=port,
-                            requestMessageSingle = requestMessageSingle,
-                            requestMessageFilePath = requestMessageFilePath,
+                            requestMessageSingle = '',
+                            requestMessageFilePath = '',
                             openapi3FilePath = openapi3FilePath,
                             openapi3Url = openapi3Url,
                             fuzzMode= fuzzMode,
