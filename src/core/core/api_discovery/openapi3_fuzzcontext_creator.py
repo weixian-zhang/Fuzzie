@@ -15,7 +15,7 @@ sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 from apicontext import ApiContext, ParameterType, ParamProp, Api
-from fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
+from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
 from eventstore import EventStore
 
 class OpenApi3FuzzContextCreator:
@@ -28,7 +28,11 @@ class OpenApi3FuzzContextCreator:
     def new_fuzzcontext(self,
                  hostname: str, 
                  port: int,
-                 fuzzMode: str, 
+                 fuzzMode: str,
+                 requestMessageSingle = '',
+                 requestMessageFilePath = '',
+                 openapi3FilePath = '',
+                 openapi3Url = '',
                  numberOfFuzzcaseToExec: int = 50, 
                  isAnonymous = False,
                  basicUsername = '',
@@ -37,9 +41,7 @@ class OpenApi3FuzzContextCreator:
                  bearerToken = '', 
                  apikeyHeader = '',
                  apikey = '',
-                 name = '',
-                 filePath = '',
-                 url = ''):
+                 name = ''):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
@@ -49,11 +51,11 @@ class OpenApi3FuzzContextCreator:
             self.fuzzcontext.name = name
             
         self.fuzzcontext.datetime = datetime.now()
-        
         self.fuzzcontext.fuzzMode = self.get_fuzzmode(fuzzMode)
-        
-        self.fuzzcontext.filePath = filePath
-        self.fuzzcontext.url = url
+        self.fuzzcontext.requestMessageSingle = requestMessageSingle
+        self.fuzzcontext.requestMessageFilePath = requestMessageFilePath
+        self.fuzzcontext.openapi3FilePath = openapi3FilePath
+        self.fuzzcontext.openapi3Url = openapi3Url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
         self.fuzzcontext.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
