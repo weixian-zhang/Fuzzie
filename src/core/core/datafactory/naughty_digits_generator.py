@@ -1,10 +1,12 @@
 
-import sys
+import sys, os
 from datagen import DataGenerator
 
-class NumericGenerator(DataGenerator):
+class NaughtyDigitGenerator(DataGenerator):
     
     def __init__(self):
+        
+        super().__init__()
         
         self.data= [
                             0.1000000000000000055511151231257827021181583404541015625,
@@ -32,28 +34,11 @@ class NumericGenerator(DataGenerator):
                            
         ]
         
-        self.piLargerIntegerFileName = 'data/pi-large.txt'
+        piLargerIntegerFilePath = os.path.join(os.path.dirname(__file__), "data\\pi-large.txt")
         
-        self.data.append(self.load_from_file(self.piLargerIntegerFileName))
+        content = self.load_from_file(piLargerIntegerFilePath)
         
-        
-
-            
-            
-    
-    # def generate_numeric_values(self, noOfRowsToPad = 1000) -> pd.DataFrame:
-        
-    #     df = pd.DataFrame()
-        
-    #     numericDF = self.load_numerics_from_seclist(df)
-        
-    #     largePIIDF = self.load_superlarge_integer_from_seclist(df)
-        
-    #     mergedDF = pd.DataFrame()
-        
-    #     mergedDF = pd.concat([mergedDF, numericDF, largePIIDF])
-        
-        #return mergedDF
+        self.data.append(content[0])
     
     def load_from_file(self, filepath):
         
@@ -61,35 +46,6 @@ class NumericGenerator(DataGenerator):
             lines = f.readlines()
             
             return lines
-    
-if __name__ == "__main__":
-    ng = NumericGenerator()
-    
-    data = ng.NextData()
-        
-    # def load_numerics_from_seclist(self, df: pd.DataFrame):
-        
-    #     #filePath = self.sm.get_file_names_of_directory()
-    #     content = self.sm.download_file_as_str(self.numeric_fieldsFileName)
-    #     decoded = content.decode('utf-8')
-        
-    #     splitted = decoded.split('\n')
-        
-    #     for s in splitted:
-    #         df = df.append({"content": s}, ignore_index=True)
-            
-    #     return df
-    
-    # def load_superlarge_integer_from_seclist(self, df: pd.DataFram):
-        
-    #     #filePath = self.sm.get_file_names_of_directory()
-    #     content = self.sm.download_file_as_str(self.piLargerIntegerFileName)
-    #     decoded = content.decode('utf-8')
-    #     splitted = decoded.split('\n')
-        
-    #     for s in splitted:
-    #         df = df.append({"content": s}, ignore_index=True)
-            
-    #     return df
+
     
     
