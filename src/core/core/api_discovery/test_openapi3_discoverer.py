@@ -16,7 +16,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-get-params-path-object.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover(EventStore())
+        openapi3 = OpenApi3ApiDiscover()
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
@@ -55,7 +55,7 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post_multipart-form-data.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover(EventStore())
+        openapi3 = OpenApi3ApiDiscover()
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
@@ -127,52 +127,11 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-post-requestbody-with-parameters.yaml') 
     
-        openapi3 = OpenApi3ApiDiscover(EventStore())
+        openapi3 = OpenApi3ApiDiscover()
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
-        self.assertTrue(True == True)
-
-        
-        
-        
-        
-
-        
-        
-        
-        
-    
-    # def get_nested_parameters(self, api) -> dict:
-    #     dict = {}
-        
-    #     for p in api.parameters:
-            
-    #         if p.type is not 'object':
-    #             dict[p.name] = p.type
-    #         elif p.type == 'object':
-    #              dict[p.name] = self.get_nested_parameters_handler(p.parameters, {})
-            
-    
-    # def get_nested_parameters_handler(self, parameters, dict):
-        
-    #     if paramProp is None:
-    #         return dict
-        
-    #     for p in paramProp.parameters:
-            
-    #         if p.type == 'object':
-                
-    #             innerParam = p.parameters
-    #             while innerParam is not None:
-                    
-                    
-    #         dict[p.name] = p.type
-            
-        
-            
-    #     return dict
-    
+        self.assertTrue(True == True)   
 
 
 if __name__ == '__main__':

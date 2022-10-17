@@ -7,12 +7,12 @@ Usage:
 
 from docopt import docopt
 
-from flask import  Flask, jsonify, request, Response
-from flask_graphql import GraphQLView
-from graphql import schema
-
-import atexit
 from eventstore import EventStore
+eventstore = EventStore()
+
+from flask import Flask
+from flask_graphql import GraphQLView
+from flaskgql import schema
 
 # disable Flask logging
 import logging
@@ -35,12 +35,10 @@ app.add_url_rule(
 )
 
 # runs when program exits
+import atexit
 def on_exit():
     eventstore.emitInfo("Fuzzie stopping")
 atexit.register(on_exit)
-
-# declare and init own modules
-eventstore = EventStore()
 
 #main entry point and startup
 def startup():

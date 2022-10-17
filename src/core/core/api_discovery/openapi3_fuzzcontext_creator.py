@@ -9,54 +9,65 @@ from datetime import datetime
 
 import os,sys
 from pathlib import Path
+
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 from apicontext import ApiContext, ParameterType, ParamProp, Api
-from fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext
+from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
+from eventstore import EventStore
 
-
-class FuzzContextCreator:
+class OpenApi3FuzzContextCreator:
     
-    def __init__(self, ):
+    def __init__(self):
         self.apicontext = None
         self.fuzzcontext = ApiFuzzContext()
+        self.eventstore = EventStore()
         
     def new_fuzzcontext(self,
-                 name: str ,
                  hostname: str, 
                  port: int,
-                 fuzzMode: str, 
+                 fuzzMode: str,
+                 requestMessageSingle = '',
+                 requestMessageFilePath = '',
+                 openapi3FilePath = '',
+                 openapi3Url = '',
                  numberOfFuzzcaseToExec: int = 50, 
                  isAnonymous = False,
-                 basicAuthnUserName = '', basicAuthnPassword = '',
+                 basicUsername = '',
+                 basicPassword = '',
                  bearerTokenHeader = 'Authorization',
                  bearerToken = '', 
                  apikeyHeader = '',
-                 apikey = ''):
+                 apikey = '',
+                 name = ''):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
-        if self.name == '':
-            self.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        if self.fuzzcontext.name == '':
+            self.fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        else:
+            self.fuzzcontext.name = name
+            
         self.fuzzcontext.datetime = datetime.now()
-        
+        self.fuzzcontext.fuzzMode = self.get_fuzzmode(fuzzMode)
+        self.fuzzcontext.requestMessageSingle = requestMessageSingle
+        self.fuzzcontext.requestMessageFilePath = requestMessageFilePath
+        self.fuzzcontext.openapi3FilePath = openapi3FilePath
+        self.fuzzcontext.openapi3Url = openapi3Url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
-        self.fuzzcontext.fuzzMode = fuzzMode
-        self.fuzzcontext.fuzzExecutionConfig.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
+        self.fuzzcontext.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
         
         #security schemes
         self.fuzzcontext.isAnonymous = isAnonymous
-        self.fuzzcontext.basicUsername = basicAuthnUserName
-        self.fuzzcontext.basicPassword = basicAuthnPassword
+        self.fuzzcontext.basicUsername = basicUsername
+        self.fuzzcontext.basicPassword = basicPassword
         self.fuzzcontext.bearerTokenHeader = bearerTokenHeader
         self.fuzzcontext.bearerToken = bearerToken
         self.fuzzcontext.apikeyHeader = apikeyHeader
         self.fuzzcontext.apikey = apikey
-        
-        #determine number of fuzz tets runs base on Quick Mode, Full Mode or Custom Mode
-        self.fuzzcontext.determine_numof_fuzzcases_to_run()
         
     def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
         
@@ -71,9 +82,21 @@ class FuzzContextCreator:
         for api in apis:
             
             fuzzcaseSet = ApiFuzzCaseSet()
+            fuzzcaseSet.Id = shortuuid.uuid()
+            fuzzcaseSet.verb = api.verb.name
+            
+            fuzzcaseSet.path = api.path
+            
             fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
-            fuzzcaseSet.querystringDataTemplate = self.create_querystring_data_template(api)
-            fuzzcaseSet.bodyDataTemplate = self.create_body_data_template(api)
+            
+            querystring = self.create_querystring_data_template(api)
+            fuzzcaseSet.querystringDataTemplate = querystring
+            fuzzcaseSet.querystringNonTemplate = self.remove_micro_template_for_gui_display(querystring)
+            
+            body = self.create_body_data_template(api)
+            fuzzcaseSet.bodyDataTemplate = body
+            fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
+            
             fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
             fuzzcaseSet.cookieDataTemplate = self.create_cookie_data_template(api)
                     
@@ -81,6 +104,13 @@ class FuzzContextCreator:
             
         return self.fuzzcontext  
    
+    def remove_micro_template_for_gui_display(self, datatemplate: str):
+       if datatemplate == '':
+            return datatemplate
+        
+       datatemplate = datatemplate.replace('{{getFuzzData(', '')
+       datatemplate = datatemplate.replace(')}}', '')
+       return datatemplate
     
     # does not support array in path, array is only supported in querystring
     def create_path_data_template(self, api: Api) -> str:
@@ -106,12 +136,11 @@ class FuzzContextCreator:
         return api.path
     
     def create_querystring_data_template(self, api: Api) -> str:
-        
-        resultMap = {}
-        querystring = ''
+    
+        qsDT = ''       
         
         if len(api.parameters) == 0:
-            return querystring
+            return qsDT
         
         for param in api.parameters:
         
@@ -121,25 +150,27 @@ class FuzzContextCreator:
                     complexObject = {}
                     self.create_object_micro_data_template(param.parameters, complexObject)
                     objectJsonStr = json.dumps(complexObject)
-                    querystring = querystring + f'{param.propertyName}={objectJsonStr}&' 
+                    qsDT = qsDT + f'{param.propertyName}={objectJsonStr}&'
                     
                 elif param.type == 'array':
                     arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
-                    querystring = querystring + f'{param.propertyName}={arrayQSTemplate}&'
+                    qsDT = qsDT + f'{param.propertyName}={arrayQSTemplate}&'
                     
                 else:
-                    querystring = querystring + f'{param.propertyName}={self.create_jinja_micro_template(param.type)}&'
+                    qsDT = qsDT + f'{param.propertyName}={self.create_jinja_micro_template(param.type)}&'
+
                     
-        if len(querystring) > 0:     
-            querystring = '?' + querystring
-            if querystring.endswith('&'):
-                querystring = querystring.rstrip(querystring[-1])
-        
-        return querystring
+        if len(qsDT) > 0:     
+            qsDT = '?' + qsDT
+            if qsDT.endswith('&'):
+                qsDT = qsDT.rstrip(qsDT[-1])
+            
+        return qsDT
     
     # body wil be serialize to json string format
-    def create_body_data_template(self, api: Api) -> str:
+    def create_body_data_template(self, api: Api)  -> dict[str]:
         
+        #bodyNonTemplate = {}
         body = {}
         
         if len(api.body) == 0:
@@ -155,13 +186,12 @@ class FuzzContextCreator:
             elif param.type == 'array':
                 arrayOfDataTemplates = self.create_array_data_template_for_body(param, 5)
                 body[param.propertyName] = arrayOfDataTemplates
+                
             else:
                 body[param.propertyName] = self.create_jinja_micro_template(param.type)
-                
-                
-                    
-        jsonBody = json.dumps(body)
-        return jsonBody
+
+
+        return body
     
     def create_header_data_template(self, api: Api) -> dict[str]:
         
@@ -260,6 +290,15 @@ class FuzzContextCreator:
         if paramType.lower() == ParameterType.Cookie.value.lower():
             return True
         return False
+    
+    def get_fuzzmode(self, fuzzmode: str):
+        
+        if fuzzmode == FuzzMode.Quick.name:
+            return FuzzMode.Quick.name
+        elif fuzzmode == FuzzMode.Full.name:
+            return FuzzMode.Full.name
+        else:
+             return FuzzMode.Custom.name
         
         
         

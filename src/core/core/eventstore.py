@@ -1,4 +1,4 @@
-'''Fuzzie's EventStore'''
+'''Fuzzie EventStore'''
 
 from multiprocessing import Event
 import jsonpickle
@@ -25,6 +25,11 @@ class Message(object):
 class EventStore:
     
     GeneralEventTopic = "event_general"
+    
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(EventStore, cls).__new__(cls)
+        return cls.instance
     
     def __init__(self) -> None:
         

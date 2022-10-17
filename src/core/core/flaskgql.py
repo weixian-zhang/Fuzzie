@@ -1,5 +1,8 @@
 import graphene
 
+from servicemanager import ServiceManager
+from eventstore import EventStore
+
 # import sys, os
 # from pathlib import Path
 # projectDirPath = os.path.dirname(Path(__file__))
@@ -82,28 +85,29 @@ class ApiFuzzDataCase(graphene.ObjectType):
     
 class ApiFuzzCaseSet(graphene.ObjectType):
     Id = graphene.String()
+    path = graphene.String()
+    querystringNonTemplate = graphene.String()
+    bodyNonTemplate = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
     authnType = graphene.Field(SupportedAuthnType)
-    fuzzDataCases = graphene.List(graphene.Field(ApiFuzzDataCase))
-
-class FuzzExecutionConfig(graphene.ObjectType):
-    hostname = graphene.String()
-    port = graphene.Int()
-    fuzzMode =graphene.Field(ApiVerb)
-    fuzzcaseToExec = graphene.Int(default_value=50)
-    securitySchemes = graphene.Field(SecuritySchemes)
+    fuzzDataCases = graphene.List(ApiFuzzDataCase)
         
         
 class ApiFuzzContext(graphene.ObjectType):
     Id = graphene.String()
     name = graphene.String()
-    datetime: graphene.DateTime()
+    datetime = graphene.DateTime()
     
     hostname = graphene.String()
     port = graphene.Int()
-    fuzzMode = graphene.Field(FuzzMode)
+    fuzzMode = graphene.String()
     fuzzcaseToExec = graphene.Int(default_value=50)
+    
+    requestMessageSingle = graphene.String()
+    requestMessageFilePath = graphene.String()
+    openapi3FilePath = graphene.String()
+    openapi3Url = graphene.String()
     
     #security schemes
     authnType = graphene.Field(SupportedAuthnType)
@@ -112,10 +116,8 @@ class ApiFuzzContext(graphene.ObjectType):
     basicPassword  = graphene.String()
     bearerToken  = graphene.String()
     apikeyHeader  = graphene.String()
-    apikey  = graphene.String()
-    
-    fuzzcaseSets: graphene.List(graphene.Field(ApiFuzzCaseSet))
-    fuzzExecutionConfig = graphene.Field(FuzzExecutionConfig)
+    apikey  = graphene.String()  
+    fuzzcaseSets = graphene.List(ApiFuzzCaseSet)
 
 # queries
 class Query(graphene.ObjectType):
@@ -125,7 +127,10 @@ class Query(graphene.ObjectType):
     fuzzContext = graphene.Field(type=ApiFuzzContext, fuzzcontextId=graphene.String())
     
     def resolve_fuzzcontexts(self,info):
-        return [None]
+        
+        sm = ServiceManager()
+        result = sm.get_fuzzcontexts()
+        return result
     
     def resolve_fuzzContext(self,info, fuzzcontextId):
         r = ApiFuzzContext()
@@ -146,22 +151,96 @@ class DiscoverOpenApi3ByFilePath(graphene.Mutation):
         bearerToken = graphene.String()
         apikeyHeader = graphene.String()
         apikey = graphene.String()
+        openapi3FilePath = graphene.String()
     
     ok = graphene.Boolean()
     apiFuzzContext = graphene.Field(ApiFuzzContext)
     
-    def mutate(self, info, name, hostname, port, isAnonymous, username='', password='', bearerToken='', apikeyHeader='', apikey=''):
-        apiFuzzContext = ApiFuzzContext()
-        apiFuzzContext.name = name
-        apiFuzzContext.hostname = hostname
-        apiFuzzContext.port = port
+    def mutate(self, info, hostname, port, openapi3FilePath, name='', isAnonymous=True, fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, basicUsername='', basicPassword='', bearerTokenHeader = '', bearerToken='', apikeyHeader='', apikey=''):
+        
+        sm = ServiceManager()
+        
+        fuzzcontext = sm.discover_openapi3_by_filepath_or_url(
+                            hostname=hostname,
+                            port=port,
+                            name=name,
+                            fuzzMode= fuzzmode,
+                            numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
+                            isAnonymous=isAnonymous,
+                            basicUsername=basicUsername,
+                            basicPassword=basicPassword,
+                            bearerTokenHeader=bearerTokenHeader,
+                            bearerToken=bearerToken,
+                            apikeyHeader=apikeyHeader,
+                            apikey=apikey,
+                            openapi3FilePath=openapi3FilePath)
         
         ok = True
+        apiFuzzContext = fuzzcontext
+        
         return DiscoverOpenApi3ByFilePath(apiFuzzContext=apiFuzzContext, ok=ok)
+    
+class DiscoverOpenApi3ByUrl(graphene.Mutation):
+    
+    class Arguments:
+        name = graphene.String()
+        hostname = graphene.String()
+        port = graphene.Int()
+        isAnonymous = graphene.Boolean()
+        username = graphene.String()
+        password = graphene.String()
+        bearerTokenHeader = graphene.String()
+        bearerToken = graphene.String()
+        apikeyHeader = graphene.String()
+        apikey = graphene.String()
+        openapi3Url = graphene.String()
+    
+    ok = graphene.Boolean()
+    apiFuzzContext = graphene.Field(ApiFuzzContext)
+
+   
+    def mutate(self, info, hostname, port, openapi3Url, name = '', isAnonymous = True, fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, basicUsername='', basicPassword='', bearerTokenHeader = '', bearerToken='', apikeyHeader='', apikey=''):
+        
+        sm = ServiceManager()
+        
+        fuzzcontext = sm.discover_openapi3_by_filepath_or_url(
+                            hostname=hostname,
+                            port=port,
+                            name=name,
+                            fuzzMode= fuzzmode,
+                            numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
+                            isAnonymous=isAnonymous,
+                            basicUsername=basicUsername,
+                            basicPassword=basicPassword,
+                            bearerTokenHeader=bearerTokenHeader,
+                            bearerToken=bearerToken,
+                            apikeyHeader=apikeyHeader,
+                            apikey=apikey,
+                            openapi3Url=openapi3Url)
+        
+        ok = True
+        apiFuzzContext = fuzzcontext
+        
+        return DiscoverOpenApi3ByUrl(apiFuzzContext=apiFuzzContext, ok=ok)
+    
+class Fuzz(graphene.Mutation):
+    class Arguments:
+        fuzzcontextId = graphene.String()
+        
+    #define output
+    ok = graphene.Boolean()
+     
+    def mutate(self, info, fuzzcontextId):
+        ok = True
+        return Fuzz(ok=ok)
     
 class Mutation(graphene.ObjectType):
     
     discover_by_openapi3_file_path = DiscoverOpenApi3ByFilePath.Field()
+    
+    discover_by_openapi3_url = DiscoverOpenApi3ByUrl.Field()
+    
+    fuzz = Fuzz.Field()
     
     #discoverByOpenAPI3FilePath(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
     
@@ -176,6 +255,5 @@ class Mutation(graphene.ObjectType):
 # only used when a fuzz test happens as Fuzzie needs to report to GUI client, the status of each API in fuzz-operation
 class Subscription(graphene.ObjectType):
     pass
-    
     
 schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)
