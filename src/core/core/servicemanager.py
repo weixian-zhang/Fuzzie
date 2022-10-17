@@ -68,7 +68,7 @@ class ServiceManager:
         
         return fuzzcontext
     
-    def get_fuzzcontexts(self):
+    def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
         
         j = FuzzContextTable.join(FuzzCaseSetTable,
                 FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
@@ -90,38 +90,11 @@ class ServiceManager:
             yesno, existingFuzzContext = self.is_data_exist_in_fuzzcontexts(fuzzcontextId, fuzzcontexts)
             fuzzcontext = None
             if not yesno:
-                fuzzcontext = ApiFuzzContext()
-                fuzzcontext.Id = rowDict['Id']
-                fuzzcontext.datetime = rowDict['datetime']
-                fuzzcontext.name = rowDict['name']
-                
-                fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
-                fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
-                fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
-                fuzzcontext.openapi3Url = rowDict['openapi3Url']
-                
-                fuzzcontext.hostname= rowDict['hostname']
-                fuzzcontext.port= rowDict['port']
-                fuzzcontext.fuzzMode= rowDict['fuzzMode']
-                fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
-                fuzzcontext.authnType = rowDict['authnType']
-                fuzzcontext.isAnonymous = rowDict['isAnonymous']
-                fuzzcontext.basicUsername= rowDict['basicUsername']
-                fuzzcontext.basicPassword = rowDict['basicPassword']
-                fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
-                fuzzcontext.bearerToken = rowDict['bearerToken']
-                fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
-                fuzzcontext.apikey = rowDict['apikey']
+                fuzzcontext = self.create_fuzzcontext_from_dict(rowDict)
             else:
                 fuzzcontext = existingFuzzContext
             
-            fcs = ApiFuzzCaseSet()
-            fcs.Id = rowDict['fuzzCaseSetId']
-            fcs.path = rowDict['path']
-            fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
-            fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
-            fcs.selected = rowDict['selected']
-            fcs.verb = rowDict['verb']
+            fcs = self.create_fuzzcaseset_from_dict(rowDict)
             
             fuzzcontext.fuzzcaseSets.append(fcs)
             
@@ -188,7 +161,44 @@ class ServiceManager:
                         )
                 )
                 
-                dbconn.execute(fcSetStmt)    
+                dbconn.execute(fcSetStmt)
+                
+    def create_fuzzcontext_from_dict(self, rowDict):
+        fuzzcontext = ApiFuzzContext()
+        fuzzcontext.Id = rowDict['Id']
+        fuzzcontext.datetime = rowDict['datetime']
+        fuzzcontext.name = rowDict['name']
+        
+        fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
+        fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
+        fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
+        fuzzcontext.openapi3Url = rowDict['openapi3Url']
+        
+        fuzzcontext.hostname= rowDict['hostname']
+        fuzzcontext.port= rowDict['port']
+        fuzzcontext.fuzzMode= rowDict['fuzzMode']
+        fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+        fuzzcontext.authnType = rowDict['authnType']
+        fuzzcontext.isAnonymous = rowDict['isAnonymous']
+        fuzzcontext.basicUsername= rowDict['basicUsername']
+        fuzzcontext.basicPassword = rowDict['basicPassword']
+        fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
+        fuzzcontext.bearerToken = rowDict['bearerToken']
+        fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
+        fuzzcontext.apikey = rowDict['apikey']
+        
+        return fuzzcontext
+    
+
+    def create_fuzzcaseset_from_dict(self, rowDict):
+        fcs = ApiFuzzCaseSet()
+        fcs.Id = rowDict['fuzzCaseSetId']
+        fcs.path = rowDict['path']
+        fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
+        fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
+        fcs.selected = rowDict['selected']
+        fcs.verb = rowDict['verb']
+        return fcs
         
 
     
