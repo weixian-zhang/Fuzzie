@@ -1,4 +1,7 @@
-
+import os, sys
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
 
 from datagen import DataGenerator
 import os

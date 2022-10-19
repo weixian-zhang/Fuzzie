@@ -1,5 +1,14 @@
 import unittest
 
+import os, sys
+from pathlib import Path
+datafacPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory')
+dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data')
+modelsPath = os.path.join(os.path.dirname(Path(__file__)), 'models')
+sys.path.insert(0, datafacPath)
+sys.path.insert(0, dbPath)
+sys.path.insert(0, modelsPath)
+
 from db import FuzzContextTable, FuzzCaseSetTable, dbconn, metadata
 from sqlalchemy.sql import select, insert
 import json
@@ -80,7 +89,6 @@ class TestFuzzManager(unittest.TestCase):
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
                 header = json.dumps(fcset.headerDataTemplate)
-                cookies = json.dumps(fcset.cookieDataTemplate)
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
@@ -95,7 +103,6 @@ class TestFuzzManager(unittest.TestCase):
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = header,
-                        cookieDataTemplate = cookies,
                         bodyDataTemplate =  body,
                         fuzzcontextId = fuzzcontext.Id
                         )

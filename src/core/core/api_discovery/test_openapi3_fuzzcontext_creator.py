@@ -31,13 +31,14 @@ class TestFuzzManager(unittest.TestCase):
                             fuzzMode= 'Quick',
                             numberOfFuzzcaseToExec=50,
                             isAnonymous=True,
+                            openapi3FilePath = filePath,
                             basicUsername='',
                             basicPassword='',
                             bearerTokenHeader='',
                             bearerToken='',
                             apikeyHeader='',
                             apikey='',
-                            filePath=filePath)
+                            openapi3Url = '')
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
@@ -65,7 +66,7 @@ class TestFuzzManager(unittest.TestCase):
                             bearerToken='',
                             apikeyHeader='',
                             apikey='',
-                            filePath='testdata\\testdata-openapi3-post_multipart-form-data.yaml')
+                            openapi3FilePath='testdata\\testdata-openapi3-post_multipart-form-data.yaml')
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
@@ -93,7 +94,7 @@ class TestFuzzManager(unittest.TestCase):
                             bearerToken='',
                             apikeyHeader='',
                             apikey='',
-                            url=url)
+                            openapi3Url=url)
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
@@ -122,7 +123,7 @@ class TestFuzzManager(unittest.TestCase):
                             bearerToken='',
                             apikeyHeader='',
                             apikey='',
-                            filePath=filePath)
+                            openapi3FilePath=filePath)
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
@@ -130,7 +131,33 @@ class TestFuzzManager(unittest.TestCase):
         
         self.assertGreater(len(fuzzcontext.fuzzcaseSets[0].headerDataTemplate), 0)
         
-        self.assertGreater(len(fuzzcontext.fuzzcaseSets[0].cookieDataTemplate), 0)
+        
+    def test_openapi3_httpbin_org(self):
+        
+        filePath = 'testdata\\testdata-openapi3-httpbin.org.yaml'
+        openapi3Yaml = os.path.join(projectDirPath, filePath) 
+        
+        openapi3Dis = OpenApi3ApiDiscover()
+        apicontext = openapi3Dis.load_openapi3_file(openapi3Yaml)
+        
+        fcc = OpenApi3FuzzContextCreator()
+        fcc.new_fuzzcontext(hostname='',
+                            port=port,
+                            fuzzMode= 'Quick',
+                            numberOfFuzzcaseToExec=50,
+                            isAnonymous=True,
+                            basicUsername='',
+                            basicPassword='',
+                            bearerTokenHeader='',
+                            bearerToken='',
+                            apikeyHeader='',
+                            apikey='',
+                            openapi3FilePath=filePath)
+        
+        fuzzcontext = fcc.create_fuzzcontext(apicontext)
+        
+        self.assertGreater(len(fuzzcontext.fuzzcaseSets), 0)
+        
         
 
 

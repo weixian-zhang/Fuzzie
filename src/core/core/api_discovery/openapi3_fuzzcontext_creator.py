@@ -33,7 +33,7 @@ class OpenApi3FuzzContextCreator:
                  requestMessageFilePath = '',
                  openapi3FilePath = '',
                  openapi3Url = '',
-                 numberOfFuzzcaseToExec: int = 50, 
+                 numberOfFuzzcaseToExec: int = 10, 
                  isAnonymous = False,
                  basicUsername = '',
                  basicPassword = '',
@@ -58,7 +58,7 @@ class OpenApi3FuzzContextCreator:
         self.fuzzcontext.openapi3Url = openapi3Url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
-        self.fuzzcontext.numberOfFuzzcaseToExec = numberOfFuzzcaseToExec 
+        self.fuzzcontext.numberOfFuzzcaseToExec = self.determine_fuzzcases_to_run(fuzzMode, numberOfFuzzcaseToExec)  
         
         #security schemes
         self.fuzzcontext.isAnonymous = isAnonymous
@@ -73,6 +73,8 @@ class OpenApi3FuzzContextCreator:
         
         if self.fuzzcontext  is None:
             raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
+        
+        self.set_hostname(apicontext)
         
         apis = apicontext.apis
         
@@ -98,12 +100,29 @@ class OpenApi3FuzzContextCreator:
             fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
             
             fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
-            fuzzcaseSet.cookieDataTemplate = self.create_cookie_data_template(api)
                     
             self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
-        return self.fuzzcontext  
-   
+        return self.fuzzcontext 
+    
+    def set_hostname(self, apicontext: ApiContext):
+        
+        if self.fuzzcontext.hostname == '':
+            if len(apicontext.baseUrl) > 0:
+                self.fuzzcontext.hostname = apicontext.baseUrl[0]
+        
+    # minimum 2 fuzz cases to run
+    def determine_fuzzcases_to_run(self, fuzzmode: str, fuzzcaseToExec):
+        default = 2
+        
+        if fuzzmode == FuzzMode.Quick.name:
+            return 50
+        elif fuzzmode == FuzzMode.Full.name:
+            return 20000
+        elif fuzzmode == FuzzMode.Custom.name:
+            if fuzzcaseToExec <= 2:
+                return default
+                
     def remove_micro_template_for_gui_display(self, datatemplate: str):
        if datatemplate == '':
             return datatemplate
@@ -206,19 +225,6 @@ class OpenApi3FuzzContextCreator:
                   
         return headers
     
-    def create_cookie_data_template(self, api: Api) -> dict[str]:
-        
-        cookies = {}
-        
-        if len(api.parameters) == 0:
-            return cookies
-        
-        for param in api.parameters:
-            if self.is_cookie_param(param.paramType):
-                cookies[param.propertyName] = param.type
-                  
-        return cookies
-    
     # data template helpers   
     def create_object_micro_data_template(self, parameters: list[ParamProp], resultMap: dict) -> dict:
         
@@ -285,11 +291,7 @@ class OpenApi3FuzzContextCreator:
         if paramType.lower() == ParameterType.Header.value.lower():
             return True
         return False
-    
-    def is_cookie_param(self, paramType):
-        if paramType.lower() == ParameterType.Cookie.value.lower():
-            return True
-        return False
+
     
     def get_fuzzmode(self, fuzzmode: str):
         

@@ -3,9 +3,10 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, ApiFuzzCaseSet
-from eventstore import EventStore
+from webapi_fuzzer import WebApiFuzzer
 
-from db import FuzzContextTable, FuzzCaseSetTable, dbconn
+from eventstore import EventStore
+from db import FuzzContextTable, FuzzCaseSetTable, dbconn, get_fuzzcontext, get_fuzzcontexts
 from sqlalchemy.sql import select, insert
 
 
@@ -21,7 +22,7 @@ class ServiceManager:
         
     def discover_openapi3_by_filepath_or_url(self,
                             hostname,
-                            port,
+                            port=443,
                             name='',
                             openapi3FilePath = '',
                             openapi3Url = '',
@@ -69,61 +70,20 @@ class ServiceManager:
         return fuzzcontext
     
     def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
-        
-        j = FuzzContextTable.join(FuzzCaseSetTable,
-                FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
-        stmt = select(FuzzContextTable, FuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), FuzzCaseSetTable).select_from(j)
-        results = dbconn.execute(stmt)
-        fcRows = results.fetchall()
-        
-        if len(fcRows) == 0:
-            return []
-        
-        fuzzcontexts = []
-        
-        for row in fcRows:
-            
-            rowDict = row._asdict()
-           
-            fuzzcontextId = rowDict['Id']
-
-            yesno, existingFuzzContext = self.is_data_exist_in_fuzzcontexts(fuzzcontextId, fuzzcontexts)
-            fuzzcontext = None
-            if not yesno:
-                fuzzcontext = self.create_fuzzcontext_from_dict(rowDict)
-            else:
-                fuzzcontext = existingFuzzContext
-            
-            fcs = self.create_fuzzcaseset_from_dict(rowDict)
-            
-            fuzzcontext.fuzzcaseSets.append(fcs)
-            
-            if not yesno:
-                fuzzcontexts.append(fuzzcontext)
-        
-        return fuzzcontexts
+        return get_fuzzcontexts()
     
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:
-        j = FuzzContextTable.join(FuzzCaseSetTable,
-                FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
-        stmt = (
-                select(FuzzContextTable, FuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), FuzzCaseSetTable)
-                .where(FuzzContextTable.c.Id == Id)
-                .select_from(j)
-               )
-        results = dbconn.execute(stmt)
-        fcRow = results.fetchone()
+        return get_fuzzcontext(Id)
+    
+    def fuzz(self, Id) -> None:
         
-        if fcRow is None:
-            self.eventstore.emitErr('Cannot get fuzz context with Id: {Id}')
-            
-        return fcRow
+        fuzzcontext = self.get_fuzzcontext(Id)
         
-    def is_data_exist_in_fuzzcontexts(self, fuzzcontextId: str, fuzzcontexts: list[ApiFuzzContext]):
-        for fc in fuzzcontexts:
-            if fc.Id == fuzzcontextId:
-                return True, fc
-        return False, None
+        webapifuzzer = WebApiFuzzer(fuzzcontext)
+        
+        webapifuzzer.fuzz()
+        
+    
     
     
     def insert_db_fuzzcontext(self, fuzzcontext: ApiFuzzContext):
@@ -156,7 +116,6 @@ class ServiceManager:
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
                 header = json.dumps(fcset.headerDataTemplate)
-                cookies = json.dumps(fcset.cookieDataTemplate)
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
@@ -171,7 +130,6 @@ class ServiceManager:
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = header,
-                        cookieDataTemplate = cookies,
                         bodyDataTemplate =  body,
                         fuzzcontextId = fuzzcontext.Id
                         )
@@ -179,42 +137,46 @@ class ServiceManager:
                 
                 dbconn.execute(fcSetStmt)
                 
-    def create_fuzzcontext_from_dict(self, rowDict):
-        fuzzcontext = ApiFuzzContext()
-        fuzzcontext.Id = rowDict['Id']
-        fuzzcontext.datetime = rowDict['datetime']
-        fuzzcontext.name = rowDict['name']
+    # def create_fuzzcontext_from_dict(self, rowDict):
+    #     fuzzcontext = ApiFuzzContext()
+    #     fuzzcontext.Id = rowDict['Id']
+    #     fuzzcontext.datetime = rowDict['datetime']
+    #     fuzzcontext.name = rowDict['name']
         
-        fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
-        fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
-        fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
-        fuzzcontext.openapi3Url = rowDict['openapi3Url']
+    #     fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
+    #     fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
+    #     fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
+    #     fuzzcontext.openapi3Url = rowDict['openapi3Url']
         
-        fuzzcontext.hostname= rowDict['hostname']
-        fuzzcontext.port= rowDict['port']
-        fuzzcontext.fuzzMode= rowDict['fuzzMode']
-        fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
-        fuzzcontext.authnType = rowDict['authnType']
-        fuzzcontext.isAnonymous = rowDict['isAnonymous']
-        fuzzcontext.basicUsername= rowDict['basicUsername']
-        fuzzcontext.basicPassword = rowDict['basicPassword']
-        fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
-        fuzzcontext.bearerToken = rowDict['bearerToken']
-        fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
-        fuzzcontext.apikey = rowDict['apikey']
+    #     fuzzcontext.hostname= rowDict['hostname']
+    #     fuzzcontext.port= rowDict['port']
+    #     fuzzcontext.fuzzMode= rowDict['fuzzMode']
+    #     fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+    #     fuzzcontext.authnType = rowDict['authnType']
+    #     fuzzcontext.isAnonymous = rowDict['isAnonymous']
+    #     fuzzcontext.basicUsername= rowDict['basicUsername']
+    #     fuzzcontext.basicPassword = rowDict['basicPassword']
+    #     fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
+    #     fuzzcontext.bearerToken = rowDict['bearerToken']
+    #     fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
+    #     fuzzcontext.apikey = rowDict['apikey']
         
-        return fuzzcontext
+    #     return fuzzcontext
     
 
-    def create_fuzzcaseset_from_dict(self, rowDict):
-        fcs = ApiFuzzCaseSet()
-        fcs.Id = rowDict['fuzzCaseSetId']
-        fcs.path = rowDict['path']
-        fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
-        fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
-        fcs.selected = rowDict['selected']
-        fcs.verb = rowDict['verb']
-        return fcs
+    # def create_fuzzcaseset_from_dict(self, rowDict):
+    #     fcs = ApiFuzzCaseSet()
+    #     fcs.Id = rowDict['fuzzCaseSetId']
+    #     fcs.path = rowDict['path']
+    #     fcs.pathDataTemplate = rowDict['pathDataTemplate']
+    #     fcs.querystringDataTemplate= rowDict['querystringDataTemplate']
+    #     fcs.bodyDataTemplate= rowDict['bodyDataTemplate']
+    #     fcs.headerDataTemplate = rowDict['headerDataTemplate']
+    #     fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
+    #     fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
+    #     fcs.selected = rowDict['selected']
+    #     fcs.verb = rowDict['verb']
+    #     return fcs
         
 
     

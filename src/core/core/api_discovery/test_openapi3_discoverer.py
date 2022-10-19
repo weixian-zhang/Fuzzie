@@ -131,7 +131,18 @@ class TestOpenApi3ApiDiscover(unittest.TestCase):
         
         apicontext = openapi3.load_openapi3_file(apiFilePath)
         
-        self.assertTrue(True == True)   
+        self.assertTrue(True == True)  
+        
+    
+    def test_openapi3_httpbinorg(self):
+        
+        apiFilePath = os.path.join(projectDirPath, 'testdata\\testdata-openapi3-httpbin.org.yaml') 
+    
+        openapi3 = OpenApi3ApiDiscover()
+        
+        apicontext = openapi3.load_openapi3_file(apiFilePath)
+        
+        self.assertTrue(apicontext is not None) 
 
 
 if __name__ == '__main__':
