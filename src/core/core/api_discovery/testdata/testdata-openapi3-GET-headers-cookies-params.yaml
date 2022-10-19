@@ -30,18 +30,6 @@ paths:
           type: integer
         required: true
 
-      #cookie params
-      - in: cookie
-        name: debug
-        schema:
-          type: integer
-          enum: [0, 1]
-          default: 0
-      - in: cookie
-        name: csrftoken
-        schema:
-          type: string
-
       #path params
       - name: id
         in: path
