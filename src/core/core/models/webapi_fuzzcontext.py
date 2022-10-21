@@ -32,12 +32,13 @@ class ApiFuzzRequest:
         self.Id: str = ''
         self.datetime: datetime 
         self.fuzzDataCaseId: str = ''
-        self.datetime: datetime
+        self.fuzzcontextId = ''
+        self.hostnamePort = ''
+        self.verb = ''
         self.path: str = ''
         self.querystring: str = ''
         self.url: str = ''
         self.headers = {}    # json 
-        self.cookies = {}    # json 
         self.body = {}       # json 
 
 # rfc 2616
@@ -47,24 +48,23 @@ class ApiFuzzResponse:
         self.Id: str = ''
         self.datetime: datetime
         self.fuzzDataCaseId: str = ''
+        self.fuzzcontextId = ''
         self.statusCode: str = ''
         self.reasonPharse: str = ''
-        self.headers = {}    # json
-        self.body = str      # json   
+        self.responseJson = ''
+        self.setcookieHeader = ''
+        self.content = str      # json   
 
 # each fuzz data case is a unique verb + path + fuzz data
 class ApiFuzzDataCase:
     
-    # __tablename__ = 'ApiFuzzDataCase'
-    # Id = Column(String, primary_key=True)
-    # fuzzCaseSetId = Column(Integer, ForeignKey("ApiFuzzCaseSet.Id"))
-    
     def __init__(self) -> None:  
         self.Id: str = ''
-        self.fuzzcaseId: str = ''
+        self.fuzzCaseSetId = ''
+        self.fuzzcontextId = ''
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
-        self.state: FuzzProgressState = FuzzProgressState.NOTSTARTED
+        self.progressState = ''                     #FuzzProgressState.NOTSTARTED
 
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
@@ -86,13 +86,18 @@ class ApiFuzzCaseSet:
         # fuzz data for that data-type
         self.pathDataTemplate: str = ''
         self.querystringDataTemplate: str = ''
-        self.headerDataTemplate = {}
-        self.cookieDataTemplate = {}
         self.bodyDataTemplate: str = ''
-        
+        self.headerDataTemplate = {}
+
+    
     # path + querystring data templates combined
-    def get_url_datatemplate(self):
-        return self.pathDataTemplate + self.querystringDataTemplate
+    def get_path_datatemplate(self):
+        if not self.pathDataTemplate.startswith('/'):
+            self.pathDataTemplate = '/' + self.pathDataTemplate
+        return self.pathDataTemplate
+    
+    def get_querystring_datatemplate(self):
+        return self.querystringDataTemplate
 
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
@@ -111,7 +116,7 @@ class ApiFuzzContext:
         self.hostname: str = ''
         self.port: int
         self.fuzzMode: FuzzMode = FuzzMode.Quick         
-        self.fuzzcaseToExec = 50
+        self.fuzzcaseToExec = 100
         
         #security schemes
         self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
@@ -127,17 +132,11 @@ class ApiFuzzContext:
         #self.fuzzExecutionConfig: FuzzExecutionConfig
         
         #self.determine_num_of_fuzzcases(self.fuzzExecutionConfig)
-        
     
-    def get_fuzzcases_to_run(self):
-        
-        if self.fuzzExecutionConfig.fuzzMode == FuzzMode.Quick .value:
-            self.fuzzExecutionConfig.fuzzcaseToExec = 50
-        elif self.fuzzExecutionConfig.fuzzMode == FuzzMode.Full.value:
-            self.fuzzExecutionConfig.fuzzcaseToExec = 50000
-        elif self.fuzzExecutionConfig.fuzzMode == FuzzMode.Custom.value:
-            if self.fuzzExecutionConfig.fuzzcaseToExec <= 0:
-                self.fuzzExecutionConfig.fuzzcaseToExec = 50
+    def get_hostname_port(self):
+        if self.port == '':
+            return self.hostname
+        return f'{self.hostname}:{self.port}'
                 
     def is_basic_authn(self):
         if self.get_security_scheme() == SupportedAuthnType.Basic:

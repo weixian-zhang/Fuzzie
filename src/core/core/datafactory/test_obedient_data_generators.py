@@ -3,22 +3,13 @@ parentPath = os.getcwd() + "\core\core\datafactory"
 sys.path.append(parentPath)
 
 import unittest
-from obedient_data_generators import (ObedientBoolGenerator, 
-                                      ObedientIntegerGenerator, 
+from obedient_data_generators import (ObedientIntegerGenerator, 
                                       ObedientFloatGenerator, 
                                       ObedientCharGenerator, 
                                       ObedientStringGenerator)
 
 class TestObedientDataGenerator(unittest.TestCase):
-    
-    
-    def test_obedient_bool_gen(self):
-        
-        g = ObedientBoolGenerator()
-        
-        for x in range(1, (len(g.data) + 10)):
-            self.assertIn(g.NextData(), [True, False, None, 0, 1, 'true', 'false', 'yes', 'no', '1', '0', 't', 'f', 'T', 'F', 'TRUE', 'FALSE'])
-            
+               
             
     def test_obedient_int_gen(self):
         

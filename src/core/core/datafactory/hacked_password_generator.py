@@ -1,4 +1,7 @@
-
+import os, sys
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
 
 from datagen import DataGenerator
 import os
@@ -11,7 +14,7 @@ class HackedPasswordGenerator(DataGenerator):
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
 
-        self.dbpath = os.path.join(os.path.dirname(__file__), "data\fuzzie.sqlite")
+        self.dbpath = os.path.join(os.path.dirname(__file__), "data\\fuzzie.sqlite")
 
         self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
         

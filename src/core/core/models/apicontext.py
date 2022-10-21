@@ -18,7 +18,6 @@ class ParameterType(Enum):
     Path = 'path'
     Query = 'query'
     Header = 'header'
-    Cookie = 'cookie'
     
 class ArrayItem:
     
