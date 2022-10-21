@@ -27,7 +27,7 @@ class ServiceManager:
                             openapi3FilePath = '',
                             openapi3Url = '',
                             fuzzMode= 'Quick',
-                            numberOfFuzzcaseToExec=50,
+                            numberOfFuzzcaseToExec=100,
                             isAnonymous=True,
                             basicUsername='',
                             basicPassword='',

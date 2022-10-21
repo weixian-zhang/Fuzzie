@@ -33,7 +33,7 @@ class OpenApi3FuzzContextCreator:
                  requestMessageFilePath = '',
                  openapi3FilePath = '',
                  openapi3Url = '',
-                 numberOfFuzzcaseToExec: int = 10, 
+                 numberOfFuzzcaseToExec = 100, 
                  isAnonymous = False,
                  basicUsername = '',
                  basicPassword = '',
@@ -58,7 +58,7 @@ class OpenApi3FuzzContextCreator:
         self.fuzzcontext.openapi3Url = openapi3Url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
-        self.fuzzcontext.numberOfFuzzcaseToExec = self.determine_fuzzcases_to_run(fuzzMode, numberOfFuzzcaseToExec)  
+        #self.fuzzcontext.numberOfFuzzcaseToExec = self.determine_fuzzcases_to_run(fuzzMode, numberOfFuzzcaseToExec)  
         
         #security schemes
         self.fuzzcontext.isAnonymous = isAnonymous
@@ -111,17 +111,7 @@ class OpenApi3FuzzContextCreator:
             if len(apicontext.baseUrl) > 0:
                 self.fuzzcontext.hostname = apicontext.baseUrl[0]
         
-    # minimum 2 fuzz cases to run
-    def determine_fuzzcases_to_run(self, fuzzmode: str, fuzzcaseToExec):
-        default = 2
-        
-        if fuzzmode == FuzzMode.Quick.name:
-            return 50
-        elif fuzzmode == FuzzMode.Full.name:
-            return 20000
-        elif fuzzmode == FuzzMode.Custom.name:
-            if fuzzcaseToExec <= 2:
-                return default
+    
                 
     def remove_micro_template_for_gui_display(self, datatemplate: str):
        if datatemplate == '':

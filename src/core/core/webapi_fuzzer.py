@@ -1,16 +1,25 @@
 
 # supported type expression
 # openapi3 types
-    # {{ string }} (this includes dates and files)
-    # {{ number }} (treated as Fuzzie digit)
-    # {{ integer }} (treated as Fuzzie digit)
+    # {{ string }}                  this includes dates and files
+    # {{ number }}                  treated as Fuzzie digit
+    # {{ integer }}                 treated as Fuzzie digit
     # {{ boolean }}
-# in addition, fuzzie types
+# in addition, input expression for Request Message
+    # {{ my:[myvalue1,myvalue2,3,4] }}  # supply your own input
+    # {{ mutate: a quick brown fox }}   # fuzzie mutates your input by add/alter/remove
+    # {{ string }}                  
+    # {{ number }}                  
+    # {{ file }}
+    # {{ boolean }}
     # {{ datetime }}
-    # {{ username }}
-    # {{ password }}
-    # {{ digit }}   (fuzz with integer and float)
+    # {{ username }}                for login bruteforce entry test
+    # {{ password }}                for login bruteforce entry test
+    # {{ digit }}                   integer and float
     # {{ char }}
+    # {{ base64e:value }}
+    # {{ base64e }}                 generate base64 encoded random string value
+    # {{ hashsha256:value }}        generates a sha256 hash from supplied value
 
 import asyncio
 from http import cookiejar
@@ -30,7 +39,7 @@ from datafactory.naughty_digits_generator import NaughtyDigitGenerator
 from datafactory.naughty_string_generator import NaughtyStringGenerator
 from datafactory.naughty_bool_generator import NaughtyBoolGenerator
 from datafactory.obedient_data_generators import ObedientCharGenerator #, ObedientFloatGenerator, ObedientIntegerGenerator, ObedientStringGenerator
-from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, ApiFuzzRequest, ApiFuzzResponse, FuzzProgressState
+from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, ApiFuzzRequest, ApiFuzzResponse, FuzzProgressState, FuzzMode
 from db import FuzzDataCaseTable, FuzzRequestTable, FuzzResponseTable, insert_api_fuzzdatacase, insert_api_fuzzrequest, insert_api_fuzzresponse
 from sqlalchemy.sql import insert
 
@@ -69,9 +78,12 @@ class WebApiFuzzer:
         loop.run_until_complete(self.begin_fuzzing())
         
     async def begin_fuzzing(self):
+        
+        fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
+        
         for fcs in self.apifuzzcontext.fuzzcaseSets:
             
-            for fuzzcount in range(0, self.apifuzzcontext.fuzzcaseToExec):
+            for fuzzcount in range(0, fuzzCasesToTest):
             
                 fuzzCaseData = await self.http_fuzz_api(fcs)
                     
@@ -118,8 +130,8 @@ class WebApiFuzzer:
             
             fuzzResp.setcookieHeader = self.try_get_setcookie_value(respDict)
             
-            stripped = re.sub('<[^<]+?>', '', content.decode())
-            fuzzResp.content = stripped
+            #stripped = re.sub('<[^<]+?>', '', )
+            fuzzResp.content = content.decode()
             
             self.save_responsecookie_in_cookiejar(hostnamePort, fuzzResp.setcookieHeader)
             
@@ -264,6 +276,21 @@ class WebApiFuzzer:
         fresp.fuzzcontextId = fuzzcontextId 
         return fresp     
         
+        
+    # minimum 100 fuzz cases to run
+    def determine_no_of_fuzzcases_to_run(self, fuzzmode: str, fuzzcaseToExec):
+        
+        default = 100
+        
+        if fuzzmode == FuzzMode.Quick.name:
+            return default
+        elif fuzzmode == FuzzMode.Full.name:
+            return self.stringGenerator.get_dbsize()
+        elif fuzzmode == FuzzMode.Custom.name:
+            if fuzzcaseToExec <= default:
+                return default
+            else:
+                return fuzzcaseToExec
         
         
         

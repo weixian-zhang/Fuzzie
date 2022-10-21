@@ -116,7 +116,7 @@ class ApiFuzzContext:
         self.hostname: str = ''
         self.port: int
         self.fuzzMode: FuzzMode = FuzzMode.Quick         
-        self.fuzzcaseToExec = 50
+        self.fuzzcaseToExec = 100
         
         #security schemes
         self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
