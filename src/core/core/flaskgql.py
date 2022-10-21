@@ -39,7 +39,6 @@ class ParameterType(graphene.Enum):
     Path = 'path'
     Query = 'query'
     Header = 'header'
-    Cookie = 'cookie'
 
 class SecuritySchemes(graphene.ObjectType):
     authnType = graphene.Field(SupportedAuthnType)
@@ -54,14 +53,14 @@ class ApiFuzzRequest(graphene.ObjectType):
     Id = graphene.String()
     datetime = graphene.DateTime()
     fuzzDataCaseId = graphene.String()
-    datetime= graphene.DateTime()
+    fuzzcontextId = graphene.String()
+    hostnamePort = graphene.String()
+    verb= graphene.String()
     path = graphene.String()
     querystring= graphene.String()
     url= graphene.Scalar
     headers = graphene.List(graphene.String)
-    cookies = graphene.List(graphene.String)
     body = graphene.String()
-        
 
 class ApiFuzzResponse(graphene.ObjectType):
     Id = graphene.String()
@@ -77,7 +76,8 @@ class ApiFuzzResponse(graphene.ObjectType):
 # each "fuzz data set" is one ApiFuzzCase
 class ApiFuzzDataCase(graphene.ObjectType):
    id = graphene.String()
-   fuzzcaseId = graphene.String()
+   fuzzCaseSetId = graphene.String()
+   fuzzcontextId = graphene.String()
    request = graphene.Field(ApiFuzzRequest)
    response = graphene.Field(ApiFuzzResponse)
    state = graphene.Field(FuzzProgressState)

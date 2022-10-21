@@ -1,10 +1,10 @@
 
-
 from datagen import DataGenerator
 import os
 import sqlite3
 
-class NaughtyStringGenerator(DataGenerator):
+
+class NaughtyFileGenerator(DataGenerator):
     
     def __init__(self) -> None:
         super().__init__()
@@ -19,15 +19,14 @@ class NaughtyStringGenerator(DataGenerator):
         
         self.dbsize = self.get_dbsize()
         
-        
     def NextData(self):
-        
+            
         if self.rowPointer > self.dbsize:
             self.rowPointer = 1
         
         tsql = f'''
             SELECT Content
-            FROM NaughtyString
+            FROM NaughtyFile
             WHERE id = {self.rowPointer}
         '''
         
