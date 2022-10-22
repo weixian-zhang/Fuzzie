@@ -39,8 +39,11 @@ from datafactory.naughty_datetime_generator import NaughtyDateTimeGenerator
 from datafactory.naughty_digits_generator import NaughtyDigitGenerator
 from datafactory.naughty_string_generator import NaughtyStringGenerator
 from datafactory.naughty_bool_generator import NaughtyBoolGenerator
-from datafactory.obedient_data_generators import ObedientCharGenerator #, ObedientFloatGenerator, ObedientIntegerGenerator, ObedientStringGenerator
-from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, ApiFuzzRequest, ApiFuzzResponse, FuzzProgressState, FuzzMode
+from datafactory.obedient_data_generators import ObedientCharGenerator 
+from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
+                                       ApiFuzzRequest, ApiFuzzResponse, 
+                                       WSMsg_Fuzzing_FuzzCaseSetSummary,
+                                       FuzzProgressState, FuzzMode)
 from db import FuzzDataCaseTable, FuzzRequestTable, FuzzResponseTable, insert_api_fuzzdatacase, insert_api_fuzzrequest, insert_api_fuzzresponse
 from sqlalchemy.sql import insert
 
@@ -54,6 +57,8 @@ class WebApiFuzzer:
         # Set-Cookie: chocolate=chips; expires=Sun, 15-Nov-2009 18:47:08 GMT; path=/; domain=thaorius.net; secure; httponly
         # Set-Cookie: milk=shape
         self.cookiejar = {}
+        
+        self.httpTimeoutInSec = 1.2
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
@@ -77,26 +82,35 @@ class WebApiFuzzer:
         
         await self.begin_fuzzing()
         
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete()
-        
     async def begin_fuzzing(self):
         
         fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
         
         for fcs in self.apifuzzcontext.fuzzcaseSets:
             
-            for fuzzcount in range(0, fuzzCasesToTest):
+            loop = asyncio.get_event_loop()
+            asyncTasks = []
             
-                fuzzCaseData = self.http_fuzz_api(fcs)
+            for fuzzcount in range(0, fuzzCasesToTest):
+                
+                asyncTasks.append(loop.create_task(self.fuzz_data_case(fcs)))
+            
+            loop.run_until_complete(asyncio.wait(asyncTasks))
+            loop.close()
+    
+    async def fuzz_data_case(self, fcs: ApiFuzzCaseSet):
+        
+        fuzzCaseData = self.http_fuzz_api(fcs)
                     
-                # await self.save_fuzzDataCase(fuzzCaseData)
-                
-                await self.eventstore.send_to_wsclient(jsonpickle.encode(fuzzCaseData))
-                #await self.emit_client_fuzz_status(fuzzCaseData)  
-                
+        await self.save_fuzzDataCase(fuzzCaseData)
+        
+        msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
+        await self.eventstore.send_to_wsclient(jsonpickle.encode(msg))
+        
     def http_fuzz_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
-        http = httplib2.Http()
+    
+        
+        http = httplib2.Http(timeout=self.httpTimeoutInSec )
                 
         fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                 fuzzcontextId=self.apifuzzcontext.Id)
@@ -120,7 +134,7 @@ class WebApiFuzzer:
         fuzzDataCase.response = fuzzResp
         
         try:
-            
+
             resp, content = http.request(url,
                         fcs.verb, body=body,
                         headers=headers )
