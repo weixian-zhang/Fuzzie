@@ -179,6 +179,8 @@ class FuzzProgress:
     error: str = ''
     state : FuzzProgressState = FuzzProgressState.NOTSTARTED
     
-    
-    
-    
+
+class WSMsg_Fuzzing_FuzzCaseSetSummary:
+    def __init__(self,fuzzCaseSetId, statusCode) -> None:
+        self.fuzzCaseSetId = fuzzCaseSetId
+        self.statusCode = statusCode
