@@ -4,7 +4,7 @@ from multiprocessing import Event
 import jsonpickle
 from pymitter import EventEmitter
 import datetime
-
+import asyncio
 
 class MessageLevel:
     INFO = "INFO"
@@ -24,6 +24,8 @@ class Message(object):
  
 class EventStore:
     
+    websocket = None
+    wsMsgQueue = []
     GeneralEventTopic = "event_general"
     
     def __new__(cls):
@@ -101,18 +103,30 @@ class EventStore:
         if self.ExternalClientConsumeEvents:
             self.genlogs.append(msg)
     
+    def set_websocket(self, websocket):
+        EventStore.websocket = websocket
     
+    async def send_to_wsclient(self, data):
+        if EventStore.websocket != None:
+            if len(EventStore.wsMsgQueue) > 0:
+                while len(EventStore.wsMsgQueue) > 0:
+                    await EventStore.websocket.send_text(self.wsMsgQueue.pop())
+                
+            await EventStore.websocket.send_text(data)
+        else:
+            EventStore.wsMsgQueue.append(data)
+        
     #used mainly by external GUI clients to get all general events happening in fuzzer core
-    def getGeneralEventsByBatch(self, size = 5) -> list[str]:
+    # def getGeneralEventsByBatch(self, size = 5) -> list[str]:
         
-        if len(self.genlogs) == 0:
-            return []
+    #     if len(self.genlogs) == 0:
+    #         return []
         
-        if size > 50:
-            size = 50
+    #     if size > 50:
+    #         size = 50
         
-        poplogs = self.genlogs[:size + 1]
+    #     poplogs = self.genlogs[:size + 1]
         
-        del self.genlogs[:size + 1]
+    #     del self.genlogs[:size + 1]
         
-        return poplogs
+    #     return poplogs

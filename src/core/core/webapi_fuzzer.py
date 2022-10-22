@@ -28,6 +28,7 @@ import jinja2
 import httplib2
 import re
 import json
+import jsonpickle
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore
@@ -54,7 +55,7 @@ class WebApiFuzzer:
         # Set-Cookie: milk=shape
         self.cookiejar = {}
         
-        self.evts = EventStore()
+        self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
         self.passwordGenerator = HackedPasswordGenerator()
         self.usernameGenerator = HackedUsernameGenerator()
@@ -66,16 +67,18 @@ class WebApiFuzzer:
         self.usernameGenerator = HackedUsernameGenerator()
         self.CharGenerator = ObedientCharGenerator()
 
-    def fuzz(self):
+    async def fuzz(self):
         
         if self.apifuzzcontext == None or len(self.apifuzzcontext.fuzzcaseSets) == 0:
             self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
             return
         
-        self.evts.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
+        self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
         
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.begin_fuzzing())
+        await self.begin_fuzzing()
+        
+        # loop = asyncio.get_event_loop()
+        # loop.run_until_complete()
         
     async def begin_fuzzing(self):
         
@@ -85,13 +88,14 @@ class WebApiFuzzer:
             
             for fuzzcount in range(0, fuzzCasesToTest):
             
-                fuzzCaseData = await self.http_fuzz_api(fcs)
+                fuzzCaseData = self.http_fuzz_api(fcs)
                     
-                await self.save_fuzzDataCase(fuzzCaseData)
+                # await self.save_fuzzDataCase(fuzzCaseData)
                 
-                await self.emit_client_fuzz_status(fuzzCaseData)  
+                await self.eventstore.send_to_wsclient(jsonpickle.encode(fuzzCaseData))
+                #await self.emit_client_fuzz_status(fuzzCaseData)  
                 
-    async def http_fuzz_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
+    def http_fuzz_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
         http = httplib2.Http()
                 
         fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
@@ -235,11 +239,11 @@ class WebApiFuzzer:
             insert_api_fuzzrequest(fdc.request)
             insert_api_fuzzresponse(fdc.response)
         except Exception as e:
-            self.evts.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}')
+            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}')
         
     
     async def emit_client_fuzz_status(self, fuzzDataCase):
-        pass
+        self.ee
     
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
         

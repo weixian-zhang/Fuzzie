@@ -9,7 +9,7 @@ from eventstore import EventStore
 from db import FuzzContextTable, FuzzCaseSetTable, dbconn, get_fuzzcontext, get_fuzzcontexts
 from sqlalchemy.sql import select, insert
 
-
+import asyncio
 import json
 from datetime import datetime
 
@@ -75,13 +75,13 @@ class ServiceManager:
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:
         return get_fuzzcontext(Id)
     
-    def fuzz(self, Id) -> None:
+    async def fuzz(self, Id) -> None:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
         webapifuzzer = WebApiFuzzer(fuzzcontext)
         
-        webapifuzzer.fuzz()
+        await webapifuzzer.fuzz()
         
     
     
@@ -136,47 +136,6 @@ class ServiceManager:
                 )
                 
                 dbconn.execute(fcSetStmt)
-                
-    # def create_fuzzcontext_from_dict(self, rowDict):
-    #     fuzzcontext = ApiFuzzContext()
-    #     fuzzcontext.Id = rowDict['Id']
-    #     fuzzcontext.datetime = rowDict['datetime']
-    #     fuzzcontext.name = rowDict['name']
-        
-    #     fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
-    #     fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
-    #     fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
-    #     fuzzcontext.openapi3Url = rowDict['openapi3Url']
-        
-    #     fuzzcontext.hostname= rowDict['hostname']
-    #     fuzzcontext.port= rowDict['port']
-    #     fuzzcontext.fuzzMode= rowDict['fuzzMode']
-    #     fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
-    #     fuzzcontext.authnType = rowDict['authnType']
-    #     fuzzcontext.isAnonymous = rowDict['isAnonymous']
-    #     fuzzcontext.basicUsername= rowDict['basicUsername']
-    #     fuzzcontext.basicPassword = rowDict['basicPassword']
-    #     fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
-    #     fuzzcontext.bearerToken = rowDict['bearerToken']
-    #     fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
-    #     fuzzcontext.apikey = rowDict['apikey']
-        
-    #     return fuzzcontext
-    
-
-    # def create_fuzzcaseset_from_dict(self, rowDict):
-    #     fcs = ApiFuzzCaseSet()
-    #     fcs.Id = rowDict['fuzzCaseSetId']
-    #     fcs.path = rowDict['path']
-    #     fcs.pathDataTemplate = rowDict['pathDataTemplate']
-    #     fcs.querystringDataTemplate= rowDict['querystringDataTemplate']
-    #     fcs.bodyDataTemplate= rowDict['bodyDataTemplate']
-    #     fcs.headerDataTemplate = rowDict['headerDataTemplate']
-    #     fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
-    #     fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
-    #     fcs.selected = rowDict['selected']
-    #     fcs.verb = rowDict['verb']
-    #     return fcs
         
 
     
