@@ -1,7 +1,9 @@
 import graphene
-
+import asyncio
 from servicemanager import ServiceManager
 from eventstore import EventStore
+from datetime import datetime
+from rx import Observable
 
 # import sys, os
 # from pathlib import Path
@@ -124,7 +126,7 @@ class Query(graphene.ObjectType):
     
     fuzzcontexts = graphene.List(ApiFuzzContext)
     
-    fuzzContext = graphene.Field(type=ApiFuzzContext, fuzzcontextId=graphene.String())
+    fuzzContext = graphene.Field(ApiFuzzContext, fuzzcontextId=graphene.String())
     
     def resolve_fuzzcontexts(self,info):
         
@@ -137,7 +139,18 @@ class Query(graphene.ObjectType):
         r.name = fuzzcontextId
         return r
 
-# mutations
+# subscriptions
+# class Subscription(graphene.ObjectType):
+#     time_of_day = graphene.String()
+
+#     async def subscribe_time_of_day(root, info):
+#         while True:
+#             yield datetime.now().isoformat()
+#             await asyncio.sleep(1)
+
+# mutations  
+
+    
 class DiscoverOpenApi3ByFilePath(graphene.Mutation):
     
     class Arguments:
@@ -229,9 +242,15 @@ class Fuzz(graphene.Mutation):
         
     #define output
     ok = graphene.Boolean()
-     
-    def mutate(self, info, fuzzcontextId):
+    
+    async def mutate(self, info, fuzzcontextId):
+        
         ok = True
+        
+        sm = ServiceManager()
+        
+        await sm.fuzz(fuzzcontextId)
+
         return Fuzz(ok=ok)
     
 class Mutation(graphene.ObjectType):
@@ -250,10 +269,5 @@ class Mutation(graphene.ObjectType):
     
     #discoverByRequestTextFilePath(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
     
-
-# subscription
-# only used when a fuzz test happens as Fuzzie needs to report to GUI client, the status of each API in fuzz-operation
-class Subscription(graphene.ObjectType):
-    pass
     
 schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)
