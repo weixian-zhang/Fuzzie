@@ -14,7 +14,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
-from apicontext import ApiContext, ParameterType, ParamProp, Api
+from apicontext import ApiContext, ParameterType, ParamProp, Api, SupportedAuthnType
 from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
 from eventstore import EventStore
 
@@ -29,19 +29,13 @@ class OpenApi3FuzzContextCreator:
                  hostname: str, 
                  port: int,
                  fuzzMode: str,
+                 authnType,
+                 name = '',
                  requestMessageSingle = '',
                  requestMessageFilePath = '',
                  openapi3FilePath = '',
                  openapi3Url = '',
-                 numberOfFuzzcaseToExec = 100, 
-                 isAnonymous = False,
-                 basicUsername = '',
-                 basicPassword = '',
-                 bearerTokenHeader = 'Authorization',
-                 bearerToken = '', 
-                 apikeyHeader = '',
-                 apikey = '',
-                 name = ''):
+                 numberOfFuzzcaseToExec = 100):
         
         self.fuzzcontext = ApiFuzzContext()
         self.fuzzcontext.Id = shortuuid.uuid()
@@ -58,16 +52,10 @@ class OpenApi3FuzzContextCreator:
         self.fuzzcontext.openapi3Url = openapi3Url
         self.fuzzcontext.hostname = hostname
         self.fuzzcontext.port = port
+        self.fuzzcontext.authnType = authnType
         #self.fuzzcontext.numberOfFuzzcaseToExec = self.determine_fuzzcases_to_run(fuzzMode, numberOfFuzzcaseToExec)  
         
-        #security schemes
-        self.fuzzcontext.isAnonymous = isAnonymous
-        self.fuzzcontext.basicUsername = basicUsername
-        self.fuzzcontext.basicPassword = basicPassword
-        self.fuzzcontext.bearerTokenHeader = bearerTokenHeader
-        self.fuzzcontext.bearerToken = bearerToken
-        self.fuzzcontext.apikeyHeader = apikeyHeader
-        self.fuzzcontext.apikey = apikey
+        #self.set_security_scheme(basicUsername,basicPassword, bearerTokenHeader, bearerToken, apikeyHeader,apikey)
         
     def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
         
@@ -104,6 +92,26 @@ class OpenApi3FuzzContextCreator:
             self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
         return self.fuzzcontext 
+    
+    def set_security_scheme(self, 
+                                  basicUsername = '',
+                                  basicPassword = '',
+                                  bearerTokenHeader = 'Authorization',
+                                  bearerToken = '', 
+                                  apikeyHeader = '',
+                                  apikey = '',
+                                  name = ''):
+
+        if basicUsername != '' and basicPassword != '':
+            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Basic.name
+        elif bearerToken != '':
+            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Bearer.name
+        elif apikeyHeader != '' and apikey != '':
+            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.ApiKey.name
+        else:
+            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous.name
+            
+            
     
     def set_hostname(self, apicontext: ApiContext):
         

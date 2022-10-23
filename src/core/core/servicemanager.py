@@ -6,7 +6,7 @@ from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, ApiFuzzCaseSet
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
-from db import FuzzContextTable, FuzzCaseSetTable, dbconn, get_fuzzcontext, get_fuzzcontexts
+from db import FuzzContextTable, FuzzCaseSetTable, dbconn, get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext
 from sqlalchemy.sql import select, insert
 
 import asyncio
@@ -22,19 +22,13 @@ class ServiceManager:
         
     def discover_openapi3_by_filepath_or_url(self,
                             hostname,
+                            authnType,
                             port=443,
                             name='',
                             openapi3FilePath = '',
                             openapi3Url = '',
                             fuzzMode= 'Quick',
-                            numberOfFuzzcaseToExec=100,
-                            isAnonymous=True,
-                            basicUsername='',
-                            basicPassword='',
-                            bearerTokenHeader='',
-                            bearerToken='',
-                            apikeyHeader='',
-                            apikey=''):
+                            numberOfFuzzcaseToExec=100):
         
         openapi3Dis = OpenApi3ApiDiscover()
         apicontext= None
@@ -52,20 +46,13 @@ class ServiceManager:
                             requestMessageSingle = '',
                             requestMessageFilePath = '',
                             openapi3FilePath = openapi3FilePath,
-                            openapi3Url = openapi3Url,
                             fuzzMode= fuzzMode,
                             numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
-                            isAnonymous=isAnonymous,
-                            basicUsername=basicUsername,
-                            basicPassword=basicPassword,
-                            bearerTokenHeader=bearerTokenHeader,
-                            bearerToken=bearerToken,
-                            apikeyHeader=apikeyHeader,
-                            apikey=apikey)
+                            authnType=authnType)
         
         fuzzcontext = fcc.create_fuzzcontext(apicontext)
         
-        self.insert_db_fuzzcontext(fuzzcontext)
+        insert_db_fuzzcontext(fuzzcontext)
         
         return fuzzcontext
     
@@ -75,67 +62,27 @@ class ServiceManager:
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:
         return get_fuzzcontext(Id)
     
-    async def fuzz(self, Id) -> None:
+    async def fuzz(self, 
+                   Id, basicUsername = '', basicPassword= '', 
+                   bearerTokenHeader= '', bearerToken= '', 
+                   apikeyHeader= '', apikey= '') -> None:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
-        webapifuzzer = WebApiFuzzer(fuzzcontext)
+        webapifuzzer = WebApiFuzzer(fuzzcontext, 
+                                    basicUsername = basicUsername, 
+                                    basicPassword= basicPassword, 
+                                    bearerTokenHeader= bearerTokenHeader,
+                                    bearerToken= bearerToken, 
+                                    apikeyHeader=  apikeyHeader, 
+                                    apikey= apikey)
         
         await webapifuzzer.fuzz()
         
     
     
     
-    def insert_db_fuzzcontext(self, fuzzcontext: ApiFuzzContext):
-        
-        securityScheme = fuzzcontext.get_security_scheme().name
-
-        fuzzcontextStmt = (
-            insert(FuzzContextTable).
-            values(
-                   Id=fuzzcontext.Id, 
-                   datetime=datetime.now(),
-                   name = fuzzcontext.name,
-                    hostname = fuzzcontext.hostname,
-                    port = fuzzcontext.port,
-                    fuzzMode = fuzzcontext.fuzzMode,
-                    fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = securityScheme,
-                    isAnonymous = fuzzcontext.isAnonymous,
-                    basicUsername = fuzzcontext.basicUsername,
-                    basicPassword = fuzzcontext.basicPassword,
-                    bearerTokenHeader = fuzzcontext.bearerTokenHeader,
-                    bearerToken = fuzzcontext.bearerToken,
-                    apikeyHeader = fuzzcontext.apikeyHeader,
-                    apikey = fuzzcontext.apikey
-                   )
-         )
-        
-        dbconn.execute(fuzzcontextStmt)
-        
-        if len(fuzzcontext.fuzzcaseSets) > 0:
-            for fcset in fuzzcontext.fuzzcaseSets:
-                header = json.dumps(fcset.headerDataTemplate)
-                body = json.dumps(fcset.bodyDataTemplate)
-                
-                fcSetStmt = (
-                    insert(FuzzCaseSetTable).
-                    values(
-                        Id=fcset.Id, 
-                        selected = fcset.selected,
-                        verb = fcset.verb,
-                        path = fcset.path,
-                        querystringNonTemplate = fcset.querystringNonTemplate,
-                        bodyNonTemplate = fcset.bodyNonTemplate,
-                        pathDataTemplate = fcset.pathDataTemplate,
-                        querystringDataTemplate = fcset.querystringDataTemplate,
-                        headerDataTemplate = header,
-                        bodyDataTemplate =  body,
-                        fuzzcontextId = fuzzcontext.Id
-                        )
-                )
-                
-                dbconn.execute(fcSetStmt)
+    
         
 
     

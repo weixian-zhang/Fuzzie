@@ -50,14 +50,7 @@ class TestFuzzManager(unittest.TestCase):
                             hostname='http://localhost',
                             port=50001,
                             fuzzMode= FuzzMode.Quick,
-                            numberOfFuzzcaseToExec=50,
-                            isAnonymous=True,
-                            basicUsername='',
-                            basicPassword='',
-                            bearerTokenHeader='',
-                            bearerToken='',
-                            apikeyHeader='',
-                            apikey='')
+                            numberOfFuzzcaseToExec=50)
         
         fuzzcontext: ApiFuzzContext = fcc.create_fuzzcontext(apicontext)
         
@@ -73,15 +66,7 @@ class TestFuzzManager(unittest.TestCase):
                     port = fuzzcontext.port,
                     fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = securityScheme,
-                    isAnonymous = fuzzcontext.isAnonymous,
-                    basicUsername = fuzzcontext.basicUsername,
-                    basicPassword = fuzzcontext.basicPassword,
-                    bearerTokenHeader = fuzzcontext.bearerTokenHeader,
-                    bearerToken = fuzzcontext.bearerToken,
-                    apikeyHeader = fuzzcontext.apikeyHeader,
-                    apikey = fuzzcontext.apikey
-                   )
+                    authnType = securityScheme)
          )
         
         dbconn.execute(fuzzcontextStmt)

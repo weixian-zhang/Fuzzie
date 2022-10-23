@@ -2,6 +2,7 @@ from datetime import datetime
 import sqlalchemy
 from sqlalchemy import *
 import os
+import json
 from pathlib import Path
 from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, ApiFuzzResponse
 from eventstore import EventStore
@@ -33,14 +34,7 @@ FuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('openapi3Url', String),
                             Column('fuzzMode', String),
                             Column('fuzzcaseToExec', Integer),
-                            Column('authnType', String),
-                            Column('isAnonymous', Boolean),
-                            Column('basicUsername', String),
-                            Column('basicPassword', String),
-                            Column('bearerTokenHeader', String),
-                            Column('bearerToken', String),
-                            Column('apikeyHeader', String),
-                            Column('apikey', String)
+                            Column('authnType', String)
                             )
     
 FuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
@@ -153,7 +147,49 @@ def get_fuzzcontext(Id) -> ApiFuzzContext:
             fuzzcontext.fuzzcaseSets.append(fcs)
             
         return fuzzcontext
-    
+
+def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
+        
+        fuzzcontextStmt = (
+            insert(FuzzContextTable).
+            values(
+                   Id=fuzzcontext.Id, 
+                   datetime=datetime.now(),
+                   name = fuzzcontext.name,
+                    hostname = fuzzcontext.hostname,
+                    port = fuzzcontext.port,
+                    fuzzMode = fuzzcontext.fuzzMode,
+                    fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
+                    authnType = fuzzcontext.authnType
+                   )
+         )
+        
+        dbconn.execute(fuzzcontextStmt)
+        
+        if len(fuzzcontext.fuzzcaseSets) > 0:
+            for fcset in fuzzcontext.fuzzcaseSets:
+                header = json.dumps(fcset.headerDataTemplate)
+                body = json.dumps(fcset.bodyDataTemplate)
+                
+                fcSetStmt = (
+                    insert(FuzzCaseSetTable).
+                    values(
+                        Id=fcset.Id, 
+                        selected = fcset.selected,
+                        verb = fcset.verb,
+                        path = fcset.path,
+                        querystringNonTemplate = fcset.querystringNonTemplate,
+                        bodyNonTemplate = fcset.bodyNonTemplate,
+                        pathDataTemplate = fcset.pathDataTemplate,
+                        querystringDataTemplate = fcset.querystringDataTemplate,
+                        headerDataTemplate = header,
+                        bodyDataTemplate =  body,
+                        fuzzcontextId = fuzzcontext.Id
+                        )
+                )
+                
+                dbconn.execute(fcSetStmt)
+                
 def insert_api_fuzzdatacase(fdc: ApiFuzzDataCase) -> None:
     stmt = (
             insert(FuzzDataCaseTable).
@@ -226,13 +262,6 @@ def create_fuzzcontext_from_dict(rowDict):
         fuzzcontext.fuzzMode= rowDict['fuzzMode']
         fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
         fuzzcontext.authnType = rowDict['authnType']
-        fuzzcontext.isAnonymous = rowDict['isAnonymous']
-        fuzzcontext.basicUsername= rowDict['basicUsername']
-        fuzzcontext.basicPassword = rowDict['basicPassword']
-        fuzzcontext.bearerTokenHeader= rowDict['bearerTokenHeader']
-        fuzzcontext.bearerToken = rowDict['bearerToken']
-        fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
-        fuzzcontext.apikey = rowDict['apikey']
         
         return fuzzcontext
     

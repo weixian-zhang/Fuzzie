@@ -22,16 +22,16 @@
     # {{ hashsha256:value }}        generates a sha256 hash from supplied value
 
 import asyncio
+from pubsub import pub
 from http import cookiejar
 from types import MappingProxyType
 import jinja2
 import httplib2
-import re
 import json
-import jsonpickle
+import sys
 import shortuuid
 from datetime import datetime
-from eventstore import EventStore
+from eventstore import EventStore, MsgType
 from datafactory.hacked_password_generator import HackedPasswordGenerator
 from datafactory.hacked_username_generator  import HackedUsernameGenerator
 from datafactory.naughty_file_generator import NaughtyFileGenerator
@@ -40,6 +40,7 @@ from datafactory.naughty_digits_generator import NaughtyDigitGenerator
 from datafactory.naughty_string_generator import NaughtyStringGenerator
 from datafactory.naughty_bool_generator import NaughtyBoolGenerator
 from datafactory.obedient_data_generators import ObedientCharGenerator 
+from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
                                        WSMsg_Fuzzing_FuzzCaseSetSummary,
@@ -49,7 +50,14 @@ from sqlalchemy.sql import insert
 
 class WebApiFuzzer:
     
-    def __init__(self, apifuzzcontext: ApiFuzzContext) -> None:
+    def __init__(self,
+                    apifuzzcontext: ApiFuzzContext,
+                    basicUsername = '',
+                    basicPassword = '',
+                    bearerTokenHeader = '',
+                    bearerToken = '',
+                    apikeyHeader = '',
+                    apikey = '') -> None:
         
         # supports remember Set-Cookie from response
         #cookie example
@@ -58,7 +66,17 @@ class WebApiFuzzer:
         # Set-Cookie: milk=shape
         self.cookiejar = {}
         
+        # security creds
+        self.basicUsername = basicUsername,
+        self.basicPassword = basicPassword,
+        self.bearerTokenHeader = bearerTokenHeader,
+        self.bearerToken = bearerToken,
+        self.apikeyHeader = apikeyHeader,
+        self.apikey = apikey
+        
         self.httpTimeoutInSec = 1.2
+        
+        self.fuzzdatacaseCoroutines = []
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
@@ -71,6 +89,8 @@ class WebApiFuzzer:
         self.boolGenerator = NaughtyBoolGenerator() 
         self.usernameGenerator = HackedUsernameGenerator()
         self.CharGenerator = ObedientCharGenerator()
+        
+        pub.subscribe(self.command_relay_receiver, 'command')
 
     async def fuzz(self):
         
@@ -78,26 +98,30 @@ class WebApiFuzzer:
             self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
             return
         
-        self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
+        await self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
         
         await self.begin_fuzzing()
         
     async def begin_fuzzing(self):
         
-        fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
-        
-        for fcs in self.apifuzzcontext.fuzzcaseSets:
+        try:
+            fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
             
-            loop = asyncio.get_event_loop()
-            asyncTasks = []
-            
-            for fuzzcount in range(0, fuzzCasesToTest):
+            for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
-                asyncTasks.append(loop.create_task(self.fuzz_data_case(fcs)))
+                self.fuzzdatacaseCoroutines = []
+                
+                for count in range(0, fuzzCasesToTest):
+                    
+                    self.fuzzdatacaseCoroutines.append(asyncio.create_task(self.fuzz_data_case(fcs)))
+
+                await asyncio.gather(*self.fuzzdatacaseCoroutines)
+        except Exception as e:
+            await self.eventstore.send_to_ws(sys.exc_info(), MsgType.AppEvent)
+        except asyncio.exceptions.CancelledError as e:
+            await self.eventstore.send_to_ws('Fuzzing was cancelled', MsgType.AppEvent)
             
-            loop.run_until_complete(asyncio.wait(asyncTasks))
-            loop.close()
-    
+
     async def fuzz_data_case(self, fcs: ApiFuzzCaseSet):
         
         fuzzCaseData = self.http_fuzz_api(fcs)
@@ -105,8 +129,18 @@ class WebApiFuzzer:
         await self.save_fuzzDataCase(fuzzCaseData)
         
         msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
-        await self.eventstore.send_to_wsclient(jsonpickle.encode(msg))
         
+        await self.eventstore.send_to_ws(msg, MsgType.FuzzEvent)
+        
+    def command_relay_receiver(self, command):
+        if command == 'cancel_fuzzing':
+            self.cancel_fuzzing()
+        
+    def cancel_fuzzing(self):
+        if len(self.fuzzdatacaseCoroutines) > 0:
+            for t in self.fuzzdatacaseCoroutines:
+                t.cancel()
+                
     def http_fuzz_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
     
         
@@ -195,20 +229,26 @@ class WebApiFuzzer:
         
         url = f'{hostnamePort}{path}{querystring}'
         
-        securityHeaders = {}
-        if fc.isAnonymous == False:
-            if fc.is_basic_authn():
-                http.add_credentials(fc.basicUsername, fc.basicPassword)
-            elif fc.is_bearertoken_authn():
-                securityHeaders[fc.bearerTokenHeader] = fc.bearerToken
-            elif fc.is_apikey_authn():
-                securityHeaders[fc.apikeyHeader] = fc.apikey
+        securityHeaders = self.determine_security_scheme_to_fuzz(http, fc)
                 
         headers = {**securityHeaders, **headerDict}     #merge 2 dicts
         
         return [hostnamePort, url, path, querystring, body, headers]
-        
     
+    # returns dict representing header
+    def determine_security_scheme_to_fuzz(self, http, fc: ApiFuzzContext) -> dict:
+        securityHeaders = {}
+        
+        if fc.authnType == SupportedAuthnType.Anonymous.name:
+            return securityHeaders
+        
+        if fc.authnType == SupportedAuthnType.Basic.name:
+            http.add_credentials(fc.basicUsername, fc.basicPassword)
+        elif fc.authnType == SupportedAuthnType.Bearer.name:
+            securityHeaders[fc.bearerTokenHeader] = fc.bearerToken
+        elif fc.authnType == SupportedAuthnType.ApiKey.name:
+            securityHeaders[fc.apikeyHeader] = fc.apikey
+        return securityHeaders
             
     def inject_fuzzdata_in_datatemplate(self, tpl: str) -> str:
         
@@ -249,6 +289,8 @@ class WebApiFuzzer:
     async def save_fuzzDataCase(self, fdc: ApiFuzzDataCase):
 
         try:
+            # remove security credentials before saving
+            
             insert_api_fuzzdatacase(fdc)
             insert_api_fuzzrequest(fdc.request)
             insert_api_fuzzresponse(fdc.response)
