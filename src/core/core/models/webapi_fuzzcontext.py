@@ -117,16 +117,7 @@ class ApiFuzzContext:
         self.port: int
         self.fuzzMode: FuzzMode = FuzzMode.Quick         
         self.fuzzcaseToExec = 100
-        
-        #security schemes
-        self.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous
-        self.isAnonymous = False
-        self.basicUsername = ''
-        self.basicPassword  = ''
-        self.bearerTokenHeader = ''
-        self.bearerToken  = ''
-        self.apikeyHeader  = ''
-        self.apikey  = ''
+        self.authnType: str = SupportedAuthnType.Anonymous.name
         
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
         #self.fuzzExecutionConfig: FuzzExecutionConfig
@@ -137,34 +128,6 @@ class ApiFuzzContext:
         if self.port == '':
             return self.hostname
         return f'{self.hostname}:{self.port}'
-                
-    def is_basic_authn(self):
-        if self.get_security_scheme() == SupportedAuthnType.Basic:
-            return True
-        return False
-    
-    def is_bearertoken_authn(self):
-        if self.get_security_scheme() == SupportedAuthnType.Bearer:
-            return True
-        return False
-    
-    def is_apikey_authn(self):
-        if self.get_security_scheme() == SupportedAuthnType.ApiKey:
-            return True
-        return False
-                
-    def get_security_scheme(self) -> SupportedAuthnType:
-        if self.isAnonymous == True:
-            return SupportedAuthnType.Anonymous
-        elif self.basicUsername != '' and self.basicPassword != '':
-            return SupportedAuthnType.Basic
-        elif self.bearerToken != '':
-            return SupportedAuthnType.Bearer
-        elif self.apikeyHeader != '' and self.apikey != '':
-            return SupportedAuthnType.ApiKey
-        else:
-            return SupportedAuthnType.Anonymous
-        
         
 class ApiFuzzReport:
     def __init__(self) -> None:

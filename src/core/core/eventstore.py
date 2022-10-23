@@ -1,14 +1,28 @@
 '''Fuzzie EventStore'''
 
+from enum import Enum
 from multiprocessing import Event
 import jsonpickle
 from pymitter import EventEmitter
 import datetime
+import json
 import asyncio
 
 class MessageLevel:
     INFO = "INFO"
     ERROR = "ERROR"
+    
+class MsgType(Enum):
+    AppEvent = 1,
+    FuzzEvent = 2
+
+class WebsocketClientData:
+    def __init__(self, data, msgType: MsgType):
+        self.data = data
+        self.msgType = msgType.name
+    
+    def json(self):
+        return jsonpickle.encode(self, unpicklable=False)
     
 class Message(object):
     
@@ -26,7 +40,7 @@ class EventStore:
     
     websocket = None
     wsMsgQueue = []
-    GeneralEventTopic = "event_general"
+    AppEventTopic = "AppEventTopic"
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -35,22 +49,14 @@ class EventStore:
     
     def __init__(self) -> None:
         
-        self.ExternalClientConsumeEvents = False
         self.genlogs = []
         self.fuzzProgress = []
         
         self.ee = EventEmitter()
-        self.ee.on(EventStore.GeneralEventTopic, self.handleGeneralLogs)
+        self.ee.on(EventStore.AppEventTopic, self.handleGeneralLogs)
         
-    @property
-    def supportExternalClientConsumeEvents(self):
-        return self.ExternalClientConsumeEvents
-    
-    @supportExternalClientConsumeEvents.setter
-    def supportExternalClientConsumeEvents(self, value):
-        self.ExternalClientConsumeEvents = value
         
-    def emitInfo(self, message: str, data = "") -> None:
+    async def emitInfo(self, message: str, data = "") -> None:
                     
         m = Message(
             datetime.datetime.now(),
@@ -59,10 +65,11 @@ class EventStore:
             data
             )
         
-        self.ee.emit(EventStore.GeneralEventTopic, m.json())
+        self.ee.emit(EventStore.AppEventTopic, m.json())
                 
+        await self.send_to_ws(m.json(), MsgType.AppEvent)
         
-    def emitErr(self, error: str, data = "") -> None:
+    async def emitErr(self, error: str, data = "") -> None:
         
         m = Message(
             datetime.datetime.now(),
@@ -71,9 +78,11 @@ class EventStore:
             data
             )
         
-        self.ee.emit(EventStore.GeneralEventTopic, m.json())
+        self.ee.emit(EventStore.AppEventTopic, m.json())
+        
+        await self.send_to_ws(m, MsgType.AppEvent)
     
-    def emitErr(self, err: any, data = "") -> None:
+    async def emitErr(self, err: any, data = "") -> None:
         
         m = None
         
@@ -92,41 +101,30 @@ class EventStore:
         else:
             return
         
-        self.ee.emit(EventStore.GeneralEventTopic, m.json())
+        self.ee.emit(EventStore.AppEventTopic, m.json())
+        
+        await self.send_to_ws(m, MsgType.AppEvent)
         
     
     def handleGeneralLogs(self, msg: str):
-        
         print(msg)
-        
-        #support external GUI clients to collect logs from fuzzer core
-        if self.ExternalClientConsumeEvents:
-            self.genlogs.append(msg)
     
     def set_websocket(self, websocket):
         EventStore.websocket = websocket
     
-    async def send_to_wsclient(self, data):
+    # send to websocket clients
+    async def send_to_ws(self, data, msgType: MsgType):
+        
+        if not type(data) is str:
+            data = jsonpickle.encode(data, unpicklable=False)
+        
+        m = WebsocketClientData(data, msgType)
+        
         if EventStore.websocket != None:
             if len(EventStore.wsMsgQueue) > 0:
                 while len(EventStore.wsMsgQueue) > 0:
                     await EventStore.websocket.send_text(self.wsMsgQueue.pop())
                 
-            await EventStore.websocket.send_text(data)
+            await EventStore.websocket.send_text(m.json())
         else:
-            EventStore.wsMsgQueue.append(data)
-        
-    #used mainly by external GUI clients to get all general events happening in fuzzer core
-    # def getGeneralEventsByBatch(self, size = 5) -> list[str]:
-        
-    #     if len(self.genlogs) == 0:
-    #         return []
-        
-    #     if size > 50:
-    #         size = 50
-        
-    #     poplogs = self.genlogs[:size + 1]
-        
-    #     del self.genlogs[:size + 1]
-        
-    #     return poplogs
+            EventStore.wsMsgQueue.append(m.json())
