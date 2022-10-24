@@ -64,7 +64,6 @@ class ApiFuzzDataCase:
         self.fuzzcontextId = ''
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
-        self.progressState = ''                     #FuzzProgressState.NOTSTARTED
 
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
