@@ -7,7 +7,7 @@
     # {{ boolean }}
 # in addition, input expression for Request Message
     # {{ my:[myvalue1,myvalue2,3,4] }}  # supply your own input
-    # {{ mutate: a quick brown fox }}   # fuzzie mutates your input by add/alter/remove
+    # {{ mutate:[a quick brown fox, Whatever you are, be a good one] }}   # mutates by per char add/alter/remove mutations
     # {{ string }}                  
     # {{ number }}                  
     # {{ file }}
