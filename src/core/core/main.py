@@ -25,7 +25,7 @@ import asyncio
 from pubsub import pub
 # from fastapi import FastAPI, WebSocket
 from starlette.applications import Starlette
-from starlette_graphene3 import GraphQLApp, make_graphiql_handler
+from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
 
 # disable Flask logging
@@ -41,31 +41,19 @@ class WebSocketServer(WebSocketEndpoint):
     encoding = "text"
 
     async def on_receive(self, websocket, data):
-    
         
         dataCmd = json.loads(data)
         cmd = dataCmd['command']
         
         if cmd == 'cancel_fuzzing':
-            pub.sendMessage('commandrelay', command='cancel_fuzzing')
+            pub.sendMessage('command_relay', command='cancel_fuzzing')
     
         #todo: use pubsub library to send command to service manager to cancel fuzzing
         # await websocket.send_text(f"Message text was: {data}")
         
     async def on_connect(self, websocket):
         await websocket.accept()
-
-# @app.websocket_route('/ws')
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     # Process incoming messages
-    
-#     eventstore.set_websocket(websocket)
-    
-#     while True:
-#         await websocket.receive_text()
-#         await asyncio.sleep(1)
-#     await websocket.close()
+        eventstore.set_websocket(websocket)
 
 app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler())) 
 
@@ -87,20 +75,17 @@ def startup():
     
     if args['webserver']:
         
-        
-        eventstore.supportExternalClientConsumeEvents = True
-        
         asyncio.run(eventstore.emitInfo('starting Fuzzie'))
         
-        asyncio.run( eventstore.emitInfo('starting Fuzzie web server'))
-        asyncio.run( eventstore.emitInfo('Fuzzie Fuzzer started'))
+        asyncio.run(eventstore.emitInfo('starting Fuzzie web server'))
+        asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
         
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
-        asyncio.run( eventstore.emitInfo("Fuzzie-Fuzzer web server closing"))
+        asyncio.run(eventstore.emitInfo("Fuzzie-Fuzzer web server closing"))
     else:
-        asyncio.run( eventstore.emitInfo('Fuzzie Fuzzer started'))
+         asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
     
 
 # @app.teardown_appcontext

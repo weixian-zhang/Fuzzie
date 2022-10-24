@@ -9,7 +9,8 @@ sys.path.insert(0, datafacPath)
 sys.path.insert(0, dbPath)
 sys.path.insert(0, modelsPath)
 
-from db import FuzzContextTable, FuzzCaseSetTable, dbconn, metadata
+from db import FuzzContextTable, FuzzCaseSetTable,  metadata, session_factory
+from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select, insert
 import json
 
@@ -18,7 +19,6 @@ from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreato
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
 from eventstore import EventStore
 
-import shortuuid
 from datetime import datetime
 import os
 from pathlib import Path
@@ -35,8 +35,11 @@ class TestFuzzManager(unittest.TestCase):
         
     def test_query_apifuzzcontext_join_fuzzCaseSet(self):
         query = select([FuzzContextTable])
-        results = dbconn.execute(query)
+        Session = scoped_session(session_factory)
+        results = Session.execute(query)
         results.fetchall()
+        
+        Session.close()
         
     def test_insert_apifuzzcontext(self):
         
@@ -50,11 +53,10 @@ class TestFuzzManager(unittest.TestCase):
                             hostname='http://localhost',
                             port=50001,
                             fuzzMode= FuzzMode.Quick,
-                            numberOfFuzzcaseToExec=50)
+                            numberOfFuzzcaseToExec=50,
+                            authnType='Anonymous')
         
         fuzzcontext: ApiFuzzContext = fcc.create_fuzzcontext(apicontext)
-        
-        securityScheme = fuzzcontext.get_security_scheme().name
 
         fuzzcontextStmt = (
             insert(FuzzContextTable).
@@ -66,10 +68,12 @@ class TestFuzzManager(unittest.TestCase):
                     port = fuzzcontext.port,
                     fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = securityScheme)
+                    authnType = 'Anonymous')
          )
         
-        dbconn.execute(fuzzcontextStmt)
+        Session = scoped_session(session_factory)
+        
+        Session.execute(fuzzcontextStmt)
         
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
@@ -93,7 +97,9 @@ class TestFuzzManager(unittest.TestCase):
                         )
                 )
                 
-                dbconn.execute(fcSetStmt)   
+                Session.execute(fcSetStmt)
+        
+        Session.close()
     
 
 if __name__ == '__main__':
