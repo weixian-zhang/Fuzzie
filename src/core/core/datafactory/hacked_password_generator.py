@@ -2,10 +2,15 @@ import os, sys
 from pathlib import Path
 currentDir = os.path.dirname(Path(__file__))
 sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
+sys.path.insert(0, models_dir)
+
+from db import get_naughtypassword_by_id, get_naughtypassword_row_count
 
 from datagen import DataGenerator
 import os
-import sqlite3
 
 class HackedPasswordGenerator(DataGenerator):
     
@@ -14,12 +19,6 @@ class HackedPasswordGenerator(DataGenerator):
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
 
-        self.dbpath = os.path.join(os.path.dirname(__file__), "data\\fuzzie.sqlite")
-
-        self.sqliteconn = sqlite3.connect(self.dbpath, isolation_level=None)
-        
-        self.cursor = self.sqliteconn.cursor()
-        
         self.dbsize = self.get_dbsize()
         
         
@@ -28,15 +27,7 @@ class HackedPasswordGenerator(DataGenerator):
         if self.rowPointer > self.dbsize:
             self.rowPointer = 1
         
-        tsql = f'''
-            SELECT Content
-            FROM NaughtyPassword
-            WHERE id = {self.rowPointer}
-        '''
-        
-        self.cursor.execute(tsql)
-        
-        result = self.cursor.fetchone()[0]
+        result = get_naughtypassword_by_id(self.rowPointer)
         
         self.rowPointer += 1
         
@@ -44,13 +35,7 @@ class HackedPasswordGenerator(DataGenerator):
         
         
     def get_dbsize(self):
-        tsql = f'''
-            SELECT count(1)
-            FROM NaughtyPassword
-        '''
         
-        self.cursor.execute(tsql)
-        
-        count = self.cursor.fetchone()[0]
+        count = get_naughtypassword_row_count()
         
         return count

@@ -5,39 +5,65 @@ Usage:
     main.py fuzz [--openapi-url=<url>] [--openapi-path=<filepath>] [--rt=<request-text-string>] [--rt-path=<request-text-path>] 
 '''
 
+#https://stackoverflow.com/questions/60899741/python-graphene-subscription-server
+# https://github.com/graphql-python/graphql-ws
+# https://github.com/graphql-python/graphql-ws/blob/master/examples/flask_gevent/app.py
+
+from time import sleep
 from docopt import docopt
 
 from eventstore import EventStore
 eventstore = EventStore()
-
-from flask import Flask
-from flask_graphql import GraphQLView
 from flaskgql import schema
+
+import json
+import asyncio
+import uvicorn
+from uvicorn.main import Server
+import asyncio
+
+from pubsub import pub
+# from fastapi import FastAPI, WebSocket
+from starlette.applications import Starlette
+from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
+from starlette.endpoints import WebSocketEndpoint
 
 # disable Flask logging
 import logging
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-#init Flask app
-app = Flask(__name__)
+app = Starlette()
+
+@app.websocket_route("/ws")
+class WebSocketServer(WebSocketEndpoint):
+    counter = 0
+    encoding = "text"
+
+    async def on_receive(self, websocket, data):
+        
+        dataCmd = json.loads(data)
+        cmd = dataCmd['command']
+        
+        if cmd == 'cancel_fuzzing':
+            pub.sendMessage('command_relay', command='cancel_fuzzing')
+    
+        #todo: use pubsub library to send command to service manager to cancel fuzzing
+        # await websocket.send_text(f"Message text was: {data}")
+        
+    async def on_connect(self, websocket):
+        await websocket.accept()
+        eventstore.set_websocket(websocket)
+
+app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler())) 
+
 host='localhost'
 webserverPort = 50001
 
-#init flask-graphql
-app.add_url_rule(
-    '/graphql',
-    view_func=GraphQLView.as_view(
-        'graphql',
-        schema=schema,
-        graphiql=True # for having the GraphiQL interface
-    )
-)
-
 # runs when program exits
 import atexit
-def on_exit():
-    eventstore.emitInfo("Fuzzie stopping")
+async def on_exit():
+    await eventstore.emitInfo("Fuzzie stopping")
 atexit.register(on_exit)
 
 #main entry point and startup
@@ -49,25 +75,22 @@ def startup():
     
     if args['webserver']:
         
+        asyncio.run(eventstore.emitInfo('starting Fuzzie'))
         
-        eventstore.supportExternalClientConsumeEvents = True
-        
-        eventstore.emitInfo('starting Fuzzie')
-        
-        eventstore.emitInfo('starting Fuzzie web server')
-        eventstore.emitInfo('Fuzzie Fuzzer started')
+        asyncio.run(eventstore.emitInfo('starting Fuzzie web server'))
+        asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
         
         
-        app.run(port=webserverPort, threaded=True)
+        uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
-        eventstore.emitInfo("Fuzzie-Fuzzer web server closing")
+        asyncio.run(eventstore.emitInfo("Fuzzie-Fuzzer web server closing"))
     else:
-        eventstore.emitInfo('Fuzzie Fuzzer started')
+         asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
     
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
+# @app.teardown_appcontext
+# def shutdown_session(exception=None):
+#     eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
     
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     startup()
