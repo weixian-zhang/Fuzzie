@@ -7,8 +7,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
-from sqlalchemy.orm import sessionmaker, scoped_session
-from db import session_factory, get_naughtypassword_by_id
+from db import get_naughtypassword_by_id, get_naughtypassword_row_count
 
 from datagen import DataGenerator
 import os
@@ -36,13 +35,7 @@ class HackedPasswordGenerator(DataGenerator):
         
         
     def get_dbsize(self):
-        tsql = f'''
-            SELECT count(1)
-            FROM NaughtyPassword
-        '''
         
-        self.cursor.execute(tsql)
-        
-        count = self.cursor.fetchone()[0]
+        count = get_naughtypassword_row_count()
         
         return count
