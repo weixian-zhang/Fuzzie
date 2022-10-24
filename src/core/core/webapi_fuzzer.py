@@ -51,6 +51,7 @@ from db import (FuzzDataCaseTable, FuzzRequestTable, FuzzResponseTable,
 from sqlalchemy.sql import insert
 import threading
 import queue
+from multiprocessing import Lock 
 
 class WebApiFuzzer:
     
@@ -82,6 +83,7 @@ class WebApiFuzzer:
         
         self.dbInsertQueue = queue.Queue()
         self.stop_threads = False
+        self.dblock: Lock = Lock()
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
@@ -139,9 +141,9 @@ class WebApiFuzzer:
                
         fuzzCaseData = self.http_fuzz_api(fcs)
          
-        self.dbInsertQueue.put(fuzzCaseData, block=False)       
+        #self.dbInsertQueue.put(fuzzCaseData, block=False)       
         
-        #await self.save_fuzzDataCase(fuzzCaseData)
+        await self.save_fuzzDataCase(fuzzCaseData)
         
         msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
         
@@ -313,11 +315,15 @@ class WebApiFuzzer:
     async def save_fuzzDataCase(self, fdc: ApiFuzzDataCase):
 
         try:
-            # remove security credentials before saving
             
+            self.dblock.acquire()
+
             insert_api_fuzzdatacase(fdc)
             insert_api_fuzzrequest(fdc.request)
             insert_api_fuzzresponse(fdc.response)
+            
+            self.dblock.release()
+            
         except Exception as e:
             await self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}')
         
