@@ -50,6 +50,7 @@ from db import (FuzzDataCaseTable, FuzzRequestTable, FuzzResponseTable,
                 insert_api_fuzzdatacase, insert_api_fuzzrequest, insert_api_fuzzresponse)
 from sqlalchemy.sql import insert
 import threading
+import queue
 
 class WebApiFuzzer:
     
@@ -79,6 +80,7 @@ class WebApiFuzzer:
         
         self.httpTimeoutInSec = 1.2
         
+        self.dbInsertQueue = queue.Queue()
         self.stop_threads = False
         
         self.eventstore = EventStore()
@@ -136,8 +138,10 @@ class WebApiFuzzer:
             return
                
         fuzzCaseData = self.http_fuzz_api(fcs)
-                    
-        await self.save_fuzzDataCase(fuzzCaseData)
+         
+        self.dbInsertQueue.put(fuzzCaseData, block=False)       
+        
+        #await self.save_fuzzDataCase(fuzzCaseData)
         
         msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
         
@@ -148,15 +152,16 @@ class WebApiFuzzer:
         
     def pubsub_command_receiver(self, command):
         if command == 'cancel_fuzzing':
-            asyncio.run(self.cancel_fuzzing)
+            self.cancel_fuzzing()
             
-    async def cancel_fuzzing(self):
+    def cancel_fuzzing(self):
         
             self.stop_threads = True
             if self.workerTreads is not None and len(self.workerTreads) > 0:
                 for worker in self.workerTreads:
                     worker.join()
-            await self.eventstore.send_to_ws('Fuzzing is cancelled', MsgType.AppEvent)
+                self.workerTreads = []
+            #await self.eventstore.send_to_ws('Fuzzing is cancelled', MsgType.AppEvent)
                 
         
                 

@@ -349,6 +349,16 @@ def get_naughtypassword_by_id(id):
     
     return row['Content']
 
+def get_naughtypassword_row_count():
+    Session = scoped_session(session_factory)
+    
+    count = Session.query(NaughtyPasswordTable.c.id).count()
+    
+    Session.close()
+    
+    return count
+
+
 def get_naughtyusername_by_id(id):
     stmt = select(NaughtyUsernameTable, NaughtyUsernameTable.columns.Content).where(NaughtyUsernameTable.c.id == id)
         
