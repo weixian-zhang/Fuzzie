@@ -1,10 +1,12 @@
 import WebSocket from 'ws';
 import ReconnectingWebSocket from 'reconnecting-websocket'
+import axios from 'axios'
 import EventLogger from './Logger';
 
 export default class WebClient
 {
-    private _gqlAddress = "http://localhost:50001";
+    private _retryInternalMillisec = 3000;
+    private _gqlAddress = "http://localhost:50001/graphql";
     private _wsAddress = "ws://localhost:50001/ws";
     private _ws: ReconnectingWebSocket;
     private _logger: EventLogger;
@@ -45,10 +47,41 @@ export default class WebClient
                     clearInterval(timer)
                     resolve(true);
                 }
-            }, 500);
+            }, this._retryInternalMillisec);
         })
     }
 
+    public async isGraphQLServerAlive()
+    {
+        return new Promise((resolve, reject) => {
+            const timer = setInterval(() => {
 
+                axios({
+                    url: this._gqlAddress,
+                    method: 'post',
+                    data: {
+                      query: `
+                        query {
+                          alive
+                        `
+                    }
+                  })
+                   .then(response => {
+                       if(response.status == 200)
+                       {
+                            clearInterval(timer);
+                            resolve(true);
+                       }
+                          
+                   })
+                   .catch(err => {
+                       this._logger.log(err.message);
+                   });
+
+            }, this._retryInternalMillisec);
+        })
+
+        
+    }
     
 }
