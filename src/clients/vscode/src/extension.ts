@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as cp from "child_process";
 import {AppContext} from './AppContext';
 import * as path from 'path';
+import { WebAppPanel } from './WebAppPanel';
 
 var appcontext : AppContext;
 var _outputWindow: vscode.OutputChannel;
@@ -19,24 +20,20 @@ export function activate(context: vscode.ExtensionContext) {
 	initFuzzerPYZPath(context, appcontext);
 
 	log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
-
-	let activate = vscode.commands.registerCommand('fuzzie.activate', activateFuzzie);
-	let deactivate = vscode.commands.registerCommand('fuzzie.deactivate', deactivateFuzzie);
-	let op3Url = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.url', getOpenApiUrl);
-	let op3FilePath = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.filepath', getOpenApiFilePath);
-	let rtFilePath = vscode.commands.registerCommand('fuzzie.apirecognition.requesttext.filepath', getRequestTextFilePath);
-	let rtSingle = vscode.commands.registerCommand('fuzzie.fuzzie.apirecognition.requesttext.single', getSingleRequestText);
 	
 
-	context.subscriptions.push(activate);
-	context.subscriptions.push(deactivate);
-	context.subscriptions.push(op3Url);
-	context.subscriptions.push(op3FilePath);
-	context.subscriptions.push(rtFilePath);
+	context.subscriptions.push(   
+		vscode.commands.registerCommand(
+			'fuzzie.open-webview', () => 
+				{
+					WebAppPanel.createOrShow(context.extensionUri);
+				}
+		)
+	);
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {
+export function openWebPanel() {
 	deactivateFuzzie();
 }
 
