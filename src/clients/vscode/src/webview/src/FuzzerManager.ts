@@ -1,5 +1,5 @@
 
-import WebClient from "./WebClient";
+import WebClient from "../../WebClient";
 
 export default class FuzzerManager
 {
@@ -14,7 +14,7 @@ export default class FuzzerManager
 
     public async isFuzzerReady(): Promise<boolean>
     {
-        this.isFuzzerWSConnected = await this.webclient.connectToFuzzerWSServer();
+        //this.isFuzzerWSConnected = await this.webclient.connectToFuzzerWSServer();
 
         return true;
         //is websocket connected
@@ -22,8 +22,8 @@ export default class FuzzerManager
         //
     }
 
-    public isFuzzerRunning(): Promise<boolean>
+    public async isFuzzerRunning(): Promise<boolean>
     {
-        return new Promise<boolean>(false);
+        return await new Promise((resolve, reject) => {resolve(false)});
     }
 }

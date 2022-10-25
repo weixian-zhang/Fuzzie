@@ -122,9 +122,14 @@ class ApiFuzzContext(graphene.ObjectType):
 # queries
 class Query(graphene.ObjectType):
     
+    alive = graphene.String()
+    
     fuzzcontexts = graphene.List(ApiFuzzContext)
     
     fuzzContext = graphene.Field(ApiFuzzContext, fuzzcontextId=graphene.String())
+    
+    def resolve_alive(self, info):
+        return "alive"
     
     def resolve_fuzzcontexts(self,info):
         
@@ -136,17 +141,6 @@ class Query(graphene.ObjectType):
         r = ApiFuzzContext()
         r.name = fuzzcontextId
         return r
-
-# subscriptions
-# class Subscription(graphene.ObjectType):
-#     time_of_day = graphene.String()
-
-#     async def subscribe_time_of_day(root, info):
-#         while True:
-#             yield datetime.now().isoformat()
-#             await asyncio.sleep(1)
-
-# mutations  
 
     
 class DiscoverOpenApi3ByFilePath(graphene.Mutation):
