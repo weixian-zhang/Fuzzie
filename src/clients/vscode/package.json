@@ -10,40 +10,14 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:fuzzie.activate",
-    "onCommand:fuzzie.deactivate",
-    "onCommand:fuzzie.apirecognition.openapi3.url",
-    "onCommand:fuzzie.apirecognition.openapi3.filepath",
-    "onCommand:fuzzie.apirecognition.requesttext.single",
-    "onCommand:fuzzie.apirecognition.requesttext.filepath",
-    "onCommand:fuzzie.apirecognition.requesttext.single"
+    "onCommand:fuzzie.open-webview"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "fuzzie.activate",
-        "title": "Fuzzie: Activate"
-      },
-      {
-        "command": "fuzzie.deactivate",
-        "title": "Fuzzie: Deactivate"
-      },
-      {
-        "command": "fuzzie.apirecognition.openapi3.url",
-        "title": "Fuzzie: OpenAPI 3 Url"
-      },
-      {
-        "command": "fuzzie.apirecognition.openapi3.filepath",
-        "title": "Fuzzie: OpenAPI 3 File Path"
-      },
-      {
-        "command": "fuzzie.apirecognition.requesttext.filepath",
-        "title": "Fuzzie: Request Text File Path .http .rest"
-      },
-      {
-        "command": "fuzzie.apirecognition.requesttext.single",
-        "title": "Fuzzie: single Request Text input"
+        "command": "fuzzie.open-webview",
+        "title": "Fuzzie: Open View"
       }
     ]
   },
