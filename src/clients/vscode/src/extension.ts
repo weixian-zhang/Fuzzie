@@ -40,9 +40,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	eventlogger.log('checking if fuzzer running');
 
-	const isFuzzerRunning = await _webclient.isFuzzerWebsocketServerRunning()
-	
-	if(!isFuzzerRunning)
+	const isFuzzerRunning = true; // await _webclient.isFuzzerWebsocketServerRunning()
+
+	const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
+
+	if(!isFuzzerRunning || !isFuzzerGraphQLRunning)
 	{
 		eventlogger.log('fuzzer is not running, started fuzzer. This may tkae a few minutes before you can start to fuzz');
 		startFuzzer(appcontext);
