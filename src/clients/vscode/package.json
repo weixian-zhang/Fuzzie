@@ -9,15 +9,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:fuzzie.open-webview"
-  ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:fuzzie.openwebview"
+  ],
   "contributes": {
     "commands": [
       {
-        "command": "fuzzie.open-webview",
-        "title": "Fuzzie: Open View"
+        "command": "fuzzie.openwebview",
+        "title": "Fuzzie: Open"
       }
     ]
   },
@@ -48,5 +48,9 @@
     "typescript": "^4.7.2",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "@types/ws": "^8.5.3",
+    "ws": "^8.10.0"
   }
 }

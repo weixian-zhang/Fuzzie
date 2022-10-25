@@ -103,7 +103,22 @@
 			}
 		},
 		{
-			"label": "build vscode vuejs",
+			"label": "npm run build Vuej",
+			"type": "shell",
+			"command": "copy-item",
+			"args": [
+				"${workspaceFolder}/src/clients/vscode/src/webview/src/assets",
+				"${workspaceFolder}/src/clients/vscode/dist/webview",
+				"-recurse",
+				"-Force"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
+			"dependsOn": ["npm run build Vuejs internal"]
+		},
+		{
+			"label": "npm run build Vuejs internal",
 			"type": "shell",
 			"command": "npm run build",
 			"options": {
