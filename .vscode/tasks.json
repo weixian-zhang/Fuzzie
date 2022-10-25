@@ -101,6 +101,15 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/core/api_discovery"
 			}
+		},
+		{
+			"label": "build vscode vuejs",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
+			}
+		}
 		
 	]
 }
