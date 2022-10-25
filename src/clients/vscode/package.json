@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@types/ws": "^8.5.3",
+    "reconnecting-websocket": "^4.4.0",
     "ws": "^8.10.0"
   }
 }

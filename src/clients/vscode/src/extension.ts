@@ -5,25 +5,28 @@ import * as cp from "child_process";
 import {AppContext} from './AppContext';
 import * as path from 'path';
 import { VuejsPanel } from './VuejsPanel';
-import FuzzerManager from './FuzzerManager';
+import WebClient from './WebClient';
+import EventLogger from './Logger';
 
 var appcontext : AppContext;
-var _outputWindow: vscode.OutputChannel;
+
+var eventlogger = new EventLogger();
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
-const _fuzzManager = new FuzzerManager();
+
+var _webclient = new WebClient()
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 	
-	log('Fuzzie is initializing');
+	eventlogger.log('Fuzzie is initializing');
 
 	appcontext = new AppContext();
 
 	initFuzzerPYZPath(context, appcontext);
 
-	log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+	eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
 	
 	context.subscriptions.push(   
@@ -35,13 +38,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	//TODO if fuzzer is NOT started, start Fuzzer
-	startFuzzer(appcontext);
+	eventlogger.log('checking if fuzzer running');
 
-	await _fuzzManager.isFuzzerReady();
+	const isFuzzerRunning = await _webclient.isFuzzerWebsocketServerRunning()
+	
+	if(!isFuzzerRunning)
+	{
+		eventlogger.log('fuzzer is not running, started fuzzer. This may tkae a few minutes before you can start to fuzz');
+		startFuzzer(appcontext);
+	};
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {
+	eventlogger.log('Fuzzie is deactivated');
 	//TODO check if process is running
 		//if running, kill process
 }
@@ -58,16 +67,16 @@ function startFuzzer(appcontext: AppContext) {
 		
 	if(_pythonProcess != undefined) {
 		_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
-			log(`Fuzzer: ${data}`);
+			eventlogger.log(`Fuzzer: ${data}`);
 		});
 		_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
-			log(`Fuzzer: ${data}`);
+			eventlogger.log(`Fuzzer: ${data}`);
 		});
 		_pythonProcess.on('SIGINT',function(code){
-			log(`Fuzzer: exiting ${code}`);
+			eventlogger.log(`Fuzzer: exiting ${code}`);
 		});
 		_pythonProcess.on('close', function(code){
-			log(`Fuzzer: exiting ${code}`);
+			eventlogger.log(`Fuzzer: exiting ${code}`);
 		});
 	}
 	
@@ -83,12 +92,12 @@ function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: A
 	appcontext.fuzzerPYZFolderPath = cmdWorkingDir;
 }
 
-function log(message: string) {
-	if(_outputWindow == null)
-		_outputWindow = vscode.window.createOutputChannel("Fuzzie");
+// function log(message: string) {
+// 	if(_outputWindow == null)
+// 		_outputWindow = vscode.window.createOutputChannel("Fuzzie");
 
-		_outputWindow.appendLine(message);
-}
+// 		_outputWindow.appendLine(message);
+// }
 
 // // this method is called when your extension is deactivated
 // export function openWebPanel() {
