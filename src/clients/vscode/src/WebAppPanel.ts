@@ -37,20 +37,35 @@ export class WebAppPanel {
 			WebAppPanel._panel.reveal(column);
 			return;
 		}
+        
+        const vuejsDistFolder = 'vuejs-dist'
 
 		// Otherwise, create a new panel.
-		// WebAppPanel._panel = vscode.window.createWebviewPanel(
+		WebAppPanel._panel = vscode.window.createWebviewPanel(
+			'vuejs',
+			'Fuzzie',
+			column || vscode.ViewColumn.One,
+			{
+                enableScripts: true,
+                localResourceRoots: [
+				    vscode.Uri.file(path.join(this._extensionPath, vuejsDistFolder))
+			    ]
+            }
+		);
+        
+        // this._panel = vscode.window.createWebviewPanel('vuejs', "React", {
+        //     'Fuzzie',
 		// 	'Fuzzie',
-		// 	'Fuzzie',
-		// 	column || vscode.ViewColumn.One,
-		// 	this.getWebviewOptions(this._extensionUri),
-		// );
-        WebAppPanel._panel = vscode.window.createWebviewPanel(
-            'catCoding',
-            'Cat Coding',
-            vscode.ViewColumn.One//,
-            //WebAppPanel.getWebviewOptions(WebAppPanel._extensionUri)
-          );
+		// 	vscode.ViewColumn.One,
+
+		// 	// Enable javascript in the webview
+		// 	enableScripts: true,
+
+		// 	// And restric the webview to only loading content from our extension's `media` directory.
+		// 	localResourceRoots: [
+		// 		vscode.Uri.file(path.join(this._extensionPath, 'build'))
+		// 	]
+		// });
 
 
         
@@ -58,39 +73,29 @@ export class WebAppPanel {
           //fs.readFileSync(vscode.Uri.file(path.join(WebAppPanel._extensionUri.path, "vuejs-dist/index.html")).with({scheme: 'vscode-resource'}).fsPath, "utf-8");
 
           WebAppPanel._panel.webview.html = html
+
+          // Listen for when the panel is disposed
+            // This happens when the user closes the panel or when the panel is closed programatically
+            //this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
     }
 
     private static _getHtmlForWebview() {
-		// const manifest = require(path.join(this._extensionPath, 'build', 'asset-manifest.json'));
-		// const mainScript = manifest['files']['main.js'];
-		// const mainStyle = manifest['files']['main.css'];
 
-		const scriptPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, '../vuejs-dist', 'js/app.js'));
-		const scriptUri = scriptPathOnDisk.with({ scheme: 'vscode-resource' });
-		const stylePathOnDisk = vscode.Uri.file(path.join(this._extensionPath, '../vuejs-dist', 'css/app.css'));
-		const styleUri = stylePathOnDisk.with({ scheme: 'vscode-resource' });
+        const vuejsDistFolder = 'vuejs-dist'
+
+		const appjsPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, vuejsDistFolder, 'js/app.js'));
+		const appjsUri = appjsPathOnDisk.with({ scheme: 'vscode-resource' });
+
+        const chunkVendorsPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, vuejsDistFolder, 'js/chunk-vendors.js'));
+		const chunkVendorsUri = chunkVendorsPathOnDisk.with({ scheme: 'vscode-resource' });
+
+		const appCSSPathOnDisk = vscode.Uri.file(path.join(this._extensionPath,vuejsDistFolder, 'css/app.css'));
+		const appCSSUri = appCSSPathOnDisk.with({ scheme: 'vscode-resource' });
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
 
-		return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="utf-8">
-				<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-				<meta name="theme-color" content="#000000">
-				<title>React App</title>
-				<link rel="stylesheet" type="text/css" href="${styleUri}">
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src vscode-resource: https:; script-src 'nonce-${nonce}';style-src vscode-resource: 'unsafe-inline' http: https: data:;">
-				<base href="${vscode.Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' })}/">
-			</head>
-			<body>
-				<noscript>You need to enable JavaScript to run this app.</noscript>
-				<div id="root"></div>
-				
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
-			</html>`;
+		return `<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>fuzzie</title><script defer="defer" src="${chunkVendorsUri}"></script><script defer="defer" src="${appjsUri}"></script><link href="${appCSSUri}" rel="stylesheet"></head><body><div id="app"></div></body></html>`;
 	}
     
     
