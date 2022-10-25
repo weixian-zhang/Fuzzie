@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 import os
 
-sqlitedb = os.getcwd() + "\core\datafactory\data\fuzzie.sqlite"
+sqlitedb = os.getcwd() + "\core\datafactory\data\\fuzzie.sqlite"
 pilargefile = os.getcwd() + "\core\datafactory\data\pi-large.txt"
 
 with open('core/requirements.txt', 'rb') as f:
