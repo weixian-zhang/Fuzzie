@@ -10,18 +10,18 @@ export default class EventLogger
 		    
     }
 
-    public log(message: string)
+    public log(message: string, source: string = "")
     {
-        this._outputWindow.appendLine(JSON.stringify(new EventLog(message)));
+        this._outputWindow.appendLine(`\n${JSON.stringify(new EventLog(message, source))}`);
     }
 }
 
 class EventLog {
+    public source: string = ""
     public message: string = ""
     public datetime: Date = new Date()
-    public constructor(message: string)
+    public constructor(message: string, source: string = "")
     {
         this.message = message;
-
     }
 }
