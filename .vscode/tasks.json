@@ -14,18 +14,9 @@
 		{
 			"label": "npm run serve webview",
 			"type": "shell",
-			"command": "npm run serve Hello",
+			"command": "npm run serve",
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
-			}
-		},
-		{
-			"label": "vscode ext - npm run watch",
-			"type": "shell",
-			"command": "npm run watch",
-			"isBackground": true,
-			"options": {
-				"cwd": "${workspaceFolder}/src/clients/vscode"
 			}
 		},
 		{
@@ -119,7 +110,7 @@
 			}
 		},
 		{
-			"label": "npm run build Vuej",
+			"label": "npm run build Vuejs",
 			"type": "shell",
 			"command": "copy-item",
 			"args": [
