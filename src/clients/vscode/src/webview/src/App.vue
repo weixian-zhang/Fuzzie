@@ -1,16 +1,22 @@
 <template>
-  <img alt="Vue logo" :src="require('./assets/img/logo.png')">
-
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <Master />
 </template>
 
 <script lang="ts">
+
 import { Options, Vue } from 'vue-class-component';
 import HelloWorld from './components/HelloWorld.vue';
+import Master from './components/Master.vue'
+import BootstrapVue3 from 'bootstrap-vue-3';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'bootstrap/dist/css/bootstrap.css';
+
+// Vue.use(BootstrapVue);
 
 @Options({
   components: {
     HelloWorld,
+    Master
   },
 })
 export default class App extends Vue {}

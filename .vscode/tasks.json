@@ -4,11 +4,19 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "run graphql ws",
+			"label": "fuzzer - run graphql ws",
 			"type": "shell",
 			"command": "python main.py webserver start",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/core"
+			}
+		},
+		{
+			"label": "npm run serve webview",
+			"type": "shell",
+			"command": "npm run serve Hello",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
 			}
 		},
 		{

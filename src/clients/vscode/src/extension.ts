@@ -46,9 +46,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const isFuzzerWSRunning = await _webclient.isFuzzerWebsocketServerRunning()
 
-	const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
+	//const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
 
-	if(!isFuzzerWSRunning && !isFuzzerGraphQLRunning)
+	if(!isFuzzerWSRunning) // && !isFuzzerGraphQLRunning)
 	{
 		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
 		startFuzzer(appcontext);
@@ -104,69 +104,6 @@ function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: A
 	appcontext.fuzzerPYZFilePath = fuzzerPYZFilePath;
 	appcontext.fuzzerPYZFolderPath = cmdWorkingDir;
 }
-
-// function log(message: string) {
-// 	if(_outputWindow == null)
-// 		_outputWindow = vscode.window.createOutputChannel("Fuzzie");
-
-// 		_outputWindow.appendLine(message);
-// }
-
-// // this method is called when your extension is deactivated
-// export function openWebPanel() {
-// 	deactivateFuzzie();
-// }
-
-
-// async function activateFuzzie()
-// {
-// 	log("starting up Fuzzie Fuzzer. First time startup will take longer.")
-
-	
-// }
-
-// async function deactivateFuzzie()
-// {
-// 	log("deactivating Fuzzie: performing clean up");
-
-// 	if(appcontext.pythonChildProcess != undefined) {
-// 		appcontext.pythonChildProcess.kill();
-// 	}
-// }
-
-// async function getOpenApiUrl() {
-// 	var inputboxValue: any = await vscode.window.showInputBox({
-// 		placeHolder: "OpenAPI 3 spec Url",
-// 	  });
-
-// 	if(inputboxValue !== undefined){
-// 		vscode.window.showInformationMessage(inputboxValue);
-// 	}
-// }
-
-// async function getOpenApiFilePath() {
-// 	var inputboxValue: any = await vscode.window.showInputBox({
-// 		placeHolder: "OpenAPI 3 spec file path",
-// 	  });
-
-// 	if(inputboxValue !== undefined){
-// 		vscode.window.showInformationMessage(inputboxValue);
-// 	}
-// }
-
-// async function getSingleRequestText() {
-// 	return;
-// }
-
-// async function getRequestTextFilePath() {
-// 	var inputboxValue: any = await vscode.window.showInputBox({
-// 		placeHolder: "request text file path",
-// 	  });
-
-// 	if(inputboxValue !== undefined){
-// 		vscode.window.showInformationMessage(inputboxValue);
-// 	}
-// }
 
 
 
