@@ -7,10 +7,12 @@ import * as path from 'path';
 import { VuejsPanel } from './VuejsPanel';
 import WebClient from './WebClient';
 import EventLogger from './Logger';
+import StateManager from './StateManager';
 
 var appcontext : AppContext;
 
 var eventlogger = new EventLogger();
+var stateManager:  StateManager;
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
@@ -19,6 +21,8 @@ var _webclient = new WebClient()
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
+
+	stateManager = new StateManager(context);
 	
 	eventlogger.log('Fuzzie is initializing');
 
@@ -40,24 +44,24 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	eventlogger.log('checking if fuzzer running');
 
-	const isFuzzerRunning = true; // await _webclient.isFuzzerWebsocketServerRunning()
+	const isFuzzerWSRunning = await _webclient.isFuzzerWebsocketServerRunning()
 
 	const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
 
-	if(!isFuzzerRunning || !isFuzzerGraphQLRunning)
+	if(!isFuzzerWSRunning && !isFuzzerGraphQLRunning)
 	{
-		eventlogger.log('fuzzer is not running, started fuzzer. This may tkae a few minutes before you can start to fuzz');
+		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
 		startFuzzer(appcontext);
 	};
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {
-	eventlogger.log('Fuzzie is deactivated');
-	//TODO check if process is running
-		//if running, kill process
+	eventlogger.log('Fuzzie is deactivated, fuzzer is still running as background process');
+	//TODO and access:
+		// get process pid from statemanager to and kill process
 }
 
-function startFuzzer(appcontext: AppContext) {
+async function startFuzzer(appcontext: AppContext) {
 
 	//TODO check if process is running
 		//if running skip below
@@ -65,7 +69,14 @@ function startFuzzer(appcontext: AppContext) {
 	let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
 
 	if(_pythonProcess == undefined)
+	{
 		_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
+
+		const pid = _pythonProcess.pid
+		if(pid != undefined)
+			await stateManager.set('fuzzer/processid', pid.toString());
+	}
+		
 		
 	if(_pythonProcess != undefined) {
 		_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
