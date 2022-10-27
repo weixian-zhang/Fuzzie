@@ -79,6 +79,8 @@ class ServiceManager:
         
         await webapifuzzer.fuzz()
         
+        print('a')
+        
     
     
     
