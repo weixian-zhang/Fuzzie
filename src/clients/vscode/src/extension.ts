@@ -4,116 +4,96 @@ import * as vscode from 'vscode';
 import * as cp from "child_process";
 import {AppContext} from './AppContext';
 import * as path from 'path';
+import { VuejsPanel } from './VuejsPanel';
+import WebClient from './WebClient';
+import EventLogger from './Logger';
+import StateManager from './StateManager';
 
 var appcontext : AppContext;
-var _outputWindow: vscode.OutputChannel;
+
+var eventlogger = new EventLogger();
+var stateManager:  StateManager;
+
+var _pythonProcess: cp.ChildProcessWithoutNullStreams;
+
+var _webclient = new WebClient()
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+
+	stateManager = new StateManager(context);
 	
-	log('Fuzzie is initializing');
+	eventlogger.log('Fuzzie is initializing');
 
 	appcontext = new AppContext();
 
 	initFuzzerPYZPath(context, appcontext);
 
-	log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+	eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
-	let activate = vscode.commands.registerCommand('fuzzie.activate', activateFuzzie);
-	let deactivate = vscode.commands.registerCommand('fuzzie.deactivate', deactivateFuzzie);
-	let op3Url = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.url', getOpenApiUrl);
-	let op3FilePath = vscode.commands.registerCommand('fuzzie.apirecognition.openapi3.filepath', getOpenApiFilePath);
-	let rtFilePath = vscode.commands.registerCommand('fuzzie.apirecognition.requesttext.filepath', getRequestTextFilePath);
-	let rtSingle = vscode.commands.registerCommand('fuzzie.fuzzie.apirecognition.requesttext.single', getSingleRequestText);
 	
+	context.subscriptions.push(   
+		vscode.commands.registerCommand(
+			'fuzzie.openwebview', () => 
+				{
+					VuejsPanel.createOrShow(context.extensionUri.path);
+				}
+		)
+	);
 
-	context.subscriptions.push(activate);
-	context.subscriptions.push(deactivate);
-	context.subscriptions.push(op3Url);
-	context.subscriptions.push(op3FilePath);
-	context.subscriptions.push(rtFilePath);
+	eventlogger.log('checking if fuzzer running');
+
+	const isFuzzerWSRunning = await _webclient.isFuzzerWebsocketServerRunning()
+
+	//const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
+
+	if(!isFuzzerWSRunning) // && !isFuzzerGraphQLRunning)
+	{
+		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
+		startFuzzer(appcontext);
+	};
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
-	deactivateFuzzie();
+export async function deactivate(context: vscode.ExtensionContext) {
+	eventlogger.log('Fuzzie is deactivated, fuzzer is still running as background process');
+	//TODO and access:
+		// get process pid from statemanager to and kill process
 }
 
+async function startFuzzer(appcontext: AppContext) {
 
-async function activateFuzzie()
-{
-	log("starting up Fuzzie Fuzzer. First time startup will take longer.")
-
-	startFuzzer(appcontext);
-}
-
-async function deactivateFuzzie()
-{
-	log("deactivating Fuzzie: performing clean up");
-
-	if(appcontext.pythonChildProcess != undefined) {
-		appcontext.pythonChildProcess.kill();
-	}
-}
-
-async function getOpenApiUrl() {
-	var inputboxValue: any = await vscode.window.showInputBox({
-		placeHolder: "OpenAPI 3 spec Url",
-	  });
-
-	if(inputboxValue !== undefined){
-		vscode.window.showInformationMessage(inputboxValue);
-	}
-}
-
-async function getOpenApiFilePath() {
-	var inputboxValue: any = await vscode.window.showInputBox({
-		placeHolder: "OpenAPI 3 spec file path",
-	  });
-
-	if(inputboxValue !== undefined){
-		vscode.window.showInformationMessage(inputboxValue);
-	}
-}
-
-async function getSingleRequestText() {
-	return;
-}
-
-async function getRequestTextFilePath() {
-	var inputboxValue: any = await vscode.window.showInputBox({
-		placeHolder: "request text file path",
-	  });
-
-	if(inputboxValue !== undefined){
-		vscode.window.showInformationMessage(inputboxValue);
-	}
-}
-
-
-function startFuzzer(appcontext: AppContext) {
+	//TODO check if process is running
+		//if running skip below
 
 	let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
-	var pythonProcess: cp.ChildProcessWithoutNullStreams = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
-	
-	if(pythonProcess != undefined) {
-		pythonProcess.stderr?.on('data', (data: Uint8Array) => {
-			log(`Fuzzer: ${data}`);
+
+	if(_pythonProcess == undefined)
+	{
+		_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
+
+		const pid = _pythonProcess.pid
+		if(pid != undefined)
+			await stateManager.set('fuzzer/processid', pid.toString());
+	}
+		
+		
+	if(_pythonProcess != undefined) {
+		_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
+			eventlogger.log(`Fuzzer: ${data}`);
 		});
-		pythonProcess.stdout?.on('data', (data: Uint8Array) => {
-			log(`Fuzzer: ${data}`);
+		_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
+			eventlogger.log(`Fuzzer: ${data}`);
 		});
-		pythonProcess.on('SIGINT',function(code){
-			log(`Fuzzer: exiting ${code}`);
+		_pythonProcess.on('SIGINT',function(code){
+			eventlogger.log(`Fuzzer: exiting ${code}`);
 		});
-		pythonProcess.on('close', function(code){
-			log(`Fuzzer: exiting ${code}`);
+		_pythonProcess.on('close', function(code){
+			eventlogger.log(`Fuzzer: exiting ${code}`);
 		});
 	}
 	
 }
-
 
 function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: AppContext) {
 	var distFuzzerFolder: string = "dist/fuzzer";
@@ -125,11 +105,7 @@ function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: A
 	appcontext.fuzzerPYZFolderPath = cmdWorkingDir;
 }
 
-function log(message: string) {
-	if(_outputWindow == null)
-		_outputWindow = vscode.window.createOutputChannel("Fuzzie");
 
-		_outputWindow.appendLine(message);
-}
+
 
 

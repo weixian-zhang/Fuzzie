@@ -28,12 +28,9 @@ from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
 
-# disable Flask logging
-import logging
-log = logging.getLogger('werkzeug')
-log.disabled = True
-
 app = Starlette()
+
+eventstore.emitInfo('Fuzzie/Fuzzer: fuzzer starting')
 
 @app.websocket_route("/ws")
 class WebSocketServer(WebSocketEndpoint):
@@ -54,8 +51,16 @@ class WebSocketServer(WebSocketEndpoint):
     async def on_connect(self, websocket):
         await websocket.accept()
         eventstore.set_websocket(websocket)
+        
+        x = 0
+        while(x < 10):
+            await websocket.send_text("hello from server")
+            x += 1
+            await asyncio.sleep(1)
 
-app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler())) 
+app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
+
+eventstore.emitInfo('websocket server initialized')
 
 host='localhost'
 webserverPort = 50001
@@ -63,7 +68,7 @@ webserverPort = 50001
 # runs when program exits
 import atexit
 async def on_exit():
-    await eventstore.emitInfo("Fuzzie stopping")
+    await eventstore.emitInfo("fuzzer stopping")
 atexit.register(on_exit)
 
 #main entry point and startup
@@ -75,17 +80,18 @@ def startup():
     
     if args['webserver']:
         
-        asyncio.run(eventstore.emitInfo('starting Fuzzie'))
+        asyncio.run(eventstore.emitInfo('fuzzer starting'))
         
-        asyncio.run(eventstore.emitInfo('starting Fuzzie web server'))
-        asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
+        asyncio.run(eventstore.emitInfo('starting GraphQL server'))
+        
+        asyncio.run(eventstore.emitInfo('fuzzer started'))
         
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
-        asyncio.run(eventstore.emitInfo("Fuzzie-Fuzzer web server closing"))
+        asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
     else:
-         asyncio.run(eventstore.emitInfo('Fuzzie Fuzzer started'))
+         asyncio.run(eventstore.emitInfo('fuzzer started'))
     
 
 # @app.teardown_appcontext

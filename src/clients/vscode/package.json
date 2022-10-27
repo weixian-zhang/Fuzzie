@@ -9,41 +9,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:fuzzie.activate",
-    "onCommand:fuzzie.deactivate",
-    "onCommand:fuzzie.apirecognition.openapi3.url",
-    "onCommand:fuzzie.apirecognition.openapi3.filepath",
-    "onCommand:fuzzie.apirecognition.requesttext.single",
-    "onCommand:fuzzie.apirecognition.requesttext.filepath",
-    "onCommand:fuzzie.apirecognition.requesttext.single"
-  ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:fuzzie.openwebview"
+  ],
   "contributes": {
     "commands": [
       {
-        "command": "fuzzie.activate",
-        "title": "Fuzzie: Activate"
-      },
-      {
-        "command": "fuzzie.deactivate",
-        "title": "Fuzzie: Deactivate"
-      },
-      {
-        "command": "fuzzie.apirecognition.openapi3.url",
-        "title": "Fuzzie: OpenAPI 3 Url"
-      },
-      {
-        "command": "fuzzie.apirecognition.openapi3.filepath",
-        "title": "Fuzzie: OpenAPI 3 File Path"
-      },
-      {
-        "command": "fuzzie.apirecognition.requesttext.filepath",
-        "title": "Fuzzie: Request Text File Path .http .rest"
-      },
-      {
-        "command": "fuzzie.apirecognition.requesttext.single",
-        "title": "Fuzzie: single Request Text input"
+        "command": "fuzzie.openwebview",
+        "title": "Fuzzie: Open"
       }
     ]
   },
@@ -74,5 +48,12 @@
     "typescript": "^4.7.2",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/ws": "^8.5.3",
+    "axios": "^1.1.3",
+    "reconnecting-websocket": "^4.4.0",
+    "ws": "^8.10.0"
   }
 }

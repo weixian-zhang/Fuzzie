@@ -4,12 +4,19 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "vscode ext - npm run watch",
+			"label": "fuzzer - run graphql ws",
 			"type": "shell",
-			"command": "npm run watch",
-			"isBackground": true,
+			"command": "python main.py webserver start",
 			"options": {
-				"cwd": "${workspaceFolder}/src/clients/vscode"
+				"cwd": "${workspaceFolder}/src/core/core"
+			}
+		},
+		{
+			"label": "npm run serve webview",
+			"type": "shell",
+			"command": "npm run serve",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
 			}
 		},
 		{
@@ -101,6 +108,30 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/core/api_discovery"
 			}
+		},
+		{
+			"label": "npm run build Vuejs",
+			"type": "shell",
+			"command": "copy-item",
+			"args": [
+				"${workspaceFolder}/src/clients/vscode/src/webview/src/assets",
+				"${workspaceFolder}/src/clients/vscode/dist/webview",
+				"-recurse",
+				"-Force"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
+			"dependsOn": ["npm run build Vuejs internal"]
+		},
+		{
+			"label": "npm run build Vuejs internal",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
+			}
+		}
 		
 	]
 }
