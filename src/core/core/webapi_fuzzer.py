@@ -21,8 +21,10 @@
     # {{ base64e }}                 generate base64 encoded random string value
     # {{ hashsha256:value }}        generates a sha256 hash from supplied value
 
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait
+import asyncio
+
 from pubsub import pub
 from http import cookiejar
 from types import MappingProxyType
@@ -43,12 +45,15 @@ from datafactory.naughty_bool_generator import NaughtyBoolGenerator
 from datafactory.obedient_data_generators import ObedientCharGenerator 
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
+                                       ApiFuzzCaseSetRun,
                                        ApiFuzzRequest, ApiFuzzResponse, 
                                        WSMsg_Fuzzing_FuzzCaseSetSummary,
                                        FuzzMode)
-from db import (FuzzDataCaseTable, FuzzRequestTable, FuzzResponseTable, 
-                insert_api_fuzzdatacase, insert_api_fuzzrequest, insert_api_fuzzresponse)
-from sqlalchemy.sql import insert
+from db import (insert_api_fuzzCaseSetRuns,
+                update_api_fuzzCaseSetRun_completed,
+                insert_api_fuzzdatacase, 
+                insert_api_fuzzrequest, 
+                insert_api_fuzzresponse)
 import threading
 import queue
 from multiprocessing import Lock 
@@ -79,7 +84,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apikeyHeader,
         self.apikey = apikey
         
-        self.httpTimeoutInSec = 1.2
+        self.httpTimeoutInSec = 2
         
         self.dbInsertQueue = queue.Queue()
         self.stop_threads = False
@@ -99,59 +104,6 @@ class WebApiFuzzer:
         
         pub.subscribe(self.pubsub_command_receiver, 'command_relay')
 
-    async def fuzz(self):
-        
-        if self.apifuzzcontext == None or len(self.apifuzzcontext.fuzzcaseSets) == 0:
-            await self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
-            return
-        
-        await self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
-        
-        await self.begin_fuzzing()
-        
-    async def begin_fuzzing(self):
-        
-        try:
-            fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
-            
-            for fcs in self.apifuzzcontext.fuzzcaseSets:
-                
-                self.fuzzdatacaseCoroutines = []
-                
-                for count in range(0, fuzzCasesToTest):
-                    
-                    self.workerTreads = []
-                    self.stop_threads = False
-                    tmp = threading.Thread(target=self.fuzz_entrypoint, args=(fcs, self.stop_threads))
-                    self.workerTreads.append(tmp)
-                    tmp.start()               
-                
-        except Exception as e:
-            await self.eventstore.send_to_ws(sys.exc_info(), MsgType.AppEvent)
-        except asyncio.exceptions.CancelledError as e:
-            await self.eventstore.send_to_ws('Fuzzing was cancelled', MsgType.AppEvent)
-            
-    def fuzz_entrypoint(self, fcs: ApiFuzzCaseSet, stop_thread):
-        asyncio.run(self.fuzz_data_case(fcs, stop_thread))
-        
-    async def fuzz_data_case(self, fcs: ApiFuzzCaseSet, stop_threads):
-        
-        if stop_threads == True:
-            return
-               
-        fuzzCaseData = self.http_fuzz_api(fcs)
-         
-        #self.dbInsertQueue.put(fuzzCaseData, block=False)       
-        
-        await self.save_fuzzDataCase(fuzzCaseData)
-        
-        msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
-        
-        await self.eventstore.send_to_ws(msg, MsgType.FuzzEvent)
-        
-        await asyncio.sleep(1)
-        
-        
     def pubsub_command_receiver(self, command):
         if command == 'cancel_fuzzing':
             self.cancel_fuzzing()
@@ -164,13 +116,106 @@ class WebApiFuzzer:
                     worker.join()
                 self.workerTreads = []
             #await self.eventstore.send_to_ws('Fuzzing is cancelled', MsgType.AppEvent)
-                
+            
+    async def fuzz(self):
         
+        if self.apifuzzcontext == None or len(self.apifuzzcontext.fuzzcaseSets) == 0:
+            await self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
+            return
+        
+        await self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
+        
+        await self.begin_fuzzing()
+        
+        print('a')
+        
+    async def begin_fuzzing(self):
+        
+        from functools import partial
+        
+        fuzzCaseSetRunId = shortuuid.uuid()
+        
+        try:
+            
+            fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
+            
+            #create a fuzzcaserun record
+            
+            insert_api_fuzzCaseSetRuns(fuzzCaseSetRunId, self.apifuzzcontext.Id)
+            
+            futures =[]
+            args = []
+            
+            executor = ThreadPoolExecutor(max_workers=5)
+            
+            for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
-    def http_fuzz_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
+                self.fuzzdatacaseCoroutines = []
+                
+                
+                for count in range(0, fuzzCasesToTest):
+                    
+                    
+                    #args.append({'fuzzCaseSetRunId':fuzzCaseSetRunId, 'fcs': fcs })
+                    
+                    future = executor.submit(self.fuzz_data_case,fuzzCaseSetRunId, fcs )
+                    
+                    future.add_done_callback(self.fuzz_data_case_done)
+                    
+                    futures.append(future)
+                    
+                
+                
+                
+                        
+                    # await self.fuzz_data_case(fuzzCaseSetRunId, fcs, False)
+                    
+                    # self.workerTreads = []
+                    # self.stop_threads = False
+                    # tmp = threading.Thread(target=self.fuzz_async_entrypoint, args=(fuzzCaseSetRunId, fcs, self.stop_threads))
+                    # self.workerTreads.append(tmp)
+                    # tmp.start()
+                
+                
+        except Exception as e:
+            await self.eventstore.send_to_ws(sys.exc_info(), MsgType.AppEvent)
+        except asyncio.exceptions.CancelledError as e:
+            await self.eventstore.send_to_ws('Fuzzing was cancelled', MsgType.AppEvent)
+            
+        finally:
+            update_api_fuzzCaseSetRun_completed(fuzzCaseSetRunId)
+    
+    def fuzz_async_entrypoint(self, dictArgs):
+        
+        fuzzCaseSetRunId = dictArgs['fuzzCaseSetRunId']
+        fcs = dictArgs['fcs']
+        
+        self.fuzz_data_case(fuzzCaseSetRunId, fcs)
+        
+        #asyncio.run(self.fuzz_data_case(fuzzCaseSetRunId, fcs, stop_thread))
+        
+    def fuzz_data_case_done(self, fcs: ApiFuzzCaseSet):
+        print('fuzz data case done!')
+        
+    def fuzz_data_case(self, fuzzCaseSetRunId: str, fcs: ApiFuzzCaseSet): #, stop_threads):
+        
+        # user cancels fuzzing
+        # if stop_threads == True:
+        #     return
+               
+        fuzzCaseData = self.http_call_api(fcs)    
+        
+        asyncio.run( self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData))
+        
+        msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
+        
+        asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
+    
+                 
+    def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
     
         
-        http = httplib2.Http(timeout=self.httpTimeoutInSec )
+        http = httplib2.Http(timeout=self.httpTimeoutInSec)
                 
         fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                 fuzzcontextId=self.apifuzzcontext.Id)
@@ -214,7 +259,8 @@ class WebApiFuzzer:
             self.save_responsecookie_in_cookiejar(hostnamePort, fuzzResp.setcookieHeader)
             
         except Exception as e:
-            fuzzResp.content = f'Error when fuzzing {url}, {e.strerror}'
+            err = ''.join([a for a in e.args])
+            fuzzResp.content = f'Error when fuzzing {url}, {err}'
             
         return fuzzDataCase
             
@@ -286,7 +332,7 @@ class WebApiFuzzer:
         return result
             
     def getFuzzData(self, type: str):
-        match type:
+        match type._undefined_name:
             case 'string':
                 return self.stringGenerator.NextData()
             case 'number':
@@ -312,20 +358,22 @@ class WebApiFuzzer:
             case _:
                 return self.stringGenerator.NextData()
     
-    async def save_fuzzDataCase(self, fdc: ApiFuzzDataCase):
+    def save_fuzzDataCase(self, fuzzCaseSetRunId, fdc: ApiFuzzDataCase):
 
         try:
             
             self.dblock.acquire()
-
-            insert_api_fuzzdatacase(fdc)
+            
+            insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc)
+            
             insert_api_fuzzrequest(fdc.request)
+            
             insert_api_fuzzresponse(fdc.response)
             
             self.dblock.release()
             
         except Exception as e:
-            await self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}')
+            asyncio.run(self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}'))
         
     
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
