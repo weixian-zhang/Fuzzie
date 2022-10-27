@@ -6,7 +6,7 @@ from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, ApiFuzzCaseSet
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
-from db import FuzzContextTable, FuzzCaseSetTable, get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext
+from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext
 from sqlalchemy.sql import select, insert
 
 import asyncio

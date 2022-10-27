@@ -9,7 +9,7 @@ sys.path.insert(0, datafacPath)
 sys.path.insert(0, dbPath)
 sys.path.insert(0, modelsPath)
 
-from db import FuzzContextTable, FuzzCaseSetTable,  metadata, session_factory
+from db import ApiFuzzContextTable, ApiFuzzCaseSetTable,  metadata, session_factory
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select, insert
 import json
@@ -34,7 +34,7 @@ class TestFuzzManager(unittest.TestCase):
         
         
     def test_query_apifuzzcontext_join_fuzzCaseSet(self):
-        query = select([FuzzContextTable])
+        query = select([ApiFuzzContextTable])
         Session = scoped_session(session_factory)
         results = Session.execute(query)
         results.fetchall()
@@ -59,7 +59,7 @@ class TestFuzzManager(unittest.TestCase):
         fuzzcontext: ApiFuzzContext = fcc.create_fuzzcontext(apicontext)
 
         fuzzcontextStmt = (
-            insert(FuzzContextTable).
+            insert(ApiFuzzContextTable).
             values(
                    Id=fuzzcontext.Id, 
                    datetime=datetime.now(),
@@ -81,7 +81,7 @@ class TestFuzzManager(unittest.TestCase):
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
-                    insert(FuzzCaseSetTable).
+                    insert(ApiFuzzCaseSetTable).
                     values(
                         Id=fcset.Id, 
                         selected = fcset.selected,
