@@ -24,7 +24,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 import asyncio
-
+from functools import partial
 from pubsub import pub
 from http import cookiejar
 from types import MappingProxyType
@@ -56,7 +56,23 @@ from db import (insert_api_fuzzCaseSetRuns,
                 insert_api_fuzzresponse)
 import threading
 import queue
-from multiprocessing import Lock 
+from multiprocessing import Lock
+
+class ThreadTracker(dict):
+    
+    def __init__(self, all_tasks_completed_callback, *args, **kwargs):
+        self.all_tasks_completed_callback = all_tasks_completed_callback
+        self.update(*args, **kwargs)
+    
+    def __delitem__(self, key):
+        print(f'{key} is being poped')
+        
+        if dict.__len__ == 0:
+            self.all_tasks_completed_callback()
+            
+        del self.store[self._keytransform(key)]
+        
+        
 
 class WebApiFuzzer:
     
@@ -86,8 +102,11 @@ class WebApiFuzzer:
         
         self.httpTimeoutInSec = 2
         
+        self.fuzzCaseSetRunId = shortuuid.uuid()
+        self.fuzzDataCaseThreadTracker = {} #ThreadTracker(self.all_tasks_completed_callback)
         self.dbInsertQueue = queue.Queue()
-        self.stop_threads = False
+        self.futures =[]
+        self.executor = ThreadPoolExecutor(max_workers=5)
         self.dblock: Lock = Lock()
         
         self.eventstore = EventStore()
@@ -133,7 +152,7 @@ class WebApiFuzzer:
         
         from functools import partial
         
-        fuzzCaseSetRunId = shortuuid.uuid()
+        
         
         try:
             
@@ -141,33 +160,28 @@ class WebApiFuzzer:
             
             #create a fuzzcaserun record
             
-            insert_api_fuzzCaseSetRuns(fuzzCaseSetRunId, self.apifuzzcontext.Id)
+            insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             
-            futures =[]
-            args = []
             
-            executor = ThreadPoolExecutor(max_workers=5)
             
-            for fcs in self.apifuzzcontext.fuzzcaseSets:
-                
-                self.fuzzdatacaseCoroutines = []
-                
+            for fcs in self.apifuzzcontext.fuzzcaseSets:                
                 
                 for count in range(0, fuzzCasesToTest):
                     
+                    taskTrackId = shortuuid.uuid()
                     
                     #args.append({'fuzzCaseSetRunId':fuzzCaseSetRunId, 'fcs': fcs })
                     
-                    future = executor.submit(self.fuzz_data_case,fuzzCaseSetRunId, fcs )
+                    future = self.executor.submit(self.asyncio_wrapper_fuzz_data_case, taskTrackId, self.fuzzCaseSetRunId, fcs )
                     
-                    future.add_done_callback(self.fuzz_data_case_done)
+                    #future.add_done_callback(partial(self.fuzz_data_case_done, taskTrackId))
                     
-                    futures.append(future)
+                    #self.futures.append(future)
+                    
+                    break
                     
                 
                 
-                
-                        
                     # await self.fuzz_data_case(fuzzCaseSetRunId, fcs, False)
                     
                     # self.workerTreads = []
@@ -182,34 +196,51 @@ class WebApiFuzzer:
         except asyncio.exceptions.CancelledError as e:
             await self.eventstore.send_to_ws('Fuzzing was cancelled', MsgType.AppEvent)
             
-        finally:
-            update_api_fuzzCaseSetRun_completed(fuzzCaseSetRunId)
     
-    def fuzz_async_entrypoint(self, dictArgs):
+    def asyncio_wrapper_fuzz_data_case(self, taskTrackId, fuzzCaseSetRunId, fcs: ApiFuzzDataCase):
         
-        fuzzCaseSetRunId = dictArgs['fuzzCaseSetRunId']
-        fcs = dictArgs['fcs']
+        asyncio.run(self.fuzz_data_case(taskTrackId=taskTrackId, fuzzCaseSetRunId=fuzzCaseSetRunId, fcs=fcs))
+    
+    def all_tasks_completed_callback(self):
+        update_api_fuzzCaseSetRun_completed(self.fuzzCaseSetRunId)
+        print('all_tasks_completed_callback')
         
-        self.fuzz_data_case(fuzzCaseSetRunId, fcs)
+    def fuzz_data_case_done(self, taskTrackId):
         
-        #asyncio.run(self.fuzz_data_case(fuzzCaseSetRunId, fcs, stop_thread))
+        self.fuzzDataCaseThreadTracker.pop(taskTrackId)
         
-    def fuzz_data_case_done(self, fcs: ApiFuzzCaseSet):
-        print('fuzz data case done!')
+        if len(self.fuzzDataCaseThreadTracker) == 0:
+            print('fuzzing c')
         
-    def fuzz_data_case(self, fuzzCaseSetRunId: str, fcs: ApiFuzzCaseSet): #, stop_threads):
+    
+        
+    async def fuzz_data_case(self, taskTrackId, fuzzCaseSetRunId, fcs: ApiFuzzCaseSet): #, stop_threads):
         
         # user cancels fuzzing
         # if stop_threads == True:
         #     return
-               
-        fuzzCaseData = self.http_call_api(fcs)    
         
-        asyncio.run( self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData))
+        try:
+            
+            self.fuzzDataCaseThreadTracker[taskTrackId] = taskTrackId
+                   
+            fuzzCaseData = self.http_call_api(fcs)    
+            
+            await self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
+            
+            # msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
+            
+            # asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
+            
+            self.fuzzDataCaseThreadTracker.pop(taskTrackId)
         
-        msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
-        
-        asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
+            # check if last task, to end fuzzing
+            if len(self.fuzzDataCaseThreadTracker) == 0:
+                print('fuzzing completed!')
+            
+        except print(0):
+            pass
+     
     
                  
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
@@ -358,7 +389,7 @@ class WebApiFuzzer:
             case _:
                 return self.stringGenerator.NextData()
     
-    def save_fuzzDataCase(self, fuzzCaseSetRunId, fdc: ApiFuzzDataCase):
+    async def save_fuzzDataCase(self, fuzzCaseSetRunId, fdc: ApiFuzzDataCase):
 
         try:
             
@@ -373,7 +404,7 @@ class WebApiFuzzer:
             self.dblock.release()
             
         except Exception as e:
-            asyncio.run(self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}'))
+            await self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {e}')
         
     
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
