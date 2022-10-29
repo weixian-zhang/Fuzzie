@@ -50,7 +50,7 @@ from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDa
                                        WSMsg_Fuzzing_FuzzCaseSetSummary,
                                        FuzzMode)
 from db import (insert_api_fuzzCaseSetRuns,
-                update_api_fuzzCaseSetRun_completed,
+                update_api_fuzzCaseSetRun_status,
                 insert_api_fuzzdatacase, 
                 insert_api_fuzzrequest, 
                 insert_api_fuzzresponse)
@@ -103,9 +103,7 @@ class WebApiFuzzer:
         self.httpTimeoutInSec = 2
         
         self.fuzzCaseSetRunId = shortuuid.uuid()
-        self.fuzzDataCaseThreadTracker = {} #ThreadTracker(self.all_tasks_completed_callback)
         self.totalFuzzRuns = 0
-        self.futures =[]
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.fuzzWorkersLock = Lock()
         self.dblock: Lock = Lock()
@@ -124,18 +122,14 @@ class WebApiFuzzer:
         
         pub.subscribe(self.pubsub_command_receiver, 'command_relay')
 
+
     def pubsub_command_receiver(self, command):
-        if command == 'cancel_fuzzing':
-            self.cancel_fuzzing()
-            
-    def cancel_fuzzing(self):
         
-            self.stop_threads = True
-            if self.workerTreads is not None and len(self.workerTreads) > 0:
-                for worker in self.workerTreads:
-                    worker.join()
-                self.workerTreads = []
-            #await self.eventstore.send_to_ws('Fuzzing is cancelled', MsgType.AppEvent)
+        if command == 'cancel_fuzzing':
+            self.executor.shutdown(wait=False, cancel_futures=True)
+            self.totalFuzzRuns = 0
+            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+        
             
     async def fuzz(self):
         
@@ -157,6 +151,7 @@ class WebApiFuzzer:
             #create a fuzzcaserun record
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             
+            fuzzCasesToTest = 1 # testing only
             self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * fuzzCasesToTest
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:                
@@ -177,12 +172,8 @@ class WebApiFuzzer:
             
     
     def asyncio_wrapper_fuzz_data_case(self, taskTrackId, fuzzCaseSetRunId, fcs: ApiFuzzDataCase):
-        
         asyncio.run(self.fuzz_data_case(taskTrackId=taskTrackId, fuzzCaseSetRunId=fuzzCaseSetRunId, fcs=fcs))
-    
-    def mark_fuzzrun_completed(self):
-        update_api_fuzzCaseSetRun_completed(self.fuzzCaseSetRunId)
-
+        
     def fuzz_data_case_done(self, future):
         
         self.fuzzWorkersLock.acquire()
@@ -193,7 +184,7 @@ class WebApiFuzzer:
     
         # check if last task, to end fuzzing
         if self.totalFuzzRuns == 0:
-            self.mark_fuzzrun_completed()
+            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
             
         self.fuzzWorkersLock.release()
         
@@ -201,23 +192,13 @@ class WebApiFuzzer:
         
     async def fuzz_data_case(self, taskTrackId, fuzzCaseSetRunId, fcs: ApiFuzzCaseSet): #, stop_threads):
         
-        try:
-                               
-            fuzzCaseData = self.http_call_api(fcs)    
+        fuzzCaseData = self.http_call_api(fcs)    
             
-            await self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
-            
-            # msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
-            
-            # asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
-            
-            # self.fuzzWorkersLock.acquire()
-
-            # if taskTrackId in self.fuzzDataCaseThreadTracker: del self.fuzzDataCaseThreadTracker[taskTrackId]
-            
-            
-        except print(0):
-            pass
+        await self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
+        
+        # msg = WSMsg_Fuzzing_FuzzCaseSetSummary(fuzzCaseData.Id, fuzzCaseData.response.statusCode)
+        
+        # asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
      
     
                  

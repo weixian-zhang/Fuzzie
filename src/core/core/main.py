@@ -49,12 +49,6 @@ class WebSocketServer(WebSocketEndpoint):
     async def on_connect(self, websocket):
         await websocket.accept()
         eventstore.set_websocket(websocket)
-        
-        x = 0
-        while(x < 10):
-            await websocket.send_text("hello from server")
-            x += 1
-            await asyncio.sleep(1)
 
 app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
 
