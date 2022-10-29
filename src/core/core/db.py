@@ -63,7 +63,7 @@ ApiFuzzCaseSetRuns= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('startTime', DateTime),
                             Column('endTime', DateTime),
-                            Column('completed', Boolean),
+                            Column('status', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
@@ -251,7 +251,7 @@ def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
             values(
                     Id = Id,
                     startTime = datetime.now(),
-                    completed = False,
+                    status = 'fuzzing',
                     fuzzcontextId = fuzzcontextId
                    )
          )
@@ -263,13 +263,13 @@ def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
     Session.commit()
     Session.close()
     
-def update_api_fuzzCaseSetRun_completed(fuzzCaseSetRunId) -> None:
+def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed') -> None:
     stmt = (
             update(ApiFuzzCaseSetRuns).
             where(ApiFuzzCaseSetRuns.c.Id == fuzzCaseSetRunId).
             values(
                     endTime = datetime.now(),
-                    completed = True
+                    status = status
                    )
             )
     
