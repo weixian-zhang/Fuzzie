@@ -104,9 +104,10 @@ class WebApiFuzzer:
         
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.fuzzDataCaseThreadTracker = {} #ThreadTracker(self.all_tasks_completed_callback)
-        self.dbInsertQueue = queue.Queue()
+        self.totalFuzzRuns = 0
         self.futures =[]
         self.executor = ThreadPoolExecutor(max_workers=5)
+        self.fuzzWorkersLock = Lock()
         self.dblock: Lock = Lock()
         
         self.eventstore = EventStore()
@@ -146,23 +147,17 @@ class WebApiFuzzer:
         
         await self.begin_fuzzing()
         
-        print('a')
-        
     async def begin_fuzzing(self):
-        
-        from functools import partial
-        
-        
-        
+          
+    
         try:
             
             fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
             
             #create a fuzzcaserun record
-            
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             
-            
+            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * fuzzCasesToTest
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:                
                 
@@ -170,26 +165,10 @@ class WebApiFuzzer:
                     
                     taskTrackId = shortuuid.uuid()
                     
-                    #args.append({'fuzzCaseSetRunId':fuzzCaseSetRunId, 'fcs': fcs })
-                    
                     future = self.executor.submit(self.asyncio_wrapper_fuzz_data_case, taskTrackId, self.fuzzCaseSetRunId, fcs )
                     
-                    #future.add_done_callback(partial(self.fuzz_data_case_done, taskTrackId))
-                    
-                    #self.futures.append(future)
-                    
-                    break
-                    
-                
-                
-                    # await self.fuzz_data_case(fuzzCaseSetRunId, fcs, False)
-                    
-                    # self.workerTreads = []
-                    # self.stop_threads = False
-                    # tmp = threading.Thread(target=self.fuzz_async_entrypoint, args=(fuzzCaseSetRunId, fcs, self.stop_threads))
-                    # self.workerTreads.append(tmp)
-                    # tmp.start()
-                
+                    future.add_done_callback(self.fuzz_data_case_done)      
+
                 
         except Exception as e:
             await self.eventstore.send_to_ws(sys.exc_info(), MsgType.AppEvent)
@@ -201,29 +180,29 @@ class WebApiFuzzer:
         
         asyncio.run(self.fuzz_data_case(taskTrackId=taskTrackId, fuzzCaseSetRunId=fuzzCaseSetRunId, fcs=fcs))
     
-    def all_tasks_completed_callback(self):
+    def mark_fuzzrun_completed(self):
         update_api_fuzzCaseSetRun_completed(self.fuzzCaseSetRunId)
-        print('all_tasks_completed_callback')
+
+    def fuzz_data_case_done(self, future):
         
-    def fuzz_data_case_done(self, taskTrackId):
+        self.fuzzWorkersLock.acquire()
         
-        self.fuzzDataCaseThreadTracker.pop(taskTrackId)
-        
-        if len(self.fuzzDataCaseThreadTracker) == 0:
-            print('fuzzing c')
+        self.totalFuzzRuns = self.totalFuzzRuns - 1
+
+        print(self.totalFuzzRuns)
+    
+        # check if last task, to end fuzzing
+        if self.totalFuzzRuns == 0:
+            self.mark_fuzzrun_completed()
+            
+        self.fuzzWorkersLock.release()
         
     
         
     async def fuzz_data_case(self, taskTrackId, fuzzCaseSetRunId, fcs: ApiFuzzCaseSet): #, stop_threads):
         
-        # user cancels fuzzing
-        # if stop_threads == True:
-        #     return
-        
         try:
-            
-            self.fuzzDataCaseThreadTracker[taskTrackId] = taskTrackId
-                   
+                               
             fuzzCaseData = self.http_call_api(fcs)    
             
             await self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
@@ -232,11 +211,10 @@ class WebApiFuzzer:
             
             # asyncio.run(self.eventstore.send_to_ws(msg, MsgType.FuzzEvent))
             
-            self.fuzzDataCaseThreadTracker.pop(taskTrackId)
-        
-            # check if last task, to end fuzzing
-            if len(self.fuzzDataCaseThreadTracker) == 0:
-                print('fuzzing completed!')
+            # self.fuzzWorkersLock.acquire()
+
+            # if taskTrackId in self.fuzzDataCaseThreadTracker: del self.fuzzDataCaseThreadTracker[taskTrackId]
+            
             
         except print(0):
             pass
