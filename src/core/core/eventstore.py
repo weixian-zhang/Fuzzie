@@ -4,7 +4,7 @@ from enum import Enum
 from multiprocessing import Event
 import jsonpickle
 from pymitter import EventEmitter
-import datetime
+from  datetime import datetime
 import json
 import asyncio
 
@@ -16,8 +16,9 @@ class MsgType(Enum):
     AppEvent = 1,
     FuzzEvent = 2
 
-class WebsocketClientData:
-    def __init__(self, data, msgType: MsgType):
+class WebsocketClientMessage:
+    def __init__(self, data, msgType: MsgType = MsgType.AppEvent):
+        self.timestamp = datetime.now()
         self.data = data
         self.msgType = msgType.name
     
@@ -59,7 +60,7 @@ class EventStore:
     async def emitInfo(self, message: str, data = "") -> None:
                     
         m = Message(
-            datetime.datetime.now(),
+            datetime.now(),
             str(MessageLevel.INFO),
             message,
             data
@@ -67,12 +68,12 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
                 
-        await self.send_to_ws(m.json(), MsgType.AppEvent)
+        await self.send_to_ws(message, MsgType.AppEvent)
         
     async def emitErr(self, error: str, data = "") -> None:
         
         m = Message(
-            datetime.datetime.now(),
+            datetime.now(),
             str(MessageLevel.ERROR),
             error,
             data
@@ -80,30 +81,32 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        await self.send_to_ws(m, MsgType.AppEvent)
+        await self.send_to_ws(error, MsgType.AppEvent)
     
-    async def emitErr(self, err: any, data = "") -> None:
+    async def emitErr(self, err: Exception, data = "") -> None:
         
         m = None
         
+        errMsg = ', '.join([x for x in err.args])
+        
         if  isinstance(err, Exception):
             m = Message(
-                datetime.datetime.now(),
+                datetime.now(),
                 str(MessageLevel.ERROR),
-                err.args,
+                errMsg,
                 data)
         elif isinstance(err, str):
             m = Message(
-                datetime.datetime.now(),
+                datetime.now(),
                 str(MessageLevel.ERROR),
-                err,
+                errMsg,
                 data)
         else:
             return
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        await self.send_to_ws(m, MsgType.AppEvent)
+        await self.send_to_ws(errMsg, MsgType.AppEvent)
         
     
     def handleGeneralLogs(self, msg: str):
@@ -113,18 +116,25 @@ class EventStore:
         EventStore.websocket = websocket
     
     # send to websocket clients
-    async def send_to_ws(self, data, msgType: MsgType):
+    async def send_to_ws(self, data: str, msgType: MsgType = MsgType.AppEvent):
         
-        if not type(data) is str:
-            data = jsonpickle.encode(data, unpicklable=False)
+        try:
+            
+            # msg = ''
+            
+            # if not type(data) is str:
+            #     msg = jsonpickle.encode(data, unpicklable=False)
         
-        m = WebsocketClientData(data, msgType)
+            m = WebsocketClientMessage(data)
+            
+            if EventStore.websocket != None:
+                if len(EventStore.wsMsgQueue) > 0:
+                    while len(EventStore.wsMsgQueue) > 0:
+                        await EventStore.websocket.send_text(self.wsMsgQueue.pop())
+                    
+                await EventStore.websocket.send_text(m.json())
+            else:
+                EventStore.wsMsgQueue.append(m.json())
+        except Exception as e:
+            print(e)
         
-        if EventStore.websocket != None:
-            if len(EventStore.wsMsgQueue) > 0:
-                while len(EventStore.wsMsgQueue) > 0:
-                    await EventStore.websocket.send_text(self.wsMsgQueue.pop())
-                
-            await EventStore.websocket.send_text(m.json())
-        else:
-            EventStore.wsMsgQueue.append(m.json())
