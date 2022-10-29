@@ -2,11 +2,12 @@
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
-from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, ApiFuzzCaseSet
+from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
+from graphql_models import ApiFuzzContextSetsRunsView, ApiFuzzCaseSet
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
-from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext
+from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext, get_fuzzContextSetRuns
 from sqlalchemy.sql import select, insert
 
 import asyncio
@@ -59,10 +60,13 @@ class ServiceManager:
     def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
         return get_fuzzcontexts()
     
-
     
-    # def get_fuzzcontext(self, Id) -> ApiFuzzContext:
-    #     return get_fuzzcontext(Id)
+    def get_fuzzContextSetRuns(self) -> list[ApiFuzzContextSetsRunsView]:
+        return get_fuzzContextSetRuns() 
+    
+    
+    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+        return get_fuzzcontext(Id)
     
     async def fuzz(self, 
                    Id, basicUsername = '', basicPassword= '', 
@@ -80,8 +84,6 @@ class ServiceManager:
                                     apikey= apikey)
         
         await webapifuzzer.fuzz()
-        
-        print('a')
         
     
     

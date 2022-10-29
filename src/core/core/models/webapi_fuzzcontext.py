@@ -87,6 +87,7 @@ class ApiFuzzCaseSet:
         self.path = ''
         self.querystringNonTemplate = ''
         self.bodyNonTemplate = ''
+        self.headerNonTemplate = ''
         
         # all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
         # property name and value as data-type. Base on data-type fuzzer calls DataFactory.{data type} to generate tjhe correct

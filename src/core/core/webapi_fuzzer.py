@@ -21,6 +21,7 @@
     # {{ base64e }}                 generate base64 encoded random string value
     # {{ hashsha256:value }}        generates a sha256 hash from supplied value
 
+from cProfile import run
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 import asyncio
@@ -126,9 +127,14 @@ class WebApiFuzzer:
     def pubsub_command_receiver(self, command):
         
         if command == 'cancel_fuzzing':
-            self.executor.shutdown(wait=False, cancel_futures=True)
-            self.totalFuzzRuns = 0
-            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+            self.cancel_fuzzing()
+            
+    def cancel_fuzzing(self):
+        self.executor.shutdown(wait=False, cancel_futures=True)
+        self.totalFuzzRuns = 0
+        self.dblock.acquire()
+        update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+        self.dblock.release()
         
             
     async def fuzz(self):
@@ -286,6 +292,8 @@ class WebApiFuzzer:
         path = self.inject_fuzzdata_in_datatemplate(pathDT)
         querystring = self.inject_fuzzdata_in_datatemplate(querystringDT)
         body = self.inject_fuzzdata_in_datatemplate(bodyDT)
+        
+        #header
         headerStr = self.inject_fuzzdata_in_datatemplate(headerDT)
         headerDict = json.loads(headerStr)
         
@@ -415,61 +423,4 @@ class WebApiFuzzer:
                 return default
             else:
                 return fuzzcaseToExec
-        
-        
-        
-        
-    # def test_transform(self):
-        
-    #     microTypeTemplates = {
-    #         "string": "{{ getFuzzData('string') }}",
-    #         "number": "{{ getFuzzData('digit') }}",
-    #         "integer": "{{ getFuzzData('digit') }}",
-    #         "digit": "{{ getFuzzData('digit') }}",
-    #         "boolean": "{{ getFuzzData('boolean') }}",
-    #         "datetime": "{{ getFuzzData('datetime') }}",
-    #         "username": "{{ getFuzzData('username') }}",
-    #         "password": "{{ getFuzzData('password') }}",
-    #         "file": "{{ getFuzzData('file') }}",
-    #     }
-        
-    #     gqlTemplate = '''
-    #     mutation discoverByUrl {
-    #         discoverByOpenapi3Url(name:{{ string }}, hostname: {{ string }}, port: {{ number }}, openapi3Url: {{string}}){
-    #             ok
-    #             apiFuzzContext {
-    #                 Id
-    #                 hostname
-    #                 port
-    #                 fuzzMode
-    #                 fuzzcaseToExec
-    #                 fuzzcaseSets{
-    #                     Id
-    #                     verb
-    #                     path
-    #                     querystringNonTemplate
-    #                     bodyNonTemplate
-    #                 }
-    #             }
-    #         }
-    #         }
-    #     '''
-        
-    #     env = jinja2.Environment()
-        
-    #     jinjaTemplate: jinja2.Template = env.from_string(gqlTemplate)
-        
-    #     resultWithGetFuzzData =  jinjaTemplate.render(microTypeTemplates)
-        
-    #     print(resultWithGetFuzzData)
-        
-    #     withActualDataTemplate: jinja2.Template = jinja2.Template(resultWithGetFuzzData)
-        
-    #     finalResult =  withActualDataTemplate.render({ 'getFuzzData': self.getFuzzData })
-        
-    #     print(finalResult)
-    
-    
-    
-    
     
