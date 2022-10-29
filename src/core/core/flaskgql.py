@@ -126,7 +126,7 @@ class Query(graphene.ObjectType):
     
     fuzzcontexts = graphene.List(ApiFuzzContext)
     
-    fuzzContext = graphene.Field(ApiFuzzContext, fuzzcontextId=graphene.String())
+    #fuzzContext = graphene.Field(ApiFuzzContext, fuzzcontextId=graphene.String())
     
     def resolve_alive(self, info):
         return "alive"
@@ -137,10 +137,10 @@ class Query(graphene.ObjectType):
         result = sm.get_fuzzcontexts()
         return result
     
-    def resolve_fuzzContext(self,info, fuzzcontextId):
-        r = ApiFuzzContext()
-        r.name = fuzzcontextId
-        return r
+    # def resolve_fuzzContext(self,info, fuzzcontextId):
+    #     r = ApiFuzzContext()
+    #     r.name = fuzzcontextId
+    #     return r
 
     
 class DiscoverOpenApi3ByFilePath(graphene.Mutation):

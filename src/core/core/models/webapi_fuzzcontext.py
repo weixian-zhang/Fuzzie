@@ -55,12 +55,20 @@ class ApiFuzzResponse:
         self.setcookieHeader = ''
         self.content = str      # json   
 
+class ApiFuzzCaseSetRun:
+    
+    def __init__(self, id, fuzzcontextId, fuzzdatacaseId) -> None:  
+        self.Id: str = id
+        self.datetime = ''
+        self.fuzzcontextId = fuzzcontextId
+
 # each fuzz data case is a unique verb + path + fuzz data
 class ApiFuzzDataCase:
     
     def __init__(self) -> None:  
         self.Id: str = ''
         self.fuzzCaseSetId = ''
+        self.fuzzCaseSetRunId = ''
         self.fuzzcontextId = ''
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}

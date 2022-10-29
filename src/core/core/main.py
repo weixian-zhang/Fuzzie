@@ -30,8 +30,6 @@ from starlette.endpoints import WebSocketEndpoint
 
 app = Starlette()
 
-eventstore.emitInfo('Fuzzie/Fuzzer: fuzzer starting')
-
 @app.websocket_route("/ws")
 class WebSocketServer(WebSocketEndpoint):
     counter = 0
@@ -51,12 +49,6 @@ class WebSocketServer(WebSocketEndpoint):
     async def on_connect(self, websocket):
         await websocket.accept()
         eventstore.set_websocket(websocket)
-        
-        x = 0
-        while(x < 10):
-            await websocket.send_text("hello from server")
-            x += 1
-            await asyncio.sleep(1)
 
 app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
 
@@ -80,12 +72,9 @@ def startup():
     
     if args['webserver']:
         
-        asyncio.run(eventstore.emitInfo('fuzzer starting'))
-        
-        asyncio.run(eventstore.emitInfo('starting GraphQL server'))
-        
         asyncio.run(eventstore.emitInfo('fuzzer started'))
         
+        asyncio.run(eventstore.emitInfo('starting GraphQL server'))
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         

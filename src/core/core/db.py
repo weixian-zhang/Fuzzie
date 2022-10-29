@@ -1,10 +1,11 @@
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import *
+from sqlalchemy.orm.exc import NoResultFound
 import os
 import json
 from pathlib import Path
-from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, ApiFuzzResponse,FuzzProgressState
+from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
 from eventstore import EventStore
 
 evts = EventStore()
@@ -20,11 +21,12 @@ metadata = MetaData(engine)
 
 apifuzzcontext_TableName = 'ApiFuzzContext'
 apifuzzCaseSet_TableName = 'ApiFuzzCaseSet'
+apifuzzCaseSetRuns_TableName = 'ApiFuzzCaseSetRuns'
 apifuzzDataCase_TableName = 'ApiFuzzDataCase'
 apifuzzRequest_TableName = 'ApiFuzzRequest'
 apifuzzResponse_TableName = 'ApiFuzzResponse'
 
-FuzzContextTable = Table(apifuzzcontext_TableName, metadata,
+ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('name', String),
@@ -38,8 +40,9 @@ FuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('fuzzcaseToExec', Integer),
                             Column('authnType', String)
                             )
-    
-FuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
+# Api schema, or see this as a "Api schema template" for execution
+# When fuzz executes based on this FuzzCaseSet template, the result is a list of 1 ApiFuzzCaseSetRun -> many ApiFuzzDataCases
+ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
                             Column('verb', String),
@@ -54,14 +57,25 @@ FuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
-
-FuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
+# track number of runs for each FuzzContext
+# many to many mapping table
+ApiFuzzCaseSetRuns= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('Id', String, primary_key=True),
-                            Column('fuzzCaseSetId', String, ForeignKey(f'{FuzzCaseSetTable}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{FuzzContextTable}.Id'))
+                            Column('startTime', DateTime),
+                            Column('endTime', DateTime),
+                            Column('status', String),
+                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
-FuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
+
+ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
+                            Column('Id', String, primary_key=True),
+                            Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
+                            Column('fuzzcaseSetRunIdId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
+                            )
+
+ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('hostnamePort', String),
@@ -71,12 +85,12 @@ FuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('url', String),
                             Column('headers', String),
                             Column('body', String),
-                            Column('fuzzDataCaseId', String, ForeignKey(f'{FuzzDataCaseTable}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{FuzzContextTable}.Id'))
+                            Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
 
-FuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
+ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('statusCode', String),
@@ -85,7 +99,7 @@ FuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('setcookieHeader', String),
                             Column('content', String),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{FuzzContextTable}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
 NaughtyPasswordTable = Table('NaughtyPassword', metadata,
@@ -108,9 +122,9 @@ NaughtyStringTable = Table('NaughtyString', metadata,
 
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
-    j = FuzzContextTable.join(FuzzCaseSetTable,
-                FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
-    stmt = select(FuzzContextTable, FuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), FuzzCaseSetTable).select_from(j)
+    j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,
+                ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
+    stmt = select(ApiFuzzContextTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), ApiFuzzCaseSetTable).select_from(j)
     
     Session = scoped_session(session_factory)
         
@@ -147,20 +161,23 @@ def get_fuzzcontexts() -> list[ApiFuzzContext]:
     
     return fuzzcontexts
 
-def get_fuzzcontext(Id) -> ApiFuzzContext:
-        j = FuzzContextTable.join(FuzzCaseSetTable,
-                FuzzContextTable.c.Id == FuzzCaseSetTable.c.fuzzcontextId)
-        stmt = (
-                select(FuzzContextTable, FuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"), FuzzCaseSetTable)
-                .where(FuzzContextTable.c.Id == Id)
-                .select_from(j)
-               )
+def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:       
         
         Session = scoped_session(session_factory)
         
-        results = Session.execute(stmt)
+        fcRows = (Session.query(ApiFuzzContextTable, ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"))
+                  .select_from(join(ApiFuzzContextTable, ApiFuzzCaseSetTable))
+                  .filter(ApiFuzzContextTable.c.Id == Id)
+                  .filter(ApiFuzzCaseSetTable.c.selected.is_(fuzzCaseSetSelected))
+                  .all()
+                )
         
-        fcRows = results.fetchmany()
+        
+        # results = Session.execute(stmt)
+        
+        # fcRows = results.fetchmany()
+        
+        Session.close()
         
         if fcRows is None or len(fcRows) == 0:
             evts.emitErr(f'Cannot get fuzz context with Id: {Id}')
@@ -177,17 +194,17 @@ def get_fuzzcontext(Id) -> ApiFuzzContext:
             fcs = create_fuzzcaseset_from_dict(rowDict)
             fuzzcontext.fuzzcaseSets.append(fcs)
         
-        Session.close()
-        
         return fuzzcontext
 
 def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
+
+        Session = scoped_session(session_factory)
         
         fuzzcontextStmt = (
-            insert(FuzzContextTable).
+            insert(ApiFuzzContextTable).
             values(
                    Id=fuzzcontext.Id, 
-                   datetime=datetime.now(),
+                   datetime= datetime.now(),
                    name = fuzzcontext.name,
                     hostname = fuzzcontext.hostname,
                     port = fuzzcontext.port,
@@ -197,11 +214,9 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                    )
          )
         
-        Session = scoped_session(session_factory)
-        
         Session.execute(fuzzcontextStmt)
         
-        Session.commit()
+        # insert fuzzcaseset
         
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
@@ -209,7 +224,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
-                    insert(FuzzCaseSetTable).
+                    insert(ApiFuzzCaseSetTable).
                     values(
                         Id=fcset.Id, 
                         selected = fcset.selected,
@@ -227,13 +242,50 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                 
                 Session.execute(fcSetStmt)
         
+        Session.commit()
         Session.close()
-                
-def insert_api_fuzzdatacase(fdc: ApiFuzzDataCase) -> None:
+
+def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
     stmt = (
-            insert(FuzzDataCaseTable).
+            insert(ApiFuzzCaseSetRuns).
+            values(
+                    Id = Id,
+                    startTime = datetime.now(),
+                    status = 'fuzzing',
+                    fuzzcontextId = fuzzcontextId
+                   )
+         )
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(stmt)
+    
+    Session.commit()
+    Session.close()
+    
+def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed') -> None:
+    stmt = (
+            update(ApiFuzzCaseSetRuns).
+            where(ApiFuzzCaseSetRuns.c.Id == fuzzCaseSetRunId).
+            values(
+                    endTime = datetime.now(),
+                    status = status
+                   )
+            )
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(stmt)
+    
+    Session.commit()
+    Session.close()
+                
+def insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc: ApiFuzzDataCase) -> None:
+    stmt = (
+            insert(ApiFuzzDataCaseTable).
             values(
                     Id = fdc.Id,
+                    fuzzcaseSetRunIdId = fuzzCaseSetRunId,
                     fuzzCaseSetId = fdc.fuzzCaseSetId,
                     fuzzcontextId = fdc.fuzzcontextId
                    )
@@ -248,7 +300,7 @@ def insert_api_fuzzdatacase(fdc: ApiFuzzDataCase) -> None:
     
 def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
     stmt = (
-            insert(FuzzRequestTable).
+            insert(ApiFuzzRequestTable).
             values(
                     Id = fr.Id,
                     datetime = fr.datetime,
@@ -273,7 +325,7 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
     
 def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
     stmt = (
-            insert(FuzzResponseTable).
+            insert(ApiFuzzResponseTable).
             values(
                     Id = fr.Id,
                     datetime = fr.datetime,
@@ -337,17 +389,17 @@ def create_fuzzcaseset_from_dict(rowDict):
     return fcs
 
 def get_naughtypassword_by_id(id):
-    stmt = select(NaughtyPasswordTable, NaughtyPasswordTable.columns.Content).where(NaughtyPasswordTable.c.id == id)
+    
         
     Session = scoped_session(session_factory)
     
-    result = Session.execute(stmt)
-    
-    row = result.fetchone()
+    row = Session.query(NaughtyPasswordTable.columns.Content).filter(NaughtyPasswordTable.c.id == id).one()
     
     Session.close()
+        
+    rowDict = row._asdict()
     
-    return row['Content']
+    return rowDict['Content']
 
 def get_naughtypassword_row_count():
     Session = scoped_session(session_factory)
@@ -359,18 +411,18 @@ def get_naughtypassword_row_count():
     return count
 
 
-def get_naughtyusername_by_id(id):
-    stmt = select(NaughtyUsernameTable, NaughtyUsernameTable.columns.Content).where(NaughtyUsernameTable.c.id == id)
+def get_naughtyusername_by_id(id) -> str:
+    
         
     Session = scoped_session(session_factory)
     
-    result = Session.execute(stmt)
-    
-    row = result.fetchone()
+    row = Session.query(NaughtyUsernameTable.columns.Content).filter(NaughtyUsernameTable.c.id == id).one()
     
     Session.close()
+        
+    rowDict = row._asdict()
     
-    return row['Content']
+    return rowDict['Content']
 
 def get_naughtyusername_row_count():
     Session = scoped_session(session_factory)
@@ -381,18 +433,22 @@ def get_naughtyusername_row_count():
     
     return count
 
-def get_naughtystring_by_id(id):
-    stmt = select(NaughtyStringTable, NaughtyStringTable.columns.Content).where(NaughtyStringTable.c.id == id)
+def get_naughtystring_by_id(id) -> str:
+    
+    try:
+        Session = scoped_session(session_factory)
+
+        row = Session.query(NaughtyStringTable.columns.Content).filter(NaughtyStringTable.c.id == id).one()
         
-    Session = scoped_session(session_factory)
+        Session.close()
+        
+        rowDict = row._asdict()
+        
+        return rowDict['Content']
     
-    result = Session.execute(stmt)
+    except NoResultFound as e:
+        print(e)
     
-    row = result.fetchone()
-    
-    Session.close()
-    
-    return row['Content']
 
 def get_naughtystring_row_count():
     Session = scoped_session(session_factory)
@@ -412,6 +468,7 @@ def update_fuzzcaseset_fuzzing_completed(fuzzCaseSetId):
 
 def update_fuzzcaseset_fuzzing_stop(fuzzCaseSetId):
     pass
+
                             
     
 # create tables if not exist
