@@ -59,8 +59,10 @@ class ServiceManager:
     def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
         return get_fuzzcontexts()
     
-    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
-        return get_fuzzcontext(Id)
+
+    
+    # def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+    #     return get_fuzzcontext(Id)
     
     async def fuzz(self, 
                    Id, basicUsername = '', basicPassword= '', 
