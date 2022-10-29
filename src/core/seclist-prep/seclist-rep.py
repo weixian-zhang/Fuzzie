@@ -46,16 +46,16 @@ CREATE TABLE IF NOT EXISTS NaughtyPassword (
 );
 '''
 
-dbpath = os.getcwd() + "\src\core\core\datafactory\data\fuzzie.sqlite"
+dbpath = os.getcwd() + "\src\core\core\datafactory\data\\fuzzie.sqlite"
 
 sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 
 cursor = sqliteconn.cursor()
 
-#cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
+cursor.execute("DROP TABLE IF EXISTS NaughtyFile;")
 cursor.execute("DROP TABLE IF EXISTS NaughtyString;")
-#cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
-# cursor.execute("DROP TABLE IF EXISTS NaughtyPassword;")
+cursor.execute("DROP TABLE IF EXISTS NaughtyUsername;")
+cursor.execute("DROP TABLE IF EXISTS NaughtyPassword;")
 
 cursor.execute(create_db_table_naughtyfile)
 cursor.execute(create_db_table_naughtystring)
@@ -136,8 +136,8 @@ if __name__ == '__main__':
     
     prepare_naughty_string()
     # prepare_naughty_files()
-    # prepare_naughty_username()
-    # prepare_naughty_password()
+    prepare_naughty_username()
+    prepare_naughty_password()
     sqliteconn.close()
     
     print("data loading completed")

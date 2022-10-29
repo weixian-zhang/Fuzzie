@@ -9,7 +9,8 @@ sys.path.insert(0, datafacPath)
 sys.path.insert(0, dbPath)
 sys.path.insert(0, modelsPath)
 
-from db import FuzzContextTable, FuzzCaseSetTable,  metadata, session_factory
+from db import (ApiFuzzContextTable, ApiFuzzCaseSetTable,  metadata, session_factory, 
+                get_naughtystring_by_id, get_naughtyusername_by_id, get_naughtypassword_by_id)
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select, insert
 import json
@@ -29,12 +30,27 @@ class TestFuzzManager(unittest.TestCase):
     def setUp(self):
         self.metadata = metadata
 
-    def teardown(self):
-        self.metadata.drop_all()
+    # def teardown(self):
+    #     self.metadata.drop_all()
         
+        
+    def test_get_naughtystring(self):
+        
+        s = get_naughtystring_by_id(1)
+        self.assertTrue(s != '')
+        
+    def test_get_naughtyusername(self):
+        
+        s = get_naughtyusername_by_id(1)
+        self.assertTrue(s != '')
+        
+    def test_get_naughtypassword(self):
+        
+        s = get_naughtypassword_by_id(1)
+        self.assertTrue(s != '')
         
     def test_query_apifuzzcontext_join_fuzzCaseSet(self):
-        query = select([FuzzContextTable])
+        query = select([ApiFuzzContextTable])
         Session = scoped_session(session_factory)
         results = Session.execute(query)
         results.fetchall()
@@ -59,7 +75,7 @@ class TestFuzzManager(unittest.TestCase):
         fuzzcontext: ApiFuzzContext = fcc.create_fuzzcontext(apicontext)
 
         fuzzcontextStmt = (
-            insert(FuzzContextTable).
+            insert(ApiFuzzContextTable).
             values(
                    Id=fuzzcontext.Id, 
                    datetime=datetime.now(),
@@ -81,7 +97,7 @@ class TestFuzzManager(unittest.TestCase):
                 body = json.dumps(fcset.bodyDataTemplate)
                 
                 fcSetStmt = (
-                    insert(FuzzCaseSetTable).
+                    insert(ApiFuzzCaseSetTable).
                     values(
                         Id=fcset.Id, 
                         selected = fcset.selected,
