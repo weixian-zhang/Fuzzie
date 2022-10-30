@@ -92,6 +92,7 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('url', String),
                             Column('headers', String),
                             Column('body', String),
+                            Column('requestMessage', String),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -102,9 +103,10 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('datetime', DateTime),
                             Column('statusCode', String),
                             Column('reasonPharse', String),
-                            Column('responseJson', String),
+                            Column('responseDisplayText', String),
                             Column('setcookieHeader', String),
-                            Column('content', String),
+                            Column('headerJson', String),
+                            Column('body', String),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -391,7 +393,8 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
                     querystring = fr.querystring,
                     url = fr.url,
                     headers = fr.headers,
-                    body = fr.body
+                    body = fr.body,
+                    requestMessage = fr.requestMessage
                    )
          )
     
@@ -412,10 +415,10 @@ def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
                     fuzzcontextId = fr.fuzzcontextId,
                     statusCode = fr.statusCode,
                     reasonPharse = fr.reasonPharse,
-                    responseJson = fr.responseJson,
+                    responseDisplayText = fr.responseDisplayText,
                     setcookieHeader = fr.setcookieHeader,
-                    content = fr.content,
-
+                    headerJson = fr.headerJson,
+                    body = fr.body,
                    )
          )
 
