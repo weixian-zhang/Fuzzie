@@ -3,7 +3,7 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
-from graphql_models import ApiFuzzContextSetsRunsView, ApiFuzzCaseSet
+from graphql_models import ApiFuzzContextSetsRunsViewModel
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
@@ -44,7 +44,7 @@ class ServiceManager:
                             name=name,
                             hostname=hostname,
                             port=port,
-                            requestMessageSingle = '',
+                            requestMessageText = '',
                             requestMessageFilePath = '',
                             openapi3FilePath = openapi3FilePath,
                             fuzzMode= fuzzMode,
@@ -61,14 +61,14 @@ class ServiceManager:
         return get_fuzzcontexts()
     
     
-    def get_fuzzContextSetRuns(self) -> list[ApiFuzzContextSetsRunsView]:
+    def get_fuzzContextSetRuns(self) -> list[ApiFuzzContextSetsRunsViewModel]:
         return get_fuzzContextSetRuns() 
     
     
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:
         return get_fuzzcontext(Id)
     
-    async def fuzz(self, 
+    def fuzz(self, 
                    Id, basicUsername = '', basicPassword= '', 
                    bearerTokenHeader= '', bearerToken= '', 
                    apikeyHeader= '', apikey= '') -> None:
@@ -83,7 +83,7 @@ class ServiceManager:
                                     apikeyHeader=  apikeyHeader, 
                                     apikey= apikey)
         
-        await webapifuzzer.fuzz()
+        webapifuzzer.fuzz()
         
     
     

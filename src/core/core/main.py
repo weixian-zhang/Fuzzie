@@ -43,10 +43,7 @@ class WebSocketServer(WebSocketEndpoint):
         
         if cmd == 'cancel_fuzzing':
             pub.sendMessage('command_relay', command='cancel_fuzzing')
-            await eventstore.send_to_ws('Fuzzing was cancelled')
-    
-        #todo: use pubsub library to send command to service manager to cancel fuzzing
-        # await websocket.send_text(f"Message text was: {data}")
+            eventstore.send_websocket('Fuzzing was cancelled, finishing up some running test cases')
         
     async def on_connect(self, websocket):
         await websocket.accept()
@@ -74,9 +71,9 @@ def startup():
     
     if args['webserver']:
         
-        asyncio.run(eventstore.emitInfo('fuzzer started'))
+        # asyncio.run(eventstore.emitInfo('fuzzer started'))
         
-        asyncio.run(eventstore.emitInfo('starting GraphQL server'))
+        # asyncio.run(eventstore.emitInfo('starting GraphQL server'))
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
