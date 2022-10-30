@@ -8,15 +8,19 @@ from pathlib import Path
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, 
                                        ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
     )
-from graphql_models import ApiFuzzContextSetsRunsView, ApiFuzzCaseSet
+from graphql_models import ApiFuzzContextSetsRunsViewModel, ApiFuzzCaseSetViewModel
 from eventstore import EventStore
 
 evts = EventStore()
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data/fuzzie.sqlite')
-connStr = f'sqlite:///{dbPath}?check_same_thread=False'
+connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
 
 session_factory = sessionmaker(bind=engine)
+
+# import sqlite3
+# db = sqlite3.connect(dbPath)
+# db.execute('pragma journal_mode=wal')
 
 
 metadata = MetaData(engine)
@@ -34,7 +38,7 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('name', String),
                             Column('hostname', String),
                             Column('port', String),
-                            Column('requestMessageSingle', String),
+                            Column('requestMessageText', String),
                             Column('requestMessageFilePath', String),
                             Column('openapi3FilePath', String),
                             Column('openapi3Url', String),
@@ -123,7 +127,6 @@ NaughtyStringTable = Table('NaughtyString', metadata,
                             Column('RowNumber', String)
                             )
 
-
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
     j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,
                 ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
@@ -194,7 +197,7 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         return fuzzcontext
 
-def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsView]:
+def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
     
     try:
         Session = scoped_session(session_factory)
@@ -205,8 +208,7 @@ def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsView]:
                         ApiFuzzContextTable.columns.Id, 
                         ApiFuzzContextTable.columns.datetime,
                         ApiFuzzContextTable.columns.name,
-                        ApiFuzzContextTable.columns.requestMessageSingle,
-                        ApiFuzzContextTable.columns.requestMessageSingle,
+                        ApiFuzzContextTable.columns.requestMessageText,
                         ApiFuzzContextTable.columns.requestMessageFilePath,
                         ApiFuzzContextTable.columns.openapi3FilePath,
                         ApiFuzzContextTable.columns.openapi3Url,
@@ -244,11 +246,11 @@ def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsView]:
             
             rowDict = row._asdict()
             
-            srView = ApiFuzzContextSetsRunsView()
+            srView = ApiFuzzContextSetsRunsViewModel()
             srView.contextId = rowDict['Id']
             srView.datetime = rowDict['datetime']
             srView.name = rowDict['name']
-            srView.requestMessageSingle = rowDict['requestMessageSingle']
+            srView.requestMessageText = rowDict['requestMessageText']
             srView.requestMessageFilePath = rowDict['requestMessageFilePath']
             srView.openapi3FilePath = rowDict['openapi3FilePath']
             srView.openapi3Url = rowDict['openapi3Url']
@@ -282,7 +284,11 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     port = fuzzcontext.port,
                     fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = fuzzcontext.authnType
+                    authnType = fuzzcontext.authnType,
+                    requestMessageText = fuzzcontext.requestMessageText,
+                    requestMessageFilePath = fuzzcontext.requestMessageFilePath,
+                    openapi3FilePath = fuzzcontext.openapi3FilePath,
+                    openapi3Url = fuzzcontext.openapi3Url
                    )
          )
         
@@ -433,7 +439,7 @@ def create_fuzzcontext_from_dict(rowDict):
         fuzzcontext.datetime = rowDict['datetime']
         fuzzcontext.name = rowDict['name']
         
-        fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
+        fuzzcontext.requestMessageText = rowDict['requestMessageText']
         fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
         fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
         fuzzcontext.openapi3Url = rowDict['openapi3Url']

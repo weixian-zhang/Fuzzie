@@ -4,7 +4,7 @@ from servicemanager import ServiceManager
 from eventstore import EventStore
 from datetime import datetime
 from rx import Observable
-from graphql_models import ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase,ApiFuzzRequest,ApiFuzzResponse,ApiFuzzContextSetsRunsView
+from graphql_models import ApiFuzzContext
 
 # import sys, os
 # from pathlib import Path
@@ -106,7 +106,7 @@ from graphql_models import ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase,ApiFu
 #     fuzzMode = graphene.String()
 #     fuzzcaseToExec = graphene.Int(default_value=50)
     
-#     requestMessageSingle = graphene.String()
+#     requestMessageText = graphene.String()
 #     requestMessageFilePath = graphene.String()
 #     openapi3FilePath = graphene.String()
 #     openapi3Url = graphene.String()
@@ -225,7 +225,7 @@ class Fuzz(graphene.Mutation):
     #define output
     ok = graphene.Boolean()
     
-    async def mutate(self, info, 
+    def mutate(self, info, 
                      fuzzcontextId,
                      basicUsername = '',
                     basicPassword = '',
@@ -238,7 +238,7 @@ class Fuzz(graphene.Mutation):
         
         sm = ServiceManager()
         
-        await sm.fuzz(fuzzcontextId, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        sm.fuzz(fuzzcontextId, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
         return Fuzz(ok=ok)
     

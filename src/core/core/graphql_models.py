@@ -1,17 +1,6 @@
-from webapi_fuzzcontext import FuzzMode, SupportedAuthnType, ApiFuzzCaseSet, ApiVerb
 from datetime import datetime
 import graphene
 
-# class ApiFuzzCaseSetView:
-#     def __init__(self):
-#         self.Id: str = ''
-#         self.selected: bool = True          # to be use in future to support GUI select 1 or more API to fuzz instead of default all APIs
-#         self.verb = ''
-#         self.fuzzcontextId = ''
-#         self.path = ''
-#         self.querystringNonTemplate = ''
-#         self.bodyNonTemplate = ''
-#         self.headerNonTemplate = ''
         
 class FuzzMode(graphene.Enum):
     Quick = 'quick'
@@ -85,7 +74,7 @@ class ApiFuzzDataCase(graphene.ObjectType):
    state = graphene.Field(FuzzProgressState)
         
     
-class ApiFuzzCaseSet(graphene.ObjectType):
+class ApiFuzzCaseSetViewModel(graphene.ObjectType):
     Id = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
@@ -106,7 +95,7 @@ class ApiFuzzContext(graphene.ObjectType):
     fuzzMode = graphene.String()
     fuzzcaseToExec = graphene.Int(default_value=50)
     
-    requestMessageSingle = graphene.String()
+    requestMessageText = graphene.String()
     requestMessageFilePath = graphene.String()
     openapi3FilePath = graphene.String()
     openapi3Url = graphene.String()
@@ -118,13 +107,13 @@ class ApiFuzzContext(graphene.ObjectType):
     bearerToken  = graphene.String()
     apikeyHeader  = graphene.String()
     apikey  = graphene.String()  
-    fuzzcaseSets = graphene.List(ApiFuzzCaseSet)
+    fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
 
-class ApiFuzzContextSetsRunsView:
+class ApiFuzzContextSetsRunsViewModel:
     contextId = graphene.String()
     datetime = graphene.DateTime()
     name = graphene.String()
-    requestMessageSingle = ''
+    requestMessageText = ''
     requestMessageFilePath = ''
     openapi3FilePath = ''
     openapi3Url = ''
@@ -134,4 +123,4 @@ class ApiFuzzContextSetsRunsView:
     fuzzcaseToExec = 100
     authnType: str = SupportedAuthnType.Anonymous.name
     caseSetRunsId = ''
-    caseSetViews: list[ApiFuzzCaseSet] = []
+    caseSetViews: list[ApiFuzzCaseSetViewModel] = []

@@ -8,6 +8,9 @@ from  datetime import datetime
 import json
 import asyncio
 
+import nest_asyncio
+nest_asyncio.apply()
+
 class MessageLevel:
     INFO = "INFO"
     ERROR = "ERROR"
@@ -57,7 +60,7 @@ class EventStore:
         self.ee.on(EventStore.AppEventTopic, self.handleGeneralLogs)
         
         
-    async def emitInfo(self, message: str, data = "") -> None:
+    def emitInfo(self, message: str, data = "") -> None:
                     
         m = Message(
             datetime.now(),
@@ -68,9 +71,9 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
                 
-        await self.send_to_ws(message, MsgType.AppEvent)
+        self.send_websocket(message, MsgType.AppEvent)
         
-    async def emitErr(self, error: str, data = "") -> None:
+    def emitErr(self, error: str, data = "") -> None:
         
         m = Message(
             datetime.now(),
@@ -81,9 +84,9 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        await self.send_to_ws(error, MsgType.AppEvent)
+        self.send_websocket(error, MsgType.AppEvent)
     
-    async def emitErr(self, err: Exception, data = "") -> None:
+    def emitErr(self, err: Exception, data = "") -> None:
         
         m = None
         
@@ -106,7 +109,7 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        await self.send_to_ws(errMsg, MsgType.AppEvent)
+        self.send_websocket(errMsg, MsgType.AppEvent)
         
     
     def handleGeneralLogs(self, msg: str):
@@ -114,17 +117,15 @@ class EventStore:
     
     def set_websocket(self, websocket):
         EventStore.websocket = websocket
+        
+    def send_websocket(self, data: str, msgType: MsgType = MsgType.AppEvent):
+        asyncio.run(self.send_websocket_async(data, msgType))
     
     # send to websocket clients
-    async def send_to_ws(self, data: str, msgType: MsgType = MsgType.AppEvent):
+    async def send_websocket_async(self, data: str, msgType: MsgType = MsgType.AppEvent):
         
         try:
-            
-            # msg = ''
-            
-            # if not type(data) is str:
-            #     msg = jsonpickle.encode(data, unpicklable=False)
-        
+                   
             m = WebsocketClientMessage(data)
             
             if EventStore.websocket != None:
@@ -136,5 +137,6 @@ class EventStore:
             else:
                 EventStore.wsMsgQueue.append(m.json())
         except Exception as e:
+            EventStore.wsMsgQueue.append(m.json())
             print(e)
         
