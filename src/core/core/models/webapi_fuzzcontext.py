@@ -41,20 +41,22 @@ class ApiFuzzRequest:
         self.url: str = ''
         self.headers = {}    # json 
         self.body = {}       # json 
+        self.requestMessage = ''
 
 # rfc 2616
 # https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6
 class ApiFuzzResponse:
     def __init__(self) -> None:
-        self.Id: str = ''
+        self.Id: str
         self.datetime: datetime
-        self.fuzzDataCaseId: str = ''
+        self.fuzzDataCaseId = ''
         self.fuzzcontextId = ''
-        self.statusCode: str = ''
-        self.reasonPharse: str = ''
-        self.responseJson = ''
+        self.statusCode = ''
+        self.reasonPharse = ''
+        self.responseDisplayText = ''
+        self.headerJson = ''
         self.setcookieHeader = ''
-        self.content = str      # json   
+        self.body = ''
 
 class ApiFuzzCaseSetRun:
     

@@ -22,12 +22,13 @@
     # {{ hashsha256:value }}        generates a sha256 hash from supplied value
 
 from cProfile import run
+from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import wait
-import asyncio
-from functools import partial
+from urllib.error import HTTPError
+import urllib3 
 from pubsub import pub
 from http import cookiejar
+import jsonpickle
 from types import MappingProxyType
 import jinja2
 import httplib2
@@ -79,7 +80,7 @@ class WebApiFuzzer:
                     apifuzzcontext: ApiFuzzContext,
                     basicUsername = '',
                     basicPassword = '',
-                    bearerTokenHeader = '',
+                    bearerTokenHeader = 'Authorization',
                     bearerToken = '',
                     apikeyHeader = '',
                     apikey = '') -> None:
@@ -99,7 +100,8 @@ class WebApiFuzzer:
         self.apikeyHeader = apikeyHeader,
         self.apikey = apikey
         
-        self.httpTimeoutInSec = 1.5
+        self.http = urllib3.PoolManager(num_pools=5)
+        self.httpTimeoutInSec = 3.0
         self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.totalFuzzRuns = 0
@@ -186,12 +188,12 @@ class WebApiFuzzer:
     
         try:
             
-            http = httplib2.Http(timeout=self.httpTimeoutInSec)
+            #http = httplib2.Http(timeout=self.httpTimeoutInSec)
                 
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
-            hostnamePort, url, path, querystring, body, headers = self.dataprep_fuzzcaseset(http, self.apifuzzcontext, fcs)
+            hostnamePort, url, path, querystring, body, headers = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             fuzzrequest = self.create_fuzzrequest(
                                     fuzzDataCaseId=fuzzDataCase.Id,
@@ -204,36 +206,45 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
-            fuzzResp = self.create_fuzzresponse(fuzzDataCase.Id, self.apifuzzcontext.Id)
+            #fuzzResp = self.create_fuzzresponse(fuzzDataCase.Id, self.apifuzzcontext.Id)
             
             fuzzDataCase.request = fuzzrequest
-            fuzzDataCase.response = fuzzResp    
-
-            resp, content = http.request(url,
-                        fcs.verb, body=body,
-                        headers=headers )
-
-            fuzzResp.statusCode = resp.status
-            fuzzResp.reasonPharse = resp.reason
             
-            respJson, respDict = self.response_as_json(resp.items().mapping)
+            resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
             
-            fuzzResp.responseJson = respJson
+            fuzzResp: ApiFuzzResponse= self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
-            fuzzResp.setcookieHeader = self.try_get_setcookie_value(respDict)
+            fuzzDataCase.response = fuzzResp 
             
-            #stripped = re.sub('<[^<]+?>', '', )
-            fuzzResp.content = content.decode()
+            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)
             
-            #self.save_responsecookie_in_cookiejar(hostnamePort, fuzzResp.setcookieHeader)
-        
-        # except httplib2.ServerNotFoundError:
-        #     fuzzResp.content = f'Site is not contactable {url}'
-        # except httplib2.HttpLib2ErrorWithResponse as e:
-        #     fuzzResp.content = f'Error when fuzzing {url}, {e.response}'
-        # except httplib2.HttpLib2Error as e:
-        #     err = ', '.join([a for a in e.args])
-        #     fuzzResp.content = f'Error when fuzzing {url}, {err}'
+            
+        except urllib3.exceptions.HTTPError as e:
+            
+            err = jsonpickle.encode(e.args, unpicklable=False)
+            
+            fr = ApiFuzzResponse()
+            fr.Id = shortuuid.uuid()
+            fr.datetime = datetime.now()
+            fr.fuzzcontextId = self.apifuzzcontext.Id
+            fr.fuzzDataCaseId = fuzzDataCase.Id
+            fr.statusCode = 500
+            fr.reasonPharse = err
+            fuzzDataCase.response = fr
+    
+        except HTTPError as e:
+            
+            err = jsonpickle.encode(e.args, unpicklable=False)
+            
+            fr = ApiFuzzResponse()
+            fr.Id = shortuuid.uuid()
+            fr.datetime = datetime.now()
+            fr.fuzzcontextId = self.apifuzzcontext.Id
+            fr.fuzzDataCaseId = fuzzDataCase.Id
+            fr.statusCode = 500
+            fr.reasonPharse = err
+            fuzzDataCase.response = fr
+            
         except Exception as e:
             
             # when cancelled during http call due to user cancelling and executor being shutdown,
@@ -241,10 +252,16 @@ class WebApiFuzzer:
             if self.fuzzCancel == True:
                 return
             
-            err = '\n '.join([a for a in e.args])
-            fuzzResp.statusCode = 500
-            fuzzResp.reasonPharse = err
-            fuzzResp.content = f'Error when fuzzing {url}, {err}'
+            err = jsonpickle.encode(e.args, unpicklable=False)
+                
+            fr = ApiFuzzResponse()
+            fr.Id = shortuuid.uuid()
+            fr.datetime = datetime.now()
+            fr.fuzzcontextId = self.apifuzzcontext.Id
+            fr.fuzzDataCaseId = fuzzDataCase.Id
+            fr.statusCode = 500
+            fr.reasonPharse = f'{err}'
+            fuzzDataCase.response = fr
             
         return fuzzDataCase
     
@@ -261,12 +278,37 @@ class WebApiFuzzer:
             self.dbLock.release()
             self.eventstore.send_websocket('fuzzing is completed')
             
-    def response_as_json(self, respMapping: MappingProxyType):
-        dict = {}
-        for k in respMapping.keys():
-            dict[k] = respMapping[k]
-        j = json.dumps(dict)
-        return [j, dict]
+    def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp) -> ApiFuzzResponse:
+    
+        
+        fuzzResp = ApiFuzzResponse()
+        fuzzResp.Id = shortuuid.uuid()
+        fuzzResp.datetime = datetime.now()
+        fuzzResp.fuzzDataCaseId = fuzzDataCaseId
+        fuzzResp.fuzzcontextId = fuzzcontextId 
+        
+        fuzzResp.statusCode = resp.status
+        fuzzResp.reasonPharse = resp.reason
+        fuzzResp.body = resp.data.decode('utf-8')
+        
+        headers = {}
+        headersMultilineText = ''
+        for k in resp.headers.keys():
+            headers[k] = resp.headers[k]
+            headersMultilineText = headersMultilineText + f'{resp.headers[k]}\n'
+            
+        fuzzResp.headersJson = jsonpickle.encode(headers, unpicklable=False)
+            
+        fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
+        
+        fuzzResp.responseDisplayText = f'''
+            # HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}
+              {headersMultilineText}
+              
+              {fuzzResp.body}
+        '''
+        
+        return fuzzResp
     
     def try_get_setcookie_value(self, respHeadersDict: dict):
         result = ''
@@ -275,14 +317,14 @@ class WebApiFuzzer:
             result = respHeadersDict[setCookieHeader]
         return result
                      
-    def save_responsecookie_in_cookiejar(self, hostname, cookie):
+    def save_resp_cookie_if_exists(self, hostname, cookie):
         if cookie == '':
             return
         
         if not hostname in self.cookiejar.keys():
             self.cookiejar[hostname] = cookie
         
-    def dataprep_fuzzcaseset(self, http, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):
+    def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):
         
         hostnamePort = fc.get_hostname_port()
         pathDT = fcs.get_path_datatemplate()
@@ -300,26 +342,36 @@ class WebApiFuzzer:
         
         url = f'{hostnamePort}{path}{querystring}'
         
-        securityHeaders = self.determine_security_scheme_to_fuzz(http, fc)
+        authnHeader= self.determine_authn_scheme(fc)
                 
-        headers = {**securityHeaders, **headerDict}     #merge 2 dicts
+        headers = {**authnHeader, **headerDict}     #merge 2 dicts
         
         return [hostnamePort, url, path, querystring, body, headers]
     
     # returns dict representing header
-    def determine_security_scheme_to_fuzz(self, http, fc: ApiFuzzContext) -> dict:
+    def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:
         securityHeaders = {}
         
         if fc.authnType == SupportedAuthnType.Anonymous.name:
-            return securityHeaders
+            return {}
         
         if fc.authnType == SupportedAuthnType.Basic.name:
-            http.add_credentials(fc.basicUsername, fc.basicPassword)
+            return {
+                    'Authorization': f'Basic {self.basicUsername}:{self.basicPassword}'
+                   }
+        
         elif fc.authnType == SupportedAuthnType.Bearer.name:
-            securityHeaders[fc.bearerTokenHeader] = fc.bearerToken
+            return {
+                    f'{fc.bearerTokenHeader}': f'{fc.bearerToken}'
+                   }
+
         elif fc.authnType == SupportedAuthnType.ApiKey.name:
-            securityHeaders[fc.apikeyHeader] = fc.apikey
-        return securityHeaders
+            
+            return {
+                    f'{fc.apikeyHeader}': f'{fc.apikey}'
+                   }
+            
+        return {}
             
     def inject_fuzzdata_in_datatemplate(self, tpl: str) -> str:
         
@@ -390,6 +442,8 @@ class WebApiFuzzer:
         
         fr = ApiFuzzRequest()
         
+        
+        
         fr.Id = shortuuid.uuid()
         fr.datetime = datetime.now()
         fr.fuzzDataCaseId = fuzzDataCaseId
@@ -402,15 +456,20 @@ class WebApiFuzzer:
         fr.headers = json.dumps(headers)
         fr.body = body
         
-        return fr
-    
-    def create_fuzzresponse(self, fuzzDataCaseId, fuzzcontextId):
-        fresp = ApiFuzzResponse()
-        fresp.Id = shortuuid.uuid()
-        fresp.datetime = datetime.now()
-        fresp.fuzzDataCaseId = fuzzDataCaseId
-        fresp.fuzzcontextId = fuzzcontextId 
-        return fresp     
+        headerMultilineText = ''
+        
+        if len(headers) > 0:
+            for x in headers.key():
+                headerMultilineText = headerMultilineText + f'{headers[x]}\n'
+            
+        fr.requestMessage = f'''
+          {fr.verb} {fr.path} HTTP/1.1
+          {headerMultilineText}
+
+          {fr.body if fr.body != '{}' else ''}
+        '''
+        
+        return fr     
         
         
     # minimum 100 fuzz cases to run
