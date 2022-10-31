@@ -135,7 +135,7 @@ def removeDoubleQuotes(content: str):
 if __name__ == '__main__':
     
     prepare_naughty_string()
-    # prepare_naughty_files()
+    prepare_naughty_files()
     prepare_naughty_username()
     prepare_naughty_password()
     sqliteconn.close()
