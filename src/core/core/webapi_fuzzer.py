@@ -178,10 +178,17 @@ class WebApiFuzzer:
         try:
             fuzzCaseData = self.http_call_api(fcs)    
             
-            self.eventstore.send_websocket(fuzzCaseData.json(), MsgType.FuzzEvent)
+            if (fuzzCaseData is not None and 
+                fuzzCaseData.request is not None and 
+                fuzzCaseData.response is not None):
             
-            self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
+                self.eventstore.send_websocket(fuzzCaseData.json(), MsgType.FuzzEvent)
+                
+                self.save_fuzzDataCase(fuzzCaseSetRunId, fuzzCaseData)
+            
         except Exception as e:
+            if self.fuzzCancel == True:
+                return
             self.eventstore.emitErr(e)
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
@@ -206,8 +213,6 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
-            #fuzzResp = self.create_fuzzresponse(fuzzDataCase.Id, self.apifuzzcontext.Id)
-            
             fuzzDataCase.request = fuzzrequest
             
             resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
@@ -217,20 +222,6 @@ class WebApiFuzzer:
             fuzzDataCase.response = fuzzResp 
             
             self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)
-            
-            
-        except urllib3.exceptions.HTTPError as e:
-            
-            err = jsonpickle.encode(e.args, unpicklable=False)
-            
-            fr = ApiFuzzResponse()
-            fr.Id = shortuuid.uuid()
-            fr.datetime = datetime.now()
-            fr.fuzzcontextId = self.apifuzzcontext.Id
-            fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.statusCode = 500
-            fr.reasonPharse = err
-            fuzzDataCase.response = fr
     
         except HTTPError as e:
             
@@ -262,6 +253,9 @@ class WebApiFuzzer:
             fr.statusCode = 500
             fr.reasonPharse = f'{err}'
             fuzzDataCase.response = fr
+            
+        if fuzzDataCase.request == None:
+            print('request null')
             
         return fuzzDataCase
     
