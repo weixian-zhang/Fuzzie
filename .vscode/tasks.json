@@ -131,6 +131,14 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
 			}
+		},
+		{
+			"label": "sqlite clear fuzzer tables",
+			"type": "shell",
+			"command": "sqlite3 ${workspaceFolder}\\src\\core\\core\\datafactory\\data\\fuzzie.sqlite  ${workspaceFolder}\\src\\core\\seclist-prep\\clear_fuzzer_tables.sql",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
 		}
 		
 	]

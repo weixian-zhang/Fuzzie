@@ -4,22 +4,21 @@ import os
 import pandas as pd
 import numpy as np
 
-class NaughtyStringGenerator:
+class NaughtyHttpHeadersGenerator:
     
     def __init__(self, cursor) -> None:
         self.cursor = cursor
         self.sm = StorageManager()
-        self.blnsFileName = "blns.txt"
         
-    def generate_naughty_strings(self) -> pd.DataFrame:
+    def generate_httpheaders(self) -> pd.DataFrame:
         
-        df = self.load_naughty_strings_from_seclist()
+        df = self.load_naughty_httpheaders_from_seclist()
         df['RowNumber'] = np.arange(len(df))
         return df 
     
-    def load_naughty_strings_from_seclist(self) -> pd.DataFrame:
+    def load_naughty_httpheaders_from_seclist(self) -> pd.DataFrame:
         
-        fileNamePaths = self.sm.get_file_names_of_directory('naughty-strings/')
+        fileNamePaths = self.sm.get_file_names_of_directory('http-headers/')
         
         if len(fileNamePaths.items) == 0:
             return []
@@ -29,36 +28,27 @@ class NaughtyStringGenerator:
         RowNumber = 1
         
         for fnp in fileNamePaths:
-            try:
-                
-                encodedContent = self.sm.download_file_as_str(fnp)
-                
-                decoded = encodedContent.decode('utf-8')
-                
-                splitted = []
-                
-                if self.is_blns_file(fnp):
-                    splitted = self.handle_blns_content_splitting(decoded)
-                else:
-                    splitted = decoded.split("\n")
-                    
-                for ns in splitted:        
-                
-                        if ns.startswith('#'):
-                            continue
+            encodedContent = self.sm.download_file_as_str(fnp)
+            
+            decoded = encodedContent.decode('utf-8')
+            
+            splitted = decoded.split("\n")
+            
+            for ns in splitted:        
+                    try:
                         
                         ns = ns.replace('"', '')
                         
                         self.cursor.execute(f'''
-                                insert into NaughtyString (Content, RowNumber)
+                                insert into NaughtyHttpHeader(Content, RowNumber)
                                 values ("{ns}", {RowNumber})
                                 ''')
                         
                         RowNumber = RowNumber + 1
-                    
-            except Exception as e:
-                print(e)
-        
+                        
+                    except Exception as e:
+                        print(e)
+            
             # for ns in splitted:
             #     newRow = { "Content": ns }
             #     df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
