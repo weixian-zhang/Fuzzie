@@ -9,12 +9,13 @@ Usage:
 # https://github.com/graphql-python/graphql-ws
 # https://github.com/graphql-python/graphql-ws/blob/master/examples/flask_gevent/app.py
 
+from multiprocessing import Event
 from time import sleep
 from docopt import docopt
 
 from eventstore import EventStore
 eventstore = EventStore()
-from flaskgql import schema
+from starlette_graphql import schema
 
 import json
 import asyncio
@@ -42,9 +43,7 @@ class WebSocketServer(WebSocketEndpoint):
         
         if cmd == 'cancel_fuzzing':
             pub.sendMessage('command_relay', command='cancel_fuzzing')
-    
-        #todo: use pubsub library to send command to service manager to cancel fuzzing
-        # await websocket.send_text(f"Message text was: {data}")
+            eventstore.send_websocket('Fuzzing was cancelled, finishing up some running test cases')
         
     async def on_connect(self, websocket):
         await websocket.accept()
@@ -59,8 +58,8 @@ webserverPort = 50001
 
 # runs when program exits
 import atexit
-async def on_exit():
-    await eventstore.emitInfo("fuzzer stopping")
+def on_exit():
+    asyncio.run(eventstore.emitInfo("fuzzer shutting down"))
 atexit.register(on_exit)
 
 #main entry point and startup
@@ -72,9 +71,9 @@ def startup():
     
     if args['webserver']:
         
-        asyncio.run(eventstore.emitInfo('fuzzer started'))
+        # asyncio.run(eventstore.emitInfo('fuzzer started'))
         
-        asyncio.run(eventstore.emitInfo('starting GraphQL server'))
+        # asyncio.run(eventstore.emitInfo('starting GraphQL server'))
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
@@ -88,5 +87,9 @@ def startup():
 #     eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
     
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
-    startup()
+    try:
+        startup()
+    except Exception as e:
+        asyncio.run(eventstore.emitErr(e))
+    
 

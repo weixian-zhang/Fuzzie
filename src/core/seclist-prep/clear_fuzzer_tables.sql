@@ -10,3 +10,5 @@ drop table ApiFuzzRequest;
 drop table ApiFuzzResponse;
 drop table ApiFuzzDataCase;
 drop table ApiFuzzCaseSetRuns;
+drop table ApiFuzzCaseSet;
+drop table ApiFuzzContext;

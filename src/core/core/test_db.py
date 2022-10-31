@@ -10,7 +10,8 @@ sys.path.insert(0, dbPath)
 sys.path.insert(0, modelsPath)
 
 from db import (ApiFuzzContextTable, ApiFuzzCaseSetTable,  metadata, session_factory, 
-                get_naughtystring_by_id, get_naughtyusername_by_id, get_naughtypassword_by_id)
+                get_naughtystring_by_id, get_naughtyusername_by_id, get_naughtypassword_by_id,
+                get_fuzzContextSetRuns)
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select, insert
 import json
@@ -30,8 +31,10 @@ class TestFuzzManager(unittest.TestCase):
     def setUp(self):
         self.metadata = metadata
 
-    # def teardown(self):
-    #     self.metadata.drop_all()
+    def test_get_fuzzContextSetRuns(self):
+        
+        r = get_fuzzContextSetRuns()
+        self.assertTrue(len(r) > 0)
         
         
     def test_get_naughtystring(self):

@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from apicontext import ApiVerb, SupportedAuthnType
+import jsonpickle
 
 # from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 # from sqlalchemy.orm import relationship, backref, object_session
@@ -40,20 +41,22 @@ class ApiFuzzRequest:
         self.url: str = ''
         self.headers = {}    # json 
         self.body = {}       # json 
+        self.requestMessage = ''
 
 # rfc 2616
 # https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6
 class ApiFuzzResponse:
     def __init__(self) -> None:
-        self.Id: str = ''
+        self.Id: str
         self.datetime: datetime
-        self.fuzzDataCaseId: str = ''
+        self.fuzzDataCaseId = ''
         self.fuzzcontextId = ''
-        self.statusCode: str = ''
-        self.reasonPharse: str = ''
-        self.responseJson = ''
+        self.statusCode = ''
+        self.reasonPharse = ''
+        self.responseDisplayText = ''
+        self.headerJson = ''
         self.setcookieHeader = ''
-        self.content = str      # json   
+        self.body = ''
 
 class ApiFuzzCaseSetRun:
     
@@ -72,6 +75,9 @@ class ApiFuzzDataCase:
         self.fuzzcontextId = ''
         self.request: ApiFuzzRequest = {}
         self.response: ApiFuzzResponse = {}
+        
+    def json(self):
+       return jsonpickle.encode(self, unpicklable=False)
 
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
@@ -87,24 +93,18 @@ class ApiFuzzCaseSet:
         self.path = ''
         self.querystringNonTemplate = ''
         self.bodyNonTemplate = ''
+        self.headerNonTemplate = ''
         
-        # all ApiFuzzDataCase generate new data base on this template. This template is a json string with 
-        # property name and value as data-type. Base on data-type fuzzer calls DataFactory.{data type} to generate tjhe correct
-        # fuzz data for that data-type
-        self.pathDataTemplate: str = ''
-        self.querystringDataTemplate: str = ''
-        self.bodyDataTemplate: str = ''
+
+        self.pathDataTemplate = ''
+        self.querystringDataTemplate = ''
+        self.bodyDataTemplate = ''
         self.headerDataTemplate = {}
 
-    
-    # path + querystring data templates combined
     def get_path_datatemplate(self):
         if not self.pathDataTemplate.startswith('/'):
             self.pathDataTemplate = '/' + self.pathDataTemplate
         return self.pathDataTemplate
-    
-    def get_querystring_datatemplate(self):
-        return self.querystringDataTemplate
 
 
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
@@ -114,7 +114,7 @@ class ApiFuzzContext:
         self.Id: str = ''
         self.datetime: datetime
         self.name = ''
-        self.requestMessageSingle = ''
+        self.requestMessageText = ''
         self.requestMessageFilePath = ''
         self.openapi3FilePath = ''
         self.openapi3Url = ''

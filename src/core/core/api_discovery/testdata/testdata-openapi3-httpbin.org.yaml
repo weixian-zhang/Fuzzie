@@ -26,38 +26,38 @@ externalDocs:
 
 paths:
   # New operations for parsing time
-  /:
-    get:
-      summary: The current time, in a variety of formats
-      tags:
-        - time
-      servers:
-        - url: https://now.httpbin.org
-        - url: http://now.httpbin.org
-      #externalDocs:
-      #  url: /docs # ???
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  now:
-                    $ref: '#/components/schemas/Timestamp'
-                  urls:
-                    type: array
-                    items:
-                      type: string
-                    example:
-                      - /
-                      - /docs
-                      - '/when/:human-timestamp'
-                      - '/parse/:machine-timestamp'
-                required:
-                  - now
-                  - urls
+  # /:
+  #   get:
+  #     summary: The current time, in a variety of formats
+  #     tags:
+  #       - time
+  #     servers:
+  #       - url: https://now.httpbin.org
+  #       - url: http://now.httpbin.org
+  #     #externalDocs:
+  #     #  url: /docs # ???
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 now:
+  #                   $ref: '#/components/schemas/Timestamp'
+  #                 urls:
+  #                   type: array
+  #                   items:
+  #                     type: string
+  #                   example:
+  #                     - /
+  #                     - /docs
+  #                     - '/when/:human-timestamp'
+  #                     - '/parse/:machine-timestamp'
+  #               required:
+  #                 - now
+  #                 - urls
 
   /when/{human-timestamp}:
     get:

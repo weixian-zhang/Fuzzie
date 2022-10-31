@@ -2,11 +2,12 @@
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
-from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, ApiFuzzCaseSet
+from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
+from graphql_models import ApiFuzzContextSetsRunsViewModel
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
-from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext
+from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext, get_fuzzContextSetRuns
 from sqlalchemy.sql import select, insert
 
 import asyncio
@@ -43,7 +44,7 @@ class ServiceManager:
                             name=name,
                             hostname=hostname,
                             port=port,
-                            requestMessageSingle = '',
+                            requestMessageText = '',
                             requestMessageFilePath = '',
                             openapi3FilePath = openapi3FilePath,
                             fuzzMode= fuzzMode,
@@ -59,12 +60,15 @@ class ServiceManager:
     def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
         return get_fuzzcontexts()
     
-
     
-    # def get_fuzzcontext(self, Id) -> ApiFuzzContext:
-    #     return get_fuzzcontext(Id)
+    def get_fuzzContextSetRuns(self) -> list[ApiFuzzContextSetsRunsViewModel]:
+        return get_fuzzContextSetRuns() 
     
-    async def fuzz(self, 
+    
+    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+        return get_fuzzcontext(Id)
+    
+    def fuzz(self, 
                    Id, basicUsername = '', basicPassword= '', 
                    bearerTokenHeader= '', bearerToken= '', 
                    apikeyHeader= '', apikey= '') -> None:
@@ -79,9 +83,7 @@ class ServiceManager:
                                     apikeyHeader=  apikeyHeader, 
                                     apikey= apikey)
         
-        await webapifuzzer.fuzz()
-        
-        print('a')
+        webapifuzzer.fuzz()
         
     
     

@@ -5,16 +5,22 @@ from sqlalchemy.orm.exc import NoResultFound
 import os
 import json
 from pathlib import Path
-from models.webapi_fuzzcontext import ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
+from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, 
+                                       ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
+    )
+from graphql_models import ApiFuzzContextSetsRunsViewModel, ApiFuzzCaseSetViewModel
 from eventstore import EventStore
 
 evts = EventStore()
-
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data/fuzzie.sqlite')
-connStr = f'sqlite:///{dbPath}?check_same_thread=False'
+connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
 
 session_factory = sessionmaker(bind=engine)
+
+# import sqlite3
+# db = sqlite3.connect(dbPath)
+# db.execute('pragma journal_mode=wal')
 
 
 metadata = MetaData(engine)
@@ -32,7 +38,7 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('name', String),
                             Column('hostname', String),
                             Column('port', String),
-                            Column('requestMessageSingle', String),
+                            Column('requestMessageText', String),
                             Column('requestMessageFilePath', String),
                             Column('openapi3FilePath', String),
                             Column('openapi3Url', String),
@@ -49,6 +55,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('path', String),
                             Column('querystringNonTemplate', String),
                             Column('bodyNonTemplate', String),
+                            Column('headerNonTemplate', String),
                             Column('pathDataTemplate', String, nullable=True),
                             Column('querystringDataTemplate', String, nullable=True),
                             Column('headerDataTemplate', String, nullable=True),
@@ -59,7 +66,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
 
 # track number of runs for each FuzzContext
 # many to many mapping table
-ApiFuzzCaseSetRuns= Table(apifuzzCaseSetRuns_TableName, metadata,
+ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('startTime', DateTime),
                             Column('endTime', DateTime),
@@ -85,6 +92,7 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('url', String),
                             Column('headers', String),
                             Column('body', String),
+                            Column('requestMessage', String),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -95,9 +103,10 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('datetime', DateTime),
                             Column('statusCode', String),
                             Column('reasonPharse', String),
-                            Column('responseJson', String),
+                            Column('responseDisplayText', String),
                             Column('setcookieHeader', String),
-                            Column('content', String),
+                            Column('headerJson', String),
+                            Column('body', String),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -119,7 +128,6 @@ NaughtyStringTable = Table('NaughtyString', metadata,
                             Column('Content', String),
                             Column('RowNumber', String)
                             )
-
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
     j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,
@@ -172,11 +180,6 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
                   .all()
                 )
         
-        
-        # results = Session.execute(stmt)
-        
-        # fcRows = results.fetchmany()
-        
         Session.close()
         
         if fcRows is None or len(fcRows) == 0:
@@ -196,6 +199,79 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         return fuzzcontext
 
+def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
+    
+    try:
+        Session = scoped_session(session_factory)
+    
+        rows = (
+            Session.query
+                    (
+                        ApiFuzzContextTable.columns.Id, 
+                        ApiFuzzContextTable.columns.datetime,
+                        ApiFuzzContextTable.columns.name,
+                        ApiFuzzContextTable.columns.requestMessageText,
+                        ApiFuzzContextTable.columns.requestMessageFilePath,
+                        ApiFuzzContextTable.columns.openapi3FilePath,
+                        ApiFuzzContextTable.columns.openapi3Url,
+                        ApiFuzzContextTable.columns.hostname,
+                        ApiFuzzContextTable.columns.port,
+                        ApiFuzzContextTable.columns.fuzzMode,      
+                        ApiFuzzContextTable.columns.fuzzcaseToExec,
+                        ApiFuzzContextTable.columns.authnType,
+                        
+                        ApiFuzzCaseSetRunsTable.columns.Id.label("fuzzCaseSetRunsId"),
+                        ApiFuzzCaseSetRunsTable.columns.startTime,
+                        ApiFuzzCaseSetRunsTable.columns.endTime,
+                        ApiFuzzCaseSetRunsTable.columns.status,
+                        
+                        ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                        ApiFuzzCaseSetTable.columns.selected,
+                        ApiFuzzCaseSetTable.columns.verb,
+                        ApiFuzzCaseSetTable.columns.fuzzcontextId,
+                        ApiFuzzCaseSetTable.columns.path,
+                        ApiFuzzCaseSetTable.columns.querystringNonTemplate,
+                        ApiFuzzCaseSetTable.columns.bodyNonTemplate,
+                        ApiFuzzCaseSetTable.columns.headerNonTemplate
+                    )
+                    .join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
+                    .join(ApiFuzzCaseSetRunsTable, ApiFuzzCaseSetRunsTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id, isouter=True)
+                    .all()
+        )
+        
+        
+        
+        if rows is None or len(rows) == 0:
+                return []
+            
+        for row in rows:
+            
+            rowDict = row._asdict()
+            
+            srView = ApiFuzzContextSetsRunsViewModel()
+            srView.contextId = rowDict['Id']
+            srView.datetime = rowDict['datetime']
+            srView.name = rowDict['name']
+            srView.requestMessageText = rowDict['requestMessageText']
+            srView.requestMessageFilePath = rowDict['requestMessageFilePath']
+            srView.openapi3FilePath = rowDict['openapi3FilePath']
+            srView.openapi3Url = rowDict['openapi3Url']
+            srView.hostname = rowDict['hostname']
+            srView.port = rowDict['port']
+            srView.fuzzMode = rowDict['fuzzMode']   
+            srView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+            srView.authnType = rowDict['authnType']
+            
+            srView.caseSetRunsId = rowDict['fuzzCaseSetRunsId']
+            
+            fcSetView = ApiFuzzCaseSet()
+    except Exception as e:
+        print(e)
+    finally:
+        Session.close()
+    
+
+# mutations
 def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
 
         Session = scoped_session(session_factory)
@@ -210,7 +286,11 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     port = fuzzcontext.port,
                     fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = fuzzcontext.authnType
+                    authnType = fuzzcontext.authnType,
+                    requestMessageText = fuzzcontext.requestMessageText,
+                    requestMessageFilePath = fuzzcontext.requestMessageFilePath,
+                    openapi3FilePath = fuzzcontext.openapi3FilePath,
+                    openapi3Url = fuzzcontext.openapi3Url
                    )
          )
         
@@ -235,6 +315,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = header,
+                        headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  body,
                         fuzzcontextId = fuzzcontext.Id
                         )
@@ -247,7 +328,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
 
 def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
     stmt = (
-            insert(ApiFuzzCaseSetRuns).
+            insert(ApiFuzzCaseSetRunsTable).
             values(
                     Id = Id,
                     startTime = datetime.now(),
@@ -265,8 +346,8 @@ def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
     
 def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed') -> None:
     stmt = (
-            update(ApiFuzzCaseSetRuns).
-            where(ApiFuzzCaseSetRuns.c.Id == fuzzCaseSetRunId).
+            update(ApiFuzzCaseSetRunsTable).
+            where(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId).
             values(
                     endTime = datetime.now(),
                     status = status
@@ -312,7 +393,8 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
                     querystring = fr.querystring,
                     url = fr.url,
                     headers = fr.headers,
-                    body = fr.body
+                    body = fr.body,
+                    requestMessage = fr.requestMessage
                    )
          )
     
@@ -333,10 +415,10 @@ def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
                     fuzzcontextId = fr.fuzzcontextId,
                     statusCode = fr.statusCode,
                     reasonPharse = fr.reasonPharse,
-                    responseJson = fr.responseJson,
+                    responseDisplayText = fr.responseDisplayText,
                     setcookieHeader = fr.setcookieHeader,
-                    content = fr.content,
-
+                    headerJson = fr.headerJson,
+                    body = fr.body,
                    )
          )
 
@@ -360,7 +442,7 @@ def create_fuzzcontext_from_dict(rowDict):
         fuzzcontext.datetime = rowDict['datetime']
         fuzzcontext.name = rowDict['name']
         
-        fuzzcontext.requestMessageSingle = rowDict['requestMessageSingle']
+        fuzzcontext.requestMessageText = rowDict['requestMessageText']
         fuzzcontext.requestMessageFilePath = rowDict['requestMessageFilePath']
         fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
         fuzzcontext.openapi3Url = rowDict['openapi3Url']
