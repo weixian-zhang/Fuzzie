@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
-src/core/core/datafactory/data/fuzzie.sqlite
+src/core/core/datafactory/data/*.sqlite
 
 # Distribution / packaging
 .Python
