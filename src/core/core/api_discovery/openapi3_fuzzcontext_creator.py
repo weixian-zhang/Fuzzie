@@ -31,7 +31,7 @@ class OpenApi3FuzzContextCreator:
                  fuzzMode: str,
                  authnType,
                  name = '',
-                 requestMessageSingle = '',
+                 requestMessageText = '',
                  requestMessageFilePath = '',
                  openapi3FilePath = '',
                  openapi3Url = '',
@@ -46,7 +46,7 @@ class OpenApi3FuzzContextCreator:
             
         self.fuzzcontext.datetime = datetime.now()
         self.fuzzcontext.fuzzMode = self.get_fuzzmode(fuzzMode)
-        self.fuzzcontext.requestMessageSingle = requestMessageSingle
+        self.fuzzcontext.requestMessageText = requestMessageText
         self.fuzzcontext.requestMessageFilePath = requestMessageFilePath
         self.fuzzcontext.openapi3FilePath = openapi3FilePath
         self.fuzzcontext.openapi3Url = openapi3Url
@@ -87,7 +87,9 @@ class OpenApi3FuzzContextCreator:
             fuzzcaseSet.bodyDataTemplate = body
             fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
             
-            fuzzcaseSet.headerDataTemplate = self.create_header_data_template(api)
+            header = self.create_header_data_template(api)
+            fuzzcaseSet.headerDataTemplate = header
+            fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
                     
             self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
             
@@ -219,7 +221,7 @@ class OpenApi3FuzzContextCreator:
         
         for param in api.parameters:
             if self.is_header_param(param.paramType):
-                headers[param.propertyName] = param.type
+                headers[param.propertyName] = self.create_jinja_micro_template(param.type)
                   
         return headers
     

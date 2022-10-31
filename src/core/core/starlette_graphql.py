@@ -4,6 +4,7 @@ from servicemanager import ServiceManager
 from eventstore import EventStore
 from datetime import datetime
 from rx import Observable
+from graphql_models import ApiFuzzContext
 
 # import sys, os
 # from pathlib import Path
@@ -12,112 +13,112 @@ from rx import Observable
 # from apicontext import SupportedAuthnType, ApiVerb
 # from fuzzcontext import FuzzProgressState 
 
-class FuzzMode(graphene.Enum):
-    Quick = 'quick'
-    Full = 'full'
-    Custom = 'custom'
+# class FuzzMode(graphene.Enum):
+#     Quick = 'quick'
+#     Full = 'full'
+#     Custom = 'custom'
     
-class FuzzProgressState(graphene.Enum):
-    NOTSTARTED = "not started"
-    FUZZING = "still fuzzing"
-    SUCCESS = "success"
-    FAILED = "failed"
+# class FuzzProgressState(graphene.Enum):
+#     NOTSTARTED = "not started"
+#     FUZZING = "still fuzzing"
+#     SUCCESS = "success"
+#     FAILED = "failed"
     
-class SupportedAuthnType(graphene.Enum):
-    Anonymous = "Anonymous",
-    Basic = "Basic",
-    Bearer = "Bearer",
-    ApiKey = "ApiKey"
+# class SupportedAuthnType(graphene.Enum):
+#     Anonymous = "Anonymous",
+#     Basic = "Basic",
+#     Bearer = "Bearer",
+#     ApiKey = "ApiKey"
     
-class ApiVerb(graphene.Enum):
-    GET = "GET"
-    POST = "POST"
-    PUT = "PUT"
-    PATCH = "PATCH"
-    DELETE = 'DELETE'
+# class ApiVerb(graphene.Enum):
+#     GET = "GET"
+#     POST = "POST"
+#     PUT = "PUT"
+#     PATCH = "PATCH"
+#     DELETE = 'DELETE'
     
     
-class ParameterType(graphene.Enum):
-    Path = 'path'
-    Query = 'query'
-    Header = 'header'
+# class ParameterType(graphene.Enum):
+#     Path = 'path'
+#     Query = 'query'
+#     Header = 'header'
 
-class SecuritySchemes(graphene.ObjectType):
-    authnType = graphene.Field(SupportedAuthnType)
-    basiccUsername = graphene.String()
-    basicPassword = graphene.String()
-    bearerToken = graphene.String()
-    apikeyHeader = graphene.String()
-    apikey = graphene.String()
+# class SecuritySchemes(graphene.ObjectType):
+#     authnType = graphene.Field(SupportedAuthnType)
+#     basiccUsername = graphene.String()
+#     basicPassword = graphene.String()
+#     bearerToken = graphene.String()
+#     apikeyHeader = graphene.String()
+#     apikey = graphene.String()
         
-class ApiFuzzRequest(graphene.ObjectType):
-    Id = graphene.String()
-    datetime = graphene.DateTime()
-    fuzzDataCaseId = graphene.String()
-    fuzzcontextId = graphene.String()
-    hostnamePort = graphene.String()
-    verb= graphene.String()
-    path = graphene.String()
-    querystring= graphene.String()
-    url= graphene.Scalar
-    headers = graphene.List(graphene.String)
-    body = graphene.String()
+# class ApiFuzzRequest(graphene.ObjectType):
+#     Id = graphene.String()
+#     datetime = graphene.DateTime()
+#     fuzzDataCaseId = graphene.String()
+#     fuzzcontextId = graphene.String()
+#     hostnamePort = graphene.String()
+#     verb= graphene.String()
+#     path = graphene.String()
+#     querystring= graphene.String()
+#     url= graphene.Scalar
+#     headers = graphene.List(graphene.String)
+#     body = graphene.String()
 
-class ApiFuzzResponse(graphene.ObjectType):
-    Id = graphene.String()
-    datetime = graphene.DateTime()
-    fuzzDataCaseId = graphene.String()
-    httpVersion = graphene.String()
-    statusCode = graphene.String()
-    headers = graphene.List(graphene.String)
-    body = graphene.String()
-    error = graphene.String()
+# class ApiFuzzResponse(graphene.ObjectType):
+#     Id = graphene.String()
+#     datetime = graphene.DateTime()
+#     fuzzDataCaseId = graphene.String()
+#     httpVersion = graphene.String()
+#     statusCode = graphene.String()
+#     headers = graphene.List(graphene.String)
+#     body = graphene.String()
+#     error = graphene.String()
         
 
-# each "fuzz data set" is one ApiFuzzCase
-class ApiFuzzDataCase(graphene.ObjectType):
-   id = graphene.String()
-   fuzzCaseSetId = graphene.String()
-   fuzzcontextId = graphene.String()
-   request = graphene.Field(ApiFuzzRequest)
-   response = graphene.Field(ApiFuzzResponse)
-   state = graphene.Field(FuzzProgressState)
+# # each "fuzz data set" is one ApiFuzzCase
+# class ApiFuzzDataCase(graphene.ObjectType):
+#    id = graphene.String()
+#    fuzzCaseSetId = graphene.String()
+#    fuzzcontextId = graphene.String()
+#    request = graphene.Field(ApiFuzzRequest)
+#    response = graphene.Field(ApiFuzzResponse)
+#    state = graphene.Field(FuzzProgressState)
         
     
-class ApiFuzzCaseSet(graphene.ObjectType):
-    Id = graphene.String()
-    path = graphene.String()
-    querystringNonTemplate = graphene.String()
-    bodyNonTemplate = graphene.String()
-    selected = graphene.Boolean()
-    verb = graphene.Field(ApiVerb) 
-    authnType = graphene.Field(SupportedAuthnType)
-    fuzzDataCases = graphene.List(ApiFuzzDataCase)
+# class ApiFuzzCaseSet(graphene.ObjectType):
+#     Id = graphene.String()
+#     selected = graphene.Boolean()
+#     verb = graphene.Field(ApiVerb) 
+#     path = graphene.String()
+#     querystringNonTemplate = graphene.String()
+#     bodyNonTemplate = graphene.String()
+#     headerNonTemplate = graphene.String()
+#     authnType = graphene.Field(SupportedAuthnType)
         
         
-class ApiFuzzContext(graphene.ObjectType):
-    Id = graphene.String()
-    name = graphene.String()
-    datetime = graphene.DateTime()
+# class ApiFuzzContext(graphene.ObjectType):
+#     Id = graphene.String()
+#     name = graphene.String()
+#     datetime = graphene.DateTime()
     
-    hostname = graphene.String()
-    port = graphene.Int()
-    fuzzMode = graphene.String()
-    fuzzcaseToExec = graphene.Int(default_value=50)
+#     hostname = graphene.String()
+#     port = graphene.Int()
+#     fuzzMode = graphene.String()
+#     fuzzcaseToExec = graphene.Int(default_value=50)
     
-    requestMessageSingle = graphene.String()
-    requestMessageFilePath = graphene.String()
-    openapi3FilePath = graphene.String()
-    openapi3Url = graphene.String()
+#     requestMessageText = graphene.String()
+#     requestMessageFilePath = graphene.String()
+#     openapi3FilePath = graphene.String()
+#     openapi3Url = graphene.String()
     
-    #security schemes
-    authnType = graphene.Field(SupportedAuthnType)
-    basicUsername = graphene.String()
-    basicPassword  = graphene.String()
-    bearerToken  = graphene.String()
-    apikeyHeader  = graphene.String()
-    apikey  = graphene.String()  
-    fuzzcaseSets = graphene.List(ApiFuzzCaseSet)
+#     #security schemes
+#     authnType = graphene.Field(SupportedAuthnType)
+#     basicUsername = graphene.String()
+#     basicPassword  = graphene.String()
+#     bearerToken  = graphene.String()
+#     apikeyHeader  = graphene.String()
+#     apikey  = graphene.String()  
+#     fuzzcaseSets = graphene.List(ApiFuzzCaseSet)
 
 # queries
 class Query(graphene.ObjectType):
@@ -126,15 +127,21 @@ class Query(graphene.ObjectType):
     
     fuzzcontexts = graphene.List(ApiFuzzContext)
     
+    fuzzContextsSetsRuns = graphene.List(ApiFuzzContext)
+    
     #fuzzContext = graphene.Field(ApiFuzzContext, fuzzcontextId=graphene.String())
     
     def resolve_alive(self, info):
         return "alive"
     
     def resolve_fuzzcontexts(self,info):
-        
         sm = ServiceManager()
         result = sm.get_fuzzcontexts()
+        return result
+    
+    def resolve_fuzzContextsSetsRuns(self, info):
+        sm = ServiceManager()
+        result = sm.get
         return result
     
     # def resolve_fuzzContext(self,info, fuzzcontextId):
@@ -218,7 +225,7 @@ class Fuzz(graphene.Mutation):
     #define output
     ok = graphene.Boolean()
     
-    async def mutate(self, info, 
+    def mutate(self, info, 
                      fuzzcontextId,
                      basicUsername = '',
                     basicPassword = '',
@@ -231,7 +238,7 @@ class Fuzz(graphene.Mutation):
         
         sm = ServiceManager()
         
-        await sm.fuzz(fuzzcontextId, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        sm.fuzz(fuzzcontextId, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
         return Fuzz(ok=ok)
     
