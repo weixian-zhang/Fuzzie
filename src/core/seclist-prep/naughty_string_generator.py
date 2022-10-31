@@ -6,7 +6,8 @@ import numpy as np
 
 class NaughtyStringGenerator:
     
-    def __init__(self) -> None:
+    def __init__(self, cursor) -> None:
+        self.cursor = cursor
         self.sm = StorageManager()
         self.blnsFileName = "blns.txt"
         
@@ -25,21 +26,42 @@ class NaughtyStringGenerator:
         
         df = pd.DataFrame()
         
+        RowNumber = 1
+        
         for fnp in fileNamePaths:
-            encodedContent = self.sm.download_file_as_str(fnp)
-            
-            decoded = encodedContent.decode('utf-8')
-            
-            splitted = []
-            
-            if self.is_blns_file(fnp):
-                splitted = self.handle_blns_content_splitting(decoded)
-            else:
-                splitted = decoded.split("\n")
-            
-            for ns in splitted:
-                newRow = { "Content": ns }
-                df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
+            try:
+                
+                encodedContent = self.sm.download_file_as_str(fnp)
+                
+                decoded = encodedContent.decode('utf-8')
+                
+                splitted = []
+                
+                if self.is_blns_file(fnp):
+                    splitted = self.handle_blns_content_splitting(decoded)
+                else:
+                    splitted = decoded.split("\n")
+                    
+                for ns in splitted:        
+                
+                        if ns.startswith('#'):
+                            continue
+                        
+                        ns = ns.replace('"', '')
+                        
+                        self.cursor.execute(f'''
+                                insert into NaughtyString (Content, RowNumber)
+                                values ("{ns}", {RowNumber})
+                                ''')
+                        
+                        RowNumber = RowNumber + 1
+                    
+            except Exception as e:
+                print(e)
+        
+            # for ns in splitted:
+            #     newRow = { "Content": ns }
+            #     df = df.append(newRow, ignore_index=True,verify_integrity=False, sort=None)
         
         return df
             
