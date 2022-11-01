@@ -7,7 +7,6 @@ from pymitter import EventEmitter
 from  datetime import datetime
 import json
 import asyncio
-
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -73,24 +72,29 @@ class EventStore:
                 
         self.send_websocket(message, MsgType.AppEvent)
         
-    def emitErr(self, error: str, data = "") -> None:
+    # def emitErr(self, error: str, data = "") -> None:
         
-        m = Message(
-            datetime.now(),
-            str(MessageLevel.ERROR),
-            error,
-            data
-            )
+    #     m = Message(
+    #         datetime.now(),
+    #         str(MessageLevel.ERROR),
+    #         error,
+    #         data
+    #         )
         
-        self.ee.emit(EventStore.AppEventTopic, m.json())
+    #     self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        self.send_websocket(error, MsgType.AppEvent)
+    #     self.send_websocket(error, MsgType.AppEvent)
     
-    def emitErr(self, err: Exception, data = "") -> None:
+    def emitErr(self, err , data = "") -> None:
         
         m = None
         
-        errMsg = ', '.join([x for x in err.args])
+        errMsg = ''
+        
+        if type(err) is str:
+            errMsg = err
+        elif type(err) is Exception and err.args is not None:
+            errMsg = ', '.join([x for x in err.args])
         
         if  isinstance(err, Exception):
             m = Message(

@@ -31,6 +31,8 @@ from starlette.endpoints import WebSocketEndpoint
 
 app = Starlette()
 
+websocket: WebSocket = None
+
 @app.websocket_route("/ws")
 class WebSocketServer(WebSocketEndpoint):
     counter = 0
@@ -43,12 +45,30 @@ class WebSocketServer(WebSocketEndpoint):
         
         if cmd == 'cancel_fuzzing':
             pub.sendMessage('command_relay', command='cancel_fuzzing')
-            eventstore.send_websocket('Fuzzing was cancelled, finishing up some running test cases')
+            eventstore.send_websocket('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
+            
+            
+    async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
+        print(f'Fuzzer/main: client disconnected from websocket server, close_code {close_code}')
         
     async def on_connect(self, websocket):
         await websocket.accept()
+        
+        websocket = websocket
+        
         eventstore.set_websocket(websocket)
+        eventstore.send_websocket('Fuzzer/main: client connected to websocket server ')
 
+# single point message subscriber from all modules that sends message to websocket connected client
+# def pubsub_command_send_ws_msg_to_client(wsMsg):
+#     asyncio.run(websocket.send_text(wsMsg))
+    
+# pub.subscribe(pubsub_command_send_ws_msg_to_client, 'command_send_ws_msg')
+
+
+
+
+# init graphql server
 app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
 
 eventstore.emitInfo('websocket server initialized')

@@ -59,493 +59,493 @@ paths:
   #                 - now
   #                 - urls
 
-  /when/{human-timestamp}:
-    get:
-      tags:
-        - time
-      servers:
-        - url: http://now.httpbin.org
-        - url: https://now.httpbin.org
-      parameters:
-        - in: path
-          name: human-timestamp
-          required: true
-          schema:
-            anyOf:
-              - type: string # ????
-      responses:
-        '200':
-          $ref: '#/components/responses/TimestampResponse'
-        '500':
-          description: oops
+  # /when/{human-timestamp}:
+  #   get:
+  #     tags:
+  #       - time
+  #     servers:
+  #       - url: http://now.httpbin.org
+  #       - url: https://now.httpbin.org
+  #     parameters:
+  #       - in: path
+  #         name: human-timestamp
+  #         required: true
+  #         schema:
+  #           anyOf:
+  #             - type: string # ????
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/TimestampResponse'
+  #       '500':
+  #         description: oops
 
-  /parse/{machine-timestamp}:
-    get:
-      tags:
-        - time
-      servers:
-        - url: http://now.httpbin.org
-        - url: https://now.httpbin.org
-      parameters:
-        - in: path
-          name: machine-timestamp
-          required: true
-          schema:
-            anyOf:
-              - type: string # ????
-              - type: number
-      responses:
-        '200':
-          $ref: '#/components/responses/TimestampResponse'
-        '500':
-          description: oops
+  # /parse/{machine-timestamp}:
+  #   get:
+  #     tags:
+  #       - time
+  #     servers:
+  #       - url: http://now.httpbin.org
+  #       - url: https://now.httpbin.org
+  #     parameters:
+  #       - in: path
+  #         name: machine-timestamp
+  #         required: true
+  #         schema:
+  #           anyOf:
+  #             - type: string # ????
+  #             - type: number
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/TimestampResponse'
+  #       '500':
+  #         description: oops
 
-  /get:
-    get:
-      tags:
-        - HTTP methods
-      summary: |
-        Returns the GET request's data. Accepts any query parameters and any headers.
-      parameters:
-        - $ref: '#/components/parameters/freeFormQuery'
-      responses:
-        '200':  # Change to 'default' ???
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+  # /get:
+  #   get:
+  #     tags:
+  #       - HTTP methods
+  #     summary: |
+  #       Returns the GET request's data. Accepts any query parameters and any headers.
+  #     parameters:
+  #       - $ref: '#/components/parameters/freeFormQuery'
+  #     responses:
+  #       '200':  # Change to 'default' ???
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
 
-  /delete:
-    delete:
-      tags:
-        - HTTP methods
-      summary: |
-        Returns the DELETE request's data. Accepts any query parameters and any headers.
-      parameters:
-        - $ref: '#/components/parameters/freeFormQuery'
-      responses:
-        200:
-          description: OK
+  # /delete:
+  #   delete:
+  #     tags:
+  #       - HTTP methods
+  #     summary: |
+  #       Returns the DELETE request's data. Accepts any query parameters and any headers.
+  #     parameters:
+  #       - $ref: '#/components/parameters/freeFormQuery'
+  #     responses:
+  #       200:
+  #         description: OK
 
-  /post:
-    post:
-      tags:
-        - HTTP methods
-      # summary: POSTs a pizza order and returns the POSTed data.
-      summary: Returns the POSTed data
-      parameters:
-        - $ref: '#/components/parameters/freeFormQuery'
-      requestBody:
-        description: Data provided in the request body will be returned in the response.
-        content:
-          application/json:
-            schema: {}
-            example:
-              message: Hello, world!
-          application/vnd+json:
-            schema: {}
-            examples:
-              pizzaOrder:
-                summary: Pizza order data
-                description: Longer description ...
-                value:
-                  custname: Alice
-                  custtel: '+1-202-555-0100'
-                  custemail: alice@wonderland.net
-                  size: medium
-                  topping: [cheese, mushroom]
-                  delivery: '19:00'
-                  comments: Ring the door bell three times
-              simpleObject:
-                summary: sample object
-                value:
-                  foo: bar
-          application/xml:
-            schema:
-              type: object
-            example:
-              message: Hello, world!
-          text/plain:
-            schema:
-              type: string
-              example: Hi there
-          application/x-www-form-urlencoded:
-            schema:
-              # anyOf:
-              #   - type: object
-              #     additionalProperties: true
+  # /post:
+  #   post:
+  #     tags:
+  #       - HTTP methods
+  #     # summary: POSTs a pizza order and returns the POSTed data.
+  #     summary: Returns the POSTed data
+  #     parameters:
+  #       - $ref: '#/components/parameters/freeFormQuery'
+  #     requestBody:
+  #       description: Data provided in the request body will be returned in the response.
+  #       content:
+  #         application/json:
+  #           schema: {}
+  #           example:
+  #             message: Hello, world!
+  #         application/vnd+json:
+  #           schema: {}
+  #           examples:
+  #             pizzaOrder:
+  #               summary: Pizza order data
+  #               description: Longer description ...
+  #               value:
+  #                 custname: Alice
+  #                 custtel: '+1-202-555-0100'
+  #                 custemail: alice@wonderland.net
+  #                 size: medium
+  #                 topping: [cheese, mushroom]
+  #                 delivery: '19:00'
+  #                 comments: Ring the door bell three times
+  #             simpleObject:
+  #               summary: sample object
+  #               value:
+  #                 foo: bar
+  #         application/xml:
+  #           schema:
+  #             type: object
+  #           example:
+  #             message: Hello, world!
+  #         text/plain:
+  #           schema:
+  #             type: string
+  #             example: Hi there
+  #         application/x-www-form-urlencoded:
+  #           schema:
+  #             # anyOf:
+  #             #   - type: object
+  #             #     additionalProperties: true
 
-              #   - description: Pizza order
-              type: object
-              properties:
-                custname:
-                  type: string
-                  example: Alice
-                  description: Customer name
-                custtel:
-                  type: string
-                  example: '+1-202-555-0100'
-                  description: Customer phone number
-                custemail:
-                  type: string
-                  format: email
-                  example: alice@wonderland.net
-                  description: Customer email address
-                size:
-                  type: string
-                  enum:
-                    - small
-                    - medium
-                    - large
-                  description: Pizza size
-                topping:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - bacon
-                      - cheese
-                      - mushroom
-                      - onion
-                  description: Pizza toppings
-                delivery:
-                  type: string
-                  example: '13:30'
-                  description: Delivery time
-                comments:
-                  type: string
-                  example: ASAP
-                  description: Comments
-            examples:
-              pizzaOrder:
-                summary: Pizza order data
-                description: Longer description ...
-                value:
-                  custname: Alice
-                  custtel: '+1-202-555-0100'
-                  custemail: alice@wonderland.net
-                  size: medium
-                  topping: [cheese, mushroom]
-                  delivery: '19:00'
-                  comments: Ring the door bell three times
-              simpleObject:
-                summary: sample object
-                value:
-                  foo: bar
-          # multipart/form-data: {}  # TODO
-          '*/*':   # is this valid?
-            schema: {}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CommonResponse'
-              #schema:
-              #  type: object
+  #             #   - description: Pizza order
+  #             type: object
+  #             properties:
+  #               custname:
+  #                 type: string
+  #                 example: Alice
+  #                 description: Customer name
+  #               custtel:
+  #                 type: string
+  #                 example: '+1-202-555-0100'
+  #                 description: Customer phone number
+  #               custemail:
+  #                 type: string
+  #                 format: email
+  #                 example: alice@wonderland.net
+  #                 description: Customer email address
+  #               size:
+  #                 type: string
+  #                 enum:
+  #                   - small
+  #                   - medium
+  #                   - large
+  #                 description: Pizza size
+  #               topping:
+  #                 type: array
+  #                 items:
+  #                   type: string
+  #                   enum:
+  #                     - bacon
+  #                     - cheese
+  #                     - mushroom
+  #                     - onion
+  #                 description: Pizza toppings
+  #               delivery:
+  #                 type: string
+  #                 example: '13:30'
+  #                 description: Delivery time
+  #               comments:
+  #                 type: string
+  #                 example: ASAP
+  #                 description: Comments
+  #           examples:
+  #             pizzaOrder:
+  #               summary: Pizza order data
+  #               description: Longer description ...
+  #               value:
+  #                 custname: Alice
+  #                 custtel: '+1-202-555-0100'
+  #                 custemail: alice@wonderland.net
+  #                 size: medium
+  #                 topping: [cheese, mushroom]
+  #                 delivery: '19:00'
+  #                 comments: Ring the door bell three times
+  #             simpleObject:
+  #               summary: sample object
+  #               value:
+  #                 foo: bar
+  #         # multipart/form-data: {}  # TODO
+  #         '*/*':   # is this valid?
+  #           schema: {}
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/CommonResponse'
+  #             #schema:
+  #             #  type: object
 
-  # /put: {}
-  # /patch: {}
-  # /delete: {}
-  # /response-headers:
+  # # /put: {}
+  # # /patch: {}
+  # # /delete: {}
+  # # /response-headers:
+  # #   parameters:
+  # #     - in: query
+  # #       name: headers
+  # #       # Arbitrary key=value pairs
+  # #       schema:
+  # #         type: object
+  # #         example:
+  # #           Server: unicorn
+  # #       style: simple
+  # #   get: {}
+  # #   post: {}
+
+
+  # /ip:
+  #   get:
+  #     summary: Returns Origin IP.
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 origin:
+  #                   type: string
+  #                   description: >
+  #                     The IP address, or a comma-separated list of IP addresses.
+  #                     For example, "10.100.10.10, 10.100.20.254, 52.91.14.13"'
+  #                   example: 10.100.10.10
+  #               required:
+  #                 - origin
+  #             examples:   # Content examples override schema-level examples
+  #               oneIp:
+  #                 description: Example of a single IP
+  #                 value:
+  #                   origin: 10.100.10.10
+  #               multipleIps:
+  #                 description: Example of multiple IPs
+  #                 value:
+  #                   origin: 10.100.10.10, 10.100.20.254, 52.91.14.13
+
+  # /user-agent:
+  #   get:
+  #     summary: Returns the user agent.
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 user-agent:
+  #                   type: string
+  #                   example: curl/7.37.0
+  #               required:
+  #                 - user-agent
+
+  # /headers:
+  #   get:
+  #     summary: Returns the request headers.
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 headers:
+  #                   type: object
+  #                   additionalProperties:
+  #                     type: string
+  #                   # wrong syntax!
+  #                   #example:
+  #                   #  $ref: '#/components/examples/headers'
+  #               required:
+  #                 - headers
+
+  # # /anything:
+  # #   summary: Returns request data, including method used.
+  # #   get: {}
+  # #   post: {}
+  # #   put: {}
+  # #   patch: {}
+  # #   delete: {}
+  # #   trace: {}
+  # #   options: {}
+
+  # # /anything/{anything}:
+  # #   summary: Returns request data, including method used.
+
+  # #   parameters:
+  # #     - in: path
+  # #       name: anything
+  # #       required: true
+  # #       schema:
+  # #         type: string
+  # #       description: An arbitrary subpath
+
+  # #   get: {}
+  # #   post: {}
+  # #   put: {}
+  # #   patch: {}
+  # #   delete: {}
+  # #   trace: {}
+  # #   options: {}
+
+  # /delay/{n}:
+  #   get:
+  #     summary: Delays responding for min(n, 10) seconds.
+  #     parameters:
+  #       - name: n
+  #         in: path
+  #         required: true
+  #         description: Response delay, in seconds.
+  #         schema:
+  #           type: integer
+  #           minimum: 0
+  #           maximum: 10
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/json: {}
+  #             # schema:
+  #             #   type: object
+
+  # /basic-auth/{user}/{password}:
+  #   get:
+  #     summary: Challenges HTTPBasic Auth.
+  #     tags:
+  #       - auth
+  #     security:
+  #       - basicAuth: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/user'
+  #       - $ref: '#/components/parameters/password'
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/200BasicAuth'
+  #       '401':
+  #         description: >-
+  #           Unauthorized (The username and password used for Basic auth do not
+  #           match those in the URL path.)
+  #         headers:
+  #           Www-Authenticate:
+  #             schema:
+  #               type: string
+  #               example: 'Basic realm="Fake Realm"'
+
+  # /hidden-basic-auth/{user}/{password}:
+  #   get:
+  #     summary: Hidden Basic authentication
+  #     tags:
+  #       - auth
+  #     description: Returns 404 Not Found unless the request is authenticated.
+  #     security:
+  #       - basicAuth: []
+  #     parameters:
+  #       - $ref: '#/components/parameters/user'
+  #       - $ref: '#/components/parameters/password'
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/200BasicAuth'
+  #       '404':
+  #         description: >-
+  #           Unautorized (the username and password used for Basic auth do not
+  #           match those in the URL path.)
+
+  # /bearer:
+  #   get:
+  #     summary: Tests Bearer authentication
+  #     tags:
+  #       - auth
+  #     security:
+  #       - bearerAuth: []
+  #     responses:
+  #       '200':
+  #         description: Authorized
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 authenticated:
+  #                   type: boolean
+  #                   example: true
+  #                 token:
+  #                   type: string
+  #                   description: Bearer token specified in the request
+  #       '404':
+  #         description: Unauthorized
+
+
+  # /status/{statusCode}:
+  #   summary: Returns the specified HTTP status code, or a random status code if more than one are given
   #   parameters:
-  #     - in: query
-  #       name: headers
-  #       # Arbitrary key=value pairs
-  #       schema:
-  #         type: object
-  #         example:
-  #           Server: unicorn
-  #       style: simple
-  #   get: {}
-  #   post: {}
-
-
-  /ip:
-    get:
-      summary: Returns Origin IP.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  origin:
-                    type: string
-                    description: >
-                      The IP address, or a comma-separated list of IP addresses.
-                      For example, "10.100.10.10, 10.100.20.254, 52.91.14.13"'
-                    example: 10.100.10.10
-                required:
-                  - origin
-              examples:   # Content examples override schema-level examples
-                oneIp:
-                  description: Example of a single IP
-                  value:
-                    origin: 10.100.10.10
-                multipleIps:
-                  description: Example of multiple IPs
-                  value:
-                    origin: 10.100.10.10, 10.100.20.254, 52.91.14.13
-
-  /user-agent:
-    get:
-      summary: Returns the user agent.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user-agent:
-                    type: string
-                    example: curl/7.37.0
-                required:
-                  - user-agent
-
-  /headers:
-    get:
-      summary: Returns the request headers.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  headers:
-                    type: object
-                    additionalProperties:
-                      type: string
-                    # wrong syntax!
-                    #example:
-                    #  $ref: '#/components/examples/headers'
-                required:
-                  - headers
-
-  # /anything:
-  #   summary: Returns request data, including method used.
-  #   get: {}
-  #   post: {}
-  #   put: {}
-  #   patch: {}
-  #   delete: {}
-  #   trace: {}
-  #   options: {}
-
-  # /anything/{anything}:
-  #   summary: Returns request data, including method used.
-
-  #   parameters:
-  #     - in: path
-  #       name: anything
+  #     - name: statusCode
+  #       in: path
   #       required: true
+  #       description: The status code to return, or a weighted list of statuses to pick from, such as `200:4,500:0.3,418`.
   #       schema:
-  #         type: string
-  #       description: An arbitrary subpath
+  #         type: array
+  #         items:
+  #           description: HTTP status code. May include optional weight, e.g. `200:0.9`
+  #           oneOf:
+  #             - type: string
+  #             - type: integer
+  #         minItems: 1
+  #         example:
+  #           - '200:5'
+  #           - '500:0.3'
+  #           - 418
+  #       style: simple
 
-  #   get: {}
-  #   post: {}
-  #   put: {}
-  #   patch: {}
-  #   delete: {}
-  #   trace: {}
-  #   options: {}
+  #   get:
+  #     tags:
+  #       - Status codes
+  #     responses:
+  #       default:
+  #         description: A response with the requested status code.
+  #   post:
+  #     tags:
+  #       - Status codes
+  #     responses:
+  #       default:
+  #         description: A response with the requested status code.
+  #   patch:
+  #     tags:
+  #       - Status codes
+  #     responses:
+  #       default:
+  #         description: A response with the requested status code.
+  #   put:
+  #     tags:
+  #       - Status codes
+  #     responses:
+  #       default:
+  #         description: A response with the requested status code.
+  #   delete:
+  #     tags:
+  #       - Status codes
+  #     responses:
+  #       default:
+  #         description: A response with the requested status code.
 
-  /delay/{n}:
-    get:
-      summary: Delays responding for min(n, 10) seconds.
-      parameters:
-        - name: n
-          in: path
-          required: true
-          description: Response delay, in seconds.
-          schema:
-            type: integer
-            minimum: 0
-            maximum: 10
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json: {}
-              # schema:
-              #   type: object
+  # /xml:
+  #   get:
+  #     summary: Returns some XML.
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           application/xml: {}
 
-  /basic-auth/{user}/{password}:
-    get:
-      summary: Challenges HTTPBasic Auth.
-      tags:
-        - auth
-      security:
-        - basicAuth: []
-      parameters:
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/password'
-      responses:
-        '200':
-          $ref: '#/components/responses/200BasicAuth'
-        '401':
-          description: >-
-            Unauthorized (The username and password used for Basic auth do not
-            match those in the URL path.)
-          headers:
-            Www-Authenticate:
-              schema:
-                type: string
-                example: 'Basic realm="Fake Realm"'
+  # /html:
+  #   get:
+  #     summary: Returns an HTML page
+  #     responses:
+  #       '200':
+  #         description: OK
+  #         content:
+  #           text/html: {}
 
-  /hidden-basic-auth/{user}/{password}:
-    get:
-      summary: Hidden Basic authentication
-      tags:
-        - auth
-      description: Returns 404 Not Found unless the request is authenticated.
-      security:
-        - basicAuth: []
-      parameters:
-        - $ref: '#/components/parameters/user'
-        - $ref: '#/components/parameters/password'
-      responses:
-        '200':
-          $ref: '#/components/responses/200BasicAuth'
-        '404':
-          description: >-
-            Unautorized (the username and password used for Basic auth do not
-            match those in the URL path.)
+  # /image/{format}:
+  #   get:
+  #     summary: Returns an image with the specified format.
+  #     tags:
+  #       - images
+  #     parameters:
+  #       - in: path
+  #         name: format
+  #         required: true
+  #         schema:
+  #           type: string
+  #           enum:
+  #             - png
+  #             - jpeg
+  #             - webp
+  #             - svg
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/Image'
 
-  /bearer:
-    get:
-      summary: Tests Bearer authentication
-      tags:
-        - auth
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Authorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  authenticated:
-                    type: boolean
-                    example: true
-                  token:
-                    type: string
-                    description: Bearer token specified in the request
-        '404':
-          description: Unauthorized
-
-
-  /status/{statusCode}:
-    summary: Returns the specified HTTP status code, or a random status code if more than one are given
-    parameters:
-      - name: statusCode
-        in: path
-        required: true
-        description: The status code to return, or a weighted list of statuses to pick from, such as `200:4,500:0.3,418`.
-        schema:
-          type: array
-          items:
-            description: HTTP status code. May include optional weight, e.g. `200:0.9`
-            oneOf:
-              - type: string
-              - type: integer
-          minItems: 1
-          example:
-            - '200:5'
-            - '500:0.3'
-            - 418
-        style: simple
-
-    get:
-      tags:
-        - Status codes
-      responses:
-        default:
-          description: A response with the requested status code.
-    post:
-      tags:
-        - Status codes
-      responses:
-        default:
-          description: A response with the requested status code.
-    patch:
-      tags:
-        - Status codes
-      responses:
-        default:
-          description: A response with the requested status code.
-    put:
-      tags:
-        - Status codes
-      responses:
-        default:
-          description: A response with the requested status code.
-    delete:
-      tags:
-        - Status codes
-      responses:
-        default:
-          description: A response with the requested status code.
-
-  /xml:
-    get:
-      summary: Returns some XML.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/xml: {}
-
-  /html:
-    get:
-      summary: Returns an HTML page
-      responses:
-        '200':
-          description: OK
-          content:
-            text/html: {}
-
-  /image/{format}:
-    get:
-      summary: Returns an image with the specified format.
-      tags:
-        - images
-      parameters:
-        - in: path
-          name: format
-          required: true
-          schema:
-            type: string
-            enum:
-              - png
-              - jpeg
-              - webp
-              - svg
-      responses:
-        '200':
-          $ref: '#/components/responses/Image'
-
-  /image:
-    get:
-      summary: Returns an image based on the Accept header.
-      tags:
-        - images
-      responses:
-        '200':
-          $ref: '#/components/responses/Image'
-        '406':
-          description: Client did not request a supported media type.
+  # /image:
+  #   get:
+  #     summary: Returns an image based on the Accept header.
+  #     tags:
+  #       - images
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/Image'
+  #       '406':
+  #         description: Client did not request a supported media type.
 
   /cache:
     get:
