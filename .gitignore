@@ -121,6 +121,5 @@ src/core/datafactory/__pycache__/naughty_string_generator.cpython-310.pyc
 src/core/datafactory/__pycache__/storagemanager.cpython-310.pyc
 src/core/__pycache__/apicontext.cpython-310.pyc
 src/core/__pycache__/openapi3_apicontext_init_manager.cpython-310.pyc
-# src/core/core/datafactory/data/fuzzie.sqlite
 src/core/core/datafactory/data/fuzzie.sqlite-journal
 src/core/core/datafactory/data/fuzzie.sqlite

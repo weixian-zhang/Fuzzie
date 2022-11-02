@@ -173,7 +173,8 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         Session = scoped_session(session_factory)
         
-        fcRows = (Session.query(ApiFuzzContextTable, ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"))
+        fcRows = (Session.query(ApiFuzzContextTable,ApiFuzzContextTable.columns.Id.label("fuzzContextId"),
+                                ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"))
                   .select_from(join(ApiFuzzContextTable, ApiFuzzCaseSetTable))
                   .filter(ApiFuzzContextTable.c.Id == Id)
                   .filter(ApiFuzzCaseSetTable.c.selected.is_(fuzzCaseSetSelected))
@@ -380,6 +381,10 @@ def insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc: ApiFuzzDataCase) -> None:
     Session.close()
     
 def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
+    
+    if fr.Id is None:
+        raise Exception('ApiFuzzRequest is None while persisting')
+                        
     stmt = (
             insert(ApiFuzzRequestTable).
             values(
@@ -438,7 +443,7 @@ def is_data_exist_in_fuzzcontexts(fuzzcontextId: str, fuzzcontexts: list[ApiFuzz
     
 def create_fuzzcontext_from_dict(rowDict):
         fuzzcontext = ApiFuzzContext()
-        fuzzcontext.Id = rowDict['Id']
+        fuzzcontext.Id = rowDict['fuzzContextId']
         fuzzcontext.datetime = rowDict['datetime']
         fuzzcontext.name = rowDict['name']
         
