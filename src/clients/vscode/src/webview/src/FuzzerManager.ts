@@ -4,7 +4,7 @@ import WebClient from "../../WebClient";
 export default class FuzzerManager
 {
     private webclient: WebClient;
-    private isFuzzerWSConnected: boolean = false;
+    private isFuzzerWSConnected = false;
     private isFuzzerGraphQLRunning = true;
     
     public constructor()

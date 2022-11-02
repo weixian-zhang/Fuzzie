@@ -11,7 +11,6 @@
                                     </div>
                                     <div class="col col-auto">
                                         <a href="#" class="btn btn-primary">Discover</a>
-                                        
                                     </div>
                             
                                 </div>
@@ -19,8 +18,9 @@
                         
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title">Special title treatment</h5>
-                            <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+                            <ApiDiscovery />
+                            <!-- <h5 class="card-title">Special title treatment</h5>
+                            <p class="card-text">With supporting text below as a natural lead-in to additional content.</p> -->
                         </div>
                     </div>
                 </div>
@@ -54,10 +54,11 @@
   
   <script lang="ts">
   import { Options, Vue } from 'vue-class-component';
-  
+  import ApiDiscovery from './ApiDiscovery.vue';
+
   @Options({
     components: {
-      
+      ApiDiscovery
     },
   })
   export default class Master extends Vue {}

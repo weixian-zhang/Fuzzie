@@ -4,7 +4,7 @@ module.exports = defineConfig({
   filenameHashing: false,
   transpileDependencies: true,
   css: undefined,
-  outputDir: path.resolve(__dirname, "../../dist/webview")
+
   // chainWebpack: (config) => {
   //   config.plugin('copy').tap((entries) => {
   //     entries[0].patterns.push({
@@ -14,8 +14,14 @@ module.exports = defineConfig({
   //       noErrorOnMissing: true,
   //       globOptions: { ignore: ['.DS_Store'] },
   //     })
-
   //     return entries
   //   })
   // }
+  outputDir: path.resolve(__dirname, "../../dist/webview"),
+
+  pluginOptions: {
+    vuetify: {
+			// https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vuetify-loader
+		}
+  }
 })
