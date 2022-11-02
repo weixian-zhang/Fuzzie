@@ -110,6 +110,14 @@
 			}
 		},
 		{
+			"label": "npm run extension",
+			"type": "shell",
+			"command": "npm run watch",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
+		},		
+		{
 			"label": "npm run build Vuejs",
 			"type": "shell",
 			"command": "copy-item",

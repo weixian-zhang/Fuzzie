@@ -1,6 +1,4 @@
 import WebSocket from 'ws';
-import ReconnectingWebSocket from 'reconnecting-websocket'
-import axios from 'axios'
 import EventLogger from './Logger';
 
 export default class WebClient
@@ -15,8 +13,6 @@ export default class WebClient
     public constructor()
     {
         this._logger = new EventLogger();
-        //this._ws = new ReconnectingWebSocket(this._wsAddress, "", {WebSocket: WebSocket});
-        //this.initWSClient();
     }
 
     // private initWSClient()
@@ -39,7 +35,7 @@ export default class WebClient
     //     });
     // }
 
-    async isFuzzerWebsocketServerRunning(): Promise<boolean>
+    async isFuzzerRunning(): Promise<boolean>
     {
         var timesRun = 0;
 
@@ -54,16 +50,16 @@ export default class WebClient
                 const ws = new WebSocket(this._wsAddress);
 
                 ws.on("error", (err) => {
-                    this._logger.log(err.message, 'ext-startup')
                 });
 
                 ws.on('open', () => {
-                    this._logger.log('connected to fuzzer websocket server', 'ext-startup')
+                    this._logger.log('Fuzzer is running')
+                    ws.close();
                     resolve(true);
                 });
 
                 ws.on('close', () => {
-                    this._logger.log(`websocket client closed, retrying...`, 'ext-startup')
+                    this._logger.log(`fuzzer is not running`)
                     resolve(false);
                 });
     
@@ -71,64 +67,8 @@ export default class WebClient
         });
         
 
-        
-
-        // return new Promise((resolve, reject) => {
-        //     const timer = setInterval(() => {
-
-        //         if(this._ws.readyState === 1) {
-        //             clearInterval(timer)
-        //             resolve(true);
-        //         }
-        //     }, this._retryInternalMillisec);
-        // })
-    }
-
-    public async isGraphQLServerAlive()
-    {
-        var timesRun = 0;
-        return new Promise((resolve) => {
-            var interval = setInterval(() => {
-
-                timesRun += 1;
-
-                if(timesRun == 2)
-                    clearInterval(interval);
-                
-                    axios({
-                        url: this._gqlAddress,
-                        method: 'post',
-                        data: {
-                          query: `
-                            query {
-                              alive
-                            `
-                        }
-                      })
-                        .then(response => {
-                            if(response.status == 200)
-                            {
-                                resolve(true);
-                            }
-                                
-                        })
-                        .catch(err => {
-                            this._logger.log(err.message, 'ext-startup');
-                            resolve(false);
-                        });
     
-            }, 1000);
-        });
-
-        return new Promise((resolve, reject) => {
-            const timer = setInterval(() => {
-
-                
-
-            }, 1000);
-        })
-
-        
     }
+   
     
 }

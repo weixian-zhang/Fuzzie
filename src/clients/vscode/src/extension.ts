@@ -5,9 +5,9 @@ import * as cp from "child_process";
 import {AppContext} from './AppContext';
 import * as path from 'path';
 import { VuejsPanel } from './VuejsPanel';
-import WebClient from './WebClient';
 import EventLogger from './Logger';
 import StateManager from './StateManager';
+import WebSocket from 'ws';
 
 var appcontext : AppContext;
 
@@ -16,7 +16,6 @@ var stateManager:  StateManager;
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
-var _webclient = new WebClient()
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -44,11 +43,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	eventlogger.log('checking if fuzzer running');
 
-	const isFuzzerWSRunning = await _webclient.isFuzzerWebsocketServerRunning()
+	const isFuzzerWSRunning = await isFuzzerRunning()
 
-	//const isFuzzerGraphQLRunning = await _webclient.isGraphQLServerAlive();
-
-	if(!isFuzzerWSRunning) // && !isFuzzerGraphQLRunning)
+	if(!isFuzzerWSRunning)
 	{
 		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
 		startFuzzer(appcontext);
@@ -59,6 +56,40 @@ export async function deactivate(context: vscode.ExtensionContext) {
 	eventlogger.log('Fuzzie is deactivated, fuzzer is still running as background process');
 	//TODO and access:
 		// get process pid from statemanager to and kill process
+}
+
+async function isFuzzerRunning(): Promise<boolean> {
+
+	const wsAddress: string = "ws://localhost:50001/ws";
+
+	var timesRun = 0;
+
+        return new Promise((resolve) => {
+            var interval = setInterval(() => {
+
+                timesRun += 1;
+
+                if(timesRun == 2)
+                    clearInterval(interval);
+                
+                const ws = new WebSocket(wsAddress);
+
+                ws.on("error", (err) => {
+                });
+
+                ws.on('open', () => {
+                    eventlogger.log('Fuzzer is running')
+                    resolve(true);
+					ws.close();
+                });
+
+                ws.on('close', () => {
+                    eventlogger.log(`fuzzer is not running`)
+                    resolve(false);
+                });
+    
+            }, 800);
+        });
 }
 
 async function startFuzzer(appcontext: AppContext) {
