@@ -40,40 +40,39 @@ class SecuritySchemes(graphene.ObjectType):
     apikeyHeader = graphene.String()
     apikey = graphene.String()
         
-class ApiFuzzRequest(graphene.ObjectType):
-    Id = graphene.String()
-    datetime = graphene.DateTime()
-    fuzzDataCaseId = graphene.String()
-    fuzzcontextId = graphene.String()
-    hostnamePort = graphene.String()
-    verb= graphene.String()
-    path = graphene.String()
-    querystring= graphene.String()
-    url= graphene.Scalar
-    headers = graphene.List(graphene.String)
-    body = graphene.String()
+# class ApiFuzzRequest(graphene.ObjectType):
+#     Id = graphene.String()
+#     datetime = graphene.DateTime()
+#     fuzzDataCaseId = graphene.String()
+#     fuzzcontextId = graphene.String()
+#     hostnamePort = graphene.String()
+#     verb= graphene.String()
+#     path = graphene.String()
+#     querystring= graphene.String()
+#     url= graphene.Scalar
+#     headers = graphene.List(graphene.String)
+#     body = graphene.String()
 
-class ApiFuzzResponse(graphene.ObjectType):
-    Id = graphene.String()
-    datetime = graphene.DateTime()
-    fuzzDataCaseId = graphene.String()
-    httpVersion = graphene.String()
-    statusCode = graphene.String()
-    headers = graphene.List(graphene.String)
-    body = graphene.String()
-    error = graphene.String()
+# class ApiFuzzResponse(graphene.ObjectType):
+#     Id = graphene.String()
+#     datetime = graphene.DateTime()
+#     fuzzDataCaseId = graphene.String()
+#     httpVersion = graphene.String()
+#     statusCode = graphene.String()
+#     headers = graphene.List(graphene.String)
+#     body = graphene.String()
+#     error = graphene.String()
         
 
-# each "fuzz data set" is one ApiFuzzCase
-class ApiFuzzDataCase(graphene.ObjectType):
-   id = graphene.String()
-   fuzzCaseSetId = graphene.String()
-   fuzzcontextId = graphene.String()
-   request = graphene.Field(ApiFuzzRequest)
-   response = graphene.Field(ApiFuzzResponse)
-   state = graphene.Field(FuzzProgressState)
-        
-    
+# # each "fuzz data set" is one ApiFuzzCase
+# class ApiFuzzDataCase(graphene.ObjectType):
+#    id = graphene.String()
+#    fuzzCaseSetId = graphene.String()
+#    fuzzcontextId = graphene.String()
+#    request = graphene.Field(ApiFuzzRequest)
+#    response = graphene.Field(ApiFuzzResponse)
+#    state = graphene.Field(FuzzProgressState)
+
 class ApiFuzzCaseSetViewModel(graphene.ObjectType):
     Id = graphene.String()
     selected = graphene.Boolean()
@@ -84,8 +83,7 @@ class ApiFuzzCaseSetViewModel(graphene.ObjectType):
     headerNonTemplate = graphene.String()
     authnType = graphene.Field(SupportedAuthnType)
         
-        
-class ApiFuzzContext(graphene.ObjectType):
+class ApiFuzzContextViewModel(graphene.ObjectType):
     Id = graphene.String()
     name = graphene.String()
     datetime = graphene.DateTime()
@@ -108,19 +106,35 @@ class ApiFuzzContext(graphene.ObjectType):
     apikeyHeader  = graphene.String()
     apikey  = graphene.String()  
     fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
+    
+class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
+    fuzzCaseSetRunsId = graphene.String()
+    fuzzcontextId = graphene.String()
+    startTime = graphene.DateTime()
+    endTime =  graphene.DateTime()
+    status = graphene.String()
 
-class ApiFuzzContextSetsRunsViewModel:
-    contextId = graphene.String()
+
+# view models or data transfer objects
+
+class ApiFuzzContextViewModel(graphene.ObjectType):
+    
+    # FuzzContext
+    Id = graphene.String()
     datetime = graphene.DateTime()
     name = graphene.String()
-    requestMessageText = ''
-    requestMessageFilePath = ''
-    openapi3FilePath = ''
-    openapi3Url = ''
-    hostname: str = ''
-    port: int
-    fuzzMode: FuzzMode = FuzzMode.Quick         
-    fuzzcaseToExec = 100
-    authnType: str = SupportedAuthnType.Anonymous.name
-    caseSetRunsId = ''
-    caseSetViews: list[ApiFuzzCaseSetViewModel] = []
+    requestMessageText = graphene.String()
+    requestMessageFilePath = graphene.String()
+    openapi3FilePath = graphene.String()
+    openapi3Url = graphene.String()
+    hostname = graphene.String()
+    port = graphene.Int()
+    fuzzMode = graphene.String()
+    fuzzcaseToExec = graphene.Int()
+    authnType = graphene.String()
+    
+    # CaseSetRun
+    fuzzCaseSetRuns = graphene.List(ApiFuzzCaseSetRunViewModel)
+
+    # CaseSets           
+    caseSetViews = graphene.List(ApiFuzzCaseSetViewModel)

@@ -8,7 +8,7 @@ from pathlib import Path
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, 
                                        ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
     )
-from graphql_models import ApiFuzzContextSetsRunsViewModel, ApiFuzzCaseSetViewModel
+from graphql_models import ApiFuzzContextViewModel, ApiFuzzCaseSetRunViewModel
 from eventstore import EventStore
 
 evts = EventStore()
@@ -200,15 +200,15 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         return fuzzcontext
 
-def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
+def get_fuzzContextSetRuns() -> list[ApiFuzzContextViewModel]:
     
     try:
         Session = scoped_session(session_factory)
-    
-        rows = (
+        
+        fcsRunRows = (
             Session.query
                     (
-                        ApiFuzzContextTable.columns.Id, 
+                        ApiFuzzContextTable.columns.Id.label("fuzzcontextId"), 
                         ApiFuzzContextTable.columns.datetime,
                         ApiFuzzContextTable.columns.name,
                         ApiFuzzContextTable.columns.requestMessageText,
@@ -224,48 +224,86 @@ def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
                         ApiFuzzCaseSetRunsTable.columns.Id.label("fuzzCaseSetRunsId"),
                         ApiFuzzCaseSetRunsTable.columns.startTime,
                         ApiFuzzCaseSetRunsTable.columns.endTime,
-                        ApiFuzzCaseSetRunsTable.columns.status,
+                        ApiFuzzCaseSetRunsTable.columns.status
                         
-                        ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                        ApiFuzzCaseSetTable.columns.selected,
-                        ApiFuzzCaseSetTable.columns.verb,
-                        ApiFuzzCaseSetTable.columns.fuzzcontextId,
-                        ApiFuzzCaseSetTable.columns.path,
-                        ApiFuzzCaseSetTable.columns.querystringNonTemplate,
-                        ApiFuzzCaseSetTable.columns.bodyNonTemplate,
-                        ApiFuzzCaseSetTable.columns.headerNonTemplate
+                        # ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                        # ApiFuzzCaseSetTable.columns.selected,
+                        # ApiFuzzCaseSetTable.columns.verb,
+                        # ApiFuzzCaseSetTable.columns.fuzzcontextId,
+                        # ApiFuzzCaseSetTable.columns.path,
+                        # ApiFuzzCaseSetTable.columns.querystringNonTemplate,
+                        # ApiFuzzCaseSetTable.columns.bodyNonTemplate,
+                        # ApiFuzzCaseSetTable.columns.headerNonTemplate
+                        
                     )
-                    .join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
+                    #.join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
                     .join(ApiFuzzCaseSetRunsTable, ApiFuzzCaseSetRunsTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id, isouter=True)
                     .all()
         )
+            
+        
+        fcViews = {}
+        
+        # if rows is None or len(rows) == 0:
+        #     return []
         
         
+        fcidProcessed = set()
+        # get first row for FuzzContext as its fields are repeated
+        for row in fcsRunRows:
+            
+           rowDict = row._asdict()
+           
+           fcid = rowDict['fuzzcontextId']
+           
+           if not fcid in fcidProcessed:
+            
+                fcidProcessed.add(fcid) 
+                
+                fcView = ApiFuzzContextViewModel()
+                fcView.Id = rowDict['fuzzcontextId']
+                fcView.datetime = rowDict['datetime']
+                fcView.name = rowDict['name']
+                fcView.requestMessageText = rowDict['requestMessageText']
+                fcView.requestMessageFilePath = rowDict['requestMessageFilePath']
+                fcView.openapi3FilePath = rowDict['openapi3FilePath']
+                fcView.openapi3Url = rowDict['openapi3Url']
+                fcView.hostname = rowDict['hostname']
+                fcView.port = rowDict['port']
+                fcView.fuzzMode = rowDict['fuzzMode']   
+                fcView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+                fcView.authnType = rowDict['authnType']
+                fcView.fuzzCaseSetRuns = []
+                
+                fcViews[fcid] = fcView
+                
+                
+           fcRunView = ApiFuzzCaseSetRunViewModel()
+           fcRunView.fuzzCaseSetRunsId = rowDict['fuzzCaseSetRunsId']
+           fcRunView.fuzzcontextId = rowDict['fuzzcontextId']
+           fcRunView.startTime = rowDict['startTime']
+           fcRunView.endTime =  rowDict['endTime']
+           fcRunView.status = rowDict['status']
+           
+           fcView = fcViews[fcRunView.fuzzcontextId]
+           fcView.fuzzCaseSetRuns.append(fcRunView)
+           
+           
+        fcList = []
         
-        if rows is None or len(rows) == 0:
-                return []
+        for x in fcViews.keys():
+            fcList.append(fcViews[x])
+        
+        
+        return fcList
+        
+                
             
-        for row in rows:
+           
+        
             
-            rowDict = row._asdict()
+        
             
-            srView = ApiFuzzContextSetsRunsViewModel()
-            srView.contextId = rowDict['Id']
-            srView.datetime = rowDict['datetime']
-            srView.name = rowDict['name']
-            srView.requestMessageText = rowDict['requestMessageText']
-            srView.requestMessageFilePath = rowDict['requestMessageFilePath']
-            srView.openapi3FilePath = rowDict['openapi3FilePath']
-            srView.openapi3Url = rowDict['openapi3Url']
-            srView.hostname = rowDict['hostname']
-            srView.port = rowDict['port']
-            srView.fuzzMode = rowDict['fuzzMode']   
-            srView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
-            srView.authnType = rowDict['authnType']
-            
-            srView.caseSetRunsId = rowDict['fuzzCaseSetRunsId']
-            
-            fcSetView = ApiFuzzCaseSet()
     except Exception as e:
         print(e)
     finally:
@@ -442,6 +480,7 @@ def is_data_exist_in_fuzzcontexts(fuzzcontextId: str, fuzzcontexts: list[ApiFuzz
         return False, None
     
 def create_fuzzcontext_from_dict(rowDict):
+    
         fuzzcontext = ApiFuzzContext()
         fuzzcontext.Id = rowDict['fuzzContextId']
         fuzzcontext.datetime = rowDict['datetime']

@@ -106,6 +106,7 @@ class WebApiFuzzer:
         self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.totalFuzzRuns = 0
+        self.currentFuzzRuns = 0
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.dbLock = Lock()
         
@@ -133,6 +134,7 @@ class WebApiFuzzer:
         self.fuzzCancel = True
         self.executor.shutdown(wait=False, cancel_futures=True)
         self.totalFuzzRuns = 0
+        self.currentFuzzRuns = 0
         self.dbLock.acquire()
         update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
         self.dbLock.release()
@@ -177,7 +179,9 @@ class WebApiFuzzer:
     def fuzz_data_case(self, fuzzCaseSetRunId, fcs: ApiFuzzCaseSet):
         
         try:
-            fuzzDataCase = self.http_call_api(fcs)    
+            fuzzDataCase = self.http_call_api(fcs)
+            
+            # TODO: send fuzzing status update
             
             self.save_fuzzDataCase(fuzzDataCase)
             
@@ -247,7 +251,7 @@ class WebApiFuzzer:
             fr.datetime = datetime.now()
             fr.fuzzcontextId = self.apifuzzcontext.Id
             fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.statusCode = 500
+            fr.statusCode = 500 if err.find('timed out') == -1 else 508
             fr.reasonPharse = f'{err}'
             fuzzDataCase.response = fr
             
@@ -256,9 +260,9 @@ class WebApiFuzzer:
     def fuzz_data_case_done(self, future):
         
         try:
-            self.totalFuzzRuns = self.totalFuzzRuns - 1
+            self.currentFuzzRuns = self.currentFuzzRuns + 1
             
-            print(f'pending active fuzz test cases: {self.totalFuzzRuns}')
+            print(f'fuzz runs: {self.currentFuzzRuns}/{self.totalFuzzRuns}')
     
             # check if last task, to end fuzzing
             if self.totalFuzzRuns == 0:
@@ -286,8 +290,18 @@ class WebApiFuzzer:
             self.dbLock.release()
             
         except Exception as e:
-            ej = Utils.jsone(e)
-            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='save_fuzzDataCase')
+            #error occurs when fuzzing cancel, if is cancelled, ignore error
+            if not self.fuzzCancel is True:
+                ej = Utils.jsone(e)
+                self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='save_fuzzDataCase')
+                
+    
+    def send_fuzz_summary_to_client(self):
+        pass
+        # current fuzz cases
+        # total fuzz cases
+        # total no. of of the whole run
+            # 2xx, 3xx, 4xx
     
     def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostnamePort, verb, path, qs, url, headers, body):
         

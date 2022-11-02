@@ -3,7 +3,7 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
-from graphql_models import ApiFuzzContextSetsRunsViewModel
+from graphql_models import ApiFuzzContextViewModel
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore
@@ -55,13 +55,19 @@ class ServiceManager:
         
         insert_db_fuzzcontext(fuzzcontext)
         
-        return fuzzcontext
+        
+        fcView = ApiFuzzContextViewModel()
+        fcView.Id = fuzzcontext.Id
+        fcView.datetime = fuzzcontext.datetime
+        fcView.name = fuzzcontext.name
+        
+        return fcView
     
-    def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
-        return get_fuzzcontexts()
+    # def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
+    #     return get_fuzzcontexts()
     
     
-    def get_fuzzContextSetRuns(self) -> list[ApiFuzzContextSetsRunsViewModel]:
+    def get_fuzzContexts(self) -> list[ApiFuzzContextViewModel]:
         return get_fuzzContextSetRuns() 
     
     
