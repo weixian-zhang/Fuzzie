@@ -147,6 +147,14 @@
 			"options": {
 				"cwd": "${workspaceFolder}"
 			}
+		},
+		{
+			"label": "npm serve webview in browser",
+			"type": "shell",
+			"command": "npm run serve",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
+			},
 		}
 		
 	]
