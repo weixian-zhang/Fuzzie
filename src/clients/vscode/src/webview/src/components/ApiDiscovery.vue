@@ -22,7 +22,6 @@
 
 <script>
 
-import "vue3-treeview/dist/style.css";
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
