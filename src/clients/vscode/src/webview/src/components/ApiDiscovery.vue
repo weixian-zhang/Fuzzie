@@ -1,108 +1,71 @@
+<!-- https://pictogrammers.github.io/@mdi/font/6.9.96/ -->
+
 <template>
-  <div class="container-fluid">
-    <v-treeview :items="items"></v-treeview>
-  </div>
+  <v-card
+  color="white"
+  outlined
+  width="100%"
+  height="100%">
+    <v-toolbar color="blue" dense flat="true" height="50px">
+      <v-spacer />
+      <v-btn icon height="30px" width="30px">
+        <v-icon>mdi-card-plus</v-icon>
+      </v-btn>
+    </v-toolbar>
+    <div>
+      
+    </div>
+  </v-card>
+  
+
 </template>
 
-<script lang="ts">
+<script>
+
+import "vue3-treeview/dist/style.css";
 import { Options, Vue } from 'vue-class-component';
+
 @Options({
+  components: {
+    
+  },
   props: {
-    msg: String
+    // msg: String
   }
 })
 export default class ApiDiscovery extends Vue {
+
+  config = {
+        roots: ["id1", "id2"],
+      }
+  fuzzcontexts =  {
+        id1: {
+          text: "text1",
+          children: ["id11", "id12"],
+        },
+        id11: {
+          text: "text11",
+        },
+        id12: {
+          text: "text12",
+        },
+        id2: {
+          text: "text2",
+        }
+      }
+
+  mounted() {
+    //this.getFuzzcontexts()
+  }
+
   
-  items = [
-        {
-          id: 1,
-          name: 'Applications :',
-          children: [
-            { id: 2, name: 'Calendar : app' },
-            { id: 3, name: 'Chrome : app' },
-            { id: 4, name: 'Webstorm : app' },
-          ],
-        },
-        {
-          id: 5,
-          name: 'Documents :',
-          children: [
-            {
-              id: 6,
-              name: 'vuetify :',
-              children: [
-                {
-                  id: 7,
-                  name: 'src :',
-                  children: [
-                    { id: 8, name: 'index : ts' },
-                    { id: 9, name: 'bootstrap : ts' },
-                  ],
-                },
-              ],
-            },
-            {
-              id: 10,
-              name: 'material2 :',
-              children: [
-                {
-                  id: 11,
-                  name: 'src :',
-                  children: [
-                    { id: 12, name: 'v-btn : ts' },
-                    { id: 13, name: 'v-card : ts' },
-                    { id: 14, name: 'v-window : ts' },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: 15,
-          name: 'Downloads :',
-          children: [
-            { id: 16, name: 'October : pdf' },
-            { id: 17, name: 'November : pdf' },
-            { id: 18, name: 'Tutorial : html' },
-          ],
-        },
-        {
-          id: 19,
-          name: 'Videos :',
-          children: [
-            {
-              id: 20,
-              name: 'Tutorials :',
-              children: [
-                { id: 21, name: 'Basic layouts : mp4' },
-                { id: 22, name: 'Advanced techniques : mp4' },
-                { id: 23, name: 'All about app : dir' },
-              ],
-            },
-            { id: 24, name: 'Intro : mov' },
-            { id: 25, name: 'Conference introduction : avi' },
-          ],
-        },
-      ]
-    
+  getFuzzcontexts() {
+    //this.fuzzcontexts = []
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+<style>
+
 </style>

@@ -1,17 +1,13 @@
 <template>
   <v-app>
     <v-main>
-      <Master />
+      <Master />   
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-import 'bootstrap/dist/css/bootstrap.css';
-
 import Master from './components/Master.vue'
 
 export default defineComponent({
@@ -21,9 +17,11 @@ export default defineComponent({
     Master
   },
 
+
   data () {
     return {
-      //
+  
+
     }
   },
 })
@@ -47,4 +45,10 @@ html,body{
   height: 100vh;
   margin-top: 5px;
 }
+
+html {
+  overflow: hidden !important;
+}
+
+
 </style>
