@@ -25,11 +25,18 @@ import asyncio
 
 from pubsub import pub
 # from fastapi import FastAPI, WebSocket
+from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
 
 app = Starlette()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_headers=["*"],
+    allow_methods=["*"],
+)
 
 websocket: WebSocket = None
 

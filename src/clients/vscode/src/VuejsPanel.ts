@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as fs from 'fs';
 import * as path from 'path';
 
-//https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 
 export class VuejsPanel {
 	private vuejsDistFolder = 'dist/webview';
@@ -87,8 +86,6 @@ export class VuejsPanel {
 
 		return `<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>fuzzie</title><script defer="defer" src="${chunkVendorsUri}"></script><script defer="defer" src="${appjsUri}"></script><link href="${appCSSUri}" rel="stylesheet"></head><body><div id="app"></div></body></html>`;
 	}
-    
-    
 }
 
 function getNonce() {

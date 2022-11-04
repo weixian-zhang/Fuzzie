@@ -137,4 +137,4 @@ class ApiFuzzContextViewModel(graphene.ObjectType):
     fuzzCaseSetRuns = graphene.List(ApiFuzzCaseSetRunViewModel)
 
     # CaseSets           
-    caseSetViews = graphene.List(ApiFuzzCaseSetViewModel)
+    #caseSetViews = graphene.List(ApiFuzzCaseSetViewModel)

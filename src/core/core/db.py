@@ -276,10 +276,14 @@ def get_fuzzContextSetRuns() -> list[ApiFuzzContextViewModel]:
                 fcView.fuzzCaseSetRuns = []
                 
                 fcViews[fcid] = fcView
-                
-                
+           
+           fcsRunId = rowDict['fuzzCaseSetRunsId']
+           #outer join causing "empty" records to also create, ignore empty FuzzCaseSetRun records
+           if fcsRunId == None:
+               continue
+           
            fcRunView = ApiFuzzCaseSetRunViewModel()
-           fcRunView.fuzzCaseSetRunsId = rowDict['fuzzCaseSetRunsId']
+           fcRunView.fuzzCaseSetRunsId = fcsRunId
            fcRunView.fuzzcontextId = rowDict['fuzzcontextId']
            fcRunView.startTime = rowDict['startTime']
            fcRunView.endTime =  rowDict['endTime']

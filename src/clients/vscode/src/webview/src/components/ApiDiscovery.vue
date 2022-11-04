@@ -6,10 +6,13 @@
   outlined
   width="100%"
   height="100%">
-    <v-toolbar color="blue" dense flat="true" height="50px">
+    <v-toolbar color="blue" flat="true" dense height="50px">
       <v-spacer />
       <v-btn icon height="30px" width="30px">
-        <v-icon>mdi-card-plus</v-icon>
+        <v-icon :disabled="!isFuzzcontextsGetComplete" @click="getFuzzcontexts">mdi-refresh</v-icon>
+      </v-btn>
+      <v-btn icon height="30px" width="30px">
+        <v-icon >mdi-card-plus</v-icon>
       </v-btn>
     </v-toolbar>
     <div>
@@ -23,6 +26,7 @@
 <script>
 
 import { Options, Vue } from 'vue-class-component';
+import FuzzerManager from '@/services/FuzzerManager';
 
 @Options({
   components: {
@@ -34,37 +38,25 @@ import { Options, Vue } from 'vue-class-component';
 })
 export default class ApiDiscovery extends Vue {
 
-  config = {
-        roots: ["id1", "id2"],
-      }
-  fuzzcontexts =  {
-        id1: {
-          text: "text1",
-          children: ["id11", "id12"],
-        },
-        id11: {
-          text: "text11",
-        },
-        id12: {
-          text: "text12",
-        },
-        id2: {
-          text: "text2",
-        }
-      }
+  fm = new FuzzerManager();
+
+  isFuzzcontextsGetComplete = true;
+  fuzzcontexts =  [{}]
 
   mounted() {
-    //this.getFuzzcontexts()
+    this.getFuzzcontexts()
   }
 
   
-  getFuzzcontexts() {
-    //this.fuzzcontexts = []
+  async getFuzzcontexts() {
+    this.isFuzzcontextsGetComplete = false;
+    const fcs = await this.fm.getFuzzcontexts()
+    this.isFuzzcontextsGetComplete = true;
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
+
+<style scoped>
 
 </style>
