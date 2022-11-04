@@ -1,6 +1,6 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { FuzzContext, ApiFuzzcontextRuns } from "./Model";
+import { FuzzContext, ApiFuzzcontextRuns } from "../Model";
 export default class FuzzerManager
 {
     private _wc: FuzzerWebClient;

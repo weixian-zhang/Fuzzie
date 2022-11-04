@@ -24,6 +24,7 @@
       <tr
         v-for="item in desserts"
         :key="item.name"
+      
       >
         <td>{{ item.name }}</td>
         <td>{{ item.calories }}</td>

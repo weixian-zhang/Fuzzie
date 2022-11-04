@@ -11,13 +11,6 @@
     </v-toolbar>
    </v-card>
  
- 
- <v-treeview
-     activatable
-     :items="items"
-   ></v-treeview>
-      
- 
       
  </template>
  
