@@ -74,16 +74,19 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
-
+# RowNumber for pagination
 ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
-                            Column('Id', String, primary_key=True),
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
                             Column('fuzzcaseSetRunIdId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
                             )
 
+# RowNumber for pagination
 ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
-                            Column('Id', String, primary_key=True),
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('datetime', DateTime),
                             Column('hostnamePort', String),
                             Column('verb', String),
@@ -97,9 +100,10 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
-
+# RowNumber for pagination
 ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
-                            Column('Id', String, primary_key=True),
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('datetime', DateTime),
                             Column('statusCode', String),
                             Column('reasonPharse', String),

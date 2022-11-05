@@ -42,7 +42,7 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			"preLaunchTask": "npm run build Vuejs",
+			"preLaunchTask": "npm package webview dist",
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {

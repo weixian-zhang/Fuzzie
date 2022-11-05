@@ -5,10 +5,15 @@
 		"lib": [
 			"ES2020"
 		],
+		"skipDefaultLibCheck": true,
+		"allowJs": true,
+		"checkJs": false,
+		"noImplicitAny": false,
+		"noImplicitThis": false,
 		"sourceMap": true,
-		"rootDir": "src",
-		"strict": true,   /* enable all strict type-checking options */
-		"strictNullChecks": true,
+		//"rootDir": "src",
+		"strict": false,   /* enable all strict type-checking options */
+		"strictNullChecks": false,
 		"esModuleInterop": true,
     	"allowSyntheticDefaultImports": true,
 		"experimentalDecorators": true,
