@@ -42,7 +42,7 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			"preLaunchTask": "npm package webview dist",
+			//"preLaunchTask": "npm run extension",
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {

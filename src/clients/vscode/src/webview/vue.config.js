@@ -1,14 +1,21 @@
 const { defineConfig } = require('@vue/cli-service')
+const { VuetifyPlugin } = require('webpack-plugin-vuetify')
+
 const path = require('path');
 module.exports = defineConfig({
   filenameHashing: false,
   transpileDependencies: true,
-  css: undefined,
+  //adding extract css true solves this issue
+  css:{
+    extract:false  
+  },
   outputDir: path.resolve(__dirname, "../../dist/webview"),
-
+  publicPath: './',
   pluginOptions: {
-    vuetify: {
-			// https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vuetify-loader
-		}
+    vuetify: new VuetifyPlugin()
+    // vuetify: {
+       
+		// 	// https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vuetify-loader
+		// }
   }
 })
