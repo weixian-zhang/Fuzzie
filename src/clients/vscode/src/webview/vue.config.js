@@ -7,7 +7,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
   //adding extract css true solves this issue
   css:{
-    extract:false  
+    extract:true  
   },
   outputDir: path.resolve(__dirname, "../../dist/webview"),
   publicPath: './',

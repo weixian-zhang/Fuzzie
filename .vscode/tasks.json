@@ -110,9 +110,9 @@
 			}
 		},
 		{
-			"label": "npm run extension",
+			"label": "npm watch extension",
 			"type": "shell",
-			"command": "npm run compile",
+			"command": "npm run watch",
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			},
