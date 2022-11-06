@@ -130,7 +130,7 @@ class EventStore:
         
         try:
                    
-            m = WebsocketClientMessage(data)
+            m = WebsocketClientMessage(data, msgType)
             
             if EventStore.websocket != None:
                 if len(EventStore.wsMsgQueue) > 0:

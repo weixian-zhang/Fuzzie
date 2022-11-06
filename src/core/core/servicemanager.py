@@ -6,20 +6,47 @@ from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
 from graphql_models import ApiFuzzContextViewModel
 from webapi_fuzzer import WebApiFuzzer
 
-from eventstore import EventStore
+from eventstore import EventStore, MsgType
 from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext, get_fuzzContextSetRuns
 from sqlalchemy.sql import select, insert
 
-import asyncio
-import json
+import threading, time
 from datetime import datetime
+import queue
+
+def bgWorkerDataToClient():
+    
+    while True:
+        
+        try:
+            data = ServiceManager.dataQueue.get()
+        
+            if data != '':
+                ServiceManager.eventstore.send_websocket(data, MsgType.FuzzEvent)
+                
+            time.sleep(1)
+        except Exception as e:
+            print(e)
+        
+        
 
 class ServiceManager:
     
-    def __init__(self) -> None:   
-           
-        self.eventstore = EventStore()
+    eventstore = EventStore()
+    dataQueue = queue.Queue()
+    bgWorkerDataToClient = None
     
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(ServiceManager, cls).__new__(cls)
+            threading.Thread(target=bgWorkerDataToClient, daemon=True).start()
+        return cls.instance
+    
+    def __init__(self) -> None:   
+        pass
+
+
+
         
     def discover_openapi3_by_filepath_or_url(self,
                             hostname,
@@ -81,7 +108,8 @@ class ServiceManager:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
-        webapifuzzer = WebApiFuzzer(fuzzcontext, 
+        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue,
+                                    fuzzcontext, 
                                     basicUsername = basicUsername, 
                                     basicPassword= basicPassword, 
                                     bearerTokenHeader= bearerTokenHeader,

@@ -50,13 +50,16 @@ from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
                                         FuzzMode)
+from graphql_models import ApiFuzzCaseSetRunSummaryPerCaseSetViewModel
+
 from db import (insert_api_fuzzCaseSetRuns,
                 update_api_fuzzCaseSetRun_status,
                 insert_api_fuzzdatacase, 
                 insert_api_fuzzrequest, 
-                insert_api_fuzzresponse)
-import threading
-import queue
+                insert_api_fuzzresponse,
+                create_casesetrun_summary,
+                update_casesetrun_summary)
+
 from multiprocessing import Lock
 
 class ThreadTracker(dict):
@@ -78,6 +81,7 @@ class ThreadTracker(dict):
 class WebApiFuzzer:
     
     def __init__(self,
+                    dataQueue,
                     apifuzzcontext: ApiFuzzContext,
                     basicUsername = '',
                     basicPassword = '',
@@ -92,6 +96,8 @@ class WebApiFuzzer:
         # Set-Cookie: chocolate=chips; expires=Sun, 15-Nov-2009 18:47:08 GMT; path=/; domain=thaorius.net; secure; httponly
         # Set-Cookie: milk=shape
         self.cookiejar = {}
+        
+        self.dataQueue = dataQueue
         
         # security creds
         self.basicUsername = basicUsername,
@@ -108,6 +114,8 @@ class WebApiFuzzer:
         self.totalFuzzRuns = 0
         self.currentFuzzRuns = 0
         self.executor = ThreadPoolExecutor(max_workers=5)
+        
+        self.processLock = Lock()
         self.dbLock = Lock()
         
         self.eventstore = EventStore()
@@ -131,13 +139,20 @@ class WebApiFuzzer:
             self.cancel_fuzzing()
             
     def cancel_fuzzing(self):
-        self.fuzzCancel = True
-        self.executor.shutdown(wait=False, cancel_futures=True)
-        self.totalFuzzRuns = 0
-        self.currentFuzzRuns = 0
-        self.dbLock.acquire()
-        update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
-        self.dbLock.release()
+        try:
+            
+            self.fuzzCancel = True
+            self.executor.shutdown(wait=False, cancel_futures=True)
+            self.totalFuzzRuns = 0
+            self.currentFuzzRuns = 0
+            
+            self.dbLock.acquire()
+            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+            self.dbLock.release()
+            
+        except Exception as e:
+            self.eventstore.emitErr(e)
+        
         
             
     def fuzz(self):
@@ -157,7 +172,7 @@ class WebApiFuzzer:
             
             fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
             
-            #create a fuzzcaserun record
+            # create a fuzzcaserun record
             self.dbLock.acquire()
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             self.dbLock.release()
@@ -165,25 +180,36 @@ class WebApiFuzzer:
             # fuzzCasesToTest = 1 # uncomment for testing only
             self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * fuzzCasesToTest
             
-            for fcs in self.apifuzzcontext.fuzzcaseSets:                
+            for fcs in self.apifuzzcontext.fuzzcaseSets:
+                
+                caseSetRunSummaryId = shortuuid.uuid()
+                
+                self.dbLock.acquire()
+                create_casesetrun_summary(Id = caseSetRunSummaryId,
+                                          fuzzCaseSetId=  fcs.Id,
+                                          fuzzCaseSetRunId = self.fuzzCaseSetRunId,
+                                          fuzzcontextId = self.apifuzzcontext.Id,
+                                          totalRunsToComplete = self.totalFuzzRuns)   
+                self.dbLock.release()           
                 
                 for count in range(0, fuzzCasesToTest):
 
-                    future = self.executor.submit(self.fuzz_data_case, self.fuzzCaseSetRunId, fcs )
+                    future = self.executor.submit(self.fuzz_data_case, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
                     
                     future.add_done_callback(self.fuzz_data_case_done)      
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='begin_fuzzing')
         
-    def fuzz_data_case(self, fuzzCaseSetRunId, fcs: ApiFuzzCaseSet):
+    def fuzz_data_case(self, fuzzCaseSetRunId, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
         
         try:
             fuzzDataCase = self.http_call_api(fcs)
             
-            # TODO: send fuzzing status update
+            summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            self.save_fuzzDataCase(fuzzDataCase)
+            self.dataQueue.put(Utils.jsone(summaryViewModel))
+            
             
         except Exception as e:
             if self.fuzzCancel == True:
@@ -275,7 +301,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='fuzz_data_case_done')
         
 
-    def save_fuzzDataCase(self, fdc: ApiFuzzDataCase):
+    def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSetRunSummaryPerCaseSetViewModel:
     
         try:
             
@@ -287,7 +313,14 @@ class WebApiFuzzer:
             
             insert_api_fuzzresponse(fdc.response)
             
+            # update run summary
+            summaryViewModel = update_casesetrun_summary(caseSetRunSummaryId,
+                                      int(fdc.response.statusCode),
+                                      completedDataCaseRuns=1)
+            
             self.dbLock.release()
+            
+            return summaryViewModel
             
         except Exception as e:
             #error occurs when fuzzing cancel, if is cancelled, ignore error
@@ -295,13 +328,6 @@ class WebApiFuzzer:
                 ej = Utils.jsone(e)
                 self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='save_fuzzDataCase')
                 
-    
-    def send_fuzz_summary_to_client(self):
-        pass
-        # current fuzz cases
-        # total fuzz cases
-        # total no. of of the whole run
-            # 2xx, 3xx, 4xx
     
     def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostnamePort, verb, path, qs, url, headers, body):
         

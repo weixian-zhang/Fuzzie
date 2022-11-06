@@ -113,6 +113,14 @@ class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     startTime = graphene.DateTime()
     endTime =  graphene.DateTime()
     status = graphene.String()
+    
+class ApiFuzzCaseSetRunSummaryPerCaseSetViewModel(graphene.ObjectType):
+    Id: graphene.String()
+    http2xx = graphene.Int()
+    http3xx = graphene.Int()
+    http4xx = graphene.Int()
+    http5xx =  graphene.Int()
+    completedDataCaseRuns = graphene.Int() 
 
 
 # view models or data transfer objects
