@@ -89,18 +89,6 @@ export class VuejsPanel {
 
 		const vendorCSSPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css/chunk-vendors.css'));
 		const vendorCSSUri = vendorCSSPathOnDisk.with({ scheme: 'vscode-resource' });
-
-		const webfontEOTPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts/materialdesignicons-webfont.eot'));
-		const webfontEOTUri = webfontEOTPathOnDisk.with({ scheme: 'vscode-resource' });
-
-		const webfontTTFPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts/materialdesignicons-webfont.ttf'));
-		const webfontTTFUri = webfontTTFPathOnDisk.with({ scheme: 'vscode-resource' });
-
-		const webfontWOFFPathOnDisk1 = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts/materialdesignicons-webfont.woff'));
-		const webfontWOFFUri1 = webfontWOFFPathOnDisk1.with({ scheme: 'vscode-resource' });
-
-		const webfontWOFFPathOnDisk2 = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts/materialdesignicons-webfont.woff2'));
-		const webfontWOFFUri2= webfontWOFFPathOnDisk2.with({ scheme: 'vscode-resource' });
 		
 
 		// Use a nonce to whitelist which scripts can be run
@@ -117,11 +105,6 @@ export class VuejsPanel {
 				<script defer="defer" src="${vendorWebFontLoaderUri}"></script>
 				<link href="${appCSSUri}" rel="stylesheet">
 				<link href="${vendorCSSUri}" rel="stylesheet">
-				<link href="${webfontWOFFUri1}" >
-				<link href="${webfontWOFFUri2}"  >
-				<link href="${webfontEOTUri}" >
-				<link href="${webfontTTFUri}" >
-
 			</head>
 			<body>
 				<div id="app"></div>
