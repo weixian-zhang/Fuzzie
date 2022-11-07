@@ -3,11 +3,14 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
-from graphql_models import ApiFuzzContextViewModel
+from graphql_models import ApiFuzzContext_Runs_ViewModel
 from webapi_fuzzer import WebApiFuzzer
 
 from eventstore import EventStore, MsgType
-from db import  get_fuzzcontext, get_fuzzcontexts, insert_db_fuzzcontext, get_fuzzContextSetRuns
+from db import  (get_fuzzcontext, 
+                 get_caseSets_with_runSummary, 
+                 insert_db_fuzzcontext, 
+                 get_fuzzContextSetRuns)
 from sqlalchemy.sql import select, insert
 
 import threading, time
@@ -45,9 +48,6 @@ class ServiceManager:
     def __init__(self) -> None:   
         pass
 
-
-
-        
     def discover_openapi3_by_filepath_or_url(self,
                             hostname,
                             authnType,
@@ -82,19 +82,18 @@ class ServiceManager:
         
         insert_db_fuzzcontext(fuzzcontext)
         
-        
-        fcView = ApiFuzzContextViewModel()
+        fcView = ApiFuzzContext_Runs_ViewModel()
         fcView.Id = fuzzcontext.Id
         fcView.datetime = fuzzcontext.datetime
         fcView.name = fuzzcontext.name
         
         return fcView
     
-    # def get_fuzzcontexts(self) -> list[ApiFuzzContext]:
-    #     return get_fuzzcontexts()
+    def get_caseSets_with_runSummary(self, fuzzcontextId):
+        return get_caseSets_with_runSummary(fuzzcontextId)
     
     
-    def get_fuzzContexts(self) -> list[ApiFuzzContextViewModel]:
+    def get_fuzzContexts(self) -> list[ApiFuzzContext_Runs_ViewModel]:
         return get_fuzzContextSetRuns() 
     
     

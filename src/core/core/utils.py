@@ -1,4 +1,5 @@
 import jsonpickle
+import shortuuid
 
 class Utils:
     def jsone(objDict):
@@ -10,4 +11,7 @@ class Utils:
             return True, obj
         except Exception as e:
             return False, {}
+        
+    def uuid():
+        return shortuuid.uuid()
         

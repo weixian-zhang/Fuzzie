@@ -73,8 +73,42 @@ class SecuritySchemes(graphene.ObjectType):
 #    response = graphene.Field(ApiFuzzResponse)
 #    state = graphene.Field(FuzzProgressState)
 
-class ApiFuzzCaseSetViewModel(graphene.ObjectType):
-    Id = graphene.String()
+# class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
+#     Id = graphene.String()
+#     name = graphene.String()
+#     datetime = graphene.DateTime()
+    
+#     hostname = graphene.String()
+#     port = graphene.Int()
+#     fuzzMode = graphene.String()
+#     fuzzcaseToExec = graphene.Int(default_value=50)
+    
+#     requestMessageText = graphene.String()
+#     requestMessageFilePath = graphene.String()
+#     openapi3FilePath = graphene.String()
+#     openapi3Url = graphene.String()
+    
+#     #security schemes
+#     authnType = graphene.Field(SupportedAuthnType)
+#     basicUsername = graphene.String()
+#     basicPassword  = graphene.String()
+#     bearerToken  = graphene.String()
+#     apikeyHeader  = graphene.String()
+#     apikey  = graphene.String()  
+#     fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
+
+# class ApiFuzzCaseSet_RunSummary_ViewModel(graphene.ObjectType):
+#     Id: graphene.String()
+#     http2xx = graphene.Int()
+#     http3xx = graphene.Int()
+#     http4xx = graphene.Int()
+#     http5xx =  graphene.Int()
+#     completedDataCaseRuns = graphene.Int() 
+    
+class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
+    fuzzCaseSetId = graphene.String()
+    fuzzCaseSetRunId = graphene.String()
+    fuzzcontextId = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
     path = graphene.String()
@@ -82,30 +116,13 @@ class ApiFuzzCaseSetViewModel(graphene.ObjectType):
     bodyNonTemplate = graphene.String()
     headerNonTemplate = graphene.String()
     authnType = graphene.Field(SupportedAuthnType)
-        
-class ApiFuzzContextViewModel(graphene.ObjectType):
-    Id = graphene.String()
-    name = graphene.String()
-    datetime = graphene.DateTime()
     
-    hostname = graphene.String()
-    port = graphene.Int()
-    fuzzMode = graphene.String()
-    fuzzcaseToExec = graphene.Int(default_value=50)
-    
-    requestMessageText = graphene.String()
-    requestMessageFilePath = graphene.String()
-    openapi3FilePath = graphene.String()
-    openapi3Url = graphene.String()
-    
-    #security schemes
-    authnType = graphene.Field(SupportedAuthnType)
-    basicUsername = graphene.String()
-    basicPassword  = graphene.String()
-    bearerToken  = graphene.String()
-    apikeyHeader  = graphene.String()
-    apikey  = graphene.String()  
-    fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
+    runSummaryId = graphene.String()
+    http2xx = graphene.Int()
+    http3xx = graphene.Int()
+    http4xx = graphene.Int()
+    http5xx =  graphene.Int()
+    completedDataCaseRuns = graphene.Int() 
     
 class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     fuzzCaseSetRunsId = graphene.String()
@@ -114,18 +131,8 @@ class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     endTime =  graphene.DateTime()
     status = graphene.String()
     
-class ApiFuzzCaseSetRunSummaryPerCaseSetViewModel(graphene.ObjectType):
-    Id: graphene.String()
-    http2xx = graphene.Int()
-    http3xx = graphene.Int()
-    http4xx = graphene.Int()
-    http5xx =  graphene.Int()
-    completedDataCaseRuns = graphene.Int() 
 
-
-# view models or data transfer objects
-
-class ApiFuzzContextViewModel(graphene.ObjectType):
+class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     
     # FuzzContext
     Id = graphene.String()
@@ -143,6 +150,3 @@ class ApiFuzzContextViewModel(graphene.ObjectType):
     
     # CaseSetRun
     fuzzCaseSetRuns = graphene.List(ApiFuzzCaseSetRunViewModel)
-
-    # CaseSets           
-    #caseSetViews = graphene.List(ApiFuzzCaseSetViewModel)

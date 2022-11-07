@@ -50,7 +50,7 @@ from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
                                         FuzzMode)
-from graphql_models import ApiFuzzCaseSetRunSummaryPerCaseSetViewModel
+from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
 
 from db import (insert_api_fuzzCaseSetRuns,
                 update_api_fuzzCaseSetRun_status,
@@ -301,7 +301,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='fuzz_data_case_done')
         
 
-    def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSetRunSummaryPerCaseSetViewModel:
+    def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
             

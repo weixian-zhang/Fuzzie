@@ -4,16 +4,17 @@ from servicemanager import ServiceManager
 from eventstore import EventStore
 from datetime import datetime
 from rx import Observable
-from graphql_models import ApiFuzzContextViewModel, ApiFuzzCaseSetViewModel
+from graphql_models import ApiFuzzContext_Runs_ViewModel, ApiFuzzCaseSets_With_RunSummary_ViewModel
 
 # queries
 class Query(graphene.ObjectType):
     
     alive = graphene.String()
     
-    fuzzContexts = graphene.List(ApiFuzzContextViewModel)
+    fuzzContexts = graphene.List(ApiFuzzContext_Runs_ViewModel)
     
-    fuzzCaseSets = graphene.List(ApiFuzzCaseSetViewModel)
+    fuzzCaseSetWithRunSummary = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel,
+                                              fuzzcontextId = graphene.Argument(graphene.String))
     
     
     def resolve_alive(self, info):
@@ -23,6 +24,11 @@ class Query(graphene.ObjectType):
     def resolve_fuzzContexts(self, info):
         sm = ServiceManager()
         result = sm.get_fuzzContexts()
+        return result
+    
+    def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId):
+        sm = ServiceManager()
+        result = sm.get_caseSets_with_runSummary(fuzzcontextId)
         return result
     
 
@@ -37,7 +43,7 @@ class DiscoverOpenApi3ByFilePath(graphene.Mutation):
         openapi3FilePath = graphene.String()
     
     ok = graphene.Boolean()
-    apiFuzzContext = graphene.Field(ApiFuzzContextViewModel)
+    apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
     
     def mutate(self, info, hostname, port, openapi3FilePath, name='', fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, authnType='Anonymous'):
         
@@ -67,7 +73,7 @@ class DiscoverOpenApi3ByUrl(graphene.Mutation):
         openapi3Url = graphene.String()
     
     ok = graphene.Boolean()
-    apiFuzzContext = graphene.Field(ApiFuzzContextViewModel)
+    apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
 
    
     def mutate(self, info, hostname, port, openapi3Url, name = '', fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, authnType='Anonymous'):
