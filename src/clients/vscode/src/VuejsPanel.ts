@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as fs from 'fs';
 import * as path from 'path';
 
-//https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
 
 export class VuejsPanel {
 	private vuejsDistFolder = 'dist/webview';
@@ -36,7 +35,10 @@ export class VuejsPanel {
 			{
                 enableScripts: true,
                 localResourceRoots: [
-				    vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder))
+				    vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder)),
+					vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'assets')),
+					vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts')),
+					vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'img'))
 			    ]
             }
 		);
@@ -79,16 +81,36 @@ export class VuejsPanel {
         const chunkVendorsPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/chunk-vendors.js'));
 		const chunkVendorsUri = chunkVendorsPathOnDisk.with({ scheme: 'vscode-resource' });
 
+		const vendorWebFontLoaderPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css/webfontloader.js'));
+		const vendorWebFontLoaderUri = vendorWebFontLoaderPathOnDisk.with({ scheme: 'vscode-resource' });
+
 		const appCSSPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css/app.css'));
 		const appCSSUri = appCSSPathOnDisk.with({ scheme: 'vscode-resource' });
+
+		const vendorCSSPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css/chunk-vendors.css'));
+		const vendorCSSUri = vendorCSSPathOnDisk.with({ scheme: 'vscode-resource' });
+		
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
 
-		return `<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>fuzzie</title><script defer="defer" src="${chunkVendorsUri}"></script><script defer="defer" src="${appjsUri}"></script><link href="${appCSSUri}" rel="stylesheet"></head><body><div id="app"></div></body></html>`;
+		return `<!doctype html>
+		<html lang="">
+			<head>
+				<meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge">
+				<meta name="viewport" content="width=device-width,initial-scale=1">
+				<title>Fuzzie</title>
+				<script defer="defer" src="${chunkVendorsUri}"></script>
+				<script defer="defer" src="${appjsUri}"></script>
+				<script defer="defer" src="${vendorWebFontLoaderUri}"></script>
+				<link href="${appCSSUri}" rel="stylesheet">
+				<link href="${vendorCSSUri}" rel="stylesheet">
+			</head>
+			<body>
+				<div id="app"></div>
+			</body>
+		</html>`;
 	}
-    
-    
 }
 
 function getNonce() {

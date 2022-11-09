@@ -8,7 +8,10 @@ from pathlib import Path
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzDataCase, ApiFuzzCaseSet, ApiFuzzRequest, 
                                        ApiFuzzResponse,FuzzProgressState, ApiFuzzCaseSetRun
     )
-from graphql_models import ApiFuzzContextSetsRunsViewModel, ApiFuzzCaseSetViewModel
+from graphql_models import (ApiFuzzContext_Runs_ViewModel,
+            ApiFuzzCaseSetRunViewModel, 
+            ApiFuzzCaseSets_With_RunSummary_ViewModel)
+
 from eventstore import EventStore
 
 evts = EventStore()
@@ -18,11 +21,6 @@ engine = create_engine(connStr)
 
 session_factory = sessionmaker(bind=engine)
 
-# import sqlite3
-# db = sqlite3.connect(dbPath)
-# db.execute('pragma journal_mode=wal')
-
-
 metadata = MetaData(engine)
 
 apifuzzcontext_TableName = 'ApiFuzzContext'
@@ -31,6 +29,7 @@ apifuzzCaseSetRuns_TableName = 'ApiFuzzCaseSetRuns'
 apifuzzDataCase_TableName = 'ApiFuzzDataCase'
 apifuzzRequest_TableName = 'ApiFuzzRequest'
 apifuzzResponse_TableName = 'ApiFuzzResponse'
+apifuzzRunSummaryPerCaseSet_TableName = 'ApiFuzzRunSummaryPerCaseSetTable'
 
 ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
@@ -74,16 +73,32 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
-
-ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
+ApiFuzzRunSummaryPerCaseSetTable = Table(apifuzzRunSummaryPerCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
+                            Column('http2xx', Integer),
+                            Column('http3xx', Integer),
+                            Column('http4xx', Integer),
+                            Column('http5xx', Integer),
+                            Column('completedDataCaseRuns', Integer),
+                            Column('totalDataCaseRunsToComplete', Integer),
+                            Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
+                            Column('fuzzCaseSetRunId', String, ForeignKey(f'{ApiFuzzCaseSetRunsTable}.Id')),
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
+                            )
+
+# RowNumber for pagination
+ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
                             Column('fuzzcaseSetRunIdId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
                             )
 
+# RowNumber for pagination
 ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
-                            Column('Id', String, primary_key=True),
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('datetime', DateTime),
                             Column('hostnamePort', String),
                             Column('verb', String),
@@ -97,9 +112,10 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
-
+# RowNumber for pagination
 ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
-                            Column('Id', String, primary_key=True),
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
                             Column('datetime', DateTime),
                             Column('statusCode', String),
                             Column('reasonPharse', String),
@@ -173,7 +189,7 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         Session = scoped_session(session_factory)
         
-        fcRows = (Session.query(ApiFuzzContextTable,ApiFuzzContextTable.columns.Id.label("fuzzContextId"),
+        fcRows = (Session.query(ApiFuzzContextTable, ApiFuzzContextTable.columns.Id.label("fuzzContextId"),
                                 ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"))
                   .select_from(join(ApiFuzzContextTable, ApiFuzzCaseSetTable))
                   .filter(ApiFuzzContextTable.c.Id == Id)
@@ -200,15 +216,15 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         return fuzzcontext
 
-def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
+def get_fuzzContextSetRuns() -> list[ApiFuzzContext_Runs_ViewModel]:
     
     try:
         Session = scoped_session(session_factory)
-    
-        rows = (
+        
+        fcsRunRows = (
             Session.query
                     (
-                        ApiFuzzContextTable.columns.Id, 
+                        ApiFuzzContextTable.columns.Id.label("fuzzcontextId"), 
                         ApiFuzzContextTable.columns.datetime,
                         ApiFuzzContextTable.columns.name,
                         ApiFuzzContextTable.columns.requestMessageText,
@@ -224,53 +240,204 @@ def get_fuzzContextSetRuns() -> list[ApiFuzzContextSetsRunsViewModel]:
                         ApiFuzzCaseSetRunsTable.columns.Id.label("fuzzCaseSetRunsId"),
                         ApiFuzzCaseSetRunsTable.columns.startTime,
                         ApiFuzzCaseSetRunsTable.columns.endTime,
-                        ApiFuzzCaseSetRunsTable.columns.status,
+                        ApiFuzzCaseSetRunsTable.columns.status
                         
-                        ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                        ApiFuzzCaseSetTable.columns.selected,
-                        ApiFuzzCaseSetTable.columns.verb,
-                        ApiFuzzCaseSetTable.columns.fuzzcontextId,
-                        ApiFuzzCaseSetTable.columns.path,
-                        ApiFuzzCaseSetTable.columns.querystringNonTemplate,
-                        ApiFuzzCaseSetTable.columns.bodyNonTemplate,
-                        ApiFuzzCaseSetTable.columns.headerNonTemplate
                     )
-                    .join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
+                    #.join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
                     .join(ApiFuzzCaseSetRunsTable, ApiFuzzCaseSetRunsTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id, isouter=True)
                     .all()
         )
+            
+        
+        fcViews = {}
+               
+        fcidProcessed = set()
+        # get first row for FuzzContext as its fields are repeated
+        for row in fcsRunRows:
+            
+           rowDict = row._asdict()
+           
+           fcid = rowDict['fuzzcontextId']
+           
+           if not fcid in fcidProcessed:
+            
+                fcidProcessed.add(fcid) 
+                
+                fcView = ApiFuzzContext_Runs_ViewModel()
+                fcView.Id = rowDict['fuzzcontextId']
+                fcView.datetime = rowDict['datetime']
+                fcView.name = rowDict['name']
+                fcView.requestMessageText = rowDict['requestMessageText']
+                fcView.requestMessageFilePath = rowDict['requestMessageFilePath']
+                fcView.openapi3FilePath = rowDict['openapi3FilePath']
+                fcView.openapi3Url = rowDict['openapi3Url']
+                fcView.hostname = rowDict['hostname']
+                fcView.port = rowDict['port']
+                fcView.fuzzMode = rowDict['fuzzMode']   
+                fcView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+                fcView.authnType = rowDict['authnType']
+                fcView.fuzzCaseSetRuns = []
+                
+                fcViews[fcid] = fcView
+           
+           fcsRunId = rowDict['fuzzCaseSetRunsId']
+           #outer join causing "empty" records to also create, ignore empty FuzzCaseSetRun records
+           if fcsRunId == None:
+               continue
+           
+           fcRunView = ApiFuzzCaseSetRunViewModel()
+           fcRunView.fuzzCaseSetRunsId = fcsRunId
+           fcRunView.fuzzcontextId = rowDict['fuzzcontextId']
+           fcRunView.startTime = rowDict['startTime']
+           fcRunView.endTime =  rowDict['endTime']
+           fcRunView.status = rowDict['status']
+           
+           fcView = fcViews[fcRunView.fuzzcontextId]
+           fcView.fuzzCaseSetRuns.append(fcRunView)
+           
+           
+        fcList = []
+        
+        for x in fcViews.keys():
+            fcList.append(fcViews[x])
         
         
+        return fcList
         
-        if rows is None or len(rows) == 0:
-                return []
-            
-        for row in rows:
-            
-            rowDict = row._asdict()
-            
-            srView = ApiFuzzContextSetsRunsViewModel()
-            srView.contextId = rowDict['Id']
-            srView.datetime = rowDict['datetime']
-            srView.name = rowDict['name']
-            srView.requestMessageText = rowDict['requestMessageText']
-            srView.requestMessageFilePath = rowDict['requestMessageFilePath']
-            srView.openapi3FilePath = rowDict['openapi3FilePath']
-            srView.openapi3Url = rowDict['openapi3Url']
-            srView.hostname = rowDict['hostname']
-            srView.port = rowDict['port']
-            srView.fuzzMode = rowDict['fuzzMode']   
-            srView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
-            srView.authnType = rowDict['authnType']
-            
-            srView.caseSetRunsId = rowDict['fuzzCaseSetRunsId']
-            
-            fcSetView = ApiFuzzCaseSet()
     except Exception as e:
         print(e)
     finally:
         Session.close()
+        
+
+def get_caseSets_with_runSummary(fuzzcontextId):
     
+    Session = scoped_session(session_factory)
+        
+    fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                            ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
+                            ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
+                            )
+                .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzCaseSetTable.columns.Id == ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId, isouter=True)
+                .all()
+            )
+        
+    Session.close()
+    
+    result = []
+    
+    for row in fcsSumRows:
+        
+        rowDict = row._asdict()
+        
+        fcsSum = ApiFuzzCaseSets_With_RunSummary_ViewModel()
+    
+        fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']
+        fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']
+        fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
+        fcsSum.selected = rowDict['selected']
+        fcsSum.verb = rowDict['verb']
+        fcsSum.path = rowDict['path']
+        fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
+        fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
+        fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
+        
+        summaryId = rowDict['runSummaryId']
+        
+        if not summaryId is None:
+            fcsSum.runSummaryId = summaryId
+            fcsSum.http2xx = rowDict['http2xx']
+            fcsSum.http3xx = rowDict['http3xx']
+            fcsSum.http4xx = rowDict['http4xx']
+            fcsSum.http5xx = rowDict['http5xx']
+            fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
+            fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+        
+        result.append(fcsSum)
+    
+    return result
+
+
+
+def get_naughtypassword_by_id(id):
+    
+    Session = scoped_session(session_factory)
+    
+    row = Session.query(NaughtyPasswordTable.columns.Content).filter(NaughtyPasswordTable.c.id == id).one()
+    
+    Session.close()
+        
+    rowDict = row._asdict()
+    
+    return rowDict['Content']
+
+def get_naughtypassword_row_count():
+    Session = scoped_session(session_factory)
+    
+    count = Session.query(NaughtyPasswordTable.c.id).count()
+    
+    Session.close()
+    
+    return count
+
+
+def get_naughtyusername_by_id(id) -> str:
+    
+        
+    Session = scoped_session(session_factory)
+    
+    row = Session.query(NaughtyUsernameTable.columns.Content).filter(NaughtyUsernameTable.c.id == id).one()
+    
+    Session.close()
+        
+    rowDict = row._asdict()
+    
+    return rowDict['Content']
+
+def get_naughtyusername_row_count():
+    Session = scoped_session(session_factory)
+    
+    count = Session.query(NaughtyUsernameTable.c.id).count()
+    
+    Session.close()
+    
+    return count
+
+def get_naughtystring_by_id(id) -> str:
+    
+    try:
+        Session = scoped_session(session_factory)
+
+        row = Session.query(NaughtyStringTable.columns.Content).filter(NaughtyStringTable.c.id == id).one()
+        
+        Session.close()
+        
+        rowDict = row._asdict()
+        
+        return rowDict['Content']
+    
+    except NoResultFound as e:
+        print(e)
+    
+
+def get_naughtystring_row_count():
+    Session = scoped_session(session_factory)
+    
+    count = Session.query(NaughtyStringTable.c.id).count()
+    
+    Session.close()
+    
+    return count
+    
+
 
 # mutations
 def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
@@ -442,6 +609,7 @@ def is_data_exist_in_fuzzcontexts(fuzzcontextId: str, fuzzcontexts: list[ApiFuzz
         return False, None
     
 def create_fuzzcontext_from_dict(rowDict):
+    
         fuzzcontext = ApiFuzzContext()
         fuzzcontext.Id = rowDict['fuzzContextId']
         fuzzcontext.datetime = rowDict['datetime']
@@ -475,88 +643,117 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.verb = rowDict['verb']
     return fcs
 
-def get_naughtypassword_by_id(id):
-    
-        
-    Session = scoped_session(session_factory)
-    
-    row = Session.query(NaughtyPasswordTable.columns.Content).filter(NaughtyPasswordTable.c.id == id).one()
-    
-    Session.close()
-        
-    rowDict = row._asdict()
-    
-    return rowDict['Content']
 
-def get_naughtypassword_row_count():
+def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId, totalRunsToComplete=1):
+    
+    stmt = (
+            insert(ApiFuzzRunSummaryPerCaseSetTable).
+            values(
+                    Id=Id,
+                    http2xx = 0,
+                    http3xx = 0,
+                    http4xx = 0,
+                    http5xx = 0,
+                    completedDataCaseRuns = 0,
+                    totalDataCaseRunsToComplete = totalRunsToComplete,
+                    fuzzCaseSetId = fuzzCaseSetId,
+                    fuzzCaseSetRunId=fuzzCaseSetRunId,
+                    fuzzcontextId=fuzzcontextId
+                   )
+         )
+
     Session = scoped_session(session_factory)
-    
-    count = Session.query(NaughtyPasswordTable.c.id).count()
-    
-    Session.close()
-    
-    return count
-
-
-def get_naughtyusername_by_id(id) -> str:
-    
         
-    Session = scoped_session(session_factory)
+    Session.execute(stmt)
     
-    row = Session.query(NaughtyUsernameTable.columns.Content).filter(NaughtyUsernameTable.c.id == id).one()
-    
-    Session.close()
-        
-    rowDict = row._asdict()
-    
-    return rowDict['Content']
-
-def get_naughtyusername_row_count():
-    Session = scoped_session(session_factory)
-    
-    count = Session.query(NaughtyUsernameTable.c.id).count()
-    
+    Session.commit()
     Session.close()
     
-    return count
-
-def get_naughtystring_by_id(id) -> str:
+def update_casesetrun_summary(Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
     
-    try:
-        Session = scoped_session(session_factory)
-
-        row = Session.query(NaughtyStringTable.columns.Content).filter(NaughtyStringTable.c.id == id).one()
-        
-        Session.close()
-        
-        rowDict = row._asdict()
-        
-        return rowDict['Content']
-    
-    except NoResultFound as e:
-        print(e)
-    
-
-def get_naughtystring_row_count():
     Session = scoped_session(session_factory)
+
+    summary = (
+                Session
+                .query(ApiFuzzRunSummaryPerCaseSetTable)
+                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id)
+                .first()
+               )
+    rowDict =  summary._asdict()
+    existingHttp2xx = rowDict['http2xx']
+    existingHttp3xx = rowDict['http3xx']
+    existingHttp4xx = rowDict['http4xx']
+    existingHttp5xx = rowDict['http5xx']
+    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
     
-    count = Session.query(NaughtyStringTable.c.id).count()
+    if httpCode >= 200 and httpCode <= 299:
+        existingHttp2xx = existingHttp2xx + 1
+        stmt = (
+            update(ApiFuzzRunSummaryPerCaseSetTable).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            values(
+                    http2xx = existingHttp2xx
+                   )
+            )
+        Session.execute(stmt)
     
+    elif httpCode >= 300 and httpCode <= 399:
+        existingHttp3xx = existingHttp3xx + 1
+        stmt = (
+            update(ApiFuzzRunSummaryPerCaseSetTable).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            values(
+                    http3xx = existingHttp3xx
+                   )
+            )
+        Session.execute(stmt)
+    
+    elif httpCode >= 400 and httpCode <= 499:
+        existingHttp4xx = existingHttp4xx + 1
+        stmt = (
+            update(ApiFuzzRunSummaryPerCaseSetTable).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            values(
+                    http4xx = existingHttp4xx
+                   )
+            )
+        Session.execute(stmt)
+        
+    elif httpCode >= 500 and httpCode <= 599:
+        existingHttp5xx = existingHttp5xx + 1
+        stmt = (
+            update(ApiFuzzRunSummaryPerCaseSetTable).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            values(
+                    http5xx = existingHttp5xx
+                   )
+            )
+        Session.execute(stmt)
+        
+    # +1 to completed run
+    existingCompletedDataCaseRuns = existingCompletedDataCaseRuns + completedDataCaseRuns
+    stmt = (
+        update(ApiFuzzRunSummaryPerCaseSetTable).
+        where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+        values(
+                completedDataCaseRuns = existingCompletedDataCaseRuns
+                )
+        )
+    Session.execute(stmt)
+        
+    Session.commit()
     Session.close()
     
-    return count
-
-
-def update_fuzzcaseset_fuzzing_in_progress(fuzzCaseSetId):
-    pass
-
-def update_fuzzcaseset_fuzzing_completed(fuzzCaseSetId):
-    pass
-
-def update_fuzzcaseset_fuzzing_stop(fuzzCaseSetId):
-    pass
-
-                            
+    summary = ApiFuzzCaseSet_RunSummary_ViewModel()
+    summary.Id = Id
+    summary.http2xx = existingHttp2xx
+    summary.http3xx = existingHttp3xx
+    summary.http4xx = existingHttp4xx
+    summary.http5xx = existingHttp5xx
+    summary.completedDataCaseRuns = existingCompletedDataCaseRuns
+    return summary
+        
+               
     
 # create tables if not exist
 metadata.create_all()

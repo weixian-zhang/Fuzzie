@@ -22,14 +22,21 @@ import asyncio
 import uvicorn
 from uvicorn.main import Server
 import asyncio
-
+from utils import Utils
 from pubsub import pub
 # from fastapi import FastAPI, WebSocket
+from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
 
 app = Starlette()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_headers=["*"],
+    allow_methods=["*"],
+)
 
 websocket: WebSocket = None
 
@@ -40,7 +47,12 @@ class WebSocketServer(WebSocketEndpoint):
 
     async def on_receive(self, websocket, data):
         
-        dataCmd = json.loads(data)
+        ok, dataCmd = Utils.jsondc(data)
+        
+        if not ok:
+            eventstore.emitErr('invaid json command from websocket client')
+            return
+         
         cmd = dataCmd['command']
         
         if cmd == 'cancel_fuzzing':
@@ -58,14 +70,6 @@ class WebSocketServer(WebSocketEndpoint):
         
         eventstore.set_websocket(websocket)
         eventstore.send_websocket('Fuzzer/main: client connected to websocket server ')
-
-# single point message subscriber from all modules that sends message to websocket connected client
-# def pubsub_command_send_ws_msg_to_client(wsMsg):
-#     asyncio.run(websocket.send_text(wsMsg))
-    
-# pub.subscribe(pubsub_command_send_ws_msg_to_client, 'command_send_ws_msg')
-
-
 
 
 # init graphql server

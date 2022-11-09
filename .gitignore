@@ -123,3 +123,9 @@ src/core/__pycache__/apicontext.cpython-310.pyc
 src/core/__pycache__/openapi3_apicontext_init_manager.cpython-310.pyc
 src/core/core/datafactory/data/fuzzie.sqlite-journal
 src/core/core/datafactory/data/fuzzie.sqlite
+src/core/core/datafactory/data/fuzzie.sqlite
+src/core/core/datafactory/data/fuzzie.sqlite
+src/core/core/datafactory/data/fuzzie.sqlite-shm
+src/core/core/datafactory/data/fuzzie.sqlite-wal
+src/core/core/datafactory/data/fuzzie.sqlite
+src/core/core/datafactory/data/fuzzie.sqlite

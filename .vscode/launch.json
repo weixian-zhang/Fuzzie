@@ -42,7 +42,7 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			"preLaunchTask": "vscode ext - npm run watch",
+			//"preLaunchTask": "npm watch extension",
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {

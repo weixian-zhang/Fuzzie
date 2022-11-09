@@ -1,25 +1,30 @@
 <template>
-  <Master />
+  <v-app>
+    <v-main>
+      <Master />   
+    </v-main>
+  </v-app>
 </template>
 
 <script lang="ts">
-
-import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent } from 'vue'
 import Master from './components/Master.vue'
-import BootstrapVue3 from 'bootstrap-vue-3';
-import 'bootstrap-vue/dist/bootstrap-vue.css';
-import 'bootstrap/dist/css/bootstrap.css';
 
-// Vue.use(BootstrapVue);
+export default defineComponent({
+  name: 'App',
 
-@Options({
   components: {
-    HelloWorld,
     Master
   },
+
+
+  data () {
+    return {
+  
+
+    }
+  },
 })
-export default class App extends Vue {}
 </script>
 
 <style>
@@ -40,4 +45,10 @@ html,body{
   height: 100vh;
   margin-top: 5px;
 }
+
+html {
+  overflow: hidden !important;
+}
+
+
 </style>

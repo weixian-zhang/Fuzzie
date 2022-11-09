@@ -42,7 +42,16 @@
 		
 		//shiv bundle and copy fuzzie-fuzzer.pyz tasks
 		{
-			"label": "python shiv fuzzie fuzzer",
+			"label": "package fuzzie-fuzzer.pyz",
+			"type": "shell",
+			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzzer/fuzzie-fuzzer.pyz",
+			"options": {
+				"cwd": "${workspaceFolder}/src/core/dist"
+			},
+			"dependsOn": ["python shiv fuzzer"]
+		},
+		{
+			"label": "python shiv fuzzer",
 			"type": "shell",
 			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core --compressed  -e core.main:startup --root . .",
 			"options": {
@@ -81,15 +90,6 @@
 				"cwd": "${workspaceFolder}/src/clients/vscode/dist/fuzzer"
 			}
 		},
-		{
-			"label": "shiv/bundle/copy fuzzie-fuzzer.pyz",
-			"type": "shell",
-			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzzer/fuzzie-fuzzer.pyz",
-			"options": {
-				"cwd": "${workspaceFolder}/src/core/dist"
-			},
-			"dependsOn": ["python shiv fuzzie fuzzer"]
-		},
 		//end shiv bundle and copy
 
 		{
@@ -110,7 +110,15 @@
 			}
 		},
 		{
-			"label": "npm run build Vuejs",
+			"label": "npm watch extension",
+			"type": "shell",
+			"command": "npm run watch",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
+		},		
+		{
+			"label": "npm build webview dist",
 			"type": "shell",
 			"command": "copy-item",
 			"args": [
@@ -139,6 +147,26 @@
 			"options": {
 				"cwd": "${workspaceFolder}"
 			}
+		},
+		{
+			"label": "npm serve webview in browser",
+			"type": "shell",
+			"command": "npm run serve",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/src/webview"
+			},
+		},
+		{
+			"label": "vsce package",
+			"type": "shell",
+			"command": "vsce package -o ./dist",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
+			"dependsOn":[
+				"package fuzzie-fuzzer.pyz",
+				"npm package webview dist"
+			]
 		}
 		
 	]
