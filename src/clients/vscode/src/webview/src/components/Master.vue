@@ -7,9 +7,9 @@
             <div class="col-9">
                 <FuzzCaseSetPanel />
             </div>
-            
         </div>
-        <div class="row flex-fill d-flex  mt-2 mb-3">
+
+        <div class="row flex-fill d-flex  mt-2 mb-0">
             <FuzzResultPanel />
         </div>
     </div>
@@ -31,6 +31,10 @@
   export default class Master extends Vue {}
   </script>
 
-<style scoped>
+<style>
+
+html {
+  overflow: scroll !important;
+}
 
 </style>

@@ -6,7 +6,7 @@
   outlined
   width="100%"
   height="100%">
-    <v-toolbar card color="blue" flat="true" dense height="50px">
+    <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
       <v-btn icon height="30px" width="30px">
         <v-icon :disabled="!isFuzzcontextsGetComplete" @click="getFuzzcontexts">mdi-refresh</v-icon>
@@ -27,7 +27,6 @@
       </div>
   </v-card>
   
-
 </template>
 
 <script>
