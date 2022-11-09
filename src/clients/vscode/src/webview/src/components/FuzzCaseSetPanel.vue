@@ -17,69 +17,13 @@
         <v-icon >mdi-card-plus</v-icon>
       </v-btn>
     </v-toolbar>
-    
-    
-      <!-- <DataTable v-model:expandedRows="expandedRows" :value="products" dataKey="id" @row-expand="onRowExpand" @row-collapse="onRowCollapse" responsiveLayout="scroll">
-                    <template #header>
-                        <div class="table-header-container">
-                            <Button icon="pi pi-plus" label="Expand All" @click="expandAll" class="mr-2" />
-                            <Button icon="pi pi-minus" label="Collapse All" @click="collapseAll" />
-                        </div>
-                    </template>
-                    <Column :expander="true" headerStyle="width: 3rem" />
-                    <Column field="name" header="Name" sortable></Column>
-                    <Column header="Image">
-                        <template #body="slotProps">
-                            <img :src="'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.image" class="product-image" />
-                        </template>
-                    </Column>
-                    <Column field="price" header="Price" sortable>
-                        <template #body="slotProps">
-                            {{ slotProps.data.price }}
-                        </template>
-                    </Column>
-                    <Column field="category" header="Category" sortable></Column>
-                    <Column field="rating" header="Reviews" sortable>
-                        <template #body="slotProps">
-                            <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
-                        </template>
-                    </Column>
-                    <Column field="inventoryStatus" header="Status" sortable>
-                        <template #body="slotProps">
-                            <span :class="'product-badge status-' + slotProps.data.inventoryStatus.toLowerCase()">{{ slotProps.data.inventoryStatus }}</span>
-                        </template>
-                    </Column>
-                    <template #expansion="slotProps">
-                        <div class="orders-subtable">
-                            <h5>Orders for {{ slotProps.data.name }}</h5>
-                            <DataTable :value="slotProps.data.orders" responsiveLayout="scroll">
-                                <Column field="id" header="Id" sortable></Column>
-                                <Column field="customer" header="Customer" sortable></Column>
-                                <Column field="date" header="Date" sortable></Column>
-                                <Column field="amount" header="Amount" sortable>
-                                  {{ slotProps.data.amount }}
-                                </Column>
-                                <Column field="status" header="Status" sortable>
-                                    <template #body="slotProps">
-                                        <span :class="'order-badge order-' + slotProps.data.status.toLowerCase()">{{ slotProps.data.status }}</span>
-                                    </template>
-                                </Column>
-                                <Column headerStyle="width:4rem">
-                                    <template #body>
-                                        <Button icon="pi pi-search" />
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </div>
-                    </template>
-                </DataTable> -->
 
       <v-table density="compact" fixed-header>
         <thead>
           <tr>
             <th class="text-left">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" @change="selectAllChanged($event)">
                 <label class="form-check-label" for="flexCheckDefault">
                   Select All
                 </label>
@@ -123,7 +67,7 @@
             </td>
             <td>{{ item.verb }}</td>
             <td>{{ item.path }}</td>
-            <td>{{ shortenBody(item.body) }}</td>
+            <td>{{ shortenBody(item.body, 20) }}</td>
 
             <td>
               {{ item.http2xx }}
@@ -151,7 +95,7 @@
       
  
     
- <script>
+<script>
 
 import { Options, Vue } from 'vue-class-component';
 import DataTable from 'primevue/datatable';
@@ -168,22 +112,22 @@ import DataTable from 'primevue/datatable';
  export default class FuzzCaseSetPanel extends Vue {
 
 
-  fuzzCaseSetId
-    fuzzCaseSetRunId
-    fuzzcontextId
-    selected
-    verb
-    path
-    querystringNonTemplate
-    bodyNonTemplate
-    headerNonTemplate
-    authnType
-    runSummaryId
-    http2xx
-    http3xx
-    http4xx
-    http5xx
-    completedDataCaseRuns 
+  // fuzzCaseSetId
+  //   fuzzCaseSetRunId
+  //   fuzzcontextId
+  //   selected
+  //   verb
+  //   path
+  //   querystringNonTemplate
+  //   bodyNonTemplate
+  //   headerNonTemplate
+  //   authnType
+  //   runSummaryId
+  //   http2xx
+  //   http3xx
+  //   http4xx
+  //   http5xx
+  //   completedDataCaseRuns 
 
  fuzzcasesetRunSummary = [
           {
@@ -206,12 +150,19 @@ import DataTable from 'primevue/datatable';
           
         ]
 
+  selectAll = true;
 
   showTable = true; //this.nodes.length > 0 ? "true": "false";
 
-  shortenBody(bodyJson)
+  selectAllChanged(event) {
+    this.fuzzcasesetRunSummary.forEach(fcs => {
+      fcs.selected = this.selectAll;
+    });
+  }
+
+  shortenBody(bodyJson, length)
   {
-    return bodyJson.substring(0, 10) + "..."
+    return bodyJson.substring(0, length) + "..."
   }
 
  }
