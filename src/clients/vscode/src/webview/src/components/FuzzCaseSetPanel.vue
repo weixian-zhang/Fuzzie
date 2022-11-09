@@ -18,7 +18,7 @@
       </v-btn>
     </v-toolbar>
 
-      <v-table density="compact" fixed-header>
+      <v-table density="compact" fixed-header height="420px">
         <thead>
           <tr>
             <th class="text-left">
@@ -57,7 +57,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in fuzzcasesetRunSummary"
+            v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId">
             <td>
               <div class="form-check">
@@ -97,19 +97,25 @@
     
 <script>
 
-import { Options, Vue } from 'vue-class-component';
+import { Options, Vue  } from 'vue-class-component';
 import DataTable from 'primevue/datatable';
+import FuzzerWebClient from '@/services/FuzzerWebClient';
+import {EventEmitter} from 'eventemitter3';
+
+
+class Props {
+  // optional prop
+  eventemitter = {}
+}
+
 
 @Options({
   components: {
     DataTable
-  },
-  props: {
-    // msg: String
   }
 })
 
- export default class FuzzCaseSetPanel extends Vue {
+ export default class FuzzCaseSetPanel extends Vue.with(Props) {
 
 
   // fuzzCaseSetId
@@ -127,42 +133,57 @@ import DataTable from 'primevue/datatable';
   //   http3xx
   //   http4xx
   //   http5xx
-  //   completedDataCaseRuns 
+  //   completedDataCaseRuns
 
- fuzzcasesetRunSummary = [
-          {
-            
-            fuzzCaseSetId: "ASDASAsas",
-            fuzzCaseSetRunId: "ASDASAsas",
-            fuzzcontextId: "ASDASAsas",
-            selected: true,
-            verb: 'GET',
-            path: '/when/{id}?name={name}',
-            body: '{"a":"b","a":"b","a":"b","a":"b","a":"b","a":"b","a":"b"}',
-            runSummaryId: "asdasada",
-            http2xx: 0,
-            http3xx: 0,
-            http4xx: 0,
-            http5xx: 0,
-            completedDataCaseRuns : 0,
-            data: {}
-          },
-          
-        ]
+
+  fuzzerWC = {};
+
+  fcsRunSums = [];
+
+  dataCache = {};
 
   selectAll = true;
 
   showTable = true; //this.nodes.length > 0 ? "true": "false";
 
+  
+  mounted(){
+    this.fuzzerWC = new FuzzerWebClient();
+
+    // listen to ApiDiscovery Tree item select event
+    this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
+  }
+
+  async onFuzzContextSelected(fuzzcontextId)
+  {
+    if(this.dataCache[fuzzcontextId] !== undefined)
+    {
+      this.fcsRunSums = this.dataCache[fuzzcontextId];
+    }
+    else
+    {
+      const result = await this.fuzzerWC.getFuzzCaseSetWithRunSummary(fuzzcontextId);
+      this.dataCache[fuzzcontextId] = result;
+      this.fcsRunSums = this.dataCache[fuzzcontextId];
+    }
+  }
+
   selectAllChanged(event) {
-    this.fuzzcasesetRunSummary.forEach(fcs => {
+    this.fcsRunSums.forEach(fcs => {
       fcs.selected = this.selectAll;
     });
   }
 
   shortenBody(bodyJson, length)
   {
-    return bodyJson.substring(0, length) + "..."
+    if(bodyJson != undefined && bodyJson.length > length)
+    {
+      return bodyJson.substring(0, length) + "...";
+    }
+    else
+    {
+      return bodyJson;
+    }
   }
 
  }

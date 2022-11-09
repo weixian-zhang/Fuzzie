@@ -8,6 +8,7 @@
     "checkJs": true,
     "noImplicitAny": false,
     "noImplicitThis": false,
+    
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "skipLibCheck": true,

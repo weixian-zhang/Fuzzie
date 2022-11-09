@@ -16,9 +16,11 @@
       </v-btn>
     </v-toolbar>
     <div v-show="showTree">
-        <Tree :value="nodes" >
+        <Tree :value="nodes" selectionMode="single">
             <template #default="slotProps">
+              <div v-on:click="onFuzzContextSelected(slotProps.node.key)">
                 <b>{{slotProps.node.label}}</b>
+              </div>
             </template>
             <template #url="slotProps">
                 <a :href="slotProps.node.data">{{slotProps.node.label}}</a>
@@ -35,28 +37,33 @@ import { Options, Vue } from 'vue-class-component';
 import FuzzerManager from '@/services/FuzzerManager';
 import Tree from 'primevue/tree';
 import dateformat from 'dateformat';
+import {EventEmitter} from 'eventemitter3';
+
+class Props {
+  // optional prop
+  eventemitter = {}
+}
 
 @Options({
   components: {
     Tree
-  },
-  props: {
-    // msg: String
   }
 })
-export default class ApiDiscovery extends Vue {
+export default class ApiDiscovery extends Vue.with(Props) {
+
+  _eventemitter = new EventEmitter();
 
   fm = new FuzzerManager();
   
-  expandedKeys = ["childrens"];
   isFuzzcontextsGetComplete = true;
-  nodes = [];
-  showTree = this.nodes.length > 0 ? "true": "false";
 
+  nodes = [];
+
+  showTree = this.nodes.length > 0 ? "true": "false";
+  
   mounted() {
     this.getFuzzcontexts()
   }
-
   
   async getFuzzcontexts() {
 
@@ -74,8 +81,6 @@ export default class ApiDiscovery extends Vue {
         //TODO: log
         console.log(error)
     }
-    
-
   }
 
   createTreeNodesFromFuzzcontexts(fcs) {
@@ -111,6 +116,10 @@ export default class ApiDiscovery extends Vue {
 
     return nodes;
 
+  }
+
+  onFuzzContextSelected(fuzzContextId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId);
   }
 
 }

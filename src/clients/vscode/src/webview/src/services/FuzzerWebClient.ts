@@ -39,24 +39,66 @@ export default class FuzzerWebClient
         
         try {
 
-            const gqlQuery = {
-                "operationName": "",
-                "query": query,
-                "variables": {}
-            };
-
-            const axiosOpts = {
-                "method": "POST",
-                "body": JSON.stringify(query)
-            };
-
             const response = await axios.post(this.gqlUrl, {query});
             
-            return response.data.data.fuzzContexts;
+            if(response.data.data != undefined)
+            {
+                return response.data.data.fuzzContexts;
+            }
+            else
+            {
+                return [];
+            }
             
 
         } catch (err) {
-            // Handle Error Here
+            //TODO: Handle Error Here
+            console.error(err);
+        }        
+    }
+
+    public async getFuzzCaseSetWithRunSummary(fuzzcontextId: string): Promise<any> {
+
+        const query = `
+                        query {
+                            fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
+                                fuzzCaseSetId
+                                fuzzCaseSetRunId
+                                fuzzcontextId
+                                selected 
+                                verb
+                                path
+                                querystringNonTemplate
+                                bodyNonTemplate
+                                headerNonTemplate
+                                authnType
+                                runSummaryId
+                                http2xx
+                                http3xx
+                                http4xx
+                                http5xx
+                                completedDataCaseRuns
+                            }
+                        }
+                        `
+        
+        try {
+
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(response.data.data != null)
+            {
+                return response.data.data.fuzzCaseSetWithRunSummary;
+            }
+            else
+            {
+                return [];
+            }
+            
+            
+
+        } catch (err) {
+            //TODO: Handle Error Here
             console.error(err);
         }        
     }

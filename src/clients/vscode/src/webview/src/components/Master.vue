@@ -2,10 +2,10 @@
     <div class="container-fluid d-flex h-100 flex-column">
         <div class="row h-50 mt-1">
             <div class="col-3">
-                <ApiDiscovery />
+                <ApiDiscovery :eventemitter="eventemitter" />
             </div>
             <div class="col-9">
-                <FuzzCaseSetPanel />
+                <FuzzCaseSetPanel  :eventemitter="eventemitter" />
             </div>
         </div>
 
@@ -20,6 +20,7 @@
   import ApiDiscovery from './ApiDiscovery.vue';
   import FuzzCaseSetPanel from './FuzzCaseSetPanel.vue';
   import FuzzResultPanel from './FuzzResultPanel.vue';
+  import EventEmitter from 'eventemitter3'
 
   @Options({
     components: {
@@ -28,7 +29,11 @@
       FuzzResultPanel
     },
   })
-  export default class Master extends Vue {}
+  export default class Master extends Vue {
+
+    eventemitter = new EventEmitter();
+
+  }
   </script>
 
 <style>
