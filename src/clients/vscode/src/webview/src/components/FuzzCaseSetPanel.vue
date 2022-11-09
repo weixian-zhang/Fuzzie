@@ -10,11 +10,8 @@
   height="100%">
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
-      <!-- <v-btn icon height="30px" width="30px">
-        <v-icon :disabled="!isFuzzcontextsGetComplete" @click="getFuzzcontexts">mdi-refresh</v-icon>
-      </v-btn> -->
-      <v-btn icon height="30px" width="30px">
-        <v-icon >mdi-card-plus</v-icon>
+      <v-btn  variant="plain" height="30px" size="small">
+            Fuzz
       </v-btn>
     </v-toolbar>
 
@@ -58,7 +55,8 @@
         <tbody>
           <tr
             v-for="item in fcsRunSums"
-            :key="item.fuzzCaseSetId">
+            :key="item.fuzzCaseSetId"
+            @click="onRowClick(item)">
             <td>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected">
@@ -100,7 +98,6 @@
 import { Options, Vue  } from 'vue-class-component';
 import DataTable from 'primevue/datatable';
 import FuzzerWebClient from '@/services/FuzzerWebClient';
-import {EventEmitter} from 'eventemitter3';
 
 
 class Props {
@@ -116,24 +113,6 @@ class Props {
 })
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
-
-
-  // fuzzCaseSetId
-  //   fuzzCaseSetRunId
-  //   fuzzcontextId
-  //   selected
-  //   verb
-  //   path
-  //   querystringNonTemplate
-  //   bodyNonTemplate
-  //   headerNonTemplate
-  //   authnType
-  //   runSummaryId
-  //   http2xx
-  //   http3xx
-  //   http4xx
-  //   http5xx
-  //   completedDataCaseRuns
 
 
   fuzzerWC = {};
@@ -166,6 +145,10 @@ class Props {
       this.dataCache[fuzzcontextId] = result;
       this.fcsRunSums = this.dataCache[fuzzcontextId];
     }
+  }
+
+  onRowClick(fcsrs) {
+    return;
   }
 
   selectAllChanged(event) {

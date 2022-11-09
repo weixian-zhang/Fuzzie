@@ -8,11 +8,8 @@
   height="100%">
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
-      <v-btn icon height="30px" width="30px">
-        <v-icon :disabled="!isFuzzcontextsGetComplete" @click="getFuzzcontexts">mdi-refresh</v-icon>
-      </v-btn>
-      <v-btn icon height="30px" width="30px">
-        <v-icon >mdi-card-plus</v-icon>
+      <v-btn  variant="plain" height="30px" v-bind="attrs" v-on="on" size="small">
+            New Context
       </v-btn>
     </v-toolbar>
     <div v-show="showTree">
@@ -22,8 +19,19 @@
                 <b>{{slotProps.node.label}}</b>
               </div>
             </template>
+
+            <!-- fuzz run -->
             <template #url="slotProps">
-                <a :href="slotProps.node.data">{{slotProps.node.label}}</a>
+                <span>
+                  {{slotProps.node.label}}
+                  <div v-show="slotProps.node.isFuzzing">
+                    <b class="text-info">fuzzing</b>
+                    <v-progress-linear
+                        indeterminate
+                        color="teal">
+                    </v-progress-linear>
+                  </div>
+                </span>
             </template>
         </Tree>
       </div>
@@ -101,6 +109,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
           const casesetNode = {
             key: fcsr.fuzzCaseSetRunsId,
+            isFuzzing: false,
             label: dateformat(fcsr.startTime, "ddd, mmm dS, yyyy, h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
             data: fcsr
           };
