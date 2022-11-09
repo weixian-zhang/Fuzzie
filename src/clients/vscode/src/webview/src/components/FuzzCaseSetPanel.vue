@@ -2,6 +2,7 @@
 <!-- https://primefaces.org/primevue/treetable/responsive -->
 
 <template>
+
   <v-card
   color="white"
   outlined
@@ -16,24 +17,134 @@
         <v-icon >mdi-card-plus</v-icon>
       </v-btn>
     </v-toolbar>
-    <div v-show="showTable">
-      <TreeTable :value="nodes" class="p-treetable-sm" style="margin-bottom: 2rem" :scrollable="true" scroll-height="400px" :resizableColumns="true" columnResizeMode="fit" showGridlines>
-        <Column field="verb" header="Verb">
-        </Column>
-        <Column field="path" header="Path"></Column>
-        <Column field="http2xx" header="2xx"></Column>
-        <Column field="http3xx" header="Type"></Column>
-        <Column field="" header="Body"  :expander="true">
-          <template #header>
-            children: 
-          </template>
-          <template #body="slotProps">
+    
+    
+      <!-- <DataTable v-model:expandedRows="expandedRows" :value="products" dataKey="id" @row-expand="onRowExpand" @row-collapse="onRowCollapse" responsiveLayout="scroll">
+                    <template #header>
+                        <div class="table-header-container">
+                            <Button icon="pi pi-plus" label="Expand All" @click="expandAll" class="mr-2" />
+                            <Button icon="pi pi-minus" label="Collapse All" @click="collapseAll" />
+                        </div>
+                    </template>
+                    <Column :expander="true" headerStyle="width: 3rem" />
+                    <Column field="name" header="Name" sortable></Column>
+                    <Column header="Image">
+                        <template #body="slotProps">
+                            <img :src="'demo/images/product/' + slotProps.data.image" :alt="slotProps.data.image" class="product-image" />
+                        </template>
+                    </Column>
+                    <Column field="price" header="Price" sortable>
+                        <template #body="slotProps">
+                            {{ slotProps.data.price }}
+                        </template>
+                    </Column>
+                    <Column field="category" header="Category" sortable></Column>
+                    <Column field="rating" header="Reviews" sortable>
+                        <template #body="slotProps">
+                            <Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false" />
+                        </template>
+                    </Column>
+                    <Column field="inventoryStatus" header="Status" sortable>
+                        <template #body="slotProps">
+                            <span :class="'product-badge status-' + slotProps.data.inventoryStatus.toLowerCase()">{{ slotProps.data.inventoryStatus }}</span>
+                        </template>
+                    </Column>
+                    <template #expansion="slotProps">
+                        <div class="orders-subtable">
+                            <h5>Orders for {{ slotProps.data.name }}</h5>
+                            <DataTable :value="slotProps.data.orders" responsiveLayout="scroll">
+                                <Column field="id" header="Id" sortable></Column>
+                                <Column field="customer" header="Customer" sortable></Column>
+                                <Column field="date" header="Date" sortable></Column>
+                                <Column field="amount" header="Amount" sortable>
+                                  {{ slotProps.data.amount }}
+                                </Column>
+                                <Column field="status" header="Status" sortable>
+                                    <template #body="slotProps">
+                                        <span :class="'order-badge order-' + slotProps.data.status.toLowerCase()">{{ slotProps.data.status }}</span>
+                                    </template>
+                                </Column>
+                                <Column headerStyle="width:4rem">
+                                    <template #body>
+                                        <Button icon="pi pi-search" />
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
+                    </template>
+                </DataTable> -->
+
+      <v-table density="compact" fixed-header>
+        <thead>
+          <tr>
+            <th class="text-left">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                <label class="form-check-label" for="flexCheckDefault">
+                  Select All
+                </label>
+              </div>
+            </th>
+            <th class="text-left">
+              Verb
+            </th>
+            <th class="text-left">
+              Path
+            </th>
+            <th class="text-left">
+              Body
+            </th>
+            <th class="text-left">
+              2xx
+            </th>
+            <th class="text-left">
+              3xx
+            </th>
+            <th class="text-left">
+              4xx
+            </th>
+            <th class="text-left">
+              5xx
+            </th>
+            <th class="text-left">
+              Total Runs
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in fuzzcasesetRunSummary"
+            :key="item.fuzzCaseSetId">
+            <td>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected">
+              </div>
+
+            </td>
+            <td>{{ item.verb }}</td>
+            <td>{{ item.path }}</td>
+            <td>{{ shortenBody(item.body) }}</td>
+
+            <td>
+              {{ item.http2xx }}
+            </td>
+            <td>
+              {{ item.http3xx }}
+            </td>
+            <td>
+              {{ item.http4xx }}
+            </td>
+            <td>
+              {{ item.http5xx }}
+            </td>
+            <td>
+              {{ item.completedDataCaseRuns }}
+            </td>
             
-            {{ slotProps.node.data.body }}
-          </template>
-        </Column>
-    </TreeTable>
-      </div>
+          </tr>
+        </tbody>
+      </v-table>
+  
   </v-card>
   
 </template>
@@ -42,14 +153,12 @@
     
  <script>
 
-import TreeTable  from 'primevue/treetable';
-import Column from 'primevue/column';
 import { Options, Vue } from 'vue-class-component';
+import DataTable from 'primevue/datatable';
 
 @Options({
   components: {
-    TreeTable,
-    Column
+    DataTable
   },
   props: {
     // msg: String
@@ -58,50 +167,52 @@ import { Options, Vue } from 'vue-class-component';
 
  export default class FuzzCaseSetPanel extends Vue {
 
-  
-  nodes  = [
-      {
-        key:"0",
-        data: {
-          verb:"POST",
-          path:"100kb",
-          http2xx:"Folder"
-        },
-        children:[{
-            key:"0-0",
-            data: {
-              body: "I am the body",
-              others: "others of course"
-            }
-            
-           
-          }]
-          
-          
-      }
-  ];
-  
-  // [
-  //       {"key":"0","data":{"name":"Applications","size":"100kb","type":"Folder"},
-  //       "children":[{"key":"0-0","data":{"body":"sdasadadad"},
-  //       "children":[{"key":"0-0-0","data":{"name":"vue.app","size":"10kb","type":"Application"}},{"key":"0-0-1","data":{"name":"native.app","size":"10kb","type":"Application"}},{"key":"0-0-2","data":{"name":"mobile.app","size":"5kb","type":"Application"}}]},{"key":"0-1","data":{"name":"editor.app","size":"25kb","type":"Application"}},{"key":"0-2","data":{"name":"settings.app","size":"50kb","type":"Application"}}]},
-  //       {"key":"1","data":{"name":"Cloud","size":"20kb","type":"Folder"},"children":[{"key":"1-0","data":{"name":"backup-1.zip","size":"10kb","type":"Zip"}},{"key":"1-1","data":{"name":"backup-2.zip","size":"10kb","type":"Zip"}}]},
-  //       {"key":"2","data":{"name":"Desktop","size":"150kb","type":"Folder"},"children":[{"key":"2-0","data":{"name":"note-meeting.txt","size":"50kb","type":"Text"}},{"key":"2-1","data":{"name":"note-todo.txt","size":"100kb","type":"Text"}}]},
-  //       {"key":"3","data":{"name":"Documents","size":"75kb","type":"Folder"},"children":[{"key":"3-0","data":{"name":"Work","size":"55kb","type":"Folder"},"children":[{"key":"3-0-0","data":{"name":"Expenses.doc","size":"30kb","type":"Document"}},{"key":"3-0-1","data":{"name":"Resume.doc","size":"25kb","type":"Resume"}}]},{"key":"3-1","data":{"name":"Home","size":"20kb","type":"Folder"},"children":[{"key":"3-1-0","data":{"name":"Invoices","size":"20kb","type":"Text"}}]}]},
-  //       {"key":"4","data":{"name":"Downloads","size":"25kb","type":"Folder"},"children":[{"key":"4-0","data":{"name":"Spanish","size":"10kb","type":"Folder"},"children":[{"key":"4-0-0","data":{"name":"tutorial-a1.txt","size":"5kb","type":"Text"}},{"key":"4-0-1","data":{"name":"tutorial-a2.txt","size":"5kb","type":"Text"}}]},{"key":"4-1","data":{"name":"Travel","size":"15kb","type":"Text"},"children":[{"key":"4-1-0","data":{"name":"Hotel.pdf","size":"10kb","type":"PDF"}},{"key":"4-1-1","data":{"name":"Flight.pdf","size":"5kb","type":"PDF"}}]}]},
-  //       {"key":"5","data":{"name":"Main","size":"50kb","type":"Folder"},"children":[{"key":"5-0","data":{"name":"bin","size":"50kb","type":"Link"}},{"key":"5-1","data":{"name":"etc","size":"100kb","type":"Link"}},{"key":"5-2","data":{"name":"var","size":"100kb","type":"Link"}}]},
-  //       {"key":"6","data":{"name":"Other","size":"5kb","type":"Folder"},"children":[{"key":"6-0","data":{"name":"todo.txt","size":"3kb","type":"Text"}},{"key":"6-1","data":{"name":"logo.png","size":"2kb","type":"Picture"}}]},
-  //       {"key":"7","data":{"name":"Pictures","size":"150kb","type":"Folder"},"children":[{"key":"7-0","data":{"name":"barcelona.jpg","size":"90kb","type":"Picture"}},{"key":"7-1","data":{"name":"primeng.png","size":"30kb","type":"Picture"}},{"key":"7-2","data":{"name":"prime.jpg","size":"30kb","type":"Picture"}}]},
-  //       {"key":"8","data":{"name":"Videos","size":"1500kb","type":"Folder"},"children":[{"key":"8-0","data":{"name":"primefaces.mkv","size":"1000kb","type":"Video"}},{"key":"8-1","data":{"name":"intro.avi","size":"500kb","type":"Video"}}]}
-  //   ]
- 
-  columns = [
-            {field: 'name', header: 'Vin', expander: true},
-            {field: 'size', header: 'Size'},
-            {field: 'type', header: 'Type'}
-        ];
 
-  showTable = this.nodes.length > 0 ? "true": "false";
+  fuzzCaseSetId
+    fuzzCaseSetRunId
+    fuzzcontextId
+    selected
+    verb
+    path
+    querystringNonTemplate
+    bodyNonTemplate
+    headerNonTemplate
+    authnType
+    runSummaryId
+    http2xx
+    http3xx
+    http4xx
+    http5xx
+    completedDataCaseRuns 
+
+ fuzzcasesetRunSummary = [
+          {
+            
+            fuzzCaseSetId: "ASDASAsas",
+            fuzzCaseSetRunId: "ASDASAsas",
+            fuzzcontextId: "ASDASAsas",
+            selected: true,
+            verb: 'GET',
+            path: '/when/{id}?name={name}',
+            body: '{"a":"b","a":"b","a":"b","a":"b","a":"b","a":"b","a":"b"}',
+            runSummaryId: "asdasada",
+            http2xx: 0,
+            http3xx: 0,
+            http4xx: 0,
+            http5xx: 0,
+            completedDataCaseRuns : 0,
+            data: {}
+          },
+          
+        ]
+
+
+  showTable = true; //this.nodes.length > 0 ? "true": "false";
+
+  shortenBody(bodyJson)
+  {
+    return bodyJson.substring(0, 10) + "..."
+  }
 
  }
  
