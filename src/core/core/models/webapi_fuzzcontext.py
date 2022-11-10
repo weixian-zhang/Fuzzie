@@ -119,6 +119,14 @@ class ApiFuzzContext:
         self.openapi3FilePath = ''
         self.openapi3Url = ''
         
+        #security scheme
+        self.basicUsername = '', 
+        self.basicPassword= '', 
+        self.bearerTokenHeader= '', 
+        self.bearerToken= '', 
+        self.apikeyHeader=  '', 
+        self.apikey= '', 
+        
         # execution
         self.hostname: str = ''
         self.port: int

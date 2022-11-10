@@ -41,6 +41,12 @@ class DiscoverOpenApi3ByFilePath(graphene.Mutation):
         port = graphene.Int()
         authnType = graphene.String()
         openapi3FilePath = graphene.String()
+        basicUsername = graphene.String()
+        basicPassword = graphene.String()
+        bearerTokenHeader = graphene.String()
+        bearerToken = graphene.String()
+        apikeyHeader = graphene.String()
+        apikey = graphene.String()
     
     ok = graphene.Boolean()
     apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
