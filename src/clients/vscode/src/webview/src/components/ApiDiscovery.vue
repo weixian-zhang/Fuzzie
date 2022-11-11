@@ -2,8 +2,8 @@
 
 <template>
   <div>
-    # new context
-    <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:850px;">
+    <!-- new context -->
+    <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
         <div class="row">
@@ -41,7 +41,7 @@
 
                 <div class="mb-2">
                   <label for="openapi3-file" class="form-label">Request Text File</label>
-                  <input class="form-control form-control-sm" type="file" id="openapi3-file">
+                  <input class="form-control form-control-sm" type="file" id="openapi3-file" >
                 </div>
 
                 <div class="mb-2 mt-3">
@@ -129,37 +129,14 @@
               </form>
 
               <div style="text-align:right">
+                <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
                 <button class="btn btn-primary" @click="createNewContext">Create</button>
               </div>
             <!-- col end-->
             </div>
         </div>
       </div>
-
-      
     </Sidebar>
-
-
-<!-- self.name = ''
-        self.requestMessageText = ''
-        self.requestMessageFilePath = ''
-        self.openapi3FilePath = ''
-        self.openapi3Url = ''
-        
-        #security scheme
-        self.basicUsername = '', 
-        self.basicPassword= '', 
-        self.bearerTokenHeader= '', 
-        self.bearerToken= '', 
-        self.apikeyHeader=  '', 
-        self.apikey= '', 
-        
-        # execution
-        self.hostname: str = ''
-        self.port: int
-        self.fuzzMode: FuzzMode = FuzzMode.Quick         
-        self.fuzzcaseToExec = 100
-        self.authnType: str = SupportedAuthnType.Anonymous.name -->
 
     <v-card
     color="white"
@@ -172,8 +149,8 @@
               New Context
         </v-btn>
       </v-toolbar>
-      <div v-show="showTree">
-          <Tree :value="nodes" selectionMode="single">
+      <div heigh="100%">
+          <Tree :value="nodes" selectionMode="single" v-show="showTree">
               <template #default="slotProps">
                 <div v-on:click="onFuzzContextSelected(slotProps.node.key)">
                   <b>{{slotProps.node.label}}</b>
@@ -199,18 +176,21 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 
 import { Options, Vue } from 'vue-class-component';
-import FuzzerManager from '@/services/FuzzerManager';
-import Tree from 'primevue/tree';
+import FuzzerManager from '../services/FuzzerManager';
+import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
-import {EventEmitter} from 'eventemitter3';
 import Sidebar from 'primevue/sidebar';
+import VSCodeMessager from '../services/VSCodeMessager';
+
+declare var vscode: any;
 
 class Props {
   // optional prop
-  eventemitter = {}
+  eventemitter: any = {}
+  vscodeMsger: VSCodeMessager;
 }
 
 @Options({
@@ -219,15 +199,17 @@ class Props {
     Sidebar
   }
 })
-export default class ApiDiscovery extends Vue.with(Props) {
 
-  _eventemitter = new EventEmitter();
+
+
+export default class ApiDiscovery extends Vue.with(Props) {
+  
   fm = new FuzzerManager();
   isFuzzcontextsGetComplete = true;
-  nodes = [];
+  nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
   newContextSideBarVisible = false;
-
+  
   securityBtnVisibility= {
     anonymous: false,
     basic: false,
@@ -278,13 +260,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
   }
 
-  createTreeNodesFromFuzzcontexts(fcs) {
+  createTreeNodesFromFuzzcontexts(fcs): TreeNode[] {
 
-    const nodes = [];
+    const nodes: TreeNode[] = [];
 
     fcs.forEach(fc => {
 
-        const fcNode = {
+        const fcNode: any = {
           key: fc.Id,
           label: fc.name,
           data: fc
@@ -323,30 +305,60 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   createNewContext() {
-    return;
+    
+    if(this.newContext.openapi3FilePath != '')
+    {
+      this.vscodeMsger.send('read-file-content', this.newContext.openapi3FilePath);
+    }
   }
 
-  newContextObject() {
-    return {
-      isanonymous: false,
-      name: '',
-      requestText: '',
-      requestTextFilePath: '',
-      openapi3FilePath: '',
-      openapi3Url: '',
-      basicUsername: '', 
-      basicPassword: '', 
-      bearerTokenHeader: '', 
-      bearerToken: '', 
-      apikeyHeader: '', 
-      apikey: '', 
-      hostname: '',
-      port: 443,
-      fuzzMode: '',
-      fuzzcaseToExec: 100,
-      authnType: ''
-    } 
+  clearContextForm() {
+    this.newContext = {
+        isanonymous: false,
+        name: '',
+        requestText: '',
+        requestTextFilePath: '',
+        openapi3FilePath: '',
+        openapi3Url: '',
+        basicUsername: '', 
+        basicPassword: '', 
+        bearerTokenHeader: '', 
+        bearerToken: '', 
+        apikeyHeader: '', 
+        apikey: '', 
+        hostname: '',
+        port: 443,
+        fuzzMode: '',
+        fuzzcaseToExec: 100,
+        authnType: ''
+    };
   }
+
+  // newContextObject() {
+
+  //   this.newContext = {
+  //     isanonymous: false,
+  //     name: '',
+  //     requestText: '',
+  //     requestTextFilePath: '',
+  //     openapi3FilePath: '',
+  //     openapi3Url: '',
+  //     basicUsername: '', 
+  //     basicPassword: '', 
+  //     bearerTokenHeader: '', 
+  //     bearerToken: '', 
+  //     apikeyHeader: '', 
+  //     apikey: '', 
+  //     hostname: '',
+  //     port: 443,
+  //     fuzzMode: '',
+  //     fuzzcaseToExec: 100,
+  //     authnType: ''
+  //   } 
+
+    
+    
+  // }
 
 }
 </script>

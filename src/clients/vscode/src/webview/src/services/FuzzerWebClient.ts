@@ -54,6 +54,7 @@ export default class FuzzerWebClient
         } catch (err) {
             //TODO: Handle Error Here
             console.error(err);
+            return [];
         }        
     }
 
@@ -100,6 +101,7 @@ export default class FuzzerWebClient
         } catch (err) {
             //TODO: Handle Error Here
             console.error(err);
+            return [];
         }        
     }
 

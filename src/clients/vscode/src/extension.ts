@@ -21,6 +21,15 @@ var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
+	context.subscriptions.push(   
+		vscode.commands.registerCommand(
+			'fuzzie.openwebview', () => 
+				{
+					VuejsPanel.createOrShow(context, eventlogger, context.extensionUri.path);
+				}
+		)
+	);
+
 	stateManager = new StateManager(context);
 	
 	eventlogger.log('Fuzzie is initializing');
@@ -32,14 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
 	
-	context.subscriptions.push(   
-		vscode.commands.registerCommand(
-			'fuzzie.openwebview', () => 
-				{
-					VuejsPanel.createOrShow(context.extensionUri.path);
-				}
-		)
-	);
+	
 
 	eventlogger.log('checking if fuzzer running');
 
@@ -48,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	if(!isFuzzerWSRunning)
 	{
 		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
-		startFuzzer(appcontext);
+		//startFuzzer(appcontext);
 	};
 }
 
@@ -97,32 +99,40 @@ async function startFuzzer(appcontext: AppContext) {
 	//TODO check if process is running
 		//if running skip below
 
-	let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
+		try {
 
-	if(_pythonProcess == undefined)
-	{
-		_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
+			let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
 
-		const pid = _pythonProcess.pid
-		if(pid != undefined)
-			await stateManager.set('fuzzer/processid', pid.toString());
-	}
-		
-		
-	if(_pythonProcess != undefined) {
-		_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
-			eventlogger.log(`Fuzzer: ${data}`);
-		});
-		_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
-			eventlogger.log(`Fuzzer: ${data}`);
-		});
-		_pythonProcess.on('SIGINT',function(code){
-			eventlogger.log(`Fuzzer: exiting ${code}`);
-		});
-		_pythonProcess.on('close', function(code){
-			eventlogger.log(`Fuzzer: exiting ${code}`);
-		});
-	}
+			if(_pythonProcess == undefined)
+			{
+				_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
+
+				const pid = _pythonProcess.pid
+				if(pid != undefined)
+					await stateManager.set('fuzzer/processid', pid.toString());
+			}
+				
+				
+			if(_pythonProcess != undefined) {
+				_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
+					eventlogger.log(`Fuzzer: ${data}`);
+				});
+				_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
+					eventlogger.log(`Fuzzer: ${data}`);
+				});
+				_pythonProcess.on('SIGINT',function(code){
+					eventlogger.log(`Fuzzer: exiting ${code}`);
+				});
+				_pythonProcess.on('close', function(code){
+					eventlogger.log(`Fuzzer: exiting ${code}`);
+				});
+			}
+		} catch (error) {
+			
+			//TODO: logging
+			eventlogger.log(`error when starting fuzzer ${error}`);
+			return;
+		}
 	
 }
 

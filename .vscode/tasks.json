@@ -113,9 +113,10 @@
 			"label": "npm watch extension",
 			"type": "shell",
 			"command": "npm run watch",
+			"isBackground": true,
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
-			},
+			}
 		},		
 		{
 			"label": "npm build webview dist",
