@@ -57,7 +57,8 @@ class NewFuzzContext(graphene.Mutation):
     ok = graphene.Boolean()
     apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
     
-    def mutate(self, info, isanonymous,
+    def mutate(self, info,
+               isanonymous,
         name,
         requestTextContent,
         requestTextFilePath,
