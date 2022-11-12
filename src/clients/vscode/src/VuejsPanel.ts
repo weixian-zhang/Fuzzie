@@ -50,10 +50,6 @@ export class VuejsPanel {
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts')),
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'img'))
 					]
-					// ,
-					// portMapping: [
-					// 	{ webviewPort: 50001, extensionHostPort: 50001}
-					// ]
 				}
 			);
 	
@@ -62,11 +58,13 @@ export class VuejsPanel {
 				  switch (message.command) {
 					case 'read-file-content':
 					  
-						const filePath = message.text;
+						const type = message.type;
+						const content = message.content;
+
 	
-						fs.readFile(filePath, 'utf8', function(err, data){
+						fs.readFile(content, 'utf8', function(err, data){
 			
-							this._vuejsPanel.webview.postMessage({ command: 'file-content-result' });
+							this._vuejsPanel.webview.postMessage({ command: 'file-content-result', type: type, content: data});
 						});
 					
 					  	return;

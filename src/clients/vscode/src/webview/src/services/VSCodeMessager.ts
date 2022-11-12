@@ -1,5 +1,24 @@
 import type { WebviewApi } from "vscode-webview";
 
+
+export class Message {
+    public command = '';
+    public type = '';
+    public content = '';
+
+    constructor(command, type, content) {
+        this.command = command;
+        this.type = type;
+        this.content = content;
+    }
+
+    json()
+    {
+        return JSON.stringify(this);
+    }
+}
+
+
 export default class VSCodeMessager
 {
     private _vscode: WebviewApi<unknown> | undefined;
@@ -15,7 +34,7 @@ export default class VSCodeMessager
         this.startListening();
     }
 
-    public send(command: unknown, content: unknown)
+    public send(message: unknown)
     {
         try {
 
@@ -26,10 +45,8 @@ export default class VSCodeMessager
                 return;
             }
 
-            this._vscode.postMessage({
-                command: command,
-                text: content
-            });
+            this._vscode.postMessage(message);
+
         } catch (error) {
             //TODO: log error
             console.log(error);

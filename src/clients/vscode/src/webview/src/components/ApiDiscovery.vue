@@ -2,16 +2,26 @@
 
 <template>
   <div>
+    <Toast />
     <!-- new context -->
     <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
+        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
         <div class="row">
             <div class="col-6">
               <form>
                 <div class="form-group">
                   <label for="contextName">Name</label>
-                  <input type="text" class="form-control form-control-sm" id="contextName"  placeholder="fuzz context name" v-model="newContext.name">
+                  <v-text-field
+                    v-model="newContext.name"
+                    :rules="rules"
+                    counter="25"
+                    hint="This field uses counter prop"
+                    label="name"
+                  ></v-text-field>
+
+                  <!-- <input type="text" class="form-control form-control-sm" id="contextName"  placeholder="fuzz context name" v-model=""> -->
                 </div>
 
               <v-divider />
@@ -19,34 +29,39 @@
               <v-divider />
 
               <div class="form-group mb-3" >
-                  <label for="hostname">Hostname</label>
-                  <input type="text" class="form-control form-control-sm" id="hostname"  placeholder="hostname" v-model="newContext.hostname">
+                <v-text-field
+                    v-model="newContext.hostname"
+                    :rules="rules"
+                    hint="hostname"
+                    label="Hostname" />
                 </div>
 
                 <div class="form-group">
-                  <label for="port">Port</label>
-                  <input type="text" class="form-control form-control-sm" id="port"  placeholder="port" v-model="newContext.port">
+                  <v-text-field
+                    v-model="newContext.port"
+                    :rules="rules"
+                    hint="port"
+                    label="Port" />
                 </div>
 
               <v-divider />
               <b>API Discovery</b>
+              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
-
-              <small>Tell Fuzzie about your API schema in one of the following ways</small>
 
                 <div class="mb-2">
                   <label for="rq-text" class="form-label">Request Text</label>
-                  <textarea class="form-control" id="rq-text" rows="4" v-model="newContext.requestText"></textarea>
+                  <textarea class="form-control" id="rq-text" rows="4" v-model="newContext.requestTextContent"></textarea>
                 </div>
 
                 <div class="mb-2">
-                  <label for="openapi3-file" class="form-label">Request Text File</label>
-                  <input class="form-control form-control-sm" type="file" id="openapi3-file" >
+                  <label for="rt-file" class="form-label">Request Text File</label>
+                  <input class="form-control form-control-sm" type="file" id="rt-file" ref="rtFileInput" @change="onRequestTextFileChange">
                 </div>
 
                 <div class="mb-2 mt-3">
                   <label for="openapi3-file" class="form-label">OpenAPI 3 / Swagger File</label>
-                  <input class="form-control form-control-sm" type="file" id="openapi3-file">
+                  <input class="form-control form-control-sm" type="file" id="openapi3-file" ref="openapi3FileInput" @change="onOpenApi3FileChange">
                 </div>
 
                 <div class="mt-3">
@@ -103,8 +118,16 @@
                   <input type="text" class="form-control form-control-sm" id="username"  placeholder="username">
                 </div>
                 <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
-                  <label for="username">Password</label>
-                  <input type="password" class="form-control form-control-sm" id="username"  placeholder="password">
+                  <label for="password">Password</label>
+                  <v-text-field
+                    v-model="password"
+                    :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="show1 ? 'text' : 'password'"
+                    name="password"
+                    counter
+                    @click:append="show1 = !show1"
+                  ></v-text-field>
+                  <!-- <input type="password" class="form-control form-control-sm" id="username"  placeholder="password"> -->
                 </div>
 
                 <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
@@ -125,8 +148,26 @@
                   <input type="text" class="form-control form-control-sm" id="apikey">
                 </div>
 
-              <v-divider />
+                <v-divider />
+
+                <b>Fuzz Properties</b>
+                <v-divider />
+                <v-divider />
+                
+                <v-slider
+                  v-model="newContext.fuzzcaseToExec"
+                  label=''
+                  track-color="blue"
+                  thumb-color="red"
+                  thumb-label="always"
+                  min=100
+                  max=50000
+                  step="10"
+                ></v-slider>
+
               </form>
+              
+              <v-divider />
 
               <div style="text-align:right">
                 <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
@@ -180,10 +221,14 @@
 
 import { Options, Vue } from 'vue-class-component';
 import FuzzerManager from '../services/FuzzerManager';
+import Toast from 'primevue/toast';
+import { useToast } from "primevue/usetoast";
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
-import VSCodeMessager from '../services/VSCodeMessager';
+import VSCodeMessager, {Message} from '../services/VSCodeMessager';
+import Utils from '../Utils';
+import { HtmlHTMLAttributes } from '@vue/runtime-dom';
 
 declare var vscode: any;
 
@@ -196,8 +241,9 @@ class Props {
 @Options({
   components: {
     Tree,
-    Sidebar
-  }
+    Sidebar,
+    Toast
+  },
 })
 
 
@@ -209,7 +255,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
   newContextSideBarVisible = false;
-  
+  toast = useToast();
+
   securityBtnVisibility= {
     anonymous: false,
     basic: false,
@@ -219,12 +266,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   newContext= {
-    isanonymous: false,
+    isanonymous: true,
     name: '',
-    requestText: '',
+    requestTextContent: '',
     requestTextFilePath: '',
     openapi3FilePath: '',
     openapi3Url: '',
+    openapi3Content: '',
     basicUsername: '', 
     basicPassword: '', 
     bearerTokenHeader: '', 
@@ -233,13 +281,24 @@ export default class ApiDiscovery extends Vue.with(Props) {
     apikey: '', 
     hostname: '',
     port: 443,
-    fuzzMode: '',
     fuzzcaseToExec: 100,
     authnType: ''
   } 
   
   mounted() {
     this.getFuzzcontexts()
+
+    this.vscodeMsger.subscribe("file-content-result", this.readFileContentResult);
+  }
+
+  readFileContentResult(message)
+  {
+    const msgObj: Message = JSON.parse(message);
+
+    if(msgObj.type == 'openapi')
+    {
+      console.log(msgObj.content);
+    }
   }
   
   async getFuzzcontexts() {
@@ -300,26 +359,93 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId);
   }
 
-  showNewContextSideBar() {
-      return;
+  async onRequestTextFileChange(event) {
+    console.log(event);
+
+    const files = event.target.files;
+
+    const file = files[0];
+
+    const reader = new FileReader();
+    if (file.name.includes(".http") || file.name.includes(".fuzzie") || file.name.includes(".text")) {
+
+      const content = await Utils.readFileAsText(file);
+      this.newContext.requestTextContent = content;
+    }
+    else
+    {
+      this.clearRequestTextFileInput();
+      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'Request Text file has ext of .http, .text or .fuzzie', life: 5000});
+    }
+  }
+
+  async onOpenApi3FileChange(event) {
+    console.log(event);
+
+    const files = event.target.files;
+
+    const file = files[0];
+
+    const reader = new FileReader();
+    if (file.name.includes(".yaml") || file.name.includes(".json")) {
+
+      const content = await Utils.readFileAsText(file);
+      this.newContext.openapi3Content = content;
+    }
+    else
+    {
+      this.clearOpenApiFileInput();
+      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'OpenAPI3 spec files are yaml or json', life: 5000});
+    }
   }
 
   createNewContext() {
     
-    if(this.newContext.openapi3FilePath != '')
+    this.newContext.authnType = this.determineAuthnType();
+
+
+  }
+
+  // Anonymous = "Anonymous",
+  // Basic = "Basic",
+  // Bearer = "Bearer",
+  // ApiKey = "ApiKey"
+  determineAuthnType(): string {
+
+    if(this.newContext.isanonymous)
     {
-      this.vscodeMsger.send('read-file-content', this.newContext.openapi3FilePath);
+      return "Anonymous";
     }
+    else if(this.newContext.basicUsername != '' && this.newContext.basicPassword != '')
+    {
+       return "Basic";
+    }
+    else if(this.newContext.apikeyHeader != '' && this.newContext.apikey != '')
+    {
+       return  "ApiKey";
+    }
+    else if(this.newContext.bearerToken != '')
+    {
+       return  "Bearer";
+    }
+
+    return "Anonymous";
   }
 
   clearContextForm() {
+
+    
+    this.clearOpenApiFileInput();
+    this.clearRequestTextFileInput();
+    
     this.newContext = {
         isanonymous: false,
         name: '',
-        requestText: '',
+        requestTextContent: '',
         requestTextFilePath: '',
         openapi3FilePath: '',
         openapi3Url: '',
+        openapi3Content: '',
         basicUsername: '', 
         basicPassword: '', 
         bearerTokenHeader: '', 
@@ -328,38 +454,24 @@ export default class ApiDiscovery extends Vue.with(Props) {
         apikey: '', 
         hostname: '',
         port: 443,
-        fuzzMode: '',
         fuzzcaseToExec: 100,
-        authnType: ''
+        authnType: 'Anonymous'
     };
   }
 
-  // newContextObject() {
+  clearOpenApiFileInput()
+  {
+    const openapi3Unknown = this.$refs["openapi3FileInput"] as unknown;
+    const openapiEle = openapi3Unknown as HTMLInputElement;
+    openapiEle.value = '';
+  }
 
-  //   this.newContext = {
-  //     isanonymous: false,
-  //     name: '',
-  //     requestText: '',
-  //     requestTextFilePath: '',
-  //     openapi3FilePath: '',
-  //     openapi3Url: '',
-  //     basicUsername: '', 
-  //     basicPassword: '', 
-  //     bearerTokenHeader: '', 
-  //     bearerToken: '', 
-  //     apikeyHeader: '', 
-  //     apikey: '', 
-  //     hostname: '',
-  //     port: 443,
-  //     fuzzMode: '',
-  //     fuzzcaseToExec: 100,
-  //     authnType: ''
-  //   } 
-
-    
-    
-  // }
-
+  clearRequestTextFileInput()
+  {
+    const rtUnknown = this.$refs["rtFileInput"] as unknown;
+    const rtEle = rtUnknown as HTMLInputElement;
+    rtEle.value = '';
+  }
 }
 </script>
 
