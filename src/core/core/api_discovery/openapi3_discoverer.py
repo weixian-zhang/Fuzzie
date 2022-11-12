@@ -46,11 +46,11 @@ class OpenApi3ApiDiscover:
         
         return apiContext
             
-    def create_apicontext_from_openapi3(self, openapiYaml) -> ApiContext:
+    def create_apicontext_from_openapi3(self, openapiSpecString) -> ApiContext:
         
         try:
             
-            apispec = OpenAPI(openapiYaml)
+            apispec = OpenAPI(openapiSpecString)
             
             apicontext = ApiContext()
             

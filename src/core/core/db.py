@@ -37,14 +37,21 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('name', String),
                             Column('hostname', String),
                             Column('port', String),
-                            Column('requestMessageText', String),
-                            Column('requestMessageFilePath', String),
+                            Column('requestTextContent', String),
+                            Column('requestTextFilePath', String),
                             Column('openapi3FilePath', String),
                             Column('openapi3Url', String),
-                            Column('fuzzMode', String),
+                            Column('openapi3Content', String),
                             Column('fuzzcaseToExec', Integer),
-                            Column('authnType', String)
+                            Column('authnType', String),
+                            Column('basicUsername', String),
+                            Column('basicPassword', String),
+                            Column('bearerTokenHeader', String),
+                            Column('bearerToken', String),
+                            Column('apikeyHeader', String),
+                            Column('apikey', String)
                             )
+
 # Api schema, or see this as a "Api schema template" for execution
 # When fuzz executes based on this FuzzCaseSet template, the result is a list of 1 ApiFuzzCaseSetRun -> many ApiFuzzDataCases
 ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
@@ -454,18 +461,24 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     port = fuzzcontext.port,
                     fuzzMode = fuzzcontext.fuzzMode,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = fuzzcontext.authnType,
-                    requestMessageText = fuzzcontext.requestMessageText,
-                    requestMessageFilePath = fuzzcontext.requestMessageFilePath,
+                    requestTextContent = fuzzcontext.requestTextContent,
+                    requestTextFilePath = fuzzcontext.requestTextFilePath,
                     openapi3FilePath = fuzzcontext.openapi3FilePath,
-                    openapi3Url = fuzzcontext.openapi3Url
+                    openapi3Url = fuzzcontext.openapi3Url,
+                    openapi3Content = fuzzcontext.openapi3Content,
+                    authnType = fuzzcontext.authnType,
+                    basicUsername = fuzzcontext.basicUsername,
+                    basicPassword = fuzzcontext.basicPassword,
+                    bearerTokenHeader = fuzzcontext.basicPassword,
+                    bearerToken = fuzzcontext.bearerToken,
+                    apikeyHeader = fuzzcontext.apikeyHeader,
+                    apikey = fuzzcontext.apikey
                    )
          )
         
         Session.execute(fuzzcontextStmt)
         
-        # insert fuzzcaseset
-        
+        # insert fuzzcasesets
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
                 header = json.dumps(fcset.headerDataTemplate)

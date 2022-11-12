@@ -114,23 +114,25 @@ class ApiFuzzContext:
         self.Id: str = ''
         self.datetime: datetime
         self.name = ''
-        self.requestMessageText = ''
-        self.requestMessageFilePath = ''
+        self.apiDiscoveryMethod = ''
+        self.requestTextContent = ''
+        self.requestTextFilePath = ''
         self.openapi3FilePath = ''
         self.openapi3Url = ''
-        
+        self.openapi3Content = ''
+
         #security scheme
-        self.basicUsername = '', 
-        self.basicPassword= '', 
-        self.bearerTokenHeader= '', 
-        self.bearerToken= '', 
-        self.apikeyHeader=  '', 
-        self.apikey= '', 
+        self.isanonymous = False
+        self.basicUsername = ''
+        self.basicPassword = '' 
+        self.bearerTokenHeader = ''
+        self.bearerToken= ''
+        self.apikeyHeader=  '' 
+        self.apikey= '' 
         
         # execution
         self.hostname: str = ''
-        self.port: int
-        self.fuzzMode: FuzzMode = FuzzMode.Quick         
+        self.port: int   
         self.fuzzcaseToExec = 100
         self.authnType: str = SupportedAuthnType.Anonymous.name
         

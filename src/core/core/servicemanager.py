@@ -47,6 +47,67 @@ class ServiceManager:
     
     def __init__(self) -> None:   
         pass
+    
+    def new_api_fuzzcontext(self, apiDiscoveryMethod,  
+                                isanonymous,
+                                name,
+                                requestTextContent,
+                                requestTextFilePath,
+                                openapi3FilePath,
+                                openapi3Url,
+                                openapi3Content,
+                                basicUsername,
+                                basicPassword,
+                                bearerTokenHeader,
+                                bearerToken,
+                                apikeyHeader,
+                                apikey,
+                                hostname,
+                                port,
+                                fuzzcaseToExec,
+                                authnType):
+        
+        openapi3Dis = OpenApi3ApiDiscover()
+        apicontext= None
+        
+        if apiDiscoveryMethod == 'openapi3':
+            apicontext = openapi3Dis.create_apicontext_from_openapi3(openapi3Content)
+        elif apiDiscoveryMethod == 'request-text':
+            pass
+            
+        fcc = OpenApi3FuzzContextCreator()
+        
+        fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
+                                            apicontext=apicontext,
+                                            name=name,
+                                            hostname=hostname,
+                                            port=port,
+                                            requestTextContent = requestTextContent,
+                                            requestTextFilePath = requestTextFilePath,
+                                            openapi3FilePath = openapi3FilePath,
+                                            openapi3Url = openapi3Url,
+                                            openapi3Content = openapi3Content,
+                                            fuzzcaseToExec=fuzzcaseToExec,
+                                            authnType=authnType,
+                                            isanonymous=isanonymous,
+                                            basicUsername=basicUsername,
+                                            basicPassword=basicPassword,
+                                            bearerTokenHeader=bearerTokenHeader,
+                                            bearerToken=bearerToken,
+                                            apikeyHeader=apikeyHeader,
+                                            apikey=apikey)
+        
+        insert_db_fuzzcontext(fuzzcontext)
+        
+        fcView = ApiFuzzContext_Runs_ViewModel()
+        fcView.Id = fuzzcontext.Id
+        fcView.datetime = fuzzcontext.datetime
+        fcView.name = fuzzcontext.name
+        
+        return fcView
+        
+        
+        
 
     def discover_openapi3_by_filepath_or_url(self,
                             hostname,

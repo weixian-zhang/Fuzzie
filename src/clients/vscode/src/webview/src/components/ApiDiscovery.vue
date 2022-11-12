@@ -266,6 +266,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   newContext= {
+    apiDiscoveryMethod: 'openapi3',
     isanonymous: true,
     name: '',
     requestTextContent: '',
@@ -402,7 +403,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   createNewContext() {
     
     this.newContext.authnType = this.determineAuthnType();
-
+    this.newContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
   }
 
@@ -432,6 +433,14 @@ export default class ApiDiscovery extends Vue.with(Props) {
     return "Anonymous";
   }
 
+  determineApiDiscoveryMethod(){
+    if(this.newContext.requestTextContent != '')
+    {
+        return 'openapi3';
+    }
+    return 'request-text';
+  }
+
   clearContextForm() {
 
     
@@ -439,6 +448,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.clearRequestTextFileInput();
     
     this.newContext = {
+        apiDiscoveryMethod = '',
         isanonymous: false,
         name: '',
         requestTextContent: '',

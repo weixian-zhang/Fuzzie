@@ -148,7 +148,7 @@ paths:
             examples:
               pizzaOrder:
                 summary: Pizza order data
-                description: Longer description ...
+                description: Longer description
                 value:
                   custname: Alice
                   custtel: '+1-202-555-0100'
@@ -220,7 +220,7 @@ paths:
             examples:
               pizzaOrder:
                 summary: Pizza order data
-                description: Longer description ...
+                description: Longer description
                 value:
                   custname: Alice
                   custtel: '+1-202-555-0100'
@@ -243,25 +243,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommonResponse'
-              #schema:
-              #  type: object
-
-  # /put: {}
-  # /patch: {}
-  # /delete: {}
-  # /response-headers:
-  #   parameters:
-  #     - in: query
-  #       name: headers
-  #       # Arbitrary key=value pairs
-  #       schema:
-  #         type: object
-  #         example:
-  #           Server: unicorn
-  #       style: simple
-  #   get: {}
-  #   post: {}
-
 
   /ip:
     get:
@@ -329,35 +310,6 @@ paths:
                     #  $ref: '#/components/examples/headers'
                 required:
                   - headers
-
-  # /anything:
-  #   summary: Returns request data, including method used.
-  #   get: {}
-  #   post: {}
-  #   put: {}
-  #   patch: {}
-  #   delete: {}
-  #   trace: {}
-  #   options: {}
-
-  # /anything/{anything}:
-  #   summary: Returns request data, including method used.
-
-  #   parameters:
-  #     - in: path
-  #       name: anything
-  #       required: true
-  #       schema:
-  #         type: string
-  #       description: An arbitrary subpath
-
-  #   get: {}
-  #   post: {}
-  #   put: {}
-  #   patch: {}
-  #   delete: {}
-  #   trace: {}
-  #   options: {}
 
   /delay/{n}:
     get:
