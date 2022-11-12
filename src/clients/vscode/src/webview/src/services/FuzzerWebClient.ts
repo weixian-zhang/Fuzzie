@@ -15,17 +15,23 @@ export default class FuzzerWebClient
             fuzzContexts {
                 Id
                 datetime
-                Id
-                datetime
-                name
-                requestMessageText
-                requestMessageFilePath
-                openapi3FilePath
-                openapi3Url
-                hostname
-                port
-                fuzzMode
-                fuzzcaseToExec
+                apiDiscoveryMethod,  
+                isanonymous,
+                name,
+                requestTextContent,
+                requestTextFilePath,
+                openapi3FilePath,
+                openapi3Url,
+                openapi3Content,
+                basicUsername,
+                basicPassword,
+                bearerTokenHeader,
+                bearerToken,
+                apikeyHeader,
+                apikey,
+                hostname,
+                port,
+                fuzzcaseToExec,
                 authnType
                 fuzzCaseSetRuns {
                     fuzzCaseSetRunsId
@@ -105,4 +111,76 @@ export default class FuzzerWebClient
         }        
     }
 
+    public async createNewApiFuzzContext(apiDiscoveryMethod: '',
+                                            isanonymous: false,
+                                            name: '',
+                                            requestTextContent: '',
+                                            requestTextFilePath: '',
+                                            openapi3FilePath: '',
+                                            openapi3Url: '',
+                                            openapi3Content: '',
+                                            basicUsername: '', 
+                                            basicPassword: '', 
+                                            bearerTokenHeader: '', 
+                                            bearerToken: '', 
+                                            apikeyHeader: '', 
+                                            apikey: '', 
+                                            hostname: '',
+                                            port: 443,
+                                            fuzzcaseToExec: 100,
+                                            authnType: 'Anonymous'): Promise<any> {
+
+        const query = `
+        mutation discoverByFilePath {
+            discoverByOpenapi3FilePath(
+                          apiDiscoveryMethod: "${apiDiscoveryMethod}",
+                          isanonymous: ${isanonymous},
+                          name:"${name}",
+                          requestTextContent:"${requestTextContent}",
+                          requestTextFilePath:"${requestTextFilePath}",
+                          openapi3FilePath:"${openapi3FilePath}",
+                          openapi3Url:"${openapi3Url}",
+                          openapi3Content:"${openapi3Content}",
+                          basicUsername:"${basicUsername}",
+                          basicPassword:"${basicPassword}",
+                          bearerTokenHeader:"${bearerTokenHeader}",
+                          bearerToken:"${bearerToken}",
+                          apikeyHeader:"${apikeyHeader}",
+                          apikey:"${apikey}",
+                          hostname:"${hostname}",
+                          port:${port},
+                          fuzzcaseToExec: ${fuzzcaseToExec},
+                          authnType: "${authnType}"){
+              ok
+              apiFuzzContext {
+                  Id
+                  datetime
+                  name
+              }
+            }
+          }
+                        `
+        
+        try {
+
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(response.data.data != null)
+            {
+                return response.data.data.fuzzCaseSetWithRunSummary;
+            }
+            else
+            {
+                return [];
+            }
+            
+            
+
+        } catch (err) {
+            //TODO: Handle Error Here
+            console.error(err);
+            return [];
+        }        
+    }
 }
+

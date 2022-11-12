@@ -448,7 +448,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.clearRequestTextFileInput();
     
     this.newContext = {
-        apiDiscoveryMethod = '',
+        apiDiscoveryMethod: '',
         isanonymous: false,
         name: '',
         requestTextContent: '',
