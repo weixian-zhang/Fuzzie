@@ -12,13 +12,15 @@
             <div class="col-6">
               <form>
                 <div class="form-group">
-                  <label for="contextName">Name</label>
                   <v-text-field
-                    v-model="newContext.name"
-                    :rules="rules"
+                    v-model="newApiContext.name"
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
                     counter="25"
-                    hint="This field uses counter prop"
-                    label="name"
+                    density="compact"
+                    hint="e.g: my REST/GraphQL API"
+                    label="Name"
+                    clearable
                   ></v-text-field>
 
                   <!-- <input type="text" class="form-control form-control-sm" id="contextName"  placeholder="fuzz context name" v-model=""> -->
@@ -30,18 +32,24 @@
 
               <div class="form-group mb-3" >
                 <v-text-field
-                    v-model="newContext.hostname"
-                    :rules="rules"
-                    hint="hostname"
-                    label="Hostname" />
+                    v-model="newApiContext.hostname"
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    label="Hostname" 
+                    clearable/>
                 </div>
 
                 <div class="form-group">
                   <v-text-field
-                    v-model="newContext.port"
-                    :rules="rules"
-                    hint="port"
-                    label="Port" />
+                    v-model="newApiContext.port"
+                    type="number" 
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.port || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    label="Port number" />
                 </div>
 
               <v-divider />
@@ -50,23 +58,48 @@
               <v-divider />
 
                 <div class="mb-2">
-                  <label for="rq-text" class="form-label">Request Text</label>
-                  <textarea class="form-control" id="rq-text" rows="4" v-model="newContext.requestTextContent"></textarea>
+                  <v-textarea 
+                    label="Request Text" 
+                    variant="underlined" 
+                    v-model="newApiContext.requestTextContent"
+                     density="compact"
+                     clearable
+                  ></v-textarea>
                 </div>
 
                 <div class="mb-2">
-                  <label for="rt-file" class="form-label">Request Text File</label>
-                  <input class="form-control form-control-sm" type="file" id="rt-file" ref="rtFileInput" @change="onRequestTextFileChange">
+                  <v-file-input
+                    v-model="requestTextFileInputFileVModel"
+                    label="Request Text File"
+                    density="compact"
+                    ref="rtFileInput"
+                    @change="onRequestTextFileChange"
+                    variant="underlined"
+                    clearable
+                  ></v-file-input>
+                  <!-- <input class="form-control form-control-sm" type="file" id="rt-file" > -->
                 </div>
 
                 <div class="mb-2 mt-3">
-                  <label for="openapi3-file" class="form-label">OpenAPI 3 / Swagger File</label>
-                  <input class="form-control form-control-sm" type="file" id="openapi3-file" ref="openapi3FileInput" @change="onOpenApi3FileChange">
+                  <v-file-input
+                    label="OpenAPI 3 File"
+                    v-model="openapi3FileInputFileVModel"
+                    density="compact"
+                    @change="onOpenApi3FileChange"
+                    ref="openapi3FileInput" 
+                    clearable
+                    variant="underlined"
+                  ></v-file-input>
+                  <!-- <input class="form-control form-control-sm" type="file" id="openapi3-file" > -->
                 </div>
 
                 <div class="mt-3">
-                  <label for="openapi3-url" class="form-label">OpenAPI 3 / Swagger URL</label>
-                  <input class="form-control form-control-sm" type="text" id="openapi3-url" v-model="newContext.openapi3Url">
+                  <v-text-field
+                    v-model="newApiContext.openapi3Url"
+                    variant="underlined"
+                    hint="e.g: https://openapi3/spec/yaml"
+                    density="compact"
+                    label="OpenAPI 3 URL" />
                 </div>
               </form>
             </div>
@@ -79,32 +112,32 @@
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" autocomplete="off" >
-                  <label class="btn btn-outline-warning" for="authn-noauthn" @click="(
-                    newContext.isanonymous = true,
+                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                    newApiContext.isanonymous = true,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=false
                   )">No Authentication</label>
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-basic" value="0" autocomplete="off">
-                  <label class="btn btn-outline-success" for="authn-basic" @click="(
-                    newContext.isanonymous = false,
+                  <label class="btn btn-outline-success small" for="authn-basic" @click="(
+                    newApiContext.isanonymous = false,
                     securityBtnVisibility.basic=true,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=false
                   )">Basic Username/Password</label>
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" autocomplete="off">
-                  <label class="btn btn-outline-success" for="authn-bearer" @click="(
-                    newContext.isanonymous = false,
+                  <label class="btn btn-outline-success small" for="authn-bearer" @click="(
+                    newApiContext.isanonymous = false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=true,
                     securityBtnVisibility.apikey=false
                   )">Bearer Token</label>
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" autocomplete="off">
-                  <label class="btn btn-outline-success" for="authn-apikey" @click="(
-                    newContext.isanonymous = false,
+                  <label class="btn btn-outline-success small" for="authn-apikey" @click="(
+                    newApiContext.isanonymous = false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=true
@@ -113,39 +146,76 @@
 
                 <v-divider />
 
+                <!-- column 2 security -->
                 <div class="form-group mb-3" v-show="securityBtnVisibility.basic">
-                  <label for="username">Username</label>
-                  <input type="text" class="form-control form-control-sm" id="username"  placeholder="username">
+                  <v-text-field
+                    v-model="newApiContext.basicUsername"
+                    variant="underlined"
+                    hint=""
+                    density="compact"
+                    label="Username" 
+                    clearable/>
                 </div>
                 <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
-                  <label for="password">Password</label>
                   <v-text-field
-                    v-model="password"
+                    v-model="newApiContext.basicPassword"
                     :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-                    :type="show1 ? 'text' : 'password'"
+                    :type="showPasswordValue ? 'text' : 'password'"
                     name="password"
+                    label="Password"
+                    density="compact"
+                    variant="underlined"
                     counter
-                    @click:append="show1 = !show1"
+                    clearable
+                    @click:append="showPasswordValue= !showPasswordValue"
                   ></v-text-field>
-                  <!-- <input type="password" class="form-control form-control-sm" id="username"  placeholder="password"> -->
+
                 </div>
 
                 <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
-                  <label for="header">Header</label>
-                  <input type="text" class="form-control form-control-sm" id="header" value="Authorization">
+                  <v-text-field
+                    v-model="newApiContext.bearerTokenHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    density="compact"
+                    label="HTTP Header"
+                    clearable
+                  ></v-text-field>
                 </div>
                 <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
-                  <label for="header">Token</label>
-                  <input type="text" class="form-control form-control-sm" id="header">
+                  <v-text-field
+                    v-model="newApiContext.bearerToken"
+                    variant="underlined"
+                    counter="25"
+                    hint="bearer token"
+                    label="Token"
+                    density="compact"
+                    clearable
+                  ></v-text-field>
                 </div>
 
                 <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
-                  <label for="apikeyheader">API Key Header</label>
-                  <input type="text" class="form-control form-control-sm" id="apikeyheader" value="Authorization">
+                  <v-text-field
+                    v-model="newApiContext.apikeyHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    label="HTTP Header"
+                    density="compact"
+                    clearable
+                  ></v-text-field>
                 </div>
                 <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
-                  <label for="apikey">Key</label>
-                  <input type="text" class="form-control form-control-sm" id="apikey">
+                  <v-text-field
+                    v-model="newApiContext.apikey"
+                    variant="underlined"
+                    counter="25"
+                    hint="API Key"
+                    label="API Key"
+                    density="compact"
+                    clearable
+                  ></v-text-field>
                 </div>
 
                 <v-divider />
@@ -155,7 +225,7 @@
                 <v-divider />
                 
                 <v-slider
-                  v-model="newContext.fuzzcaseToExec"
+                  v-model="newApiContext.fuzzcaseToExec"
                   label=''
                   track-color="blue"
                   thumb-color="red"
@@ -171,7 +241,7 @@
 
               <div style="text-align:right">
                 <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn btn-primary" @click="createNewContext">Create</button>
+                <button class="btn btn-primary" @click="createNewApiContext">Create</button>
               </div>
             <!-- col end-->
             </div>
@@ -186,15 +256,26 @@
     height="100%">
       <v-toolbar card color="cyan" flat dense height="50px">
         <v-spacer />
-        <v-btn  variant="plain" height="30px" v-bind="attrs" v-on="on" size="small" @click="newContextSideBarVisible = true">
-              New Context
+
+        <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'Create New Messaging Fuzz Context (in roadmap)'">
+              <v-icon>mdi-message-plus-outline</v-icon>
         </v-btn>
+
+        <v-btn v-tooltip.bottom="'Create New API Fuzz Context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
+                  <v-icon>mdi-api</v-icon>
+        </v-btn>
+
       </v-toolbar>
       <div heigh="100%">
           <Tree :value="nodes" selectionMode="single" v-show="showTree">
               <template #default="slotProps">
                 <div v-on:click="onFuzzContextSelected(slotProps.node.key)">
-                  <b>{{slotProps.node.label}}</b>
+                  <v-btn
+                  variant="flat"
+                  icon="mdi-heart"
+                  color="primary"
+                >{{slotProps.node.label}}</v-btn>
+                  <!-- <b>{{slotProps.node.label}}</b> -->
                 </div>
               </template>
 
@@ -228,9 +309,7 @@ import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
 import VSCodeMessager, {Message} from '../services/VSCodeMessager';
 import Utils from '../Utils';
-import { HtmlHTMLAttributes } from '@vue/runtime-dom';
-
-declare var vscode: any;
+import { ApiFuzzContext } from '../Model';
 
 class Props {
   // optional prop
@@ -247,10 +326,12 @@ class Props {
 })
 
 
-
 export default class ApiDiscovery extends Vue.with(Props) {
   
   fm = new FuzzerManager();
+  openapi3FileInputFileVModel: Array<any> = [];
+  requestTextFileInputFileVModel: Array<any>  = [];
+  showPasswordValue = false;
   isFuzzcontextsGetComplete = true;
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
@@ -265,28 +346,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  newContext= {
-    apiDiscoveryMethod: 'openapi3',
-    isanonymous: true,
-    name: '',
-    requestTextContent: '',
-    requestTextFilePath: '',
-    openapi3FilePath: '',
-    openapi3Url: '',
-    openapi3Content: '',
-    basicUsername: '', 
-    basicPassword: '', 
-    bearerTokenHeader: '', 
-    bearerToken: '', 
-    apikeyHeader: '', 
-    apikey: '', 
-    hostname: '',
-    port: 443,
-    fuzzcaseToExec: 100,
-    authnType: ''
-  } 
-  
-  mounted() {
+  newApiContext= new ApiFuzzContext();
+
+mounted() {
     this.getFuzzcontexts()
 
     this.vscodeMsger.subscribe("file-content-result", this.readFileContentResult);
@@ -371,11 +433,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if (file.name.includes(".http") || file.name.includes(".fuzzie") || file.name.includes(".text")) {
 
       const content = await Utils.readFileAsText(file);
-      this.newContext.requestTextContent = content;
+      this.newApiContext.requestTextContent = btoa(content);
+
+      if(this.requestTextFileInputFileVModel != null && this.requestTextFileInputFileVModel.length > 0)
+      {
+        this.newApiContext.requestTextFilePath = this.requestTextFileInputFileVModel[0]?.name;
+      }
     }
     else
     {
-      this.clearRequestTextFileInput();
+      this.requestTextFileInputFileVModel = [];
       this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'Request Text file has ext of .http, .text or .fuzzie', life: 5000});
     }
   }
@@ -391,19 +458,66 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if (file.name.includes(".yaml") || file.name.includes(".json")) {
 
       const content = await Utils.readFileAsText(file);
-      this.newContext.openapi3Content = content;
+      this.newApiContext.openapi3Content = btoa(content);
+
+      if(this.openapi3FileInputFileVModel != null && this.openapi3FileInputFileVModel.length > 0)
+      {
+        this.newApiContext.openapi3FilePath = this.openapi3FileInputFileVModel[0]?.name;
+      }
     }
     else
     {
-      this.clearOpenApiFileInput();
+      this.openapi3FileInputFileVModel = [];
       this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'OpenAPI3 spec files are yaml or json', life: 5000});
     }
   }
 
-  createNewContext() {
+  async createNewApiContext() {
     
-    this.newContext.authnType = this.determineAuthnType();
-    this.newContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
+    this.newApiContext.authnType = this.determineAuthnType();
+    this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
+
+    if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
+    {
+      this.toast.add({severity:'error', summary: 'API Discovery', detail:'need either OpenAPI 3 spec or Request Text to create context', life: 5000});
+      return;
+    }
+
+    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == '')
+    {
+      this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
+      return;
+    }
+
+    if(this.newApiContext.basicUsername == 'null') {
+        this.newApiContext.basicUsername = '';
+    }
+    if(this.newApiContext.basicPassword == 'null') {
+        this.newApiContext.basicPassword = '';
+    } 
+    if(this.newApiContext.bearerTokenHeader == 'null') {
+        this.newApiContext.bearerTokenHeader = '';
+    }
+    if(this.newApiContext.bearerTokenHeader == 'null') {
+        this.newApiContext.bearerToken = '';
+    } 
+    if(this.newApiContext.apikeyHeader == 'null') {
+        this.newApiContext.apikeyHeader = '';
+    } 
+    if(this.newApiContext.apikey == 'null') {
+        this.newApiContext.apikey = '';
+    } 
+
+    const result =  await this.fm.newFuzzContext(this.newApiContext);
+    const ok = result['ok'];
+    const error =result['error'];
+    const fuzzcontext = result['fuzzcontext'] as ApiFuzzContext;
+
+    if(!ok && error != '')
+    {
+      this.toast.add({severity:'error', summary: 'Create new API context', detail:error, life: 5000});
+      return;
+    }
 
   }
 
@@ -413,19 +527,19 @@ export default class ApiDiscovery extends Vue.with(Props) {
   // ApiKey = "ApiKey"
   determineAuthnType(): string {
 
-    if(this.newContext.isanonymous)
+    if(this.newApiContext.isanonymous)
     {
       return "Anonymous";
     }
-    else if(this.newContext.basicUsername != '' && this.newContext.basicPassword != '')
+    else if(this.newApiContext.basicUsername != '' && this.newApiContext.basicPassword != '')
     {
        return "Basic";
     }
-    else if(this.newContext.apikeyHeader != '' && this.newContext.apikey != '')
+    else if(this.newApiContext.apikeyHeader != '' && this.newApiContext.apikey != '')
     {
        return  "ApiKey";
     }
-    else if(this.newContext.bearerToken != '')
+    else if(this.newApiContext.bearerToken != '')
     {
        return  "Bearer";
     }
@@ -434,53 +548,17 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   determineApiDiscoveryMethod(){
-    if(this.newContext.requestTextContent != '')
+    if(this.newApiContext.requestTextContent != '')
     {
-        return 'openapi3';
+        return 'request-text';
     }
-    return 'request-text';
+    return 'openapi3';
   }
 
   clearContextForm() {
-
-    
-    this.clearOpenApiFileInput();
-    this.clearRequestTextFileInput();
-    
-    this.newContext = {
-        apiDiscoveryMethod: '',
-        isanonymous: false,
-        name: '',
-        requestTextContent: '',
-        requestTextFilePath: '',
-        openapi3FilePath: '',
-        openapi3Url: '',
-        openapi3Content: '',
-        basicUsername: '', 
-        basicPassword: '', 
-        bearerTokenHeader: '', 
-        bearerToken: '', 
-        apikeyHeader: '', 
-        apikey: '', 
-        hostname: '',
-        port: 443,
-        fuzzcaseToExec: 100,
-        authnType: 'Anonymous'
-    };
-  }
-
-  clearOpenApiFileInput()
-  {
-    const openapi3Unknown = this.$refs["openapi3FileInput"] as unknown;
-    const openapiEle = openapi3Unknown as HTMLInputElement;
-    openapiEle.value = '';
-  }
-
-  clearRequestTextFileInput()
-  {
-    const rtUnknown = this.$refs["rtFileInput"] as unknown;
-    const rtEle = rtUnknown as HTMLInputElement;
-    rtEle.value = '';
+    this.openapi3FileInputFileVModel = [];
+    this.requestTextFileInputFileVModel = [];
+    this.newApiContext = new ApiFuzzContext();
   }
 }
 </script>
@@ -492,4 +570,5 @@ input[type=text]{
    margin-bottom:2px; /* Reduced from whatever it currently is */
    margin-top:2px; /* Reduced from whatever it currently is */
 }
+
 </style>

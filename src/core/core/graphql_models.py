@@ -134,18 +134,25 @@ class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
 
 class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     
-    # FuzzContext
     Id = graphene.String()
     datetime = graphene.DateTime()
     name = graphene.String()
-    requestMessageText = graphene.String()
-    requestMessageFilePath = graphene.String()
+    apiDiscoveryMethod = graphene.String()
+    requestTextContent = graphene.String()
+    requestTextFilePath = graphene.String()
     openapi3FilePath = graphene.String()
     openapi3Url = graphene.String()
+    openapi3Content = graphene.String()
+    isanonymous = graphene.Boolean()
+    basicUsername = graphene.String()
+    basicPassword = graphene.String() 
+    bearerTokenHeader = graphene.String()
+    bearerToken = graphene.String()
+    apikeyHeader = graphene.String()
+    apikey = graphene.String()
     hostname = graphene.String()
-    port = graphene.Int()
-    fuzzMode = graphene.String()
-    fuzzcaseToExec = graphene.Int()
+    port = graphene.Int()   
+    fuzzcaseToExec = graphene.Int() 
     authnType = graphene.String()
     
     # CaseSetRun

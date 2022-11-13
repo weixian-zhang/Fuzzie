@@ -3,7 +3,6 @@ delete from ApiFuzzResponse;
 delete from ApiFuzzDataCase;
 delete from ApiFuzzRunSummaryPerCaseSetTable;
 delete from ApiFuzzCaseSetRuns;
-
 delete from ApiFuzzCaseSet;
 delete from ApiFuzzContext;
 

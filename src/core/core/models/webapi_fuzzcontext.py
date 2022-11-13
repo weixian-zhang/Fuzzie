@@ -121,7 +121,6 @@ class ApiFuzzContext:
         self.openapi3Url = ''
         self.openapi3Content = ''
 
-        #security scheme
         self.isanonymous = False
         self.basicUsername = ''
         self.basicPassword = '' 
@@ -130,16 +129,13 @@ class ApiFuzzContext:
         self.apikeyHeader=  '' 
         self.apikey= '' 
         
-        # execution
         self.hostname: str = ''
         self.port: int   
         self.fuzzcaseToExec = 100
         self.authnType: str = SupportedAuthnType.Anonymous.name
         
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
-        #self.fuzzExecutionConfig: FuzzExecutionConfig
-        
-        #self.determine_num_of_fuzzcases(self.fuzzExecutionConfig)
+
     
     def get_hostname_port(self):
         if self.port == '':

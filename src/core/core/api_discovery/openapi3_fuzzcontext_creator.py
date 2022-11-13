@@ -46,37 +46,40 @@ class OpenApi3FuzzContextCreator:
                  apikeyHeader = '',
                  apikey = '') -> ApiFuzzContext:
         
-        self.fuzzcontext = ApiFuzzContext()
-        self.fuzzcontext.Id = shortuuid.uuid()
-        if self.fuzzcontext.name == '':
-            self.fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        fuzzcontext = ApiFuzzContext()
+        fuzzcontext.Id = shortuuid.uuid()
+        if name == '':
+            fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
         else:
-            self.fuzzcontext.name = name
+            fuzzcontext.name = name
             
-        self.fuzzcontext.datetime = datetime.now()
-        self.fuzzcontext.requestMessageText = requestTextContent
-        self.fuzzcontext.requestMessageFilePath = requestMessageFilePath
-        self.fuzzcontext.openapi3FilePath = openapi3FilePath
-        self.fuzzcontext.openapi3Url = openapi3Url
-        self.fuzzcontext.hostname = hostname
-        self.fuzzcontext.port = port
-        self.fuzzcontext.authnType = authnType
-        self.fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
+        fuzzcontext.datetime = datetime.now()
+        fuzzcontext.requestMessageText = requestTextContent
+        fuzzcontext.requestMessageFilePath = requestTextFilePath
+        fuzzcontext.openapi3FilePath = openapi3FilePath
+        fuzzcontext.openapi3Content = openapi3Content
+        fuzzcontext.openapi3Url = openapi3Url
+        fuzzcontext.hostname = hostname
+        fuzzcontext.port = port
+        fuzzcontext.authnType = authnType
+        fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
         
-        self.fuzzcontext.basicUsername = basicUsername, 
-        self.fuzzcontext.basicPassword= basicPassword, 
-        self.fuzzcontext.bearerTokenHeader= bearerTokenHeader, 
-        self.fuzzcontext.bearerToken= bearerToken, 
-        self.fuzzcontext.apikeyHeader=  apikeyHeader, 
-        self.fuzzcontext.apikey= apikey, 
+        fuzzcontext.basicUsername = basicUsername
+        fuzzcontext.basicPassword= basicPassword
+        fuzzcontext.bearerTokenHeader= bearerTokenHeader
+        fuzzcontext.bearerToken= bearerToken 
+        fuzzcontext.apikeyHeader=  apikeyHeader 
+        fuzzcontext.apikey= apikey
         
-        self.fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
+        fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
         
-        apiFuzzContext = self.create_fuzzcontext(apicontext)
+        fcSets = self.create_fuzzCaseSet(apicontext)
         
-        return apiFuzzContext
+        fuzzcontext.fuzzcaseSets = fcSets
         
-    def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
+        return fuzzcontext
+        
+    def create_fuzzCaseSet(self, apicontext: ApiContext) -> [ApiFuzzCaseSet]:
         
         if self.fuzzcontext  is None:
             raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
@@ -87,6 +90,8 @@ class OpenApi3FuzzContextCreator:
         
         if apis == None or len(apis) == 0:
             return ApiFuzzContext()
+        
+        fcSets = []
         
         for api in apis:
             
@@ -110,9 +115,9 @@ class OpenApi3FuzzContextCreator:
             fuzzcaseSet.headerDataTemplate = header
             fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
                     
-            self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
+            fcSets.append(fuzzcaseSet)
             
-        return self.fuzzcontext 
+        return fcSets
     
     def determine_security_scheme(self, 
                                   basicUsername = '',
@@ -121,12 +126,12 @@ class OpenApi3FuzzContextCreator:
                                   apikeyHeader = '',
                                   apikey = '',
                                   name = '') -> str:
-
-        if basicUsername != '' and basicPassword != '':
+    
+        if basicUsername != '' and basicPassword != '' and (basicUsername != 'null' and basicPassword != 'null'):
             return SupportedAuthnType.Basic.name
-        elif bearerToken != '':
+        elif bearerToken != '' and bearerToken != 'null':
             return SupportedAuthnType.Bearer.name
-        elif apikeyHeader != '' and apikey != '':
+        elif apikeyHeader != '' and apikey != '' and  (apikeyHeader != 'null' and apikey != 'null'):
             return SupportedAuthnType.ApiKey.name
         else:
             return SupportedAuthnType.Anonymous.name

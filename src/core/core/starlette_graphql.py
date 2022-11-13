@@ -56,6 +56,7 @@ class NewApiFuzzContext(graphene.Mutation):
         authnType = graphene.String()
     
     ok = graphene.Boolean()
+    error = graphene.String()
     apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
     
     def mutate(self, info,
@@ -80,7 +81,7 @@ class NewApiFuzzContext(graphene.Mutation):
         
         sm = ServiceManager()
         
-        fuzzcontext = sm.new_api_fuzzcontext(
+        OK, error, fuzzcontext = sm.new_api_fuzzcontext(
                                         apiDiscoveryMethod=apiDiscoveryMethod,
                                         name=name,
                                         hostname=hostname,
@@ -101,10 +102,11 @@ class NewApiFuzzContext(graphene.Mutation):
                                         apikey=apikey)
         
         
-        ok = True
+        ok = OK
+        error = error
         apiFuzzContext = fuzzcontext
         
-        return NewApiFuzzContext(apiFuzzContext=apiFuzzContext, ok=ok)
+        return NewApiFuzzContext(ok=ok,error=error, apiFuzzContext=apiFuzzContext)
     
     
     
@@ -172,7 +174,7 @@ class Fuzz(graphene.Mutation):
     
 class Mutation(graphene.ObjectType):
     
-    discover_by_openapi3_file_path = NewApiFuzzContext.Field()
+    new_api_fuzz_context = NewApiFuzzContext.Field()
     
     discover_by_openapi3_url = DiscoverOpenApi3ByUrl.Field()
     

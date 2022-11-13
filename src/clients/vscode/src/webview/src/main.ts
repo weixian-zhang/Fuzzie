@@ -9,6 +9,7 @@ import 'primevue/resources/themes/saga-blue/theme.css'      //theme
 import 'primevue/resources/primevue.min.css'                //core css
 import 'primeicons/primeicons.css'                         //icons
 import ToastService from "primevue/toastservice";
+import Tooltip from 'primevue/tooltip';
 
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -19,4 +20,5 @@ const app = createApp(App);
 app.use(vuetify)
 app.use(PrimeVue)
 app.use(ToastService);
+app.directive('tooltip', Tooltip);
 app.mount('#app')

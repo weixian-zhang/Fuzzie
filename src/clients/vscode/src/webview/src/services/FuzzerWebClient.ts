@@ -1,4 +1,7 @@
+import { ApiFuzzContext } from "../Model";
 import axios from "axios";
+import { DocumentNode, print } from 'graphql';
+import gql from 'graphql-tag';
 
 export default class FuzzerWebClient
 {
@@ -111,76 +114,98 @@ export default class FuzzerWebClient
         }        
     }
 
-    public async createNewApiFuzzContext(apiDiscoveryMethod: '',
-                                            isanonymous: false,
-                                            name: '',
-                                            requestTextContent: '',
-                                            requestTextFilePath: '',
-                                            openapi3FilePath: '',
-                                            openapi3Url: '',
-                                            openapi3Content: '',
-                                            basicUsername: '', 
-                                            basicPassword: '', 
-                                            bearerTokenHeader: '', 
-                                            bearerToken: '', 
-                                            apikeyHeader: '', 
-                                            apikey: '', 
-                                            hostname: '',
-                                            port: 443,
-                                            fuzzcaseToExec: 100,
-                                            authnType: 'Anonymous'): Promise<any> {
+    public async createNewApiFuzzContext(fuzzcontext: ApiFuzzContext): Promise<any> {
 
         const query = `
-        mutation discoverByFilePath {
-            discoverByOpenapi3FilePath(
-                          apiDiscoveryMethod: "${apiDiscoveryMethod}",
-                          isanonymous: ${isanonymous},
-                          name:"${name}",
-                          requestTextContent:"${requestTextContent}",
-                          requestTextFilePath:"${requestTextFilePath}",
-                          openapi3FilePath:"${openapi3FilePath}",
-                          openapi3Url:"${openapi3Url}",
-                          openapi3Content:"${openapi3Content}",
-                          basicUsername:"${basicUsername}",
-                          basicPassword:"${basicPassword}",
-                          bearerTokenHeader:"${bearerTokenHeader}",
-                          bearerToken:"${bearerToken}",
-                          apikeyHeader:"${apikeyHeader}",
-                          apikey:"${apikey}",
-                          hostname:"${hostname}",
-                          port:${port},
-                          fuzzcaseToExec: ${fuzzcaseToExec},
-                          authnType: "${authnType}"){
-              ok
-              apiFuzzContext {
-                  Id
-                  datetime
-                  name
-              }
+            mutation newApiFuzzContext {
+                newApiFuzzContext(
+                            apiDiscoveryMethod: "${fuzzcontext.apiDiscoveryMethod}",
+                            isanonymous: ${fuzzcontext.isanonymous},
+                            name:"${fuzzcontext.name}",
+                            requestTextContent:"${fuzzcontext.requestTextContent}",
+                            requestTextFilePath:"${fuzzcontext.requestTextFilePath}",
+                            openapi3FilePath:"${fuzzcontext.openapi3FilePath}",
+                            openapi3Url:"${fuzzcontext.openapi3Url}",
+                            openapi3Content:"${fuzzcontext.openapi3Content}",
+                            basicUsername:"${fuzzcontext.basicUsername}",
+                            basicPassword:"${fuzzcontext.basicPassword}",
+                            bearerTokenHeader:"${fuzzcontext.bearerTokenHeader}",
+                            bearerToken:"${fuzzcontext.bearerToken}",
+                            apikeyHeader:"${fuzzcontext.apikeyHeader}",
+                            apikey:"${fuzzcontext.apikey}",
+                            hostname:"${fuzzcontext.hostname}",
+                            port:${fuzzcontext.port},
+                            fuzzcaseToExec: ${fuzzcontext.fuzzcaseToExec},
+                            authnType: "${fuzzcontext.authnType}"){
+                ok
+                error
+                apiFuzzContext {
+                    Id
+                    datetime
+                    name
+                }
+                }
             }
-          }
-                        `
+        `
+                        
         
         try {
 
             const response = await axios.post(this.gqlUrl, {query});
 
-            if(response.data.data != null)
+            //http error
+            if(response.data.errors != null && response.data.errors.length > 0)
             {
-                return response.data.data.fuzzCaseSetWithRunSummary;
+                //TODO: log graphql errors
+                const errMsg = this.getErrorMsg(response.data.errors)
+                console.log(errMsg);
+
+                return {ok: false, error:errMsg, fuzzcontext: null};
             }
-            else
+
+            // graphql result including error
+            if(response.data != null)
             {
-                return [];
+                const result = response.data.data.newApiFuzzContext
+
+                return {
+                        ok: result.ok,
+                        error: result.error,
+                        apiFuzzContext: result.apiFuzzContext
+                    };
             }
             
+            return {
+                ok: true,
+                error: '',
+                apiFuzzContext: {}
+            };
             
 
         } catch (err) {
             //TODO: Handle Error Here
             console.error(err);
-            return [];
+            return {
+                ok: false,
+                error: err,
+                apiFuzzContext: {}
+            };
         }        
+    }
+
+    getErrorMsg(err: Array<any>) {
+
+        let errMsg = '';
+
+        if(err != null && err.length > 0)
+        {
+            err.forEach(e => {
+                errMsg += e.message;
+                errMsg += '\n';
+            });
+        }
+
+        return errMsg
     }
 }
 

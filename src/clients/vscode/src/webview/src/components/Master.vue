@@ -23,7 +23,6 @@
   import EventEmitter from 'eventemitter3'
   import VSCodeMessager from '../services/VSCodeMessager';
 
-
   @Options({
     components: {
       ApiDiscovery,
