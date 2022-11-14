@@ -1,7 +1,8 @@
 <template>
     <v-card
-     width="100%"
-     height="100%">
+      color="white"
+      outlined
+    >
 
      <v-toolbar color="cyan" flat dense height="50px">
       <v-spacer />

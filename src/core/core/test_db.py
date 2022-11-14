@@ -71,7 +71,6 @@ class TestFuzzManager(unittest.TestCase):
         fcc.new_fuzzcontext(
                             hostname='http://localhost',
                             port=50001,
-                            fuzzMode= FuzzMode.Quick,
                             numberOfFuzzcaseToExec=50,
                             authnType='Anonymous')
         

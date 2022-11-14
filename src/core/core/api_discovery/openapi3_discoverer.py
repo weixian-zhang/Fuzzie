@@ -46,11 +46,13 @@ class OpenApi3ApiDiscover:
         
         return apiContext
             
-    def create_apicontext_from_openapi3(self, openapiYaml) -> ApiContext:
+    def create_apicontext_from_openapi3(self, openapiSpecString) -> ApiContext:
         
         try:
             
-            apispec = OpenAPI(openapiYaml)
+            spec = yaml.safe_load(openapiSpecString)
+            
+            apispec = OpenAPI(spec, validate=False, ssl_verify=False)
             
             apicontext = ApiContext()
             
@@ -76,11 +78,11 @@ class OpenApi3ApiDiscover:
                   if hasPost:
                       apicontext.apis.append(postApi)
                     
-            return apicontext
+            return True, '', apicontext
         
         except Exception as e:
             self.eventstore.emitErr(e)
-            raise
+            return False, e.message, ApiContext
         
         
     def create_get_api(self, apiObj, path):

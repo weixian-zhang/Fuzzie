@@ -110,26 +110,52 @@ class ApiFuzzCaseSet:
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
 class ApiFuzzContext:
     
-    def __init__(self) -> None:
-        self.Id: str = ''
-        self.datetime: datetime
+    def __init__(self, Id = '',
+                        datetime = '',
+                        name = '',
+                        apiDiscoveryMethod = '',
+                        requestTextContent = '',
+                        requestTextFilePath = '',
+                        openapi3FilePath = '',
+                        openapi3Url = '',
+                        openapi3Content = '',
+                        isanonymous = False,
+                        basicUsername = '',
+                        basicPassword = '' ,
+                        bearerTokenHeader = '',
+                        bearerToken= '',
+                        apikeyHeader=  '' ,
+                        apikey= '', 
+                        hostname: str = '',
+                        port=443,
+                        fuzzcaseToExec = 100,
+                        authnType = 'Anonymous',
+                        fuzzcaseSets=[]) -> None:
+        self.Id = ''
+        self.datetime = ''
         self.name = ''
-        self.requestMessageText = ''
-        self.requestMessageFilePath = ''
+        self.apiDiscoveryMethod = ''
+        self.requestTextContent = ''
+        self.requestTextFilePath = ''
         self.openapi3FilePath = ''
         self.openapi3Url = ''
+        self.openapi3Content = ''
+
+        self.isanonymous = False
+        self.basicUsername = ''
+        self.basicPassword = '' 
+        self.bearerTokenHeader = ''
+        self.bearerToken= ''
+        self.apikeyHeader=  '' 
+        self.apikey= '' 
         
-        # execution
         self.hostname: str = ''
-        self.port: int
-        self.fuzzMode: FuzzMode = FuzzMode.Quick         
+        self.port: int   
         self.fuzzcaseToExec = 100
         self.authnType: str = SupportedAuthnType.Anonymous.name
         
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
-        #self.fuzzExecutionConfig: FuzzExecutionConfig
-        
-        #self.determine_num_of_fuzzcases(self.fuzzExecutionConfig)
+
     
     def get_hostname_port(self):
         if self.port == '':

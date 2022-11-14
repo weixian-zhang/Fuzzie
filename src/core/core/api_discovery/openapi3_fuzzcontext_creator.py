@@ -26,38 +26,66 @@ class OpenApi3FuzzContextCreator:
         self.eventstore = EventStore()
         
     def new_fuzzcontext(self,
-                 hostname: str, 
-                 port: int,
-                 fuzzMode: str,
+                 apiDiscoveryMethod,  
+                 isanonymous,
+                 apicontext,
+                 hostname, 
+                 port,
                  authnType,
                  name = '',
-                 requestMessageText = '',
-                 requestMessageFilePath = '',
+                 requestTextContent = '',
+                 requestTextFilePath = '',
                  openapi3FilePath = '',
                  openapi3Url = '',
-                 numberOfFuzzcaseToExec = 100):
+                 openapi3Content = '',
+                 fuzzcaseToExec = 100,
+                 basicUsername = '',
+                 basicPassword = '',
+                 bearerTokenHeader = '',
+                 bearerToken = '',
+                 apikeyHeader = '',
+                 apikey = '') -> ApiFuzzContext:
         
-        self.fuzzcontext = ApiFuzzContext()
-        self.fuzzcontext.Id = shortuuid.uuid()
-        if self.fuzzcontext.name == '':
-            self.fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+        fuzzcontext = ApiFuzzContext()
+        fuzzcontext.Id = shortuuid.uuid()
+        if name == '':
+            fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
         else:
-            self.fuzzcontext.name = name
+            fuzzcontext.name = name
             
-        self.fuzzcontext.datetime = datetime.now()
-        self.fuzzcontext.fuzzMode = self.get_fuzzmode(fuzzMode)
-        self.fuzzcontext.requestMessageText = requestMessageText
-        self.fuzzcontext.requestMessageFilePath = requestMessageFilePath
-        self.fuzzcontext.openapi3FilePath = openapi3FilePath
-        self.fuzzcontext.openapi3Url = openapi3Url
-        self.fuzzcontext.hostname = hostname
-        self.fuzzcontext.port = port
-        self.fuzzcontext.authnType = authnType
-        #self.fuzzcontext.numberOfFuzzcaseToExec = self.determine_fuzzcases_to_run(fuzzMode, numberOfFuzzcaseToExec)  
+        fuzzcontext.datetime = datetime.now()
+        fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
+        fuzzcontext.requestMessageText = requestTextContent
+        fuzzcontext.requestMessageFilePath = requestTextFilePath
+        fuzzcontext.openapi3FilePath = openapi3FilePath
+        fuzzcontext.openapi3Content = openapi3Content
+        fuzzcontext.openapi3Url = openapi3Url
+        fuzzcontext.hostname = hostname
+        fuzzcontext.port = port
+        fuzzcontext.authnType = authnType
+        fuzzcontext.isanonymous = isanonymous
+        fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
         
-        #self.set_security_scheme(basicUsername,basicPassword, bearerTokenHeader, bearerToken, apikeyHeader,apikey)
+        fuzzcontext.basicUsername = basicUsername
+        fuzzcontext.basicPassword= basicPassword
+        fuzzcontext.bearerTokenHeader= bearerTokenHeader
+        fuzzcontext.bearerToken= bearerToken 
+        fuzzcontext.apikeyHeader=  apikeyHeader 
+        fuzzcontext.apikey= apikey
         
-    def create_fuzzcontext(self, apicontext: ApiContext) -> ApiFuzzContext:
+        # fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
+        # if fuzzcontext.authnType == SupportedAuthnType.Anonymous.name:
+        #     fuzzcontext.isanonymous = True
+        # else:
+        #     fuzzcontext.isanonymous = False
+        
+        fcSets = self.create_fuzzCaseSet(apicontext)
+        
+        fuzzcontext.fuzzcaseSets = fcSets
+        
+        return fuzzcontext
+        
+    def create_fuzzCaseSet(self, apicontext: ApiContext) -> [ApiFuzzCaseSet]:
         
         if self.fuzzcontext  is None:
             raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
@@ -68,6 +96,8 @@ class OpenApi3FuzzContextCreator:
         
         if apis == None or len(apis) == 0:
             return ApiFuzzContext()
+        
+        fcSets = []
         
         for api in apis:
             
@@ -91,27 +121,26 @@ class OpenApi3FuzzContextCreator:
             fuzzcaseSet.headerDataTemplate = header
             fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
                     
-            self.fuzzcontext.fuzzcaseSets.append(fuzzcaseSet)
+            fcSets.append(fuzzcaseSet)
             
-        return self.fuzzcontext 
+        return fcSets
     
-    def set_security_scheme(self, 
+    def determine_security_scheme(self, 
                                   basicUsername = '',
                                   basicPassword = '',
-                                  bearerTokenHeader = 'Authorization',
                                   bearerToken = '', 
                                   apikeyHeader = '',
                                   apikey = '',
-                                  name = ''):
-
-        if basicUsername != '' and basicPassword != '':
-            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Basic.name
-        elif bearerToken != '':
-            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Bearer.name
-        elif apikeyHeader != '' and apikey != '':
-            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.ApiKey.name
+                                  name = '') -> str:
+    
+        if basicUsername != '' and basicPassword != '' and (basicUsername != 'null' and basicPassword != 'null'):
+            return SupportedAuthnType.Basic.name
+        elif bearerToken != '' and bearerToken != 'null':
+            return SupportedAuthnType.Bearer.name
+        elif apikeyHeader != '' and apikey != '' and  (apikeyHeader != 'null' and apikey != 'null'):
+            return SupportedAuthnType.ApiKey.name
         else:
-            self.fuzzcontext.authnType : SupportedAuthnType = SupportedAuthnType.Anonymous.name
+            return SupportedAuthnType.Anonymous.name
             
             
     

@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug Fuzzie flask graphql",
+			"name": "debug Fuzzer",
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
@@ -16,24 +16,7 @@
 			"cwd": "${workspaceFolder}/src/core/core"
 		},
 		{
-			"name": "debug flask openapi3 server",
-			"type": "python",
-			"request": "launch",
-			"module": "flask",
-			"env": {
-				"FLASK_APP": "openapi3_server",
-				"FLASK_ENV": "development"
-			},
-			"args": [
-				"run",
-				"--no-debugger"
-			],
-			"jinja": true,
-			"justMyCode": true,
-			"cwd": "${workspaceFolder}/src/tests/core"
-		},
-		{
-			"name": "debug vscode extension",
+			"name": "debug vscode",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -42,12 +25,31 @@
 			"outFiles": [
 				"${workspaceFolder}/src/clients/vscode/dist/**/*.js"
 			],
-			//"preLaunchTask": "npm watch extension",
+			"preLaunchTask": "npm watch extension",
 			"sourceMaps": true,
 			//important, if not breakpoint remains unbound
 			"sourceMapPathOverrides": {
 				"webpack://?:*/*": "${workspaceFolder}/src/clients/vscode/*"
-			}
-		},
+			},
+			
+		}
+		// {
+		// 	"name": "debug flask openapi3 server",
+		// 	"type": "python",
+		// 	"request": "launch",
+		// 	"module": "flask",
+		// 	"env": {
+		// 		"FLASK_APP": "openapi3_server",
+		// 		"FLASK_ENV": "development"
+		// 	},
+		// 	"args": [
+		// 		"run",
+		// 		"--no-debugger"
+		// 	],
+		// 	"jinja": true,
+		// 	"justMyCode": true,
+		// 	"cwd": "${workspaceFolder}/src/tests/core"
+		// },
+		
 	]
 }

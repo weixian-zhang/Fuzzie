@@ -6,12 +6,16 @@
   <v-card
   color="white"
   outlined
-  width="100%"
-  height="100%">
+  height="420px"
+ >
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
-      <v-btn  variant="plain" height="30px" size="small">
-            Fuzz
+      
+      <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain >
+        <v-icon>mdi-content-save-settings-outline</v-icon>
+      </v-btn>
+      <v-btn v-tooltip.left="'start fuzzing'" icon  variant="plain" height="30px" plain >
+        <v-icon>mdi-lightning-bolt</v-icon>
       </v-btn>
     </v-toolbar>
 

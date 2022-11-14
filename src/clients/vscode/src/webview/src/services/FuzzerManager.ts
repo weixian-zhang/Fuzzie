@@ -1,6 +1,6 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { FuzzContext, ApiFuzzcontextRuns } from "../Model";
+import { ApiFuzzContext, ApiFuzzcontextRuns } from "../Model";
 export default class FuzzerManager
 {
     private _wc: FuzzerWebClient;
@@ -22,35 +22,29 @@ export default class FuzzerManager
         //
     }
 
-    public async getFuzzcontexts(): Promise<Array<FuzzContext>>
+    public async newFuzzContext(fuzzcontext: ApiFuzzContext): Promise<ApiFuzzContext>
+    {
+        const result = await this._wc.createNewApiFuzzContext(fuzzcontext);
+
+        return result;
+    }
+
+    public async getFuzzcontexts(): Promise<Array<ApiFuzzContext>>
     {
         const data = await this._wc.getFuzzContexts()
 
         if(data == undefined)
             return []
 
-        const fcs: Array<FuzzContext> = [];
+        const fcs: Array<ApiFuzzContext> = [];
 
         data.forEach(fc => {
             
-            const newFC = new FuzzContext();
+            const newFC = new ApiFuzzContext();
 
             this.propMap(fc, newFC);
 
             fcs.push(newFC);
-
-            // newFC.Id = fc.Id;
-            // newFC.datetime = fc.datetime;
-            // newFC.name = fc.name;
-            // newFC.requestMessageText = fc.requestMessageText;
-            // newFC.requestMessageFilePath = fc.requestMessageFilePath;
-            // newFC.openapi3FilePath = fc.;
-            // newFC.openapi3Url = fc.;
-            // newFC.hostname = fc.;
-            // newFC.port = fc.;
-            // newFC.fuzzMode = fc.;
-            // newFC.fuzzcaseToExec = fc.;
-            // newFC.authnType = fc.;
 
             if(fc.fuzzCaseSetRuns != undefined)
             {
@@ -63,16 +57,19 @@ export default class FuzzerManager
                     newFC.fuzzCaseSetRuns.push(fcRun);
 
                 });
-                
             }
-            
-            
         });
 
         return fcs;
     }
 
     private propMap(obj: any, mappedObject: any ) {
+
+        if(obj == undefined)
+        {
+            return;
+        }
+        
         const thisObj = this;
 
         const keys = Object.keys( obj )
@@ -91,20 +88,5 @@ export default class FuzzerManager
                 mappedObject[ key ] = obj[ key ];
             }
         }
-
-        // Object.keys( obj ).forEach( function( key ) {
-        //     if (obj[ key ] == null)
-        //         true;
-        //     if(Array.isArray(obj[ key ] ))
-        //         true;
-        //     else if ( typeof obj[ key ] === 'object' ) {
-        //         // If it's an object, let's go recursive
-        //         thisObj.propMap(obj[ key ], mappedObject );
-        //     }
-        //     else {
-        //         // If it's not, add a key/value
-        //         mappedObject[ key ] = obj[ key ];
-        //     }
-        // } );
     }
 }
