@@ -6,7 +6,7 @@
   <v-card
   color="white"
   outlined
-  height="420px"
+  height="455px"
  >
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
@@ -19,7 +19,7 @@
       </v-btn>
     </v-toolbar>
 
-      <v-table density="compact" fixed-header height="420px">
+      <v-table density="compact" fixed-header height="455px">
         <thead>
           <tr>
             <th class="text-left">
@@ -35,6 +35,9 @@
             </th>
             <th class="text-left">
               Path
+            </th>
+            <th class="text-left">
+              Header
             </th>
             <th class="text-left">
               Body
@@ -69,7 +72,8 @@
             </td>
             <td>{{ item.verb }}</td>
             <td>{{ item.path }}</td>
-            <td>{{ shortenBody(item.body, 20) }}</td>
+            <td>{{ item.header }}</td>
+            <td><a href="#"> {{ shortenBody(item.body, 20) }} </a></td>
 
             <td>
               {{ item.http2xx }}

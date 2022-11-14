@@ -7,7 +7,7 @@
     <v-card
     color="white"
     outlined
-    height="420px"
+    height="455px"
     >
 
     
@@ -295,7 +295,7 @@
       </v-btn>
     </v-toolbar>
 
-    <Tree :value="nodes" selectionMode="single" v-show="showTree" width="100%" scrollHeight="420px" class="pa-1">
+    <Tree :value="nodes" selectionMode="single" v-show="showTree" width="100%" scrollHeight="455px" class="pa-1">
           <template #default="slotProps">
             <small><b v-on:click="onFuzzContextSelected(slotProps.node.key)">{{slotProps.node.label}}</b></small>
                 <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
