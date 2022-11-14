@@ -6,8 +6,8 @@
   <v-card
   color="white"
   outlined
-  width="100%"
-  height="100%">
+  height="420px"
+ >
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-spacer />
       <v-btn  variant="plain" height="30px" size="small">

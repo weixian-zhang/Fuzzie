@@ -1,6 +1,6 @@
 <template>
-    <div class="container-fluid d-flex h-100 flex-column">
-        <div class="row h-50 mt-1">
+    <div class="container-fluid h-100 d-flex flex-column">
+        <div class="row h-50">
             <div class="col-3">
                 <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
             </div>
@@ -9,9 +9,9 @@
             </div>
         </div>
 
-        <div class="row flex-fill d-flex  mt-2 mb-0">
+        <!-- <div class="row flex-fill d-flex">
             <FuzzResultPanel />
-        </div>
+        </div> -->
     </div>
 </template>
   

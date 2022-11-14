@@ -1,308 +1,41 @@
 <!-- https://pictogrammers.github.io/@mdi/font/6.9.96/ -->
 
 <template>
-  <div>
-    <Toast />
-    <!-- new context -->
-    <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
-      
-      <div class="container-fluid">
-        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
-        <div class="row">
-            <div class="col-6">
-              <form>
-                <div class="form-group">
-                  <v-text-field
-                    v-model="newApiContext.name"
-                    variant="underlined"
-                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
-                    counter="25"
-                    density="compact"
-                    hint="e.g: my REST/GraphQL API"
-                    label="Name"
-                    clearable
-                  ></v-text-field>
 
-                  <!-- <input type="text" class="form-control form-control-sm" id="contextName"  placeholder="fuzz context name" v-model=""> -->
-                </div>
 
-              <v-divider />
-              <b>Test Properties</b>
-              <v-divider />
-
-              <div class="form-group mb-3" >
-                <v-text-field
-                    v-model="newApiContext.hostname"
-                    variant="underlined"
-                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    label="Hostname" 
-                    clearable/>
-                </div>
-
-                <div class="form-group">
-                  <v-text-field
-                    v-model="newApiContext.port"
-                    type="number" 
-                    variant="underlined"
-                    :rules="[() => !!newApiContext.port || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    label="Port number" />
-                </div>
-
-              <v-divider />
-              <b>API Discovery</b>
-              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
-              <v-divider />
-
-                <div class="mb-2">
-                  <v-textarea 
-                    label="Request Text" 
-                    variant="underlined" 
-                    v-model="newApiContext.requestTextContent"
-                     density="compact"
-                     clearable
-                     @click:clear="(newApiContext.requestTextContent='')"
-                  ></v-textarea>
-                </div>
-
-                <div class="mb-2">
-                  <v-file-input
-                    v-model="requestTextFileInputFileVModel"
-                    label="Request Text File"
-                    density="compact"
-                    ref="rtFileInput"
-                    @change="onRequestTextFileChange"
-                    variant="underlined"
-                    clearable
-                    @click:clear="(
-                      requestTextFileInputFileVModel=[],
-                      newApiContext.requestTextContent='',
-                      newApiContext.requestTextFilePath=''
-                    )"
-                  ></v-file-input>
-                  <!-- <input class="form-control form-control-sm" type="file" id="rt-file" > -->
-                </div>
-
-                <div class="mb-2 mt-3">
-                  <v-file-input
-                    label="OpenAPI 3 File"
-                    v-model="openapi3FileInputFileVModel"
-                    density="compact"
-                    @change="onOpenApi3FileChange"
-                    ref="openapi3FileInput" 
-                    clearable
-                    @click:clear="(
-                      openapi3FileInputFileVModel=[],
-                      newApiContext.openapi3Content='',
-                      newApiContext.openapi3FilePath=''
-                    )"
-                    variant="underlined"
-                  ></v-file-input>
-                  <!-- <input class="form-control form-control-sm" type="file" id="openapi3-file" > -->
-                </div>
-
-                <div class="mt-3">
-                  <v-text-field
-                    v-model="newApiContext.openapi3Url"
-                    variant="underlined"
-                    hint="e.g: https://openapi3/spec/yaml"
-                    density="compact"
-                    clearable
-                    @click:clear="(
-                      newApiContext.openapi3Url=''
-                    )"
-                    label="OpenAPI 3 URL" />
-                </div>
-              </form>
-            </div>
-            <div class="col-6">
-              
-              <form>
-
-                <b>API Authentication</b>
-                <v-divider />
-
-                <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" autocomplete="off" >
-                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
-                    newApiContext.isanonymous = true,
-                    securityBtnVisibility.basic=false,
-                    securityBtnVisibility.bearer=false,
-                    securityBtnVisibility.apikey=false
-                  )">No Authentication</label>
-
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-basic" value="0" autocomplete="off">
-                  <label class="btn btn-outline-success small" for="authn-basic" @click="(
-                    newApiContext.isanonymous = false,
-                    securityBtnVisibility.basic=true,
-                    securityBtnVisibility.bearer=false,
-                    securityBtnVisibility.apikey=false
-                  )">Basic Username/Password</label>
-
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" autocomplete="off">
-                  <label class="btn btn-outline-success small" for="authn-bearer" @click="(
-                    newApiContext.isanonymous = false,
-                    securityBtnVisibility.basic=false,
-                    securityBtnVisibility.bearer=true,
-                    securityBtnVisibility.apikey=false
-                  )">Bearer Token</label>
-
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" autocomplete="off">
-                  <label class="btn btn-outline-success small" for="authn-apikey" @click="(
-                    newApiContext.isanonymous = false,
-                    securityBtnVisibility.basic=false,
-                    securityBtnVisibility.bearer=false,
-                    securityBtnVisibility.apikey=true
-                  )">API Key</label>
-                </div>
-
-                <v-divider />
-
-                <!-- column 2 security -->
-                <div class="form-group mb-3" v-show="securityBtnVisibility.basic">
-                  <v-text-field
-                    v-model="newApiContext.basicUsername"
-                    variant="underlined"
-                    hint=""
-                    density="compact"
-                    label="Username" 
-                    clearable
-                    @click:clear="(newApiContext.basicUsername='')"
-                    />
-                </div>
-                <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
-                  <v-text-field
-                    v-model="newApiContext.basicPassword"
-                    :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-                    :type="showPasswordValue ? 'text' : 'password'"
-                    name="password"
-                    label="Password"
-                    density="compact"
-                    variant="underlined"
-                    counter
-                    clearable
-                    @click:clear="(newApiContext.basicPassword='')"
-                    @click:append="showPasswordValue= !showPasswordValue"
-                  ></v-text-field>
-
-                </div>
-
-                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
-                  <v-text-field
-                    v-model="newApiContext.bearerTokenHeader"
-                    variant="underlined"
-                    counter="25"
-                    hint="default Authorization"
-                    density="compact"
-                    label="HTTP Header"
-                    clearable
-                    @click:clear="(newApiContext.bearerTokenHeader='')"
-                  ></v-text-field>
-                </div>
-                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
-                  <v-text-field
-                    v-model="newApiContext.bearerToken"
-                    variant="underlined"
-                    counter="25"
-                    hint="bearer token"
-                    label="Token"
-                    density="compact"
-                    clearable
-                    @click:clear="(newApiContext.bearerToken='')"
-                  ></v-text-field>
-                </div>
-
-                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
-                  <v-text-field
-                    v-model="newApiContext.apikeyHeader"
-                    variant="underlined"
-                    counter="25"
-                    hint="default Authorization"
-                    label="HTTP Header"
-                    density="compact"
-                    clearable
-                     @click:clear="(newApiContext.apikeyHeader='')"
-                  ></v-text-field>
-                </div>
-                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
-                  <v-text-field
-                    v-model="newApiContext.apikey"
-                    variant="underlined"
-                    counter="25"
-                    hint="API Key"
-                    label="API Key"
-                    density="compact"
-                    clearable
-                     @click:clear="(newApiContext.apikey='')"
-                  ></v-text-field>
-                </div>
-
-                <v-divider />
-
-                <b>Fuzz Properties</b>
-                <v-divider />
-                <v-divider />
-                
-                <v-slider
-                  v-model="newApiContext.fuzzcaseToExec"
-                  label=''
-                  track-color="blue"
-                  thumb-color="red"
-                  thumb-label="always"
-                  min=100
-                  max=50000
-                  step="10"
-                ></v-slider>
-
-              </form>
-              
-              <v-divider />
-
-              <div style="text-align:right">
-                <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn btn-primary" @click="createNewApiContext">Create</button>
-              </div>
-            <!-- col end-->
-            </div>
-        </div>
-      </div>
-    </Sidebar>
-
+    
     <v-card
     color="white"
     outlined
-    width="100%"
-    height="100%">
-      <v-toolbar card color="cyan" flat dense height="50px">
+    height="420px"
+    >
 
-        <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'">
-              <v-icon>mdi-refresh</v-icon>
-        </v-btn>
+    <v-toolbar card color="cyan" flat dense height="50px">
+      <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
+      :disabled="!isGetFuzzContextFinish"
+        @click="getFuzzcontexts">
+            <v-icon>mdi-refresh</v-icon>
+      </v-btn>
+      <v-spacer />
+      <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
+        <v-icon>mdi-message-plus-outline</v-icon>
+      </v-btn>
+      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
+        <v-icon>mdi-api</v-icon>
+      </v-btn>
+    </v-toolbar>
 
-        <v-spacer />
-
-        <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-              <v-icon>mdi-message-plus-outline</v-icon>
-        </v-btn>
-
-        <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
-                  <v-icon>mdi-api</v-icon>
-        </v-btn>
-
-      </v-toolbar>
-      <div heigh="100%">
-          <Tree :value="nodes" selectionMode="single" v-show="showTree">
+    <Tree :value="nodes" selectionMode="single" v-show="showTree" scrollHeight="420px" class="pa-1">
               <template #default="slotProps">
                 <div v-on:click="onFuzzContextSelected(slotProps.node.key)">
-                  <v-btn
+                  [<v-icon
                   variant="flat"
-                  icon="mdi-heart"
+                  icon="mdi-api"
                   color="primary"
-                >{{slotProps.node.label}}</v-btn>
-                  <!-- <b>{{slotProps.node.label}}</b> -->
+                  width="15px"
+                  height="15px"
+                  ></v-icon>]
+                  <b>{{slotProps.node.label}}</b>
                 </div>
               </template>
 
@@ -320,9 +53,10 @@
                   </span>
               </template>
           </Tree>
-        </div>
+
+    
+      
     </v-card>
-  </div>
 </template>
 
 <script lang="ts">
@@ -359,10 +93,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
-  isFuzzcontextsGetComplete = true;
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
   newContextSideBarVisible = false;
+  isGetFuzzContextFinish = true;
   toast = useToast();
 
   securityBtnVisibility= {
@@ -378,7 +112,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 mounted() {
     this.getFuzzcontexts()
 
-    this.vscodeMsger.subscribe("file-content-result", this.readFileContentResult);
+    //this.vscodeMsger.subscribe("file-content-result", this.readFileContentResult);
   }
 
   readFileContentResult(message)
@@ -394,7 +128,8 @@ mounted() {
   async getFuzzcontexts() {
 
     try {
-      this.isFuzzcontextsGetComplete = false;
+
+      this.isGetFuzzContextFinish = false;
       const fcs = await this.fm.getFuzzcontexts()    
 
       if (fcs.length > 0)
@@ -402,7 +137,7 @@ mounted() {
         this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
       }
 
-      this.isFuzzcontextsGetComplete = true;
+      this.isGetFuzzContextFinish = true;
     } catch (error) {
         //TODO: log
         console.log(error)
@@ -590,5 +325,6 @@ input[type=text]{
    margin-bottom:2px; /* Reduced from whatever it currently is */
    margin-top:2px; /* Reduced from whatever it currently is */
 }
+
 
 </style>

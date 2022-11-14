@@ -25,7 +25,6 @@ export default class FuzzerWebClient
                 requestTextFilePath,
                 openapi3FilePath,
                 openapi3Url,
-                openapi3Content,
                 basicUsername,
                 basicPassword,
                 bearerTokenHeader,
@@ -44,7 +43,8 @@ export default class FuzzerWebClient
                     status
                 }
             }
-        }`
+        }
+        `
         
         try {
 

@@ -10,7 +10,7 @@ from eventstore import EventStore, MsgType
 from db import  (get_fuzzcontext, 
                  get_caseSets_with_runSummary, 
                  insert_db_fuzzcontext, 
-                 get_fuzzContexts_and_runsummaries)
+                 get_fuzzContexts_and_runs)
 from sqlalchemy.sql import select, insert
 import base64
 
@@ -184,8 +184,8 @@ class ServiceManager:
         return get_caseSets_with_runSummary(fuzzcontextId)
     
     
-    def get_fuzzContexts_and_runsummary(self) -> list[ApiFuzzContext_Runs_ViewModel]:
-        return get_fuzzContexts_and_runsummaries() 
+    def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:
+        return get_fuzzContexts_and_runs() 
     
     
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:

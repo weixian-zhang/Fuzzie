@@ -23,7 +23,7 @@ class Query(graphene.ObjectType):
     
     def resolve_fuzzContexts(self, info):
         sm = ServiceManager()
-        result = sm.get_fuzzContexts()
+        result = sm.get_fuzzContexts_and_runs()
         return result
     
     def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId):

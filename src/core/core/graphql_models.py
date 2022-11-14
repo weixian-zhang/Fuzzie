@@ -142,7 +142,6 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     requestTextFilePath = graphene.String()
     openapi3FilePath = graphene.String()
     openapi3Url = graphene.String()
-    openapi3Content = graphene.String()
     isanonymous = graphene.Boolean()
     basicUsername = graphene.String()
     basicPassword = graphene.String() 
