@@ -104,8 +104,6 @@ export default class FuzzerWebClient
             {
                 return [];
             }
-            
-            
 
         } catch (err) {
             //TODO: Handle Error Here

@@ -1,5 +1,7 @@
 <template>
+    
     <div class="container-fluid h-100 d-flex flex-column">
+      <Toast />
         <div class="row h-50">
             <div class="col-3">
                 <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
@@ -22,12 +24,14 @@
   import FuzzResultPanel from './FuzzResultPanel.vue';
   import EventEmitter from 'eventemitter3'
   import VSCodeMessager from '../services/VSCodeMessager';
+  import Toast from 'primevue/toast';
 
   @Options({
     components: {
       ApiDiscovery,
       FuzzCaseSetPanel,
-      FuzzResultPanel
+      FuzzResultPanel,
+      Toast
     },
   })
   export default class Master extends Vue {

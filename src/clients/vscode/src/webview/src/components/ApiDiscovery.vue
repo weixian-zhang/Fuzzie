@@ -10,6 +10,271 @@
     height="420px"
     >
 
+    
+    <!-- new context -->
+     <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
+      
+      <div class="container-fluid">
+        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
+        <div class="row">
+            <div class="col-6">
+              <form>
+                <div class="form-group">
+                  <v-text-field
+                    v-model="newApiContext.name"
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
+                    counter="25"
+                    density="compact"
+                    hint="e.g: my REST/GraphQL API"
+                    label="Name"
+                    clearable
+                  ></v-text-field>
+                </div>
+
+              <v-divider />
+              <b>Test Properties</b>
+              <v-divider />
+
+              <div class="form-group mb-3" >
+                <v-text-field
+                    v-model="newApiContext.hostname"
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    label="Hostname" 
+                    clearable/>
+                </div>
+
+                <div class="form-group">
+                  <v-text-field
+                    v-model="newApiContext.port"
+                    type="number" 
+                    variant="underlined"
+                    :rules="[() => !!newApiContext.port || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    label="Port number" />
+                </div>
+
+              <v-divider />
+              <b>API Discovery</b>
+              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
+              <v-divider />
+
+                <div class="mb-2">
+                  <v-textarea 
+                    label="Request Text" 
+                    variant="underlined" 
+                    v-model="newApiContext.requestTextContent"
+                     density="compact"
+                     clearable
+                     @click:clear="(newApiContext.requestTextContent='')"
+                  ></v-textarea>
+                </div>
+
+                <div class="mb-2">
+                  <v-file-input
+                    v-model="requestTextFileInputFileVModel"
+                    label="Request Text File"
+                    density="compact"
+                    ref="rtFileInput"
+                    @change="onRequestTextFileChange"
+                    variant="underlined"
+                    clearable
+                    @click:clear="(
+                      requestTextFileInputFileVModel=[],
+                      newApiContext.requestTextContent='',
+                      newApiContext.requestTextFilePath=''
+                    )"
+                  ></v-file-input>
+                </div>
+
+                <div class="mb-2 mt-3">
+                  <v-file-input
+                    label="OpenAPI 3 File"
+                    v-model="openapi3FileInputFileVModel"
+                    density="compact"
+                    @change="onOpenApi3FileChange"
+                    ref="openapi3FileInput" 
+                    clearable
+                    @click:clear="(
+                      openapi3FileInputFileVModel=[],
+                      newApiContext.openapi3Content='',
+                      newApiContext.openapi3FilePath=''
+                    )"
+                    variant="underlined"
+                  ></v-file-input>
+                </div>
+
+                <div class="mt-3">
+                  <v-text-field
+                    v-model="newApiContext.openapi3Url"
+                    variant="underlined"
+                    hint="e.g: https://openapi3/spec/yaml"
+                    density="compact"
+                    clearable
+                    @click:clear="(
+                      newApiContext.openapi3Url=''
+                    )"
+                    label="OpenAPI 3 URL" />
+                </div>
+              </form>
+            </div>
+            <div class="col-6">
+              
+              <form>
+
+                <b>API Authentication</b>
+                <v-divider />
+
+                <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" autocomplete="off" >
+                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                    newApiContext.isanonymous = true,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=false
+                  )">No Authentication</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-basic" value="0" autocomplete="off">
+                  <label class="btn btn-outline-success small" for="authn-basic" @click="(
+                    newApiContext.isanonymous = false,
+                    securityBtnVisibility.basic=true,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=false
+                  )">Basic Username/Password</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" autocomplete="off">
+                  <label class="btn btn-outline-success small" for="authn-bearer" @click="(
+                    newApiContext.isanonymous = false,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=true,
+                    securityBtnVisibility.apikey=false
+                  )">Bearer Token</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" autocomplete="off">
+                  <label class="btn btn-outline-success small" for="authn-apikey" @click="(
+                    newApiContext.isanonymous = false,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=true
+                  )">API Key</label>
+                </div>
+
+                <v-divider />
+
+                <!-- column 2 security -->
+                <div class="form-group mb-3" v-show="securityBtnVisibility.basic">
+                  <v-text-field
+                    v-model="newApiContext.basicUsername"
+                    variant="underlined"
+                    hint=""
+                    density="compact"
+                    label="Username" 
+                    clearable
+                    @click:clear="(newApiContext.basicUsername='')"
+                    />
+                </div>
+                <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
+                  <v-text-field
+                    v-model="newApiContext.basicPassword"
+                    :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="showPasswordValue ? 'text' : 'password'"
+                    name="password"
+                    label="Password"
+                    density="compact"
+                    variant="underlined"
+                    counter
+                    clearable
+                    @click:clear="(newApiContext.basicPassword='')"
+                    @click:append="showPasswordValue= !showPasswordValue"
+                  ></v-text-field>
+
+                </div>
+
+                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
+                  <v-text-field
+                    v-model="newApiContext.bearerTokenHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    density="compact"
+                    label="HTTP Header"
+                    clearable
+                    @click:clear="(newApiContext.bearerTokenHeader='')"
+                  ></v-text-field>
+                </div>
+                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
+                  <v-text-field
+                    v-model="newApiContext.bearerToken"
+                    variant="underlined"
+                    counter="25"
+                    hint="bearer token"
+                    label="Token"
+                    density="compact"
+                    clearable
+                    @click:clear="(newApiContext.bearerToken='')"
+                  ></v-text-field>
+                </div>
+
+                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
+                  <v-text-field
+                    v-model="newApiContext.apikeyHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    label="HTTP Header"
+                    density="compact"
+                    clearable
+                     @click:clear="(newApiContext.apikeyHeader='')"
+                  ></v-text-field>
+                </div>
+                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
+                  <v-text-field
+                    v-model="newApiContext.apikey"
+                    variant="underlined"
+                    counter="25"
+                    hint="API Key"
+                    label="API Key"
+                    density="compact"
+                    clearable
+                     @click:clear="(newApiContext.apikey='')"
+                  ></v-text-field>
+                </div>
+
+                <v-divider />
+
+                <b>Fuzz Properties</b>
+                <v-divider />
+                <v-divider />
+                
+                <v-slider
+                  v-model="newApiContext.fuzzcaseToExec"
+                  label=''
+                  track-color="blue"
+                  thumb-color="red"
+                  thumb-label="always"
+                  min=100
+                  max=50000
+                  step="10"
+                ></v-slider>
+
+              </form>
+              
+              <v-divider />
+
+              <div style="text-align:right">
+                <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
+                <button class="btn btn-primary" @click="createNewApiContext">Create</button>
+              </div>
+            <!-- col end-->
+            </div>
+        </div>
+      </div>
+    </Sidebar> 
+
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
@@ -25,34 +290,42 @@
       </v-btn>
     </v-toolbar>
 
-    <Tree :value="nodes" selectionMode="single" v-show="showTree" scrollHeight="420px" class="pa-1">
-              <template #default="slotProps">
-                <div v-on:click="onFuzzContextSelected(slotProps.node.key)">
-                  [<v-icon
-                  variant="flat"
-                  icon="mdi-api"
-                  color="primary"
-                  width="15px"
-                  height="15px"
-                  ></v-icon>]
-                  <b>{{slotProps.node.label}}</b>
-                </div>
-              </template>
-
-              <!-- fuzz run -->
-              <template #url="slotProps">
-                  <span>
-                    {{slotProps.node.label}}
-                    <div v-show="slotProps.node.isFuzzing">
-                      <b class="text-info">fuzzing</b>
-                      <v-progress-linear
-                          indeterminate
-                          color="teal">
-                      </v-progress-linear>
-                    </div>
+    <Tree :value="nodes" selectionMode="single" v-show="showTree" width="100%" scrollHeight="420px" class="pa-1">
+          <template #default="slotProps">
+            <small><b v-on:click="onFuzzContextSelected(slotProps.node.key)">{{slotProps.node.label}}</b></small>
+                <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
+                    <v-spaces />
+                    [<v-icon
+                      variant="flat"
+                      icon="mdi-pencil"
+                      color="primary"
+                      size="x-small"
+                      ></v-icon>]
+                      [<v-icon
+                      variant="flat"
+                      icon="mdi-delete"
+                      color="primary"
+                      size="x-small"
+                      ></v-icon>]
                   </span>
-              </template>
-          </Tree>
+          </template>
+
+          <!-- fuzz run -->
+          <template #url="slotProps">
+              <span>
+                {{slotProps.node.label}}
+                <div v-show="slotProps.node.isFuzzing">
+                  <b class="text-info">fuzzing</b>
+                  <v-progress-linear
+                      indeterminate
+                      color="teal">
+                  </v-progress-linear>
+                </div>
+              </span>
+            
+          </template>
+
+      </Tree>
 
     
       
@@ -63,7 +336,7 @@
 
 import { Options, Vue } from 'vue-class-component';
 import FuzzerManager from '../services/FuzzerManager';
-import Toast from 'primevue/toast';
+
 import { useToast } from "primevue/usetoast";
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
@@ -81,8 +354,7 @@ class Props {
 @Options({
   components: {
     Tree,
-    Sidebar,
-    Toast
+    Sidebar
   },
 })
 
@@ -111,8 +383,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
 mounted() {
     this.getFuzzcontexts()
-
-    //this.vscodeMsger.subscribe("file-content-result", this.readFileContentResult);
   }
 
   readFileContentResult(message)
@@ -136,44 +406,70 @@ mounted() {
       {
         this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
       }
+      else
+      {
+        this.toast.add({severity:'info', summary: '', detail:'no fuzz context detected, create one to start fuzzing', life: 5000});
+      }
 
       this.isGetFuzzContextFinish = true;
+
+      
+
     } catch (error) {
         //TODO: log
         console.log(error)
     }
   }
 
-  createTreeNodesFromFuzzcontexts(fcs): TreeNode[] {
+  createTreeNodesFromFuzzcontexts(fcs: ApiFuzzContext[]): TreeNode[] {
 
     const nodes: TreeNode[] = [];
 
+    const apiNode = {
+        key: "-1",
+        label: "API",
+        children: new Array<any>()
+      };
+    const msgApi = {
+        key: "-2",
+        label: "Messaging",
+        children: new Array<any>()
+      };
+
+    nodes.push(apiNode);
+    nodes.push(msgApi);
+
     fcs.forEach(fc => {
 
-        const fcNode: any = {
-          key: fc.Id,
-          label: fc.name,
-          data: fc
-        };
+        if(fc instanceof ApiFuzzContext)
+        {
+            const fcNode: any = {
+              key: fc.Id,
+              label: fc.name,
+              data: fc
+            };
 
-        nodes.push(fcNode)
+            apiNode.children.push(fcNode);
 
-        fc.fuzzCaseSetRuns.forEach(fcsr => {
+            fc.fuzzCaseSetRuns.forEach(fcsr => {
 
-          const casesetNode = {
-            key: fcsr.fuzzCaseSetRunsId,
-            isFuzzing: false,
-            label: dateformat(fcsr.startTime, "ddd, mmm dS, yyyy, h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
-            data: fcsr
-          };
+            const casesetNode = {
+              key: fcsr.fuzzCaseSetRunsId,
+              isFuzzing: false,
+              label: dateformat(fcsr.startTime, "ddd, mmm dS, yyyy, h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              data: fcsr
+            };
           
-          if(fcNode.children == undefined)
-          {
-            fcNode.children = [];
-          }
+            if(fcNode.children == undefined)
+            {
+              fcNode.children = [];
+            }
 
-          fcNode.children.push(casesetNode);
-        });
+            fcNode.children.push(casesetNode);
+
+          });
+
+        }
     });
 
     return nodes;
