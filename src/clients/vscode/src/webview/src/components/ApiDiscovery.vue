@@ -130,33 +130,38 @@
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" autocomplete="off" >
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
                   <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
-                    newApiContext.isanonymous = true,
+                    newApiContext.authnType='Anonymous',
+                    securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=false
                   )">No Authentication</label>
 
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-basic" value="0" autocomplete="off">
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-basic" :checked="securityBtnVisibility.basic == true">
                   <label class="btn btn-outline-success small" for="authn-basic" @click="(
-                    newApiContext.isanonymous = false,
+                    newApiContext.authnType='Basic',
+                    securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=true,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=false
                   )">Basic Username/Password</label>
 
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" autocomplete="off">
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" :checked="securityBtnVisibility.bearer == true">
                   <label class="btn btn-outline-success small" for="authn-bearer" @click="(
-                    newApiContext.isanonymous = false,
+                    newApiContext.authnType='Bearer',
+                    securityBtnVisibility.anonymous =false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=true,
                     securityBtnVisibility.apikey=false
                   )">Bearer Token</label>
 
-                  <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" autocomplete="off">
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" :checked="securityBtnVisibility.apikey == true">
                   <label class="btn btn-outline-success small" for="authn-apikey" @click="(
-                    newApiContext.isanonymous = false,
+                    newApiContext.authnType='ApiKey',
+                    securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
                     securityBtnVisibility.apikey=true
@@ -371,8 +376,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   isGetFuzzContextFinish = true;
   toast = useToast();
 
-  securityBtnVisibility= {
-    anonymous: false,
+  securityBtnVisibility = {
+    anonymous: true,
     basic: false,
     bearer: false,
     apikey: false
