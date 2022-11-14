@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug Fuzzie flask graphql",
+			"name": "debug Fuzzer",
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
@@ -16,7 +16,7 @@
 			"cwd": "${workspaceFolder}/src/core/core"
 		},
 		{
-			"name": "debug vscode extension",
+			"name": "debug vscode",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [

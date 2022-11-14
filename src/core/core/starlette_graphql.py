@@ -57,7 +57,7 @@ class NewApiFuzzContext(graphene.Mutation):
     
     ok = graphene.Boolean()
     error = graphene.String()
-    apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
+    #apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
     
     def mutate(self, info,
                apiDiscoveryMethod,
@@ -81,7 +81,7 @@ class NewApiFuzzContext(graphene.Mutation):
         
         sm = ServiceManager()
         
-        OK, error, fuzzcontext = sm.new_api_fuzzcontext(
+        OK, error = sm.new_api_fuzzcontext(
                                         apiDiscoveryMethod=apiDiscoveryMethod,
                                         name=name,
                                         hostname=hostname,
@@ -104,9 +104,8 @@ class NewApiFuzzContext(graphene.Mutation):
         
         ok = OK
         error = error
-        apiFuzzContext = fuzzcontext
         
-        return NewApiFuzzContext(ok=ok,error=error, apiFuzzContext=apiFuzzContext)
+        return NewApiFuzzContext(ok=ok,error=error)
     
     
     

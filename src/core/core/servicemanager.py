@@ -10,7 +10,7 @@ from eventstore import EventStore, MsgType
 from db import  (get_fuzzcontext, 
                  get_caseSets_with_runSummary, 
                  insert_db_fuzzcontext, 
-                 get_fuzzContextSetRuns)
+                 get_fuzzContexts_and_runsummaries)
 from sqlalchemy.sql import select, insert
 import base64
 
@@ -82,7 +82,7 @@ class ServiceManager:
             pass
         
         if not isApiDisOK:
-            return False, error, {}
+            return False, error
             
         fcc = OpenApi3FuzzContextCreator()
         
@@ -108,11 +108,11 @@ class ServiceManager:
         
         insert_db_fuzzcontext(fuzzcontext)
         
-        savedFC = get_fuzzcontext(fuzzcontext.Id)
+        # savedFC = get_fuzzcontext(fuzzcontext.Id)
         
-        fcView = mapper.to(ApiFuzzContext_Runs_ViewModel).map(savedFC)
+        # fcView = mapper.to(ApiFuzzContext_Runs_ViewModel).map(savedFC)
         
-        return True, '', fcView
+        return True, ''
         
         
         
@@ -184,8 +184,8 @@ class ServiceManager:
         return get_caseSets_with_runSummary(fuzzcontextId)
     
     
-    def get_fuzzContexts(self) -> list[ApiFuzzContext_Runs_ViewModel]:
-        return get_fuzzContextSetRuns() 
+    def get_fuzzContexts_and_runsummary(self) -> list[ApiFuzzContext_Runs_ViewModel]:
+        return get_fuzzContexts_and_runsummaries() 
     
     
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:

@@ -37,6 +37,8 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('name', String),
                             Column('hostname', String),
                             Column('port', Integer),
+                            Column('apiDiscoveryMethod', String),
+                            Column('isanonymous', Boolean),
                             Column('requestTextContent', String),
                             Column('requestTextFilePath', String),
                             Column('openapi3FilePath', String),
@@ -222,7 +224,7 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         return fuzzcontext
 
-def get_fuzzContextSetRuns() -> list[ApiFuzzContext_Runs_ViewModel]:
+def get_fuzzContexts_and_runsummaries() -> list[ApiFuzzContext_Runs_ViewModel]:
     
     try:
         Session = scoped_session(session_factory)
@@ -455,6 +457,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
             values(
                    Id=fuzzcontext.Id, 
                    datetime= datetime.now(),
+                   apiDiscoveryMethod = fuzzcontext.apiDiscoveryMethod,
+                   isanonymous = fuzzcontext.isanonymous,
                    name = fuzzcontext.name,
                     hostname = fuzzcontext.hostname,
                     port = fuzzcontext.port,
@@ -471,25 +475,6 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     apikeyHeader = fuzzcontext.apikeyHeader,
                     apikey = fuzzcontext.apikey
                    )
-            
-            # Column('Id', String, primary_key=True),
-            #                 Column('datetime', DateTime),
-            #                 Column('name', String),
-            #                 Column('hostname', String),
-            #                 Column('port', String),
-            #                 Column('requestTextContent', String),
-            #                 Column('requestTextFilePath', String),
-            #                 Column('openapi3FilePath', String),
-            #                 Column('openapi3Url', String),
-            #                 # Column('openapi3Content', String),
-            #                 Column('fuzzcaseToExec', Integer),
-            #                 Column('authnType', String),
-            #                 Column('basicUsername', String),
-            #                 Column('basicPassword', String),
-            #                 Column('bearerTokenHeader', String),
-            #                 Column('bearerToken', String),
-            #                 Column('apikeyHeader', String),
-            #                 Column('apikey', String)
          )
         
         Session.execute(fuzzcontextStmt)
@@ -638,30 +623,29 @@ def is_data_exist_in_fuzzcontexts(fuzzcontextId: str, fuzzcontexts: list[ApiFuzz
         return False, None
     
 def create_fuzzcontext_from_dict(rowDict):
-    
-        fuzzcontext = ApiFuzzContext()       
-        fuzzcontext.Id = rowDict['Id']
-        fuzzcontext.datetime = rowDict['datetime']
-        fuzzcontext.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
-        fuzzcontext.isanonymous = rowDict['isanonymous']
-        fuzzcontext.name = rowDict['name']
-        fuzzcontext.requestTextContent = rowDict['requestTextContent']
-        fuzzcontext.requestTextFilePath = rowDict['requestTextFilePath']
-        fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
-        fuzzcontext.openapi3Url = rowDict['openapi3Url']
-        fuzzcontext.openapi3Content = rowDict['openapi3Content']
-        fuzzcontext.authnType = rowDict['authnType']
-        fuzzcontext.basicUsername = rowDict['basicUsername']
-        fuzzcontext.basicPassword = rowDict['basicPassword']
-        fuzzcontext.bearerTokenHeader = rowDict['bearerTokenHeader']
-        fuzzcontext.bearerToken = rowDict['fuzzContextId']
-        fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
-        fuzzcontext.apikey = rowDict['apikey']
-        fuzzcontext.hostname = rowDict['hostname']
-        fuzzcontext.port = rowDict['port']
-        fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
         
-        return fuzzcontext
+    fuzzcontext = ApiFuzzContext()       
+    fuzzcontext.Id = rowDict['Id']
+    fuzzcontext.datetime = rowDict['datetime']
+    fuzzcontext.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
+    fuzzcontext.isanonymous = rowDict['isanonymous']
+    fuzzcontext.name = rowDict['name']
+    fuzzcontext.hostname = rowDict['hostname']
+    fuzzcontext.port = rowDict['port']
+    fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
+    fuzzcontext.requestTextContent = rowDict['requestTextContent']
+    fuzzcontext.requestTextFilePath = rowDict['requestTextFilePath']
+    fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
+    fuzzcontext.openapi3Url = rowDict['openapi3Url']
+    fuzzcontext.authnType = rowDict['authnType']
+    fuzzcontext.basicUsername = rowDict['basicUsername']
+    fuzzcontext.basicPassword = rowDict['basicPassword']
+    fuzzcontext.bearerTokenHeader = rowDict['bearerTokenHeader']
+    fuzzcontext.bearerToken = rowDict['bearerToken']
+    fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
+    fuzzcontext.apikey = rowDict['apikey']
+    
+    return fuzzcontext
     
 
 def create_fuzzcaseset_from_dict(rowDict):

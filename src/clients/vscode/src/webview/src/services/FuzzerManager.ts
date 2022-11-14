@@ -26,17 +26,6 @@ export default class FuzzerManager
     {
         const result = await this._wc.createNewApiFuzzContext(fuzzcontext);
 
-        if (result.ok)
-        {
-            const savedFC = new ApiFuzzContext();
-
-            this.propMap(savedFC, result.fuzzcontext);
-
-            result.apiFuzzContext = savedFC;
-
-            return result;
-        }
-
         return result;
     }
 
@@ -75,6 +64,12 @@ export default class FuzzerManager
     }
 
     private propMap(obj: any, mappedObject: any ) {
+
+        if(obj == undefined)
+        {
+            return;
+        }
+        
         const thisObj = this;
 
         const keys = Object.keys( obj )

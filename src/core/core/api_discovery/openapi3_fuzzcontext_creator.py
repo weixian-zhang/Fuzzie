@@ -54,6 +54,7 @@ class OpenApi3FuzzContextCreator:
             fuzzcontext.name = name
             
         fuzzcontext.datetime = datetime.now()
+        fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
         fuzzcontext.requestMessageText = requestTextContent
         fuzzcontext.requestMessageFilePath = requestTextFilePath
         fuzzcontext.openapi3FilePath = openapi3FilePath
@@ -62,6 +63,7 @@ class OpenApi3FuzzContextCreator:
         fuzzcontext.hostname = hostname
         fuzzcontext.port = port
         fuzzcontext.authnType = authnType
+        fuzzcontext.isanonymous = isanonymous
         fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
         
         fuzzcontext.basicUsername = basicUsername
@@ -71,7 +73,11 @@ class OpenApi3FuzzContextCreator:
         fuzzcontext.apikeyHeader=  apikeyHeader 
         fuzzcontext.apikey= apikey
         
-        fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
+        # fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
+        # if fuzzcontext.authnType == SupportedAuthnType.Anonymous.name:
+        #     fuzzcontext.isanonymous = True
+        # else:
+        #     fuzzcontext.isanonymous = False
         
         fcSets = self.create_fuzzCaseSet(apicontext)
         

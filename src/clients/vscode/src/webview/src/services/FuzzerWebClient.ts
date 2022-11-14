@@ -139,11 +139,6 @@ export default class FuzzerWebClient
                             authnType: "${fuzzcontext.authnType}"){
                 ok
                 error
-                apiFuzzContext {
-                    Id
-                    datetime
-                    name
-                }
                 }
             }
         `

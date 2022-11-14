@@ -64,6 +64,7 @@
                     v-model="newApiContext.requestTextContent"
                      density="compact"
                      clearable
+                     @click:clear="(newApiContext.requestTextContent='')"
                   ></v-textarea>
                 </div>
 
@@ -76,6 +77,11 @@
                     @change="onRequestTextFileChange"
                     variant="underlined"
                     clearable
+                    @click:clear="(
+                      requestTextFileInputFileVModel=[],
+                      newApiContext.requestTextContent='',
+                      newApiContext.requestTextFilePath=''
+                    )"
                   ></v-file-input>
                   <!-- <input class="form-control form-control-sm" type="file" id="rt-file" > -->
                 </div>
@@ -88,6 +94,11 @@
                     @change="onOpenApi3FileChange"
                     ref="openapi3FileInput" 
                     clearable
+                    @click:clear="(
+                      openapi3FileInputFileVModel=[],
+                      newApiContext.openapi3Content='',
+                      newApiContext.openapi3FilePath=''
+                    )"
                     variant="underlined"
                   ></v-file-input>
                   <!-- <input class="form-control form-control-sm" type="file" id="openapi3-file" > -->
@@ -99,6 +110,10 @@
                     variant="underlined"
                     hint="e.g: https://openapi3/spec/yaml"
                     density="compact"
+                    clearable
+                    @click:clear="(
+                      newApiContext.openapi3Url=''
+                    )"
                     label="OpenAPI 3 URL" />
                 </div>
               </form>
@@ -154,7 +169,9 @@
                     hint=""
                     density="compact"
                     label="Username" 
-                    clearable/>
+                    clearable
+                    @click:clear="(newApiContext.basicUsername='')"
+                    />
                 </div>
                 <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
                   <v-text-field
@@ -167,6 +184,7 @@
                     variant="underlined"
                     counter
                     clearable
+                    @click:clear="(newApiContext.basicPassword='')"
                     @click:append="showPasswordValue= !showPasswordValue"
                   ></v-text-field>
 
@@ -181,6 +199,7 @@
                     density="compact"
                     label="HTTP Header"
                     clearable
+                    @click:clear="(newApiContext.bearerTokenHeader='')"
                   ></v-text-field>
                 </div>
                 <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
@@ -192,6 +211,7 @@
                     label="Token"
                     density="compact"
                     clearable
+                    @click:clear="(newApiContext.bearerToken='')"
                   ></v-text-field>
                 </div>
 
@@ -204,6 +224,7 @@
                     label="HTTP Header"
                     density="compact"
                     clearable
+                     @click:clear="(newApiContext.apikeyHeader='')"
                   ></v-text-field>
                 </div>
                 <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
@@ -215,6 +236,7 @@
                     label="API Key"
                     density="compact"
                     clearable
+                     @click:clear="(newApiContext.apikey='')"
                   ></v-text-field>
                 </div>
 
@@ -255,13 +277,18 @@
     width="100%"
     height="100%">
       <v-toolbar card color="cyan" flat dense height="50px">
+
+        <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'">
+              <v-icon>mdi-refresh</v-icon>
+        </v-btn>
+
         <v-spacer />
 
-        <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'Create New Messaging Fuzz Context (in roadmap)'">
+        <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
               <v-icon>mdi-message-plus-outline</v-icon>
         </v-btn>
 
-        <v-btn v-tooltip.bottom="'Create New API Fuzz Context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
+        <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
                   <v-icon>mdi-api</v-icon>
         </v-btn>
 
@@ -475,6 +502,15 @@ mounted() {
   async createNewApiContext() {
     
     this.newApiContext.authnType = this.determineAuthnType();
+    if(this.newApiContext.authnType == 'Anonymous')
+    {
+      this.newApiContext.isanonymous = true;
+    }
+    else
+    {
+      this.newApiContext.isanonymous = false;
+    }
+
     this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
     if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
@@ -488,37 +524,21 @@ mounted() {
       this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
       return;
     }
-
-    if(this.newApiContext.basicUsername == 'null') {
-        this.newApiContext.basicUsername = '';
-    }
-    if(this.newApiContext.basicPassword == 'null') {
-        this.newApiContext.basicPassword = '';
-    } 
-    if(this.newApiContext.bearerTokenHeader == 'null') {
-        this.newApiContext.bearerTokenHeader = '';
-    }
-    if(this.newApiContext.bearerTokenHeader == 'null') {
-        this.newApiContext.bearerToken = '';
-    } 
-    if(this.newApiContext.apikeyHeader == 'null') {
-        this.newApiContext.apikeyHeader = '';
-    } 
-    if(this.newApiContext.apikey == 'null') {
-        this.newApiContext.apikey = '';
-    } 
+   
 
     const result =  await this.fm.newFuzzContext(this.newApiContext);
     const ok = result['ok'];
     const error =result['error'];
-    const fuzzcontext = result['fuzzcontext'] as ApiFuzzContext;
 
     if(!ok && error != '')
     {
       this.toast.add({severity:'error', summary: 'Create new API context', detail:error, life: 5000});
       return;
     }
-
+    else
+    {
+      this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+    }
   }
 
   // Anonymous = "Anonymous",

@@ -110,9 +110,29 @@ class ApiFuzzCaseSet:
 # Also the data to be rendered on Fuzzie GUI client - VSCode extension and future Desktop client. 
 class ApiFuzzContext:
     
-    def __init__(self) -> None:
-        self.Id: str = ''
-        self.datetime: datetime
+    def __init__(self, Id = '',
+                        datetime = '',
+                        name = '',
+                        apiDiscoveryMethod = '',
+                        requestTextContent = '',
+                        requestTextFilePath = '',
+                        openapi3FilePath = '',
+                        openapi3Url = '',
+                        openapi3Content = '',
+                        isanonymous = False,
+                        basicUsername = '',
+                        basicPassword = '' ,
+                        bearerTokenHeader = '',
+                        bearerToken= '',
+                        apikeyHeader=  '' ,
+                        apikey= '', 
+                        hostname: str = '',
+                        port=443,
+                        fuzzcaseToExec = 100,
+                        authnType = 'Anonymous',
+                        fuzzcaseSets=[]) -> None:
+        self.Id = ''
+        self.datetime = ''
         self.name = ''
         self.apiDiscoveryMethod = ''
         self.requestTextContent = ''
