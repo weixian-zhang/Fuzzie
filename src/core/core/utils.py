@@ -14,4 +14,12 @@ class Utils:
         
     def uuid():
         return shortuuid.uuid()
+    
+    
+    def errAsText(err):
+        errMsg = ''
+        if err != None and err.args is not None and len(err.args) > 0:
+            errMsg = ', '.join([x for x in err.args])
+            
+        return errMsg
         

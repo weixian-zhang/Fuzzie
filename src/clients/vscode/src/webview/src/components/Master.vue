@@ -11,9 +11,9 @@
             </div>
         </div>
 
-        <!-- <div class="row flex-fill d-flex">
+        <div class="row flex-fill d-flex">
             <FuzzResultPanel />
-        </div> -->
+        </div>
     </div>
 </template>
   

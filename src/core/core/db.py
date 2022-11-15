@@ -10,7 +10,8 @@ from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzDataCase, ApiFuzzC
     )
 from graphql_models import (ApiFuzzContext_Runs_ViewModel,
             ApiFuzzCaseSetRunViewModel, 
-            ApiFuzzCaseSets_With_RunSummary_ViewModel)
+            ApiFuzzCaseSets_With_RunSummary_ViewModel,
+            ApiFuzzContextUpdate)
 
 from eventstore import EventStore
 
@@ -38,7 +39,6 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('hostname', String),
                             Column('port', Integer),
                             Column('apiDiscoveryMethod', String),
-                            Column('isanonymous', Boolean),
                             Column('requestTextContent', String),
                             Column('requestTextFilePath', String),
                             Column('openapi3FilePath', String),
@@ -153,6 +153,7 @@ NaughtyStringTable = Table('NaughtyString', metadata,
                             Column('RowNumber', String)
                             )
 
+
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
     j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,
                 ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
@@ -235,7 +236,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                         ApiFuzzContextTable.columns.Id.label("fuzzcontextId"), 
                         ApiFuzzContextTable.columns.datetime,
                         ApiFuzzContextTable.columns.apiDiscoveryMethod,  
-                        ApiFuzzContextTable.columns.isanonymous,
                         ApiFuzzContextTable.columns.name,
                         ApiFuzzContextTable.columns.requestTextContent,
                         ApiFuzzContextTable.columns.requestTextFilePath,
@@ -287,7 +287,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                 fcView.requestTextFilePath = rowDict['requestTextFilePath']
                 fcView.openapi3FilePath = rowDict['openapi3FilePath']
                 fcView.openapi3Url = rowDict['openapi3Url']
-                fcView.isanonymous = rowDict['isanonymous']
                 fcView.basicUsername = rowDict['basicUsername']
                 fcView.basicPassword = rowDict['basicPassword'] 
                 fcView.bearerTokenHeader = rowDict['bearerTokenHeader']
@@ -459,6 +458,32 @@ def get_naughtystring_row_count():
     return count
     
 
+def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
+    
+    stmt = (
+            update(ApiFuzzContextTable).
+            where(ApiFuzzContextTable.c.Id == fuzzcontext.fuzzcontextId).
+            values(
+                    name = fuzzcontext.name,
+                    basicUsername = fuzzcontext.basicUsername,
+                    basicPassword = fuzzcontext.basicPassword,
+                    bearerTokenHeader = fuzzcontext.bearerTokenHeader,
+                    bearerToken = fuzzcontext.bearerToken,
+                    apikeyHeader = fuzzcontext.apikeyHeader,
+                    apikey = fuzzcontext.apikey,
+                    hostname = fuzzcontext.hostname,
+                    port = fuzzcontext.port,
+                    fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
+                    authnType = fuzzcontext.authnType
+                   )
+            )
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(stmt)
+    
+    Session.commit()
+    Session.close()
 
 # mutations
 def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
@@ -471,7 +496,6 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                    Id=fuzzcontext.Id, 
                    datetime= datetime.now(),
                    apiDiscoveryMethod = fuzzcontext.apiDiscoveryMethod,
-                   isanonymous = fuzzcontext.isanonymous,
                    name = fuzzcontext.name,
                     hostname = fuzzcontext.hostname,
                     port = fuzzcontext.port,
@@ -641,7 +665,6 @@ def create_fuzzcontext_from_dict(rowDict):
     fuzzcontext.Id = rowDict['Id']
     fuzzcontext.datetime = rowDict['datetime']
     fuzzcontext.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
-    fuzzcontext.isanonymous = rowDict['isanonymous']
     fuzzcontext.name = rowDict['name']
     fuzzcontext.hostname = rowDict['hostname']
     fuzzcontext.port = rowDict['port']

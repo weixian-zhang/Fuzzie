@@ -27,7 +27,6 @@ class OpenApi3FuzzContextCreator:
         
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  
-                 isanonymous,
                  apicontext,
                  hostname, 
                  port,
@@ -63,7 +62,6 @@ class OpenApi3FuzzContextCreator:
         fuzzcontext.hostname = hostname
         fuzzcontext.port = port
         fuzzcontext.authnType = authnType
-        fuzzcontext.isanonymous = isanonymous
         fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
         
         fuzzcontext.basicUsername = basicUsername
@@ -72,12 +70,6 @@ class OpenApi3FuzzContextCreator:
         fuzzcontext.bearerToken= bearerToken 
         fuzzcontext.apikeyHeader=  apikeyHeader 
         fuzzcontext.apikey= apikey
-        
-        # fuzzcontext.authnType = self.determine_security_scheme(basicUsername,basicPassword, bearerToken, apikeyHeader,apikey)
-        # if fuzzcontext.authnType == SupportedAuthnType.Anonymous.name:
-        #     fuzzcontext.isanonymous = True
-        # else:
-        #     fuzzcontext.isanonymous = False
         
         fcSets = self.create_fuzzCaseSet(apicontext)
         

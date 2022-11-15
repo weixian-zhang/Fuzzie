@@ -1,6 +1,6 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { ApiFuzzContext, ApiFuzzcontextRuns } from "../Model";
+import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate } from "../Model";
 export default class FuzzerManager
 {
     private _wc: FuzzerWebClient;
@@ -22,6 +22,13 @@ export default class FuzzerManager
         //
     }
 
+    public async updateApiFuzzContext(fuzzcontext: ApiFuzzContextUpdate): Promise<[boolean, string]>
+    {
+        const [ok, error] = await this._wc.updateApiFuzzContext(fuzzcontext);
+
+        return [ok, error];
+    }
+
     public async newFuzzContext(fuzzcontext: ApiFuzzContext): Promise<ApiFuzzContext>
     {
         const result = await this._wc.createNewApiFuzzContext(fuzzcontext);
@@ -29,12 +36,12 @@ export default class FuzzerManager
         return result;
     }
 
-    public async getFuzzcontexts(): Promise<Array<ApiFuzzContext>>
+    public async getFuzzcontexts(): Promise<[boolean, string, Array<ApiFuzzContext>]>
     {
-        const data = await this._wc.getFuzzContexts()
+        const [ok, err, data] = await this._wc.getFuzzContexts()
 
-        if(data == undefined)
-            return []
+        if(!ok || data == undefined)
+            return [ok, err, []];
 
         const fcs: Array<ApiFuzzContext> = [];
 
@@ -60,7 +67,7 @@ export default class FuzzerManager
             }
         });
 
-        return fcs;
+        return [true, '', fcs];
     }
 
     private propMap(obj: any, mappedObject: any ) {
