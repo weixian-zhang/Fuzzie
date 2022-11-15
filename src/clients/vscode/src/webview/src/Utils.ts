@@ -2,6 +2,15 @@
 
 export default class Utils
 {
+    public static copy(obj: any) {
+        if(obj == null || obj == undefined)
+        {
+            return null;
+        }
+
+        return JSON.parse(JSON.stringify(obj));
+    }
+
     public static async readFileAsText(file): Promise<string>
     {
         return new Promise((resolve, reject) => {

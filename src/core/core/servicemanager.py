@@ -87,7 +87,7 @@ class ServiceManager:
         error = ''
         apicontext= None
         
-        # rtStr=  base64.b64decode(requestTextContent).decode('UTF-8')
+        rtStr=  base64.b64decode(requestTextContent).decode('UTF-8')
         openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
         
         if apiDiscoveryMethod == 'openapi3':

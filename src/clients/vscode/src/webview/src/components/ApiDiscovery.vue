@@ -762,7 +762,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if (file.name.includes(".http") || file.name.includes(".fuzzie") || file.name.includes(".text")) {
 
       const content = await Utils.readFileAsText(file);
-      this.newApiContext.requestTextContent = btoa(content);
+      this.newApiContext.requestTextContent = content;
 
       if(this.requestTextFileInputFileVModel != null && this.requestTextFileInputFileVModel.length > 0)
       {
@@ -841,8 +841,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
       return;
     }
    
+    const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
+    apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
 
-    const result =  await this.fm.newFuzzContext(this.newApiContext);
+    const result =  await this.fm.newFuzzContext(apifc);
     const ok = result['ok'];
     const error =result['error'];
 
@@ -853,6 +855,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
     else
     {
+      this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
     }
   }

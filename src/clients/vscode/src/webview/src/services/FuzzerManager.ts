@@ -31,6 +31,7 @@ export default class FuzzerManager
 
     public async newFuzzContext(fuzzcontext: ApiFuzzContext): Promise<ApiFuzzContext>
     {
+        
         const result = await this._wc.createNewApiFuzzContext(fuzzcontext);
 
         return result;
