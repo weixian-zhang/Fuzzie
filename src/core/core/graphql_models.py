@@ -104,6 +104,22 @@ class SecuritySchemes(graphene.ObjectType):
 #     http4xx = graphene.Int()
 #     http5xx =  graphene.Int()
 #     completedDataCaseRuns = graphene.Int() 
+
+
+    
+class ApiFuzzContextUpdate(graphene.InputObjectType):
+    fuzzcontextId = graphene.String()
+    name = graphene.String()
+    basicUsername = graphene.String()
+    basicPassword = graphene.String()
+    bearerTokenHeader = graphene.String()
+    bearerToken = graphene.String()
+    apikeyHeader = graphene.String()
+    apikey = graphene.String()
+    hostname = graphene.String()
+    port = graphene.Int()
+    fuzzcaseToExec = graphene.Int()
+    authnType = graphene.String()
     
 class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzCaseSetId = graphene.String()
@@ -142,7 +158,6 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     requestTextFilePath = graphene.String()
     openapi3FilePath = graphene.String()
     openapi3Url = graphene.String()
-    isanonymous = graphene.Boolean()
     basicUsername = graphene.String()
     basicPassword = graphene.String() 
     bearerTokenHeader = graphene.String()
@@ -156,3 +171,8 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     
     # CaseSetRun
     fuzzCaseSetRuns = graphene.List(ApiFuzzCaseSetRunViewModel)
+    
+class FuzzContextRunQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(ApiFuzzContext_Runs_ViewModel)

@@ -4,14 +4,16 @@ from servicemanager import ServiceManager
 from eventstore import EventStore
 from datetime import datetime
 from rx import Observable
-from graphql_models import ApiFuzzContext_Runs_ViewModel, ApiFuzzCaseSets_With_RunSummary_ViewModel
+from graphql_models import ApiFuzzContext_Runs_ViewModel, FuzzContextRunQueryResult, ApiFuzzCaseSets_With_RunSummary_ViewModel, ApiFuzzContextUpdate
+   
 
 # queries
 class Query(graphene.ObjectType):
+
     
     alive = graphene.String()
     
-    fuzzContexts = graphene.List(ApiFuzzContext_Runs_ViewModel)
+    fuzzContexts = graphene.Field(FuzzContextRunQueryResult)
     
     fuzzCaseSetWithRunSummary = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel,
                                               fuzzcontextId = graphene.Argument(graphene.String))
@@ -23,21 +25,42 @@ class Query(graphene.ObjectType):
     
     def resolve_fuzzContexts(self, info):
         sm = ServiceManager()
-        result = sm.get_fuzzContexts_and_runs()
-        return result
+        ok, err, result = sm.get_fuzzContexts_and_runs()
+        
+        r = FuzzContextRunQueryResult()
+        r.ok = ok
+        r.error = err
+        r.result = result
+        return r       
     
     def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId):
         sm = ServiceManager()
         result = sm.get_caseSets_with_runSummary(fuzzcontextId)
         return result
     
+class UpdateApiContext(graphene.Mutation):
+    class Arguments:
+        fuzzContext= ApiFuzzContextUpdate(required=True)
 
+    #define output
+    ok = graphene.Boolean()
+    error = graphene.String()
+    
+    def mutate(self, info, fuzzContext):
+        
+        sm = ServiceManager()
+        
+        OK, error = sm.update_api_fuzzcontext(fuzzContext)
+
+        ok = OK
+        error = error
+        
+        return UpdateApiContext(ok=ok,error=error)
     
 class NewApiFuzzContext(graphene.Mutation):
     
     class Arguments:
         apiDiscoveryMethod = graphene.String()
-        isanonymous = graphene.Boolean()
         name = graphene.String()
         requestTextContent = graphene.String()
         requestTextFilePath = graphene.String()
@@ -57,11 +80,9 @@ class NewApiFuzzContext(graphene.Mutation):
     
     ok = graphene.Boolean()
     error = graphene.String()
-    #apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
     
     def mutate(self, info,
                apiDiscoveryMethod,
-               isanonymous,
                 name,
                 requestTextContent,
                 requestTextFilePath,
@@ -93,7 +114,6 @@ class NewApiFuzzContext(graphene.Mutation):
                                         openapi3Content = openapi3Content,
                                         fuzzcaseToExec=fuzzcaseToExec,
                                         authnType=authnType,
-                                        isanonymous=isanonymous,
                                         basicUsername=basicUsername,
                                         basicPassword=basicPassword,
                                         bearerTokenHeader=bearerTokenHeader,
@@ -107,38 +127,6 @@ class NewApiFuzzContext(graphene.Mutation):
         
         return NewApiFuzzContext(ok=ok,error=error)
     
-    
-    
-class DiscoverOpenApi3ByUrl(graphene.Mutation):
-    
-    class Arguments:
-        name = graphene.String()
-        hostname = graphene.String()
-        port = graphene.Int()
-        authnType = graphene.String()
-        openapi3Url = graphene.String()
-    
-    ok = graphene.Boolean()
-    apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
-
-   
-    def mutate(self, info, hostname, port, openapi3Url, name = '', fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, authnType='Anonymous'):
-        
-        sm = ServiceManager()
-        
-        fcView = sm.discover_openapi3_by_filepath_or_url(
-                            hostname=hostname,
-                            port=port,
-                            name=name,
-                            fuzzMode= fuzzmode,
-                            numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
-                            authnType=authnType,
-                            openapi3Url=openapi3Url)
-        
-        ok = True
-        apiFuzzContext = fcView
-        
-        return DiscoverOpenApi3ByUrl(apiFuzzContext=apiFuzzContext, ok=ok)
     
 class Fuzz(graphene.Mutation):
     class Arguments:
@@ -175,16 +163,46 @@ class Mutation(graphene.ObjectType):
     
     new_api_fuzz_context = NewApiFuzzContext.Field()
     
-    discover_by_openapi3_url = DiscoverOpenApi3ByUrl.Field()
+    update_api_fuzz_context = UpdateApiContext.Field()
     
     fuzz = Fuzz.Field()
     
-    #discoverBySingleRequestText(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
-    
-    #discoverByRequestTextFilePath(hostname, port, username, password, bearerToken, apikeyHeader, apikey)
-    
     
 schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)
+
+
+
+
+# class DiscoverOpenApi3ByUrl(graphene.Mutation):
+    
+#     class Arguments:
+#         name = graphene.String()
+#         hostname = graphene.String()
+#         port = graphene.Int()
+#         authnType = graphene.String()
+#         openapi3Url = graphene.String()
+    
+#     ok = graphene.Boolean()
+#     apiFuzzContext = graphene.Field(ApiFuzzContext_Runs_ViewModel)
+
+   
+#     def mutate(self, info, hostname, port, openapi3Url, name = '', fuzzmode = 'Quick', numberOfFuzzcaseToExec=50, authnType='Anonymous'):
+        
+#         sm = ServiceManager()
+        
+#         fcView = sm.discover_openapi3_by_filepath_or_url(
+#                             hostname=hostname,
+#                             port=port,
+#                             name=name,
+#                             fuzzMode= fuzzmode,
+#                             numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
+#                             authnType=authnType,
+#                             openapi3Url=openapi3Url)
+        
+#         ok = True
+#         apiFuzzContext = fcView
+        
+#         return DiscoverOpenApi3ByUrl(apiFuzzContext=apiFuzzContext, ok=ok)
 
 # import sys, os
 # from pathlib import Path

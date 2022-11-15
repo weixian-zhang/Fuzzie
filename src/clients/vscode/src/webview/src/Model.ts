@@ -1,6 +1,6 @@
 
 export class ApiFuzzcontextRuns {
-     
+   
     public fuzzCaseSetRunsId  = '';
      
     public fuzzcontextId  = '';
@@ -12,13 +12,27 @@ export class ApiFuzzcontextRuns {
     public status  = '';
 }
 
+export class ApiFuzzContextUpdate {
+    public fuzzcontextId: string;
+    public name: string;
+    public basicUsername: string;
+    public basicPassword: string;
+    public bearerTokenHeader: string;
+    public bearerToken: string;
+    public apikeyHeader: string;
+    public apikey: string;
+    public hostname: string;
+    public port: number;
+    public fuzzcaseToExec: number;
+    public authnType: string;
+}
+
 export class ApiFuzzContext {
      
     public Id = '';
     public name ='my REST Api';
     public datetime ='';
     public apiDiscoveryMethod  ='';
-    public isanonymous = true;
     public requestTextContent ='';
     public requestTextFilePath ='';
     public openapi3FilePath ='';
@@ -32,7 +46,7 @@ export class ApiFuzzContext {
     public apikeyHeader ='Authorization';
     public apikey ='';
     public hostname ='httpbin.org';
-    public port ='443';
+    public port = 443;
     public fuzzcaseToExec =100;
 
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []

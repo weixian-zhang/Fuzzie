@@ -23,4 +23,49 @@ export default class Utils
             reader.readAsText(file);
         })
     }
+
+    public static mapProp(source: any, target: any , skipPropIfTargetNotFound = true) {
+
+        if(source == undefined)
+        {
+            return;
+        }
+        
+        const thisObj = this;
+
+        const keys = Object.keys( source )
+        
+        for (const key of keys) {
+            if (source[ key ] == null)
+                continue;
+            if(Array.isArray(source[ key ] ))
+                continue;
+            else if ( typeof source[ key ] === 'object' ) {
+                // If it's an object, let's go recursive
+                thisObj.mapProp(source[ key ], target );
+            }
+            else {
+
+                let srcVal = source[ key ];
+
+                if(srcVal instanceof Number)
+                {
+                    srcVal = Number(srcVal);
+                }
+
+                if(skipPropIfTargetNotFound)
+                {
+                    if(key in target)
+                    {
+                        target[ key ] = srcVal;
+                    }
+                }
+                else
+                {
+                    target[ key ] = srcVal;
+                }
+                
+            }
+        }
+    }
 }

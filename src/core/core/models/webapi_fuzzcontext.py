@@ -119,7 +119,6 @@ class ApiFuzzContext:
                         openapi3FilePath = '',
                         openapi3Url = '',
                         openapi3Content = '',
-                        isanonymous = False,
                         basicUsername = '',
                         basicPassword = '' ,
                         bearerTokenHeader = '',
@@ -141,7 +140,6 @@ class ApiFuzzContext:
         self.openapi3Url = ''
         self.openapi3Content = ''
 
-        self.isanonymous = False
         self.basicUsername = ''
         self.basicPassword = '' 
         self.bearerTokenHeader = ''

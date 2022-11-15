@@ -3,13 +3,15 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
-from graphql_models import ApiFuzzContext_Runs_ViewModel
+from graphql_models import ApiFuzzContext_Runs_ViewModel, ApiFuzzContextUpdate
 from webapi_fuzzer import WebApiFuzzer
 from automapper import mapper
 from eventstore import EventStore, MsgType
+from utils import Utils
 from db import  (get_fuzzcontext, 
                  get_caseSets_with_runSummary, 
                  insert_db_fuzzcontext, 
+                 update_api_fuzz_context,
                  get_fuzzContexts_and_runs)
 from sqlalchemy.sql import select, insert
 import base64
@@ -49,8 +51,20 @@ class ServiceManager:
     def __init__(self) -> None:   
         pass
     
+    
+    def update_api_fuzzcontext(self, apiFuzzcontext: ApiFuzzContextUpdate):
+        
+        try:
+            update_api_fuzz_context(apiFuzzcontext)
+            
+            return True, ''
+        
+        except Exception as e:
+            ServiceManager.eventstore.emitErr(e)
+            return False, Utils.errAsText(e)
+        
+    
     def new_api_fuzzcontext(self, apiDiscoveryMethod,  
-                                isanonymous,
                                 name,
                                 requestTextContent,
                                 requestTextFilePath,
@@ -98,7 +112,6 @@ class ServiceManager:
                                             openapi3Content = openapi3Content,
                                             fuzzcaseToExec=fuzzcaseToExec,
                                             authnType=authnType,
-                                            isanonymous=isanonymous,
                                             basicUsername=basicUsername,
                                             basicPassword=basicPassword,
                                             bearerTokenHeader=bearerTokenHeader,
@@ -108,87 +121,24 @@ class ServiceManager:
         
         insert_db_fuzzcontext(fuzzcontext)
         
-        # savedFC = get_fuzzcontext(fuzzcontext.Id)
-        
-        # fcView = mapper.to(ApiFuzzContext_Runs_ViewModel).map(savedFC)
-        
         return True, ''
         
-        
-        
-
-    # def discover_openapi3_by_filepath_or_url(self,
-    #                         hostname,
-    #                         authnType,
-    #                         port=443,
-    #                         name='',
-    #                         openapi3FilePath = '',
-    #                         openapi3Url = '',
-    #                         fuzzMode= 'Quick',
-    #                         numberOfFuzzcaseToExec=100):
-        
-    #     openapi3Dis = OpenApi3ApiDiscover()
-    #     apicontext= None
-        
-    #     if openapi3FilePath != '':
-    #         apicontext = openapi3Dis.load_openapi3_file(openapi3FilePath)
-    #     else:
-    #         apicontext = openapi3Dis.load_openapi3_url(openapi3Url)
-        
-    #     fcc = OpenApi3FuzzContextCreator()
-    #     fcc.new_fuzzcontext(
-    #                         name=name,
-    #                         hostname=hostname,
-    #                         port=port,
-    #                         requestMessageText = '',
-    #                         requestMessageFilePath = '',
-    #                         openapi3FilePath = openapi3FilePath,
-    #                         fuzzMode= fuzzMode,
-    #                         numberOfFuzzcaseToExec=numberOfFuzzcaseToExec,
-    #                         authnType=authnType)
-        
-    #     fuzzcontext = fcc.create_fuzzcontext(apicontext)
-        
-    #     insert_db_fuzzcontext(fuzzcontext)
-        
-    #     savedFC = get_fuzzcontext(fuzzcontext.Id)
-        
-    #     fcView = mapper.to(ApiFuzzContext_Runs_ViewModel).map(fuzzcontext)
-        
-    #     # fcView = ApiFuzzContext_Runs_ViewModel()
-    #     # fcView.Id = savedFC.Id
-    #     # fcView.datetime = savedFC.datetime
-    #     # fcView.apiDiscoveryMethod = savedFC.apiDiscoveryMethod
-    #     # fcView.apicontext = savedFC.apicontext
-    #     # fcView.name = savedFC.name
-    #     # fcView.hostname = savedFC.hostname
-    #     # fcView.port = savedFC.port
-    #     # fcView.requestTextContent  = savedFC.requestTextContent
-    #     # fcView.requestTextFilePath  = savedFC.requestTextFilePath
-    #     # fcView.openapi3FilePath  = savedFC.openapi3FilePath
-    #     # fcView.openapi3Url  = savedFC.openapi3Url
-    #     # fcView.openapi3Content  = savedFC.openapi3Content
-    #     # fcView.fuzzcaseToExecsavedFC.fuzzcaseToExec
-    #     # fcView.authnTypesavedFC.authnType
-    #     # fcView.isanonymous = savedFC.isanonymous
-    #     # fcView.basicUsername = savedFC.basicUsername
-    #     # fcView.basicPassword = savedFC.basicPassword
-    #     # fcView.bearerTokenHeader = savedFC.bearerTokenHeader
-    #     # fcView.bearerToken = savedFC.bearerToken
-    #     # fcView.apikeyHeader = savedFC.apikeyHeader
-    #     # fcView.apikey = savedFC.apikey
-        
-    #     return fcView
+    
     
     def get_caseSets_with_runSummary(self, fuzzcontextId):
         return get_caseSets_with_runSummary(fuzzcontextId)
     
     
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:
-        return get_fuzzContexts_and_runs() 
+        try:
+            fcRuns = get_fuzzContexts_and_runs()
+            return (True, '', fcRuns)
+        except Exception as e:
+            return (False, Utils.errAsText(e), [])
     
     
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+        
         return get_fuzzcontext(Id)
     
     def fuzz(self, 

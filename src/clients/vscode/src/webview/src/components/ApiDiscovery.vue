@@ -11,7 +11,7 @@
     >
 
     
-    <!-- new context -->
+     <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
@@ -55,6 +55,7 @@
                     :rules="[() => !!newApiContext.port || 'This field is required']"
                     density="compact"
                     hint=""
+                    max="65535"
                     label="Port number" />
                 </div>
 
@@ -263,7 +264,7 @@
                   thumb-label="always"
                   min=100
                   max=50000
-                  step="10"
+                  step="5"
                 ></v-slider>
 
               </form>
@@ -278,24 +279,278 @@
             </div>
         </div>
       </div>
-    </Sidebar> 
+    </Sidebar>
+
+    <!--update context-->
+    <!-- new context -->
+     <Sidebar v-model:visible="updateContextSideBarVisible" position="right" style="width:950px;">
+      
+      <div class="container-fluid">
+        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
+        <div class="row">
+            <div class="col-6">
+              <form>
+                <div class="form-group">
+                  <v-text-field
+                    v-model="apiContextEdit.name"
+                    variant="underlined"
+                    :rules="[() => !!apiContextEdit.hostname || 'This field is required']"
+                    counter="25"
+                    density="compact"
+                    hint="e.g: my REST/GraphQL API"
+                    label="Name"
+                    clearable
+                  ></v-text-field>
+                </div>
+
+              <v-divider />
+              <b>Test Properties</b>
+              <v-divider />
+
+              <div class="form-group mb-3" >
+                <v-text-field
+                    v-model="newApiContext.hostname"
+                    variant="underlined"
+                    :rules="[() => !!apiContextEdit.hostname || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    label="Hostname" 
+                    clearable/>
+                </div>
+
+                <div class="form-group">
+                  <v-text-field
+                    v-model="apiContextEdit.port"
+                    type="number" 
+                    variant="underlined"
+                    :rules="[() => !!apiContextEdit.port || 'This field is required']"
+                    density="compact"
+                    hint=""
+                    max="65535"
+                    label="Port number" />
+                </div>
+
+              <v-divider />
+              <b>API Discovery</b>
+              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
+              <v-divider />
+
+                <div class="mb-2">
+                  <v-textarea 
+                    label="Request Text" 
+                    variant="underlined" 
+                    v-model="apiContextEdit.requestTextContent"
+                     density="compact"
+                     readonly
+                  ></v-textarea>
+                </div>
+
+                <div class="mb-2">
+                  <v-text-field
+                    v-model="apiContextEdit.requestTextFilePath"
+                    variant="underlined"
+                    density="compact"
+                    readonly
+                    label="Request Text File Path" />
+                </div>
+
+                <div class="form-group">
+                  <v-text-field
+                    v-model="apiContextEdit.openapi3FilePath"
+                    variant="underlined"
+                    density="compact"
+                    readonly
+                    label="OpenAPI 3 File Path" />
+                </div>
+
+                <div class="form-group">
+                  <v-text-field
+                    v-model="apiContextEdit.openapi3Url"
+                    variant="underlined"
+                    density="compact"
+                    readonly
+                    label="Request Text File Path" />
+                </div>
+              </form>
+            </div>
+            <div class="col-6">
+              
+              <form>
+
+                <b>API Authentication</b>
+                <v-divider />
+
+                <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
+                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                    newApiContext.authnType='Anonymous',
+                    securityBtnVisibility.anonymous = true,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=false
+                  )">No Authentication</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-basic" :checked="securityBtnVisibility.basic == true">
+                  <label class="btn btn-outline-success small" for="authn-basic" @click="(
+                    newApiContext.authnType='Basic',
+                    securityBtnVisibility.anonymous=false,
+                    securityBtnVisibility.basic=true,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=false
+                  )">Basic Username/Password</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" :checked="securityBtnVisibility.bearer == true">
+                  <label class="btn btn-outline-success small" for="authn-bearer" @click="(
+                    newApiContext.authnType='Bearer',
+                    securityBtnVisibility.anonymous =false,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=true,
+                    securityBtnVisibility.apikey=false
+                  )">Bearer Token</label>
+
+                  <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" :checked="securityBtnVisibility.apikey == true">
+                  <label class="btn btn-outline-success small" for="authn-apikey" @click="(
+                    newApiContext.authnType='ApiKey',
+                    securityBtnVisibility.anonymous=false,
+                    securityBtnVisibility.basic=false,
+                    securityBtnVisibility.bearer=false,
+                    securityBtnVisibility.apikey=true
+                  )">API Key</label>
+                </div>
+
+                <v-divider />
+
+                <!-- column 2 security -->
+                <div class="form-group mb-3" v-show="securityBtnVisibility.basic">
+                  <v-text-field
+                    v-model="apiContextEdit.basicUsername"
+                    variant="underlined"
+                    hint=""
+                    density="compact"
+                    label="Username" 
+                    clearable
+                    @click:clear="(apiContextEdit.basicUsername='')"
+                    />
+                </div>
+                <div class="form-group  mb-3" v-show="securityBtnVisibility.basic">
+                  <v-text-field
+                    v-model="apiContextEdit.basicPassword"
+                    :append-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="showPasswordValue ? 'text' : 'password'"
+                    name="password"
+                    label="Password"
+                    density="compact"
+                    variant="underlined"
+                    counter
+                    clearable
+                    @click:clear="(apiContextEdit.basicPassword='')"
+                    @click:append="showPasswordValue= !showPasswordValue"
+                  ></v-text-field>
+
+                </div>
+
+                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
+                  <v-text-field
+                    v-model="apiContextEdit.bearerTokenHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    density="compact"
+                    label="HTTP Header"
+                    clearable
+                    @click:clear="(apiContextEdit.bearerTokenHeader='')"
+                  ></v-text-field>
+                </div>
+                <div class="form-group mb-3" v-show="securityBtnVisibility.bearer">
+                  <v-text-field
+                    v-model="apiContextEdit.bearerToken"
+                    variant="underlined"
+                    counter="25"
+                    hint="bearer token"
+                    label="Token"
+                    density="compact"
+                    clearable
+                    @click:clear="(apiContextEdit.bearerToken='')"
+                  ></v-text-field>
+                </div>
+
+                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
+                  <v-text-field
+                    v-model="apiContextEdit.apikeyHeader"
+                    variant="underlined"
+                    counter="25"
+                    hint="default Authorization"
+                    label="HTTP Header"
+                    density="compact"
+                    clearable
+                     @click:clear="(apiContextEdit.apikeyHeader='')"
+                  ></v-text-field>
+                </div>
+                <div class="form-group mb-3" v-show="securityBtnVisibility.apikey">
+                  <v-text-field
+                    v-model="apiContextEdit.apikey"
+                    variant="underlined"
+                    counter="25"
+                    hint="API Key"
+                    label="API Key"
+                    density="compact"
+                    clearable
+                     @click:clear="(apiContextEdit.apikey='')"
+                  ></v-text-field>
+                </div>
+
+                <v-divider />
+
+                <b>Fuzz Properties</b>
+                <v-divider />
+                <v-divider />
+                
+                <v-slider
+                  v-model="apiContextEdit.fuzzcaseToExec"
+                  label=''
+                  track-color="blue"
+                  thumb-color="red"
+                  thumb-label="always"
+                  min=100
+                  max=50000
+                  step="5"
+                ></v-slider>
+
+              </form>
+              
+              <v-divider />
+
+              <div style="text-align:right">
+                <button class="btn btn-primary" @click="updateApiContext">Update</button>
+              </div>
+            <!-- col end-->
+            </div>
+        </div>
+      </div>
+    </Sidebar>
 
     <v-toolbar card color="cyan" flat dense height="50px">
+
+      <v-toolbar-title>FuzzContexts</v-toolbar-title>
+
+      <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
+        <v-icon>mdi-message-plus-outline</v-icon>
+      </v-btn>
+
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
             <v-icon>mdi-refresh</v-icon>
       </v-btn>
-      <v-spacer />
-      <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-        <v-icon>mdi-message-plus-outline</v-icon>
-      </v-btn>
+
       <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
         <v-icon>mdi-api</v-icon>
       </v-btn>
+
     </v-toolbar>
 
-    <Tree :value="nodes" selectionMode="single" v-show="showTree" width="100%" scrollHeight="455px" class="pa-1">
+    <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" width="100%" scrollHeight="455px" class="pa-1">
           <template #default="slotProps">
             <small><b v-on:click="onFuzzContextSelected(slotProps.node.key)">{{slotProps.node.label}}</b></small>
                 <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
@@ -305,6 +560,10 @@
                       icon="mdi-pencil"
                       color="primary"
                       size="x-small"
+                      @click="(
+                        apiContextEdit = slotProps.node.data,
+                        updateContextSideBarVisible = true
+                      )"
                       ></v-icon>]
                       [<v-icon
                       variant="flat"
@@ -348,7 +607,7 @@ import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
 import VSCodeMessager, {Message} from '../services/VSCodeMessager';
 import Utils from '../Utils';
-import { ApiFuzzContext } from '../Model';
+import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 
 class Props {
   // optional prop
@@ -366,6 +625,8 @@ class Props {
 
 export default class ApiDiscovery extends Vue.with(Props) {
   
+  //properties
+
   fm = new FuzzerManager();
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
@@ -373,6 +634,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
   newContextSideBarVisible = false;
+  updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
   toast = useToast();
 
@@ -385,8 +647,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   newApiContext= new ApiFuzzContext();
+  apiContextEdit = new ApiFuzzContext();
 
-mounted() {
+  
+  //methods
+  
+  mounted() {
     this.getFuzzcontexts()
   }
 
@@ -405,15 +671,15 @@ mounted() {
     try {
 
       this.isGetFuzzContextFinish = false;
-      const fcs = await this.fm.getFuzzcontexts()    
+      const [OK, err, fcs] = await this.fm.getFuzzcontexts()    
 
-      if (fcs.length > 0)
+      if (OK)
       {
         this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
       }
       else
       {
-        this.toast.add({severity:'info', summary: '', detail:'no fuzz context detected, create one to start fuzzing', life: 5000});
+        this.toast.add({severity:'error', summary: '', detail:err, life: 5000});
       }
 
       this.isGetFuzzContextFinish = true;
@@ -535,17 +801,31 @@ mounted() {
     }
   }
 
-  async createNewApiContext() {
+  async updateApiContext() {
+    const apiFCUpdate = new ApiFuzzContextUpdate();
     
-    this.newApiContext.authnType = this.determineAuthnType();
-    if(this.newApiContext.authnType == 'Anonymous')
+    apiFCUpdate.fuzzcontextId = this.apiContextEdit.Id;
+
+    Utils.mapProp(this.apiContextEdit, apiFCUpdate);
+
+    // apiFCUpdate.port = Number(apiFCUpdate.port);
+    // apiFCUpdate.fuzzcaseToExec = Number(apiFCUpdate.fuzzcaseToExec);
+
+    const [ok, error] = await this.fm.updateApiFuzzContext(apiFCUpdate);
+
+    if(!ok)
     {
-      this.newApiContext.isanonymous = true;
+      this.toast.add({severity:'error', summary: 'Update API FuzzContext', detail:error, life: 5000});
     }
     else
     {
-      this.newApiContext.isanonymous = false;
+      this.toast.add({severity:'success', summary: 'Update API FuzzContext', detail:`${apiFCUpdate.name} updated successfully`, life: 5000});
     }
+  }
+
+  async createNewApiContext() {
+    
+    this.newApiContext.authnType = this.determineAuthnType();
 
     this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
@@ -555,7 +835,7 @@ mounted() {
       return;
     }
 
-    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == '')
+    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
     {
       this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
       return;
@@ -577,13 +857,13 @@ mounted() {
     }
   }
 
-  // Anonymous = "Anonymous",
-  // Basic = "Basic",
-  // Bearer = "Bearer",
-  // ApiKey = "ApiKey"
+  // Anonymous
+  // Basic
+  // Bearer,
+  // ApiKey
   determineAuthnType(): string {
 
-    if(this.newApiContext.isanonymous)
+    if(this.securityBtnVisibility.anonymous == true)
     {
       return "Anonymous";
     }

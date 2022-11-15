@@ -9,7 +9,7 @@
   height="455px"
  >
     <v-toolbar card color="cyan" flat dense height="50px">
-      <v-spacer />
+      <v-toolbar-title>Fuzz Cases</v-toolbar-title>
       
       <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain >
         <v-icon>mdi-content-save-settings-outline</v-icon>
