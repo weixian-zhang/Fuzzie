@@ -456,7 +456,30 @@ def get_naughtystring_row_count():
     Session.close()
     
     return count
+
+def delete_api_fuzz_context(fuzzcontextId: str):
     
+    apiRespStmt = delete(ApiFuzzResponseTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
+    apiReqStmt = delete(ApiFuzzRequestTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
+    apiDataCaseStmt = delete(ApiFuzzDataCaseTable).where(ApiFuzzDataCaseTable.c.fuzzcontextId == fuzzcontextId)
+    runSumPerCaseSetStmt = delete(ApiFuzzRunSummaryPerCaseSetTable).where(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+    CaseSetRunsStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
+    contextStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(apiRespStmt)
+    Session.execute(apiReqStmt)
+    Session.execute(apiDataCaseStmt)
+    Session.execute(runSumPerCaseSetStmt)
+    Session.execute(CaseSetRunsStmt)
+    Session.execute(contextStmt)
+    
+    Session.commit()
+    Session.close()
+   
+
+ = Table(apifuzzRunSummaryPerCaseSet_TableName, metadata,
 
 def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
     
