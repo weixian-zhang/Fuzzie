@@ -682,7 +682,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   newApiContext= new ApiFuzzContext();
   apiContextEdit = new ApiFuzzContext();
 
-  
   //methods
   
   mounted() {
@@ -832,7 +831,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if (file.name.includes(".yaml") || file.name.includes(".json")) {
 
       const content = await Utils.readFileAsText(file);
-      this.newApiContext.openapi3Content = btoa(content);
+      this.newApiContext.openapi3Content = content;
 
       if(this.openapi3FileInputFileVModel != null && this.openapi3FileInputFileVModel.length > 0)
       {

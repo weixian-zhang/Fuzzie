@@ -7,7 +7,17 @@
   color="white"
   outlined
   height="455px"
- >
+  >
+  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
+    <code >
+      <v-textarea auto-grow
+          outlined
+          rows="1"
+          readonly
+          v-model="valueInFull" />
+    </code>
+  </Sidebar>
+
     <v-toolbar card color="cyan" flat dense height="50px">
       <v-toolbar-title>Fuzz Cases</v-toolbar-title>
       
@@ -72,8 +82,22 @@
             </td>
             <td>{{ item.verb }}</td>
             <td>{{ item.path }}</td>
-            <td>{{ item.header }}</td>
-            <td><a href="#"> {{ shortenBody(item.body, 20) }} </a></td>
+            <td>
+              <span @click="(
+                onTableValueSeeInFullClicked(item.headerNonTemplate),
+                showFullValueSideBar = true
+              )">
+                {{ shortenJsonValueInTable(item.headerNonTemplate, 100) }} 
+              </span>
+            </td>
+            <td>
+              <span @click="(
+                onTableValueSeeInFullClicked(item.bodyNonTemplate),
+                showFullValueSideBar = true
+              )"> 
+              {{ shortenJsonValueInTable(item.bodyNonTemplate, 100) }} 
+              </span>
+            </td>
 
             <td>
               {{ item.http2xx }}
@@ -106,7 +130,8 @@
 import { Options, Vue  } from 'vue-class-component';
 import DataTable from 'primevue/datatable';
 import FuzzerWebClient from '@/services/FuzzerWebClient';
-
+import Sidebar from 'primevue/sidebar';
+import Utils from '../Utils';
 
 class Props {
   // optional prop
@@ -116,7 +141,8 @@ class Props {
 
 @Options({
   components: {
-    DataTable
+    DataTable,
+    Sidebar
   }
 })
 
@@ -132,6 +158,14 @@ class Props {
   selectAll = true;
 
   showTable = true; //this.nodes.length > 0 ? "true": "false";
+
+  showFullValueSideBar = false;
+
+  valueInFull = '';
+
+  onTableValueSeeInFullClicked(jsonValue) {
+      this.valueInFull = JSON.stringify(JSON.parse(jsonValue),null,'\t')
+  }
 
   
   mounted(){
@@ -165,15 +199,16 @@ class Props {
     });
   }
 
-  shortenBody(bodyJson, length)
+  shortenJsonValueInTable(bodyJson, length=100)
   {
-    if(bodyJson != undefined && bodyJson.length > length)
+    const pj = Utils.prettifyJson(bodyJson);
+    if(pj != undefined && pj.length > length)
     {
-      return bodyJson.substring(0, length) + "...";
+      return pj.substring(0, length) + "...";
     }
     else
     {
-      return bodyJson;
+      return pj;
     }
   }
 
@@ -194,5 +229,12 @@ class Props {
   overflow: auto;
 }
 
+code {
+  font-family: Consolas,"courier new";
+  color: crimson;
+  background-color: #f1f1f1;
+  padding: 2px;
+  font-size: 105%;
+}
  </style>
  

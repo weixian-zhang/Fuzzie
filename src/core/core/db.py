@@ -467,13 +467,6 @@ def delete_api_fuzz_context(fuzzcontextId: str):
     caseSetStmt =  ApiFuzzCaseSetTable.delete(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
     contextStmt = ApiFuzzContextTable.delete(ApiFuzzContextTable.c.Id == fuzzcontextId)
     
-    # apiRespStmt = delete(ApiFuzzResponseTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
-    # apiReqStmt = delete(ApiFuzzRequestTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
-    # apiDataCaseStmt = delete(ApiFuzzDataCaseTable).where(ApiFuzzDataCaseTable.c.fuzzcontextId == fuzzcontextId)
-    # runSumPerCaseSetStmt = delete(ApiFuzzRunSummaryPerCaseSetTable).where(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-    # CaseSetRunsStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
-    # contextStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
-    
     Session = scoped_session(session_factory)
         
     Session.execute(apiRespStmt)
