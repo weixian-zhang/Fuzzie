@@ -12,6 +12,7 @@ from db import  (get_fuzzcontext,
                  get_caseSets_with_runSummary, 
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
+                 delete_api_fuzz_context,
                  get_fuzzContexts_and_runs)
 from sqlalchemy.sql import select, insert
 import base64
@@ -35,7 +36,6 @@ def bgWorkerDataToClient():
             print(e)
         
         
-
 class ServiceManager:
     
     eventstore = EventStore()
@@ -51,13 +51,24 @@ class ServiceManager:
     def __init__(self) -> None:   
         pass
     
+    def delete_api_fuzz_context(self, fuzzcontextId):
+        
+        try:
+            delete_api_fuzz_context(fuzzcontextId)
+            
+            return (True, '')
+            
+        except Exception as e:
+            return (False, Utils.errAsText(e))
+        
+        
     
     def update_api_fuzzcontext(self, apiFuzzcontext: ApiFuzzContextUpdate):
         
         try:
             update_api_fuzz_context(apiFuzzcontext)
             
-            return True, ''
+            return (True, '')
         
         except Exception as e:
             ServiceManager.eventstore.emitErr(e)

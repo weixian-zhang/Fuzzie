@@ -22,4 +22,10 @@ class Utils:
             errMsg = ', '.join([x for x in err.args])
             
         return errMsg
+    
+    def isNoneEmpty(obj) -> bool:
+        if obj is None or obj == '':
+            return True
+        
+        return False
         
