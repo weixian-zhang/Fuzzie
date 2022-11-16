@@ -1,6 +1,7 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
 import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate } from "../Model";
+
 export default class FuzzerManager
 {
     private _wc: FuzzerWebClient;
@@ -20,6 +21,36 @@ export default class FuzzerManager
         //is websocket connected
 
         //
+    }
+
+    public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {
+
+        const [ok, error, spec] = await this._wc.httpGetString(url)
+
+        return [ok, error, spec];
+    }
+
+    public async deleteApiFuzzContext(fuzzcontextId): Promise<[boolean, string]> {
+        const query = `
+            mutation delete {
+                deleteApiFuzzContext(fuzzcontextId:"${fuzzcontextId}"){
+                ok
+                error
+                }
+            }
+        `
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err];
+        }
+
+        const gqlOK = resp?.data.data.deleteApiFuzzContext.ok;
+        const error = resp?.data.data.deleteApiFuzzContext.error;
+
+        return [gqlOK, error];
     }
 
     public async updateApiFuzzContext(fuzzcontext: ApiFuzzContextUpdate): Promise<[boolean, string]>

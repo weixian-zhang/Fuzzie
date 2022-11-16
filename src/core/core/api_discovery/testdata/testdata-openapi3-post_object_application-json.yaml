@@ -3,11 +3,6 @@ info:
   title: Simple API overview
   version: 2.0.0
 
-# To apply Basic auth to the whole API:
-security:
-  - basicAuth: []
-  - bearerAuth: []
-  - ApiKeyAuth: []
 
 paths:
 
@@ -82,8 +77,8 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: '#/components/schemas/Cat'
-                - $ref: '#/components/schemas/Dog'
+                - $ref: '#/components/schemas/Pet'
+                - $ref: '#/components/schemas/Pet'
       responses:
         '200':
           description: Updated

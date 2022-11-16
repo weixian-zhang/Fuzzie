@@ -24,7 +24,7 @@
                     v-model="newApiContext.name"
                     variant="underlined"
                     :rules="[() => !!newApiContext.hostname || 'This field is required']"
-                    counter="25"
+                    counter="40"
                     density="compact"
                     hint="e.g: my REST/GraphQL API"
                     label="Name"
@@ -114,6 +114,7 @@
                     v-model="newApiContext.openapi3Url"
                     variant="underlined"
                     hint="e.g: https://openapi3/spec/yaml"
+                    :rules="inputRules"
                     density="compact"
                     clearable
                     @click:clear="(
@@ -331,7 +332,7 @@
                 </div>
 
               <v-divider />
-              <b>API Discovery</b>
+              <b>API Discovery (Read-Only)</b>
               <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
 
@@ -530,15 +531,39 @@
       </div>
     </Sidebar>
 
+    <!-- delete confirmation -->
+    <v-dialog
+      v-model="showDeleteConfirmDialog"
+      width="400"
+    >
+      <v-card>
+        <v-card-title class="text-h5 grey lighten-2">
+          Delete API Fuzz Context
+        </v-card-title>
+
+        <v-card-text>
+          Delete {{apiContextToDelete.name}}?
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <button class="btn btn-primary mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
+          <button class="btn btn-danger" @click="deleteApiFuzzContext">Delete</button>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-toolbar card color="cyan" flat dense height="50px">
 
-      <v-toolbar-title>FuzzContexts</v-toolbar-title>
+      <v-toolbar-title>Fuzz Contexts</v-toolbar-title>
 
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
         <v-icon>mdi-message-plus-outline</v-icon>
       </v-btn>
 
-      <v-btn  variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
+      <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
             <v-icon>mdi-refresh</v-icon>
@@ -561,8 +586,7 @@
                       color="primary"
                       size="x-small"
                       @click="(
-                        apiContextEdit = slotProps.node.data,
-                        updateContextSideBarVisible = true
+                        onEditFuzzContextClicked(slotProps.node.data)
                       )"
                       ></v-icon>]
                       [<v-icon
@@ -570,6 +594,9 @@
                       icon="mdi-delete"
                       color="primary"
                       size="x-small"
+                      @click="(
+                        onDeleteFuzzContextClicked(slotProps.node.data)
+                      )"
                       ></v-icon>]
                   </span>
           </template>
@@ -633,10 +660,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
   showPasswordValue = false;
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
+  showDeleteConfirmDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
+  apiContextToDelete: any = {};
   toast = useToast();
+
+  inputRules= [
+        () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
+  ];
 
   securityBtnVisibility = {
     anonymous: true,
@@ -654,6 +687,19 @@ export default class ApiDiscovery extends Vue.with(Props) {
   
   mounted() {
     this.getFuzzcontexts()
+  }
+
+  onEditFuzzContextClicked(data) {
+    this.apiContextEdit = data;
+    this.updateContextSideBarVisible = true;
+  }
+
+  onDeleteFuzzContextClicked(data) {
+    this.apiContextToDelete = {
+                          Id: data.Id,
+                          name: data.name,
+                        },
+    this.showDeleteConfirmDialog = true
   }
 
   readFileContentResult(message)
@@ -675,6 +721,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
       if (OK)
       {
+        this.nodes = [];
         this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
       }
       else
@@ -683,8 +730,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
       }
 
       this.isGetFuzzContextFinish = true;
-
-      
 
     } catch (error) {
         //TODO: log
@@ -801,15 +846,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
   }
 
+  async deleteApiFuzzContext() {
+      const id = this.apiContextToDelete.Id;
+      const [ok, error] = await this.fm.deleteApiFuzzContext(id);
+
+    if(!ok)
+    {
+      this.toast.add({severity:'error', summary: 'Delete API FuzzContext', detail:error, life: 5000});
+    }
+    else
+    {
+      this.getFuzzcontexts();
+      this.toast.add({severity:'success', summary: 'Delete API FuzzContext', detail:`${this.apiContextToDelete.name} updated successfully`, life: 5000});
+    }
+
+    this.showDeleteConfirmDialog = false;
+    this.apiContextToDelete = {};
+  }
+
   async updateApiContext() {
     const apiFCUpdate = new ApiFuzzContextUpdate();
     
     apiFCUpdate.fuzzcontextId = this.apiContextEdit.Id;
 
     Utils.mapProp(this.apiContextEdit, apiFCUpdate);
-
-    // apiFCUpdate.port = Number(apiFCUpdate.port);
-    // apiFCUpdate.fuzzcaseToExec = Number(apiFCUpdate.fuzzcaseToExec);
 
     const [ok, error] = await this.fm.updateApiFuzzContext(apiFCUpdate);
 
@@ -819,8 +879,11 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
     else
     {
+      this.apiContextEdit = new ApiFuzzContext();
       this.toast.add({severity:'success', summary: 'Update API FuzzContext', detail:`${apiFCUpdate.name} updated successfully`, life: 5000});
     }
+
+    this.updateContextSideBarVisible = false;
   }
 
   async createNewApiContext() {
@@ -829,19 +892,34 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
+    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
+    {
+      this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
+      return;
+    }
+
+    if(this.newApiContext.openapi3Url != '') {
+      const [ok, error, data] = await this.fm.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+
+      if(!ok)
+      {
+        this.toast.add({severity:'error', summary: 'Trying to get OpenApi3 spec by Url', detail:error, life: 5000});
+        return;
+      }
+
+      this.newApiContext.openapi3Content = data;
+
+    }
+
     if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
     {
       this.toast.add({severity:'error', summary: 'API Discovery', detail:'need either OpenAPI 3 spec or Request Text to create context', life: 5000});
       return;
     }
 
-    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
-    {
-      this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
-      return;
-    }
    
     const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
+    apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
     apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
 
     const result =  await this.fm.newFuzzContext(apifc);
@@ -855,8 +933,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
     else
     {
+      this.newContextSideBarVisible = false;
       this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+      this.newApiContext = new ApiFuzzContext();
     }
   }
 

@@ -456,7 +456,45 @@ def get_naughtystring_row_count():
     Session.close()
     
     return count
+
+def delete_api_fuzz_context(fuzzcontextId: str):
     
+    apiRespStmt = ApiFuzzResponseTable.delete(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
+    apiReqStmt = ApiFuzzRequestTable.delete(ApiFuzzRequestTable.c.fuzzcontextId == fuzzcontextId)
+    apiDataCaseStmt = ApiFuzzDataCaseTable.delete(ApiFuzzDataCaseTable.c.fuzzcontextId == fuzzcontextId)
+    runSumPerCaseSetStmt = ApiFuzzRunSummaryPerCaseSetTable.delete(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+    caseSetRunsStmt = ApiFuzzCaseSetRunsTable.delete(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
+    caseSetStmt =  ApiFuzzCaseSetTable.delete(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+    contextStmt = ApiFuzzContextTable.delete(ApiFuzzContextTable.c.Id == fuzzcontextId)
+    
+    # apiRespStmt = delete(ApiFuzzResponseTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
+    # apiReqStmt = delete(ApiFuzzRequestTable).where(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
+    # apiDataCaseStmt = delete(ApiFuzzDataCaseTable).where(ApiFuzzDataCaseTable.c.fuzzcontextId == fuzzcontextId)
+    # runSumPerCaseSetStmt = delete(ApiFuzzRunSummaryPerCaseSetTable).where(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+    # CaseSetRunsStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
+    # contextStmt = delete(ApiFuzzCaseSetRunsTable).where(ApiFuzzCaseSetRunsTable.c.fuzzcontextId == fuzzcontextId)
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(apiRespStmt)
+    
+    Session.execute(apiReqStmt)
+    
+    Session.execute(apiDataCaseStmt)
+    
+    Session.execute(runSumPerCaseSetStmt)
+    
+    Session.execute(caseSetRunsStmt)
+    
+    Session.execute(caseSetStmt)
+    
+    Session.execute(contextStmt)
+    
+    
+    Session.commit()
+    
+    Session.close()
+
 
 def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
     

@@ -5,7 +5,7 @@ from eventstore import EventStore
 from datetime import datetime
 from rx import Observable
 from graphql_models import ApiFuzzContext_Runs_ViewModel, FuzzContextRunQueryResult, ApiFuzzCaseSets_With_RunSummary_ViewModel, ApiFuzzContextUpdate
-   
+from utils import Utils 
 
 # queries
 class Query(graphene.ObjectType):
@@ -37,7 +37,32 @@ class Query(graphene.ObjectType):
         sm = ServiceManager()
         result = sm.get_caseSets_with_runSummary(fuzzcontextId)
         return result
+
+
+class DeleteApiContext(graphene.Mutation):
+    class Arguments:
+        fuzzcontextId= graphene.String()
+
+    #define output
+    ok = graphene.Boolean()
+    error = graphene.String()
     
+    def mutate(self, info, fuzzcontextId):
+        
+        if Utils.isNoneEmpty(fuzzcontextId):
+            ok = False
+            error = 'fuzz context id cannot be empty when deleting a fuzz context'
+            return DeleteApiContext(ok=ok,error=error) 
+        
+        sm = ServiceManager()
+        
+        OK, error = sm.delete_api_fuzz_context(fuzzcontextId)
+
+        ok = OK
+        error = error
+        
+        return DeleteApiContext(ok=ok,error=error)
+
 class UpdateApiContext(graphene.Mutation):
     class Arguments:
         fuzzContext= ApiFuzzContextUpdate(required=True)
@@ -164,6 +189,8 @@ class Mutation(graphene.ObjectType):
     new_api_fuzz_context = NewApiFuzzContext.Field()
     
     update_api_fuzz_context = UpdateApiContext.Field()
+    
+    delete_api_fuzz_context = DeleteApiContext.Field()
     
     fuzz = Fuzz.Field()
     

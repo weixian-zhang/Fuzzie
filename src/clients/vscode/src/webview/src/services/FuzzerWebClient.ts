@@ -1,5 +1,5 @@
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
-import axios, { Axios, AxiosError } from "axios";
+import axios, { Axios, AxiosError, AxiosResponse } from "axios";
 import { DocumentNode, print } from 'graphql';
 import gql from 'graphql-tag';
 
@@ -9,7 +9,29 @@ export default class FuzzerWebClient
 
 
     
-    //const wsUrl: string = 'ws://localhost:50001/ws';
+    //const wsUrl: string = 'ws://localhost:50001/ws'
+
+    public async httpGetString(url: string): Promise<[boolean, string, string]> {
+
+        try {
+
+            const resp: AxiosResponse = await axios.get(url);
+            const data = resp.data;
+
+            if(data != undefined)
+            {
+                return [true, '', data];
+            }
+
+            return [false, '', ''];
+            
+        } catch (err) {
+            //TODO: log error
+
+            return[false, this.errAsText(err as any[]), '']
+        }
+
+    }
 
     
     public async getFuzzContexts(): Promise<any> {
@@ -122,6 +144,36 @@ export default class FuzzerWebClient
             console.error(err);
             return [];
         }        
+    }
+
+    public async graphql(query): Promise<[boolean, string, AxiosResponse|null]> {
+        
+        try {
+
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                return [true, '', response];
+            }
+            
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            // graphql server reports error
+            if(hasErr)
+            {
+                //TODO: log graphql errors
+
+                return [false, err, null];
+            }
+            
+            return [false, '', null];
+
+        } catch (err) {
+            //TODO: Handle Error Here
+            console.error(err);
+            return [false, this.errAsText(err as any), null];
+        }  
     }
 
     public async updateApiFuzzContext(fuzzcontext: ApiFuzzContextUpdate): Promise<any> {
