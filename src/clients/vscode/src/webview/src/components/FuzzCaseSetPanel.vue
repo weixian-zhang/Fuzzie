@@ -36,7 +36,7 @@
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" @change="selectAllChanged($event)">
                 <label class="form-check-label" for="flexCheckDefault">
-                  Select All
+                  All
                 </label>
               </div>
             </th>
@@ -83,7 +83,7 @@
             <td>{{ item.verb }}</td>
             <td>{{ item.path }}</td>
             <td>
-              <span @click="(
+              <span style="cursor: pointer" @click="(
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
                 showFullValueSideBar = true
               )">
@@ -91,7 +91,7 @@
               </span>
             </td>
             <td>
-              <span @click="(
+              <span style="cursor: pointer" @click="(
                 onTableValueSeeInFullClicked(item.bodyNonTemplate),
                 showFullValueSideBar = true
               )"> 
@@ -125,13 +125,14 @@
       
  
     
-<script>
-
+<script lang="ts">
 import { Options, Vue  } from 'vue-class-component';
+import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
-import FuzzerWebClient from '@/services/FuzzerWebClient';
+import FuzzerWebClient from '../services/FuzzerWebClient';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
+import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 
 class Props {
   // optional prop
@@ -143,15 +144,18 @@ class Props {
   components: {
     DataTable,
     Sidebar
+  },
+  watch: {
+
   }
 })
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
-
+  
 
   fuzzerWC = {};
 
-  fcsRunSums = [];
+  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
   dataCache = {};
 
@@ -162,6 +166,11 @@ class Props {
   showFullValueSideBar = false;
 
   valueInFull = '';
+
+  @Watch('fcsRunSums', { immediate: true, deep: true })
+  onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
+    return;
+  }
 
   onTableValueSeeInFullClicked(jsonValue) {
       this.valueInFull = JSON.stringify(JSON.parse(jsonValue),null,'\t')

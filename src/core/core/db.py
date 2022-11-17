@@ -352,38 +352,7 @@ def get_caseSets_with_runSummary(fuzzcontextId):
         
     Session.close()
     
-    result = []
-    
-    for row in fcsSumRows:
-        
-        rowDict = row._asdict()
-        
-        fcsSum = ApiFuzzCaseSets_With_RunSummary_ViewModel()
-    
-        fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']
-        fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']
-        fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
-        fcsSum.selected = rowDict['selected']
-        fcsSum.verb = rowDict['verb']
-        fcsSum.path = rowDict['path']
-        fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
-        fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
-        fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
-        
-        summaryId = rowDict['runSummaryId']
-        
-        if not summaryId is None:
-            fcsSum.runSummaryId = summaryId
-            fcsSum.http2xx = rowDict['http2xx']
-            fcsSum.http3xx = rowDict['http3xx']
-            fcsSum.http4xx = rowDict['http4xx']
-            fcsSum.http5xx = rowDict['http5xx']
-            fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
-            fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
-        
-        result.append(fcsSum)
-    
-    return result
+    return fcsSumRows
 
 
 
@@ -488,6 +457,8 @@ def delete_api_fuzz_context(fuzzcontextId: str):
     
     Session.close()
 
+def update_caseset_selected(fuzzcontext: ApiFuzzContextUpdate):
+    pass
 
 def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
     

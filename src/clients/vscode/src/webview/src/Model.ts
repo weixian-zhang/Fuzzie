@@ -52,3 +52,22 @@ export class ApiFuzzContext {
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []
 }
 
+export class ApiFuzzCaseSetsWithRunSummaries {
+    public fuzzCaseSetId = '';
+    public fuzzCaseSetRunId = '';
+    public fuzzcontextId = '';
+    public selected = true;
+    public verb = '';
+    public path = '';
+    public querystringNonTemplate = '';
+    public bodyNonTemplate = '';
+    public headerNonTemplate = '';
+    public authnType = '';
+    public runSummaryId = '';
+    public http2xx = 0;
+    public http3xx = 0;
+    public http4xx = 0;
+    public http5xx = 0;
+    public completedDataCaseRuns = 0; 
+}
+

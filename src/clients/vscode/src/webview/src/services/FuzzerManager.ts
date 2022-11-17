@@ -1,6 +1,6 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate } from "../Model";
+import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, ApiFuzzCaseSetsWithRunSummaries } from "../Model";
 
 export default class FuzzerManager
 {
@@ -28,6 +28,24 @@ export default class FuzzerManager
         const [ok, error, spec] = await this._wc.httpGetString(url)
 
         return [ok, error, spec];
+    }
+
+    public async getApiFuzzCaseSetsWithRunSummaries(url: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
+        
+        const query = ``;
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err, [null]];
+        }
+
+        const gqlOK = resp?.data.data.deleteApiFuzzContext.ok;
+        const error = resp?.data.data.deleteApiFuzzContext.error;
+        const data = 
+
+        return [ok, error, [null]];
     }
 
     public async deleteApiFuzzContext(fuzzcontextId): Promise<[boolean, string]> {
