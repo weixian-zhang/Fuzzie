@@ -34,11 +34,11 @@ class NaughtyDigitGenerator(DataGenerator):
                            
         ]
         
-        piLargerIntegerFilePath = os.path.join(os.path.dirname(__file__), "data\\pi-large.txt")
+        # piLargerIntegerFilePath = os.path.join(os.path.dirname(__file__), "data\\pi-large.txt")
         
-        content = self.load_from_file(piLargerIntegerFilePath)
+        # content = self.load_from_file(piLargerIntegerFilePath)
         
-        self.data.append(content[0])
+        # self.data.append(content[0])
     
     def load_from_file(self, filepath):
         
