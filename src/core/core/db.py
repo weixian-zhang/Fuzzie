@@ -452,13 +452,28 @@ def delete_api_fuzz_context(fuzzcontextId: str):
     
     Session.execute(contextStmt)
     
-    
     Session.commit()
     
     Session.close()
 
-def update_caseset_selected(fuzzcontext: ApiFuzzContextUpdate):
-    pass
+def save_caseset_selected(selectedCaseSets: dict):
+        
+    Session = scoped_session(session_factory)
+       
+    stmt = (update(ApiFuzzCaseSetTable).
+        where(ApiFuzzCaseSetTable.c.Id == bindparam('fuzzCaseSetId')).
+        values(
+                selected = bindparam('selected')
+            )
+    )
+    
+    Session.execute(stmt, selectedCaseSets)
+    
+    Session.commit()
+        
+    Session.close()
+    
+    return (True, '')
 
 def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
     

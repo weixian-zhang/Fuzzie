@@ -30,9 +30,34 @@ export default class FuzzerManager
         return [ok, error, spec];
     }
 
-    public async getApiFuzzCaseSetsWithRunSummaries(url: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
+    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
         
-        const query = ``;
+        const query = `
+        query {
+            fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
+                ok,
+                error,
+                result {
+                    fuzzCaseSetId
+                    fuzzCaseSetRunId
+                    fuzzcontextId
+                    selected 
+                    verb
+                    path
+                    querystringNonTemplate
+                    bodyNonTemplate
+                    headerNonTemplate
+                    authnType
+                    runSummaryId
+                    http2xx
+                    http3xx
+                    http4xx
+                    http5xx
+                    completedDataCaseRuns
+                }
+            }
+        }
+        `;
 
         const [ok, err, resp] = await this._wc.graphql(query)
 
@@ -41,11 +66,42 @@ export default class FuzzerManager
             return [ok, err, [null]];
         }
 
-        const gqlOK = resp?.data.data.deleteApiFuzzContext.ok;
-        const error = resp?.data.data.deleteApiFuzzContext.error;
-        const data = 
+        const gqlOK = resp?.data.data.fuzzCaseSetWithRunSummary.ok;
+        const error = resp?.data.data.fuzzCaseSetWithRunSummary.error;
+        const result = resp?.data.data.fuzzCaseSetWithRunSummary.result;
 
-        return [ok, error, [null]];
+        return [ok, error, result];
+    }
+
+    public async saveFuzzCaseSetSelected(fuzzCaseSetSelected): Promise<[boolean, string]> {
+
+        let fcsStr = JSON.stringify(fuzzCaseSetSelected);
+
+        fcsStr = fcsStr.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
+
+        fcsStr = fcsStr.replaceAll("\"selected\"","selected");
+
+        const query = `
+        mutation update_fuzzcaseset_selected {
+            saveApiFuzzcasesetSelected(fcsus: ${fcsStr})
+                 {
+                     ok,
+                     error
+                 }
+         }
+        `
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err];
+        }
+
+        const gqlOK = resp?.data.data.saveApiFuzzcasesetSelected.ok;
+        const error = resp?.data.data.saveApiFuzzcasesetSelected.error;
+
+        return [gqlOK, error];
     }
 
     public async deleteApiFuzzContext(fuzzcontextId): Promise<[boolean, string]> {

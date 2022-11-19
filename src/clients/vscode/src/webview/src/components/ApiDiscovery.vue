@@ -855,6 +855,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
     else
     {
+      this.eventemitter.emit("onFuzzContextDelete", id);
       this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'Delete API FuzzContext', detail:`${this.apiContextToDelete.name} updated successfully`, life: 5000});
     }
@@ -935,6 +936,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.newContextSideBarVisible = false;
       this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+
+      //reset form
+      this.openapi3FileInputFileVModel = [];
+      this.requestTextFileInputFileVModel = [];
       this.newApiContext = new ApiFuzzContext();
     }
   }

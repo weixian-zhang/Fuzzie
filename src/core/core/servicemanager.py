@@ -15,7 +15,8 @@ from db import  (get_fuzzcontext,
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
-                 get_fuzzContexts_and_runs)
+                 get_fuzzContexts_and_runs,
+                 save_caseset_selected)
 from sqlalchemy.sql import select, insert
 import base64
 
@@ -136,15 +137,23 @@ class ServiceManager:
         
         return True, ''
     
-    def update_caseset_selected(self, casesetSelected: list) -> tuple(bool, str):
+    def save_caseset_selected(self, caseSetSelected):
         
-        if casesetSelected is None or len(casesetSelected) > 0:
+        if caseSetSelected is None or len(caseSetSelected) == 0:
             return (True, '')
         
+        # formattedFCS = {}
+        
+        # for x in caseSetSelected:
+        #     formattedFCS[x.fuzzCaseSetId] = x.selected
+        
+        try:
+            return save_caseset_selected(caseSetSelected)
+        except Exception as e:
+            return (False, Utils.errAsText(e))
         
     
-    
-    def get_caseSets_with_runSummary(self, fuzzcontextId)-> tuple(bool, str, list[ApiFuzzCaseSets_With_RunSummary_ViewModel]):
+    def get_caseSets_with_runSummary(self, fuzzcontextId):
         
         try:
             fcsSumRows = get_caseSets_with_runSummary(fuzzcontextId)

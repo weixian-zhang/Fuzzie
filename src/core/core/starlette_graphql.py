@@ -2,9 +2,12 @@ import graphene
 import asyncio
 from servicemanager import ServiceManager
 from eventstore import EventStore
-from datetime import datetime
 from rx import Observable
-from graphql_models import ApiFuzzContext_Runs_ViewModel, FuzzContextRunQueryResult, ApiFuzzCaseSets_With_RunSummary_ViewModel, ApiFuzzContextUpdate
+from graphql_models import (ApiFuzzCaseSetUpdate, 
+                            FuzzContextRunQueryResult, 
+                            ApiFuzzCaseSets_With_RunSummary_ViewModel, 
+                            ApiFuzzContextUpdate,
+                            FuzzCaseSetRunSummaryQueryResult)
 from utils import Utils 
 
 # queries
@@ -15,7 +18,7 @@ class Query(graphene.ObjectType):
     
     fuzzContexts = graphene.Field(FuzzContextRunQueryResult)
     
-    fuzzCaseSetWithRunSummary = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel,
+    fuzzCaseSetWithRunSummary = graphene.Field(FuzzCaseSetRunSummaryQueryResult,
                                               fuzzcontextId = graphene.Argument(graphene.String))
     
     
@@ -35,9 +38,38 @@ class Query(graphene.ObjectType):
     
     def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId):
         sm = ServiceManager()
-        result = sm.get_caseSets_with_runSummary(fuzzcontextId)
-        return result
+        ok, err, result = sm.get_caseSets_with_runSummary(fuzzcontextId)
+        
+        r = FuzzCaseSetRunSummaryQueryResult(ok, err, result)
+        r.ok = ok
+        r.error = err
+        r.result = result
+          
+        return r
 
+class SaveEditedFuzzCaseSets(graphene.Mutation):
+    class Arguments:
+        fcsus = graphene.List(ApiFuzzCaseSetUpdate)
+
+    #define output
+    ok = graphene.Boolean()
+    error = graphene.String()
+    
+    def mutate(self, info, fcsus):
+        
+        if fcsus is None or len(fcsus) == 0:
+            ok = True
+            error = ''
+            return SaveEditedFuzzCaseSets(ok=ok,error=error) 
+        
+        sm = ServiceManager()
+        
+        OK, error = sm.save_caseset_selected(fcsus)
+
+        ok = OK
+        error = error
+        
+        return SaveEditedFuzzCaseSets(ok=ok,error=error)
 
 class DeleteApiContext(graphene.Mutation):
     class Arguments:
@@ -189,6 +221,8 @@ class Mutation(graphene.ObjectType):
     new_api_fuzz_context = NewApiFuzzContext.Field()
     
     update_api_fuzz_context = UpdateApiContext.Field()
+    
+    save_api_fuzzcaseset_selected = SaveEditedFuzzCaseSets.Field()
     
     delete_api_fuzz_context = DeleteApiContext.Field()
     
