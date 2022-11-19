@@ -105,7 +105,9 @@ class SecuritySchemes(graphene.ObjectType):
 #     http5xx =  graphene.Int()
 #     completedDataCaseRuns = graphene.Int() 
 
-
+class ApiFuzzCaseSetUpdate(graphene.InputObjectType):
+    fuzzCaseSetId = graphene.String()
+    selected = graphene.Boolean()
     
 class ApiFuzzContextUpdate(graphene.InputObjectType):
     fuzzcontextId = graphene.String()
@@ -176,3 +178,15 @@ class FuzzContextRunQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.List(ApiFuzzContext_Runs_ViewModel)
+    
+class FuzzCaseSetRunSummaryQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
+    
+    def __init__(self, ok, error, result) -> None:
+        super().__init__()
+        
+        ok = ok
+        error = error
+        result = result

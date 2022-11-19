@@ -3,7 +3,9 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
-from graphql_models import ApiFuzzContext_Runs_ViewModel, ApiFuzzContextUpdate
+from graphql_models import (ApiFuzzContext_Runs_ViewModel, 
+                            ApiFuzzContextUpdate, 
+                            ApiFuzzCaseSets_With_RunSummary_ViewModel)
 from webapi_fuzzer import WebApiFuzzer
 from automapper import mapper
 from eventstore import EventStore, MsgType
@@ -13,7 +15,8 @@ from db import  (get_fuzzcontext,
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
-                 get_fuzzContexts_and_runs)
+                 get_fuzzContexts_and_runs,
+                 save_caseset_selected)
 from sqlalchemy.sql import select, insert
 import base64
 
@@ -133,11 +136,66 @@ class ServiceManager:
         insert_db_fuzzcontext(fuzzcontext)
         
         return True, ''
+    
+    def save_caseset_selected(self, caseSetSelected):
+        
+        if caseSetSelected is None or len(caseSetSelected) == 0:
+            return (True, '')
+        
+        # formattedFCS = {}
+        
+        # for x in caseSetSelected:
+        #     formattedFCS[x.fuzzCaseSetId] = x.selected
+        
+        try:
+            return save_caseset_selected(caseSetSelected)
+        except Exception as e:
+            return (False, Utils.errAsText(e))
         
     
-    
     def get_caseSets_with_runSummary(self, fuzzcontextId):
-        return get_caseSets_with_runSummary(fuzzcontextId)
+        
+        try:
+            fcsSumRows = get_caseSets_with_runSummary(fuzzcontextId)
+        
+            result = []
+        
+            for row in fcsSumRows:
+                
+                rowDict = row._asdict()
+                
+                fcsSum = ApiFuzzCaseSets_With_RunSummary_ViewModel()
+            
+                fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']
+                fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']
+                fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
+                fcsSum.selected = rowDict['selected']
+                fcsSum.verb = rowDict['verb']
+                fcsSum.path = rowDict['path']
+                fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
+                fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
+                fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
+                
+                summaryId = rowDict['runSummaryId']
+                
+                if not summaryId is None:
+                    fcsSum.runSummaryId = summaryId
+                    fcsSum.http2xx = rowDict['http2xx']
+                    fcsSum.http3xx = rowDict['http3xx']
+                    fcsSum.http4xx = rowDict['http4xx']
+                    fcsSum.http5xx = rowDict['http5xx']
+                    fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
+                    fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+                
+                result.append(fcsSum)
+            
+            return (True, '', result)
+                
+        except Exception as e:
+            return (False, Utils.errAsText(e), [])
+        
+            
+        
     
     
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:

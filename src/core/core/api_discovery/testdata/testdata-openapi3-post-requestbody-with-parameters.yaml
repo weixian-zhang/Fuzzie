@@ -3,11 +3,7 @@ info:
   title: Simple API overview
   version: 2.0.0
 
-# To apply Basic auth to the whole API:
-security:
-  - basicAuth: []
-  - bearerAuth: []
-  - ApiKeyAuth: []
+
 
 paths:
 

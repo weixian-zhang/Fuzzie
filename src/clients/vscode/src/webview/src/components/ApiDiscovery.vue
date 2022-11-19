@@ -682,7 +682,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   newApiContext= new ApiFuzzContext();
   apiContextEdit = new ApiFuzzContext();
 
-  
   //methods
   
   mounted() {
@@ -832,7 +831,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if (file.name.includes(".yaml") || file.name.includes(".json")) {
 
       const content = await Utils.readFileAsText(file);
-      this.newApiContext.openapi3Content = btoa(content);
+      this.newApiContext.openapi3Content = content;
 
       if(this.openapi3FileInputFileVModel != null && this.openapi3FileInputFileVModel.length > 0)
       {
@@ -856,6 +855,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
     else
     {
+      this.eventemitter.emit("onFuzzContextDelete", id);
       this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'Delete API FuzzContext', detail:`${this.apiContextToDelete.name} updated successfully`, life: 5000});
     }
@@ -936,6 +936,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.newContextSideBarVisible = false;
       this.getFuzzcontexts();
       this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+
+      //reset form
+      this.openapi3FileInputFileVModel = [];
+      this.requestTextFileInputFileVModel = [];
       this.newApiContext = new ApiFuzzContext();
     }
   }

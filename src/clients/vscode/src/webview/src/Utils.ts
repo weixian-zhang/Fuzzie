@@ -87,4 +87,8 @@ export default class Utils
         }
         return url.protocol === "http:" || url.protocol === "https:";
       }
+
+    public static prettifyJson(json: string) {
+        return JSON.stringify(JSON.parse(json),null,'\t')
+    }
 }

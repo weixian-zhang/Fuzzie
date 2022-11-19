@@ -1,7 +1,5 @@
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
-import axios, { Axios, AxiosError, AxiosResponse } from "axios";
-import { DocumentNode, print } from 'graphql';
-import gql from 'graphql-tag';
+import axios, {  AxiosError, AxiosResponse } from "axios";
 
 export default class FuzzerWebClient
 {
@@ -101,50 +99,51 @@ export default class FuzzerWebClient
         }        
     }
 
-    public async getFuzzCaseSetWithRunSummary(fuzzcontextId: string): Promise<any> {
+    // public async getFuzzCaseSetWithRunSummary(fuzzcontextId: string): Promise<any> {
 
-        const query = `
-                        query {
-                            fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
-                                fuzzCaseSetId
-                                fuzzCaseSetRunId
-                                fuzzcontextId
-                                selected 
-                                verb
-                                path
-                                querystringNonTemplate
-                                bodyNonTemplate
-                                headerNonTemplate
-                                authnType
-                                runSummaryId
-                                http2xx
-                                http3xx
-                                http4xx
-                                http5xx
-                                completedDataCaseRuns
-                            }
-                        }
-                        `
+    //     const query = `
+    //     query {
+    //         fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
+    //             ok,
+    //             error,
+    //             result {
+    //                 fuzzCaseSetId
+    //                 fuzzCaseSetRunId
+    //                 fuzzcontextId
+    //                 selected 
+    //                 verb
+    //                 path
+    //                 querystringNonTemplate
+    //                 bodyNonTemplate
+    //                 headerNonTemplate
+    //                 authnType
+    //                 runSummaryId
+    //                 http2xx
+    //                 http3xx
+    //                 http4xx
+    //                 http5xx
+    //                 completedDataCaseRuns
+    //             }
+    //         }
+    //     }
+    //                     `
         
-        try {
+    //     try {
 
-            const response = await axios.post(this.gqlUrl, {query});
+    //         const response = await axios.post(this.gqlUrl, {query});
 
-            if(response.data.data != null)
-            {
-                return response.data.data.fuzzCaseSetWithRunSummary;
-            }
-            else
-            {
-                return [];
-            }
+    //         const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
+    //         const err = response.data.data.fuzzCaseSetWithRunSummary.error;
+    //         const result = response.data.data.fuzzCaseSetWithRunSummary.result;
 
-        } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
-            return [];
-        }        
-    }
+    //         return [ok, err, result];
+
+    //     } catch (err) {
+    //         //TODO: Handle Error Here
+    //         console.error(err);
+    //         return [];
+    //     }        
+    // }
 
     public async graphql(query): Promise<[boolean, string, AxiosResponse|null]> {
         
