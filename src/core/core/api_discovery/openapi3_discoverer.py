@@ -174,9 +174,18 @@ class OpenApi3ApiDiscover:
                 
                 cp = ParamProp(propertyName=propName, type="object", parameters=complexObj)
                 
+                result.append(cp)
+                
                 continue
+            
                 
             else:
+                
+                if format is not None and format == 'binary':
+                    cp = ParamProp(propertyName=propName, type='file', format=format)
+                    result.append(cp)
+                    continue
+                    
                 #base case - primitive type
                 if not type == "array":
                     
@@ -227,8 +236,14 @@ class OpenApi3ApiDiscover:
             
             # is primitive type
             else:
-                cp = ParamProp(propertyName=propName, type=type, format=format)
-                result.append(cp)
+                
+                if format is not None and format == 'binary':
+                    cp = ParamProp(propertyName=propName, type='file', format=format)
+                    result.append(cp)
+                    continue
+                else:
+                    cp = ParamProp(propertyName=propName, type=type, format=format)
+                    result.append(cp)
                                     
     # ParamProp.parameters will be populated with new ParamProp of item in array
     def get_items_in_array_datatype(self, items, propertyName="") -> ArrayItem:
@@ -313,7 +328,7 @@ class OpenApi3ApiDiscover:
                 content = mutatorOperation.requestBody.content
                 
                 # */*
-                if hasattr(content, sameForOthersContentType) or self.has_attribute(content, sameForOthersContentType): 
+                if hasattr(content, '*/*') or self.has_attribute(content, sameForOthersContentType): 
                     sameForOthers = content[sameForOthersContentType]
                     
                     schema = sameForOthers.schema
@@ -326,14 +341,6 @@ class OpenApi3ApiDiscover:
                     
                         if not properties is None:
                             self.get_form_data_keyval(properties, contentResult) #same handling as for keyval
-                            
-                # application/json
-                if hasattr(content, appJsonContentType) or self.has_attribute(content, appJsonContentType): 
-                    jsonContent = content[appJsonContentType]
-                    properties = jsonContent.schema.properties
-                    
-                    if not properties is None:
-                        self.get_nested_content_properties(properties, contentResult)
                 
                 # application/x-www-form-urlencoded
                 if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
@@ -350,15 +357,24 @@ class OpenApi3ApiDiscover:
                     
                     if not properties is None:
                         self.get_nested_content_properties(properties, contentResult)
+                        
+                # application/* but not file type. e.g: application/json application/xml but not application/octet-stream
+                if (not self.isFileBasedMediaType(content) and 
+                    not hasattr(content, multipartFormContentType) and
+                    not  hasattr(content, formDataWWWFormContentType) and
+                    not hasattr(content, '*/*') ):
+                    
+                    for mediaType in content.keys():
+                        
+                        eachMediaType = content[mediaType]
+                        
+                        if not properties is None:
+                            self.get_nested_content_properties(properties, contentResult)
                 
-                # assume file upload base on media type with no property name
-                if (hasattr(content, streamFileUploadContentType) or self.has_attribute(content, streamFileUploadContentType) or
-                    hasattr(content, appPdfContentType) or self.has_attribute(content, appPdfContentType) or
-                    hasattr(content, imagePngContentType) or self.has_attribute(content, imagePngContentType) or
-                    hasattr(content, imageAllContentType) or self.has_attribute(content, imageAllContentType)):
+                if self.isFileBasedMediaType(content):
                     
                     propName = "fileupload" # fixed name for file
-                    contentResult.append(ParamProp(propName, 'string', 'binary'))
+                    contentResult.append(ParamProp(propName, 'file', 'binary'))
                 
         return contentResult
     
@@ -386,6 +402,30 @@ class OpenApi3ApiDiscover:
             props = content.properties
             
         return props
+    
+    def isApplicationMediaType(self, obj):
+        
+        attrs = dict(obj)
+        
+        exist = any(x.startswith('application/')  for x in attrs)
+        
+        return exist
+        
+    def isFileBasedMediaType(self, obj):
+        
+        attrs = dict(obj)
+        
+        fileBasedMediaTypes = ['audio', 'image', 'video', 'example', 'application/octet-stream', 
+                               'application/pdf', 'application/zip', 'application/pkcs8']
+        
+        for attr in attrs.keys():
+            
+            exist = any(attr in x for x in fileBasedMediaTypes)
+            
+            if exist:
+                return True
+        
+        return False
     
     def has_attribute(self, obj, attrName):
         
