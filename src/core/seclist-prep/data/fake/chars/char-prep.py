@@ -1,6 +1,6 @@
 import io
 
-f = io.open("chars.txt", mode="r", encoding="utf-8")
+f = io.open("chars-staging.txt", mode="r", encoding="utf-8")
 
 lines = f.readlines()
 result = []
