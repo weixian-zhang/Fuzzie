@@ -23,34 +23,33 @@ paths:
                 simple: 
                   type: string
                 complex:
-                  type: array
-                  items:
+                  type: object
+                  properties:
+                    key: 
+                      type: string
+                    size: 
+                      type: integer
+                    nestyArrays1:
+                      type: array
+                      items:
+                        type: string
+                    innerObject:
                       type: object
-                      properties:
-                        key: 
+                      properties:      # Request parts
+                        id:            # Part 1 (string value)
                           type: string
-                        size: 
-                          type: integer
-                        nestyArrays1:
-                          type: array
-                          items:
-                            type: string
-                        innerObject:
+                          format: uuid
+                        address:       # Part2 (object)
                           type: object
-                          properties:      # Request parts
-                            id:            # Part 1 (string value)
+                          properties:
+                            street:
                               type: string
-                              format: uuid
-                            address:       # Part2 (object)
-                              type: object
-                              properties:
-                                street:
-                                  type: string
-                                city:
-                                  type: string
-                            profileImage:  # Part 3 (an image)
+                            city:
                               type: string
-                              format: binary
+                        profileImage:  # Part 3 (an image)
+                          type: string
+                          format: binary
+                      
             encoding:
               complex:
                 contentType: application/json

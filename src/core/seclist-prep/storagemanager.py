@@ -10,15 +10,15 @@ class StorageManager:
         self.fuzzDataContainer = fuzzDataContainer
         
         
-    def download_file_as_str(self, blobNamePath) -> str:
+    def download_file_as_str(self, blobNamePath, encoding ='utf-8') -> str:
               
        bbsvc = BlockBlobService(account_name=self.accountName, sas_token=self.sastoken)
         
        blobBytes = bbsvc.get_blob_to_bytes(self.fuzzDataContainer, blobNamePath)
        
-       encodedContent = blobBytes.content
+       content = blobBytes.content.decode(encoding)
               
-       return encodedContent
+       return content
    
    
     def get_file_names_of_directory(self, startDir) -> list:

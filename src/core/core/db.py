@@ -135,22 +135,33 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
-NaughtyPasswordTable = Table('NaughtyPassword', metadata,
-                            Column('id', String, primary_key=True),
-                            Column('Content', String),
-                            Column('RowNumber', String)
-                            )
 
-NaughtyUsernameTable = Table('NaughtyUsername', metadata,
-                            Column('id', String, primary_key=True),
-                            Column('Content', String),
-                            Column('RowNumber', String)
-                            )
 
-NaughtyStringTable = Table('NaughtyString', metadata,
-                            Column('id', String, primary_key=True),
-                            Column('Content', String),
-                            Column('RowNumber', String)
+
+SeclistPasswordTable = Table('SeclistPassword', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
+SeclistUsernameTable = Table('SeclistUsername', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
+SeclistBLNSTable = Table('SeclistBLNS', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
+SeclistXSSTable = Table('SeclistXSS', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
+SeclistSqlInjectionTable = Table('SeclistSqlInjection', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
+SeclistPayloadTable = Table('SeclistPayload', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Filename', String),
+                            Column('Content', String)
                             )
 
 
@@ -360,7 +371,7 @@ def get_naughtypassword_by_id(id):
     
     Session = scoped_session(session_factory)
     
-    row = Session.query(NaughtyPasswordTable.columns.Content).filter(NaughtyPasswordTable.c.id == id).one()
+    row = Session.query(SeclistPasswordTable.columns.Content).filter(SeclistPasswordTable.c.id == id).one()
     
     Session.close()
         
@@ -371,7 +382,7 @@ def get_naughtypassword_by_id(id):
 def get_naughtypassword_row_count():
     Session = scoped_session(session_factory)
     
-    count = Session.query(NaughtyPasswordTable.c.id).count()
+    count = Session.query(SeclistPasswordTable.c.id).count()
     
     Session.close()
     
@@ -383,7 +394,7 @@ def get_naughtyusername_by_id(id) -> str:
         
     Session = scoped_session(session_factory)
     
-    row = Session.query(NaughtyUsernameTable.columns.Content).filter(NaughtyUsernameTable.c.id == id).one()
+    row = Session.query(SeclistUsernameTable.columns.Content).filter(SeclistUsernameTable.c.id == id).one()
     
     Session.close()
         
@@ -394,7 +405,7 @@ def get_naughtyusername_by_id(id) -> str:
 def get_naughtyusername_row_count():
     Session = scoped_session(session_factory)
     
-    count = Session.query(NaughtyUsernameTable.c.id).count()
+    count = Session.query(SeclistUsernameTable.c.id).count()
     
     Session.close()
     
@@ -405,7 +416,7 @@ def get_naughtystring_by_id(id) -> str:
     try:
         Session = scoped_session(session_factory)
 
-        row = Session.query(NaughtyStringTable.columns.Content).filter(NaughtyStringTable.c.id == id).one()
+        row = Session.query(SeclistBLNSTable.columns.Content).filter(SeclistBLNSTable.c.id == id).one()
         
         Session.close()
         
@@ -420,7 +431,7 @@ def get_naughtystring_by_id(id) -> str:
 def get_naughtystring_row_count():
     Session = scoped_session(session_factory)
     
-    count = Session.query(NaughtyStringTable.c.id).count()
+    count = Session.query(SeclistBLNSTable.c.id).count()
     
     Session.close()
     
