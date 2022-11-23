@@ -1,9 +1,3 @@
-# from naughty_file_generator import NaughtyFilesGenerator
-# from naughty_string_generator import NaughtyStringGenerator
-# from naughty_username_generator import NaughtyUsernameGenerator
-# from naughty_password_generator import NaughtyPasswordGenerator
-# from naughty_useragent_generator import NaughtyUserAgentGenerator
-# from naughty_httpheaders_generators import NaughtyHttpHeadersGenerator
 import pandas as pd
 import sqlite3
 from storagemanager import StorageManager
@@ -213,7 +207,7 @@ if __name__ == '__main__':
     
     #load_seclist_xss()
     
-    load_seclist_sqlinjection()
+    #load_seclist_sqlinjection()
 
     sqliteconn.close()
     
