@@ -148,7 +148,7 @@ class OpenApi3FuzzContextCreator:
        if datatemplate == '':
             return datatemplate
         
-       datatemplate = datatemplate.replace('{{getFuzzData(', '')
+       datatemplate = datatemplate.replace('{{eval(', '')
        datatemplate = datatemplate.replace(')}}', '')
        return datatemplate
     
@@ -167,7 +167,7 @@ class OpenApi3FuzzContextCreator:
                 if param.type == 'object':
                     resultMap[param.propertyName] = self.create_object_micro_data_template(param.parameters, resultMap)
                 else:
-                    resultMap[param.propertyName] = self.create_fuzzdata_template(param.type)
+                    resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
                     
         if len(resultMap) > 0:     
             apiPathDataTemplate = api.path.format_map(resultMap)
@@ -197,7 +197,7 @@ class OpenApi3FuzzContextCreator:
                     qsDT = qsDT + f'{param.propertyName}={arrayQSTemplate}&'
                     
                 else:
-                    qsDT = qsDT + f'{param.propertyName}={self.create_fuzzdata_template(param.type)}&'
+                    qsDT = qsDT + f'{param.propertyName}={self.insert_eval_keyword_fuzzdata_expression(param.type)}&'
                     
         if len(qsDT) > 0:     
             qsDT = '?' + qsDT
@@ -227,7 +227,7 @@ class OpenApi3FuzzContextCreator:
                 body[param.propertyName] = arrayOfDataTemplates
                 
             else:
-                body[param.propertyName] = self.create_fuzzdata_template(param.type)
+                body[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
 
 
         return body
@@ -241,7 +241,7 @@ class OpenApi3FuzzContextCreator:
         
         for param in api.parameters:
             if self.is_header_param(param.paramType):
-                headers[param.propertyName] = self.create_fuzzdata_template(param.type)
+                headers[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
                   
         return headers
     
@@ -265,14 +265,14 @@ class OpenApi3FuzzContextCreator:
                 resultMap[param.propertyName] = arrayQSTemplate
 
             else:
-                resultMap[param.propertyName] = self.create_fuzzdata_template(param.type)
+                resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
     
     
     #example: #?foo[]=bar&foo[]=qux
     #OpenApi3 does not support object
     def create_array_data_template_for_querystring(self, param: ParamProp, arraySize=5):
         
-        arrayMicroTemplate = self.create_fuzzdata_template(param.arrayProp.type)
+        arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
         
         propName = param.propertyName
         
@@ -291,7 +291,7 @@ class OpenApi3FuzzContextCreator:
     def create_array_data_template_for_body(self, param: ParamProp, arraySize=5) -> list[str]:
         
         array = []
-        arrayMicroTemplate = self.create_fuzzdata_template(param.arrayProp.type)
+        arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
     
         for x in range(arraySize):
             array.append(arrayMicroTemplate)
@@ -299,8 +299,8 @@ class OpenApi3FuzzContextCreator:
         return array
                     
     
-    def create_fuzzdata_template(self, type: str):
-        return f'{{{{getFuzzData({type})}}}}'
+    def insert_eval_keyword_fuzzdata_expression(self, type: str):
+        return f'{{{{eval({type})}}}}'
     
     def is_path_param(self, paramType):
         if paramType.lower() == ParameterType.Path.value.lower():

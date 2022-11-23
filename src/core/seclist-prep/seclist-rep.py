@@ -1,9 +1,9 @@
-from naughty_file_generator import NaughtyFilesGenerator
-from naughty_string_generator import NaughtyStringGenerator
-from naughty_username_generator import NaughtyUsernameGenerator
-from naughty_password_generator import NaughtyPasswordGenerator
-from naughty_useragent_generator import NaughtyUserAgentGenerator
-from naughty_httpheaders_generators import NaughtyHttpHeadersGenerator
+# from naughty_file_generator import NaughtyFilesGenerator
+# from naughty_string_generator import NaughtyStringGenerator
+# from naughty_username_generator import NaughtyUsernameGenerator
+# from naughty_password_generator import NaughtyPasswordGenerator
+# from naughty_useragent_generator import NaughtyUserAgentGenerator
+# from naughty_httpheaders_generators import NaughtyHttpHeadersGenerator
 import pandas as pd
 import sqlite3
 from storagemanager import StorageManager
@@ -20,54 +20,6 @@ from db import metadata
 
 # create tables if not exist
 metadata.create_all()
-
-
-# files with metadata isLongFileName has no content but with very long file name to break systems that cannot
-# handle very long file names
-# exclude zipbombs
-# create_db_table_naughtyfile = '''
-# CREATE TABLE IF NOT EXISTS NaughtyFile (
-#     id integer PRIMARY KEY AUTOINCREMENT,
-# 	Filename TEXT NOT NULL,
-# 	Content TEXT NOT NULL,
-#     RowNumber integer NOT NULL
-# );
-# '''
-
-
-# create_db_table_naughtyuseragent= '''
-# CREATE TABLE IF NOT EXISTS NaughtyUserAgent (
-#     id integer PRIMARY KEY AUTOINCREMENT,
-#     Content TEXT NOT NULL,
-#     RowNumber integer NOT NULL
-# );
-
-# '''
-
-# create_db_table_naughtystring = '''
-# CREATE TABLE IF NOT EXISTS NaughtyString (
-#     id integer PRIMARY KEY AUTOINCREMENT,
-#     Content TEXT NOT NULL,
-#     RowNumber integer NOT NULL
-# );
-
-# '''
-
-# create_db_table_naughty_usernames = '''
-# CREATE TABLE IF NOT EXISTS NaughtyUsername (
-#     id integer PRIMARY KEY AUTOINCREMENT,
-#     Content TEXT NOT NULL,
-#     RowNumber integer NOT NULL
-# );
-# '''
-
-# create_db_table_naughty_password= '''
-# CREATE TABLE IF NOT EXISTS NaughtyPassword (
-#     id integer PRIMARY KEY AUTOINCREMENT,
-#     Content TEXT NOT NULL,
-#     RowNumber integer NOT NULL
-# );
-# '''
 
 dbpath = os.getcwd() + "\src\core\core\datafactory\data\\fuzzie.sqlite"
 
@@ -206,33 +158,44 @@ def load_seclist_xss():
                     continue
                 
                 cursor.execute(f'''
-                        insert into SeclistPassword (Content)
+                        insert into SeclistXSS (Content)
                         values ("{ns}")
                         ''')
     print('seclist xss completed')
     
 def load_seclist_sqlinjection():
-    for dirpath, _, filenames in os.walk(sqlinjPath):
-        for filename in filenames:
-            ffPath = os.path.join(dirpath, filename)
-            
-            f = io.open(ffPath, mode="r", encoding="utf-8")
-            content = f.readlines()
-            
-            for ns in content:        
+    
+    try:
+        for dirpath, _, filenames in os.walk(sqlinjPath):
+            for filename in filenames:
+                ffPath = os.path.join(dirpath, filename)
                 
-                ns = ns.replace('"', '')
-                ns = ns.replace('\n', '')
-                ns = ns.replace('\r\n', '')
+                f = io.open(ffPath, mode="r", encoding="utf-8")
+                content = f.readlines()
                 
-                if ns == '':
-                    continue
-                
-                cursor.execute(f'''
-                        insert into SeclistPassword (Content)
-                        values ("{ns}")
-                        ''')
-    print('seclist sql injection completed')
+                for ns in content:        
+                    
+                    if ns.startswith('#'):
+                        continue
+                    
+                    ns = ns.replace('"', '')
+                    ns = ns.replace('\n', '')
+                    ns = ns.replace('\r\n', '')
+                    
+                    if ns == '':
+                        continue
+                    
+                    cursor.execute(f'''
+                            insert into SeclistSqlInjection (Content)
+                            values ("{ns}")
+                            ''')
+        print('seclist sql injection completed')
+        
+    except Exception as e:
+        print(f'file:{ffPath}, error: {e}')
+
+
+    
 
 def removeDoubleQuotes(content: str):
     r = content.replace('"', '')
@@ -246,17 +209,11 @@ if __name__ == '__main__':
     
     #load_seclist_username()
     
-    load_seclist_password()
+    #load_seclist_password()
     
-    load_seclist_xss()
+    #load_seclist_xss()
     
     load_seclist_sqlinjection()
-    
-    # prepare_useragentstring()
-    # prepare_http_headers()
-    # prepare_naughty_files()
-    # prepare_naughty_string()
-    
 
     sqliteconn.close()
     
