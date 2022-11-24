@@ -1,7 +1,7 @@
 # import os, sys
 # from pathlib import Path
-# datafacPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory')
-# dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data')
+# datafacPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory')
+# dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data')
 # modelsPath = os.path.join(os.path.dirname(Path(__file__)), 'models')
 # sys.path.insert(0, datafacPath)
 # sys.path.insert(0, dbPath)

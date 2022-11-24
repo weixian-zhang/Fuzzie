@@ -3,8 +3,8 @@ import unittest
 import os, sys
 from pathlib import Path
 currentDir = os.path.dirname(Path(__file__))
-datafactoryPath = os.path.join(currentDir, 'datafactory')
-sys.path.insert(0, datafactoryPath)
+corporafactoryPath = os.path.join(currentDir, 'corporafactory')
+sys.path.insert(0, corporafactoryPath)
 modelPath = os.path.join(currentDir, 'models')
 sys.path.insert(0, modelPath)
 apidisPath = os.path.join(currentDir, 'api_discovery')

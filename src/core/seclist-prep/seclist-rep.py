@@ -15,7 +15,7 @@ from db import metadata
 # create tables if not exist
 metadata.create_all()
 
-dbpath = os.getcwd() + "\src\core\core\datafactory\data\\fuzzie.sqlite"
+dbpath = os.getcwd() + "\src\core\core\corporafactory\data\\fuzzie.sqlite"
 
 sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 

@@ -38,14 +38,14 @@ import sys
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore, MsgType
-from datafactory.hacked_password_generator import HackedPasswordGenerator
-from datafactory.hacked_username_generator  import HackedUsernameGenerator
-from datafactory.naughty_file_generator import NaughtyFileGenerator
-from datafactory.naughty_datetime_generator import NaughtyDateTimeGenerator
-from datafactory.naughty_digits_generator import NaughtyDigitGenerator
-from datafactory.naughty_string_generator import NaughtyStringGenerator
-from datafactory.naughty_bool_generator import NaughtyBoolGenerator
-from datafactory.obedient_data_generators import ObedientCharGenerator 
+from corporafactory.hacked_password_generator import HackedPasswordGenerator
+from corporafactory.hacked_username_generator  import HackedUsernameGenerator
+from corporafactory.naughty_file_generator import NaughtyFileGenerator
+from corporafactory.naughty_datetime_generator import NaughtyDateTimeGenerator
+from corporafactory.naughty_digits_generator import NaughtyDigitGenerator
+from corporafactory.naughty_string_generator import NaughtyStringGenerator
+from corporafactory.naughty_bool_generator import NaughtyBoolGenerator
+from corporafactory.obedient_data_generators import ObedientCharGenerator 
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
@@ -170,7 +170,7 @@ class WebApiFuzzer:
     
         try:
             
-            fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
+            #fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
             
             # create a fuzzcaserun record
             self.dbLock.acquire()
@@ -178,7 +178,7 @@ class WebApiFuzzer:
             self.dbLock.release()
             
             # fuzzCasesToTest = 1 # uncomment for testing only
-            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * fuzzCasesToTest
+            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 

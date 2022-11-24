@@ -16,7 +16,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
 from eventstore import EventStore
 
 evts = EventStore()
-dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data/fuzzie.sqlite')
+dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data/fuzzie.sqlite')
 connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
 

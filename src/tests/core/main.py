@@ -9,13 +9,13 @@ sys.path.append(corePath)
 initmanagerPath = os.path.join(corePath, 'api-initmanager')
 sys.path.append(initmanagerPath)
 
-datafactoryPath = os.path.join(corePath, 'datafactory')
-sys.path.append(datafactoryPath)
+corporafactoryPath = os.path.join(corePath, 'corporafactory')
+sys.path.append(corporafactoryPath)
 
 currentFolder = Path(__file__).parent
 
 from openapi3_init_manager import OpenApi3ApiInitManager
-from data_factory import DataFactory
+from data_factory import corporafactory
 from fuzzie_core import Fuzzie
 
 def test_openapi3_file_initer():
@@ -37,7 +37,7 @@ def test_openapi3_url_initer():
     
 def test_data_factory():
     
-    dataf = DataFactory()
+    dataf = corporafactory()
     
     df = dataf.generate_fuzz_dataset()
     
