@@ -56,6 +56,32 @@ usernamePath = os.path.join(dataPath, 'seclist', 'username')
 passwordPath = os.path.join(dataPath, 'seclist', 'password')
 sqlinjPath = os.path.join(dataPath, 'seclist', 'sql-injection')
 xssPath = os.path.join(dataPath, 'seclist', 'xss')
+charPath = os.path.join(dataPath, 'seclist', 'char')
+
+# chars
+def load_seclist_char():
+    
+        ffPath = os.path.join(charPath, 'chars-final.txt')
+            
+        f = io.open(ffPath, mode="r", encoding="utf-8")
+        content = f.readlines()
+        
+        for ns in content:        
+            
+            ns = ns.replace('"', '')
+            ns = ns.replace('\n', '')
+            ns = ns.replace('\r\n', '')
+            
+            if ns == '':
+                continue
+            
+            cursor.execute(f'''
+                    insert into SeclistChar (Content)
+                    values ("{ns}")
+                    ''')
+           
+                
+        print('seclist char completed')
 
 # strings
 def load_seclist_string():
@@ -197,9 +223,11 @@ def removeDoubleQuotes(content: str):
 
 if __name__ == '__main__':
     
+    load_seclist_char()
+    
     #load_seclist_payload()
     
-    #load_seclist_string()
+    load_seclist_string()
     
     #load_seclist_username()
     

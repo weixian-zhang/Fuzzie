@@ -8,22 +8,25 @@ models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
 from sqlalchemy.orm import scoped_session
-from db import session_factory, SeclistPasswordTable
+from db import session_factory, SeclistCharTable
 
 from corpora_base import CorporaBase
 import os
 
-class PasswordCorpora(CorporaBase):
+
+class CharCorpora(CorporaBase):
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
-            cls.instance = super(PasswordCorpora, cls).__new__(cls)
+            cls.instance = super(CharCorpora, cls).__new__(cls)
         return cls.instance
     
     def __init__(self) -> None:
         super().__init__()
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
+        
+        self.load_corpora()
 
     
     def load_corpora(self):
@@ -33,7 +36,7 @@ class PasswordCorpora(CorporaBase):
         
         Session = scoped_session(session_factory)
         
-        rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).all()
+        rows = Session.query(SeclistCharTable.c.RowNumber, SeclistCharTable.c.Content).all()
         
         Session.close()
         
@@ -46,4 +49,5 @@ class PasswordCorpora(CorporaBase):
             self.data[str(rn)] = content
             
         rows = None
+        
         

@@ -15,6 +15,7 @@ drop table ApiFuzzCaseSetRuns;
 drop table ApiFuzzCaseSet;
 drop table ApiFuzzContext;
 
+delete from SeclistChar;
 delete from SeclistBLNS;
 delete from SeclistPassword;
 delete from SeclistPayload;

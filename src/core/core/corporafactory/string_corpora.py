@@ -16,6 +16,11 @@ from eventstore import EventStore
 
 class StringCorpora:
     
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(StringCorpora, cls).__new__(cls)
+        return cls.instance
+    
     def __init__(self) -> None:
         self.es = EventStore()
         self.lock = Lock()
@@ -29,6 +34,9 @@ class StringCorpora:
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
     
     async def load_corpora(self):
+        
+        if len(self.xss) > 0 and len(self.sqli) and len(self.blns):
+            return
         
         try:
             loop = asyncio.get_event_loop()
@@ -159,3 +167,10 @@ class StringCorpora:
         self.blnsRowPointer += 1
         
         return data
+    
+    
+    def reset_cursor(self):
+        self.rowPointer = 1
+        self.xssRowPointer = 1
+        self.sqliRowPointer = 1
+        self.blnsRowPointer = 1

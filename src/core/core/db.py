@@ -163,7 +163,11 @@ SeclistPayloadTable = Table('SeclistPayload', metadata,
                             Column('Filename', String),
                             Column('Content', String)
                             )
-
+SeclistCharTable = Table('SeclistChar', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                        )
+                            
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
     j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,

@@ -1,14 +1,13 @@
 import unittest
-from password_corpora import PasswordCorpora
+from char_corpora import CharCorpora
 
-class TestPasswordCorpora(unittest.TestCase):
+class TestCharCorpora(unittest.TestCase):
     
-    def test_generate_password_corpora(self):
+    def test_generate_char_corpora(self):
         
-        g = PasswordCorpora()
-        g.load_corpora()
+        g = CharCorpora()
         
-        for x in range(0, 50):
+        for x in range(0, 500):
             val = g.next_corpora()
             self.assertIsNotNone(val)
             self.assertTrue(isinstance(val, str))
