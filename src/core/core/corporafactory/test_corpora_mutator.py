@@ -15,6 +15,21 @@ class TestCorporaMutator(unittest.TestCase):
             self.assertIsNotNone(val)
             self.assertTrue(isinstance(val, str))
             
+    
+    def test_mutate_list(self):
+        pass
+    
+    
+    def test_heap_permute(self):
+        
+        g = CorporaMutator()
+        
+        items = [1,2,3]
+        
+        result = g.permutation(items, 0, len(items))
+        
+        print(result)
+            
         
         
 if __name__ == '__main__':

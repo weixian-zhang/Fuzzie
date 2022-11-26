@@ -11,6 +11,11 @@ from eventstore import EventStore
 
 class CorporaMutator(CorporaBase):
     
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(CorporaMutator, cls).__new__(cls)
+        return cls.instance
+    
     def __init__(self) -> None:
         
         super().__init__()
@@ -99,3 +104,36 @@ class CorporaMutator(CorporaBase):
     def randomStrategy(self):
         rand = random.randint(0, 3)
         return self.mutationStrategies[rand]
+    
+    
+    def permutation(self, items : list[str], index, length):
+        
+
+        def swap(arr, fIdx, sIdx):
+            newArr = arr.copy()
+            temp = newArr[fIdx]
+            newArr[fIdx] = newArr[sIdx]
+            newArr[sIdx] = temp
+            return newArr
+    
+        def permute(arr, index, length, result: list):
+             
+            if index == length:
+                result.append(arr.copy())
+            else:
+            
+                for i in range(index, length + 1):
+                    
+                    newArr = swap(arr, index, i)
+                    permute(newArr, index + 1, length, result)
+                    newArr = swap(arr, index, i)
+
+            
+        result = []
+        permute(items, index, length - 1, result)
+        return result
+        
+
+    
+    def combinations(self, strs : list[str]):
+        pass

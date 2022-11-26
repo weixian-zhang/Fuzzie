@@ -1,4 +1,5 @@
 import os, sys
+import asyncio
 from pathlib import Path
 currentDir = os.path.dirname(Path(__file__))
 sys.path.insert(0, currentDir)
@@ -24,6 +25,13 @@ class PasswordCorpora(CorporaBase):
         super().__init__()
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
+        
+        try:
+            loop = asyncio.get_event_loop()
+            task = loop.create_task(self.load_corpora()),
+            loop.run_until_complete(asyncio.wait(task))
+        except Exception as e:
+            self.es.emitErr(e)
 
     
     def load_corpora(self):

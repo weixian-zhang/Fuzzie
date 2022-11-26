@@ -86,6 +86,8 @@ class NaughtyDateTimeGenerator(DataGenerator):
         # %m: Month as a zero-padded decimal number.
         # %y: Year without century as a zero-padded decimal number.
         # %Y: Year with century as a decimal number.
+        
+        # time
         # %H: Hour (24-hour clock) as a zero-padded decimal number.
         # %I: Hour (12-hour clock) as a zero-padded decimal number.
         # %p: Locale’s equivalent of either AM or PM.
