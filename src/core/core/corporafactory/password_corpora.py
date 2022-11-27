@@ -10,11 +10,10 @@ sys.path.insert(0, models_dir)
 
 from sqlalchemy.orm import scoped_session
 from db import session_factory, SeclistPasswordTable
-
-from corpora_base import CorporaBase
+from eventstore import EventStore
 import os
 
-class PasswordCorpora(CorporaBase):
+class PasswordCorpora:
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -22,7 +21,10 @@ class PasswordCorpora(CorporaBase):
         return cls.instance
     
     def __init__(self) -> None:
-        super().__init__()
+        self.rowPointer = 1
+        self.data = {}
+        
+        self.es = EventStore()
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
         
@@ -54,4 +56,15 @@ class PasswordCorpora(CorporaBase):
             self.data[str(rn)] = content
             
         rows = None
+        
+    def next_corpora(self):
+            
+        if self.rowPointer > (len(self.data) - 1):
+            self.rowPointer = 1
+            
+        data = self.data[str(self.rowPointer)]
+        
+        self.rowPointer += 1
+        
+        return data
         

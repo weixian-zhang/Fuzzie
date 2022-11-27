@@ -10,11 +10,9 @@ sys.path.insert(0, models_dir)
 from sqlalchemy.orm import scoped_session
 from db import session_factory, SeclistCharTable
 
-from corpora_base import CorporaBase
 import os
 
-
-class CharCorpora(CorporaBase):
+class CharCorpora:
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -22,7 +20,8 @@ class CharCorpora(CorporaBase):
         return cls.instance
     
     def __init__(self) -> None:
-        super().__init__()
+
+        self.data = {}
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
         
@@ -49,5 +48,16 @@ class CharCorpora(CorporaBase):
             self.data[str(rn)] = content
             
         rows = None
+        
+    def next_corpora(self):
+            
+        if self.rowPointer > (len(self.data) - 1):
+            self.rowPointer = 0
+            
+        data = self.data[str(self.rowPointer)]
+        
+        self.rowPointer += 1
+        
+        return data
         
         

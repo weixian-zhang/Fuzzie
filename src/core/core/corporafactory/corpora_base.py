@@ -1,20 +1,18 @@
-class CorporaBase:
+# class CorporaBase:
     
-    def __init__(self) -> None:
-        self.rowPointer = 1
-        self.data = {}
+#     def __init__(self) -> None:
+#         self.rowPointer = 0
+#         self.data = []
         
         
-    def next_corpora(self):
+#     def next_corpora(self):
             
-        if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 1
+#         if self.rowPointer > (len(self.data) - 1):
+#             self.rowPointer = 0
             
-        data = self.data[str(self.rowPointer)]
+#         data = self.data[str(self.rowPointer)]
         
-        self.rowPointer += 1
+#         self.rowPointer += 1
         
-        return data
+#         return data
     
-    def reset_cursor(self, index = 1):
-        self.rowPointer = 1
