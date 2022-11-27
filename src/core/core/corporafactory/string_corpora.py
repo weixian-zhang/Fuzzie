@@ -33,7 +33,7 @@ class StringCorpora:
         self.blns = {}
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
     
-    async def load_corpora(self):
+    def load_corpora(self):
         
         if len(self.xss) > 0 and len(self.sqli) and len(self.blns):
             return

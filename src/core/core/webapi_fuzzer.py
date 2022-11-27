@@ -192,7 +192,7 @@ class WebApiFuzzer:
                                           totalRunsToComplete = self.totalFuzzRuns)   
                 self.dbLock.release()           
                 
-                for count in range(0, fuzzCasesToTest):
+                for count in range(0, self.totalFuzzRuns):
 
                     future = self.executor.submit(self.fuzz_data_case, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
                     
@@ -241,6 +241,17 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
+            # upload binary as multipart-form
+            # with open('example.txt') as fp:
+            #     file_data = fp.read()
+            # r = http.request(
+            #     'POST',
+            #     'http://httpbin.org/post',
+            #     fields={
+            #         'filefield': ('example.txt', file_data),
+            #     })
+            # json.loads(r.data.decode('utf-8'))['files']
+            # {'filefield': '...'}
             
             resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
             
