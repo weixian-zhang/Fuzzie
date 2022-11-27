@@ -9,16 +9,9 @@ core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
 from eventstore import EventStore
 
-class CorporaMutator(CorporaBase):
-    
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(CorporaMutator, cls).__new__(cls)
-        return cls.instance
+class CorporaMutator:
     
     def __init__(self) -> None:
-        
-        super().__init__()
         
         self.runningNumber = 0
         
@@ -35,22 +28,30 @@ class CorporaMutator(CorporaBase):
     # setSize is the number of times to mutate a text
     def mutate_single(self, text: str, setSize=4):
         
+        data = []
+        
         for x in range(0, len(text) * setSize):
             
-            mutated = self.randomStrategy()(text)
+           mutated = self.randomStrategy()(text)
             
-            self.data[str(self.runningNumber)] = mutated
+           data.append(mutated)
             
-            self.runningNumber = self.runningNumber  + 1
+            
+        return data
     
-    def mutate_list(self, listText: list[str]):
+    def mutate_list(self, listText: list[str], setSize=4):
         
-        if str is None or len(str) == 0:
+        if listText is None or len(listText) == 0:
             self.es.emitErr(Exception(f'no input to mutate for expression {listText}'))
             return []
         
+        data = []
+        
         for t in listText:
-            self.mutate_single(t)
+            mutated = self.mutate_single(t, setSize=setSize)
+            data = data + mutated
+            
+        return data
         
     def replace(self, text):
        chars = list(text)

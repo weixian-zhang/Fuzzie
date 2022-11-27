@@ -7,18 +7,24 @@ class TestCorporaMutator(unittest.TestCase):
         
         g = CorporaMutator()
         
-        g.mutate_single('a quick brown fox jumps over a grey hare')
+        mutated = g.mutate_single('a quick brown fox jumps over a grey hare')
         
         for x in range(0, 50):
-            val = g.next_corpora()
-            print(val)
+            val = mutated[x]
             self.assertIsNotNone(val)
-            self.assertTrue(isinstance(val, str))
+            print(val)
             
     
     def test_mutate_list(self):
-        pass
+        
+        g = CorporaMutator()
+        
+        mutated = g.mutate_list(['a quick brown fox jumps', 'over a grey hare', 'just do it'])
     
+        for x in range(0, 50):
+            val = mutated[x]
+            self.assertIsNotNone(val)
+            print(val)
     
     def test_heap_permute(self):
         

@@ -12,7 +12,7 @@ class CorporaProvider:
         self.blnsCorpora = ''
         self.corporaMutator = CorporaMutator()
         
-    def load_corpora(self):
+    def load_all(self):
         self.passwordCorpora.load_corpora()
         
     @property
