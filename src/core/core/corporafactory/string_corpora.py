@@ -35,7 +35,7 @@ class StringCorpora:
     
     def load_corpora(self):
         
-        if len(self.xss) > 0 and len(self.sqli) and len(self.blns):
+        if len(self.xss) > 0 and len(self.sqli) > 0 and len(self.blns) > 0:
             return
         
         try:
@@ -52,6 +52,9 @@ class StringCorpora:
         
         
     async def load_xss(self):
+        
+        if len(self.xss) > 0:
+            return
         
         self.lock.acquire()
         
@@ -73,6 +76,9 @@ class StringCorpora:
     
     async def load_sqli(self):
         
+        if len(self.sqli) > 0:
+            return
+        
         self.lock.acquire()
         
         Session = scoped_session(session_factory)
@@ -92,6 +98,9 @@ class StringCorpora:
         self.lock.release()
         
     async def load_blns(self):
+        
+        if len(self.blns) > 0:
+            return
         
         self.lock.acquire()
         

@@ -1,7 +1,8 @@
 from password_corpora import PasswordCorpora
 from username_corpora import UsernameCorpora
 from corpora_mutator import CorporaMutator
-    
+from string_corpora import StringCorpora
+
 
 class CorporaProvider:
     
@@ -9,7 +10,7 @@ class CorporaProvider:
         
         self.passwordCorpora = PasswordCorpora()
         self.usernameCorpora = UsernameCorpora()
-        self.blnsCorpora = ''
+        self.stringCorpora = StringCorpora()
         self.corporaMutator = CorporaMutator()
         
     def load_all(self):

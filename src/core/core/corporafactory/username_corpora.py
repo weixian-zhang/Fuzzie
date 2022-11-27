@@ -23,6 +23,9 @@ class UsernameCorpora(CorporaBase):
     
     def load_corpora(self):
         
+        if len(self.data) > 0:
+            return
+        
         Session = scoped_session(session_factory)
         
         rows = Session.query(SeclistUsernameTable.c.RowNumber, SeclistUsernameTable.c.Content).all()
