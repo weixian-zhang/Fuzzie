@@ -1,10 +1,15 @@
 
-from fpdf import FPDF
-from string_corpora import StringCorpora
+from fpdf import FPDF, HTMLMixin
 import random
-import os
+from datetime import datetime
+import os, sys
+from pathlib import Path
+from faker import Faker
 
-class PDFCorpora:
+class CustomFPDF(FPDF, HTMLMixin):
+    pass
+
+class PDFCorpora():
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -14,34 +19,81 @@ class PDFCorpora:
     
     def __init__(self) -> None:
         
-        self.pdf = FPDF()
+        self.data = []
         
-        self.strCorpora = StringCorpora()
-        self.strCorpora.load_corpora()
+        self.faker = Faker()
+        
+    def load_corpora(self, size=500):
+        
+        if len(self.data) > 0:
+            return
+        
+        for i in range(size):
+            
+            pdf = self.create_pdf()
+            self.data.append(pdf)
         
     def next_corpora(self) -> bytearray:
- 
-        # Add a page
-        self.pdf.add_page()
         
-        # set style and size of font
-        # that you want in the pdf
-        self.pdf.set_font("Arial", size = 15)
+        if len(self.data) == 0:
+            return None
         
-        randLines = random.randint(1, 40)
+        randIdx = random.randint(0, len(self.data) - 1)
         
-        for i in range(1, randLines):
-            
-            data = self.strCorpora.next_xss_corpora()
-            
-            # create a cell
-            self.pdf.cell(400, 20, txt = data,
-                    ln = i, align = 'C')
+        return self.data[randIdx]
+    
+    # fpdf output doc
+    # http://www.fpdf.org/en/doc/output.htm
+    def create_pdf(self):
         
-        fileName = 'output_file.pdf'
         
-        byteStr = self.pdf.output(fileName, 'S').encode('latin-1')
+        html = f'''
+            <html>
+                <body>
+                    <H1 align="center">Fuzzie PDF</H1>
+                    <p>{datetime.now()}</p>
+                    <table border="0" align="center" width="50%">
+                    <thead>
+                        <tr>
+                            <th width="50%">
+                            Name
+                            </th>
+                            <th width="50%">
+                            Address
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>name</td>
+                            <td>{self.faker.name()}</td>
+                        </tr>
+                        <tr>
+                            <td>address</td>
+                            <td>{self.faker.address()}</td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </body>
+            </html>
+            '''
+       #
+        pdf = CustomFPDF()
+        pdf.add_page()
+        pdf.author = 'Fuzzie'
         
+        pdf.write_html(html)
+        
+        byteStr = pdf.output(dest='S').decode('latin-1')
+       
         return byteStr
     
+    def currDir(self):
+        
+        
+        cDir = os.path.dirname(Path(__file__))
+        return cDir
+        
+        
+        
     

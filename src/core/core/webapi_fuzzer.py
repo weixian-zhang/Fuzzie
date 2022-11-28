@@ -242,16 +242,13 @@ class WebApiFuzzer:
                                     body=body)
             
             # upload binary as multipart-form
-            # with open('example.txt') as fp:
-            #     file_data = fp.read()
+            # https://www.mrbluyee.com/2018/07/14/Python-urllib3/#Files-amp-binary-data
             # r = http.request(
             #     'POST',
             #     'http://httpbin.org/post',
             #     fields={
-            #         'filefield': ('example.txt', file_data),
+            #         'filefield': ('example.txt', file_data, 'text/plain'),
             #     })
-            # json.loads(r.data.decode('utf-8'))['files']
-            # {'filefield': '...'}
             
             resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
             

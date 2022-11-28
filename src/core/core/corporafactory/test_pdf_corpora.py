@@ -3,18 +3,19 @@ from pdf_corpora import PDFCorpora
 
 class TestPasswordCorpora(unittest.TestCase):
     
-    def test_generate_password_corpora(self):
+    def test_pdf_corpora(self):
         
         g = PDFCorpora()
+        g.load_corpora()
         
         for x in range(0, 10):
-            val = g.next_corpora()
-            self.assertIsNotNone(val)
+            pdfStr = g.next_corpora()
+            self.assertIsNotNone(pdfStr)
             
             fileName = f'C:\\Users\weixzha\\desktop\pdf-{str(x)}.pdf'
             
             f = open(fileName, "wb")
-            f.write(val)
+            f.write(bytes(pdfStr, 'latin-1'))
             f.close()
         
         

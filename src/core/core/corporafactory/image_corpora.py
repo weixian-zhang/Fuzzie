@@ -38,7 +38,6 @@ class ImageCorpora:
             texte = urllib.parse.quote_plus(self.faker.name())
             url = f'https://via.placeholder.com/{randSizeW}x{randSizeH}{randExt}?text={texte}'
             
-            
             r = self.http.request('GET', url)
             imgByte = r.data
             
