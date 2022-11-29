@@ -2,12 +2,25 @@ from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
 from digit_corpora import DigitCorpora
+from file_corpora import FileCorpora
 from image_corpora import ImageCorpora
 from password_corpora import PasswordCorpora
 from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
+import asyncio
+
+import os, sys
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
+sys.path.insert(0, models_dir)
+
+from eventstore import EventStore
 
 class CorporaProvider:
     
@@ -18,70 +31,111 @@ class CorporaProvider:
     
     def __init__(self) -> None:
         
-        self.boolCorpora = BoolCorpora()
-        self.charCorpora = CharCorpora()
-        self.datetimeCorpora = DateTimeCorpora()
-        self.digitCorpora = DigitCorpora()
-        self.imageCorpora = ImageCorpora()
-        self.passwordCorpora = PasswordCorpora()
-        self.pdfCorpora = PDFCorpora()
-        self.seclistPayloadCorpora = SeclistPayloadCorpora()
-        self.stringCorpora = StringCorpora()
-        self.usernameCorpora = UsernameCorpora()
+        self.es = EventStore()
+        
+        self._boolCorpora = BoolCorpora()
+        self._charCorpora = CharCorpora()
+        self._datetimeCorpora = DateTimeCorpora()
+        self._digitCorpora = DigitCorpora()
+        self._fileCorpora = FileCorpora()
+        self._imageCorpora = ImageCorpora()
+        self._passwordCorpora = PasswordCorpora()
+        self._pdfCorpora = PDFCorpora()
+        self._seclistPayloadCorpora = SeclistPayloadCorpora()
+        self._stringCorpora = StringCorpora()
+        self._usernameCorpora = UsernameCorpora()
         
     def load_all(self):
-        self.boolCorpora.load_corpora()
-        self.charCorpora.load_corpora()
-        self.digitCorpora.load_corpora()
-        self.digitCorpora.load_corpora()
-        self.imageCorpora.load_corpora()
-        self.passwordCorpora.load_corpora()
-        self.pdfCorpora.load_corpora()
-        self.seclistPayloadCorpora.load_corpora()
-        self.stringCorpora.load_corpora()
-        self.usernameCorpora.load_corpora()
+        try:
+            self._boolCorpora.load_corpora()
+            self._charCorpora.load_corpora()
+            self._datetimeCorpora.load_corpora()
+            self._digitCorpora.load_corpora()
+            self._fileCorpora.load_corpora()
+            self._imageCorpora.load_corpora()
+            self._passwordCorpora.load_corpora()
+            self._pdfCorpora.load_corpora()
+            self._seclistPayloadCorpora.load_corpora()
+            self._stringCorpora.load_corpora()
+            self._usernameCorpora.load_corpora()
+        except Exception as e:
+            self.es.emitErr(e)
+
         
     @property
     def boolCorpora(self):
-        return self.boolCorpora
+        return self._boolCorpora
+    @boolCorpora.setter
+    def x(self, value):
+        self._boolCorpora = value
     
     @property
     def charCorpora(self):
-        return self.charCorpora
+        return self._charCorpora
+    @charCorpora.setter
+    def x(self, value):
+        self._charCorpora = value
     
     @property
     def datetimeCorpora(self):
-        return self.datetimeCorpora
+        return self._datetimeCorpora
+    @datetimeCorpora.setter
+    def x(self, value):
+        self._datetimeCorpora = value
     
     @property
     def digitCorpora(self):
-        return self.digitCorpora
+        return self._digitCorpora
+    @digitCorpora.setter
+    def x(self, value):
+        self._digitCorpora = value
     
     @property
+    def fileCorpora(self):
+        return self._fileCorpora
+    @fileCorpora.setter
+    def x(self, value):
+        self._fileCorpora = value
+        
+    @property
     def imageCorpora(self):
-        return self.imageCorpora
+        return self._imageCorpora
+    @imageCorpora.setter
+    def x(self, value):
+        self._imageCorpora = value
     
     @property
     def passwordCorpora(self):
-        return self.passwordCorpora
+        return self._passwordCorpora
+    @passwordCorpora.setter
+    def x(self, value):
+        self._passwordCorpora = value
     
     @property
     def pdfCorpora(self):
-        return self.pdfCorpora
+        return self._pdfCorpora
+    @pdfCorpora.setter
+    def x(self, value):
+        self._pdfCorpora = value
     
     @property
     def seclistPayloadCorpora(self):
-        return self.seclistPayloadCorpora
+        return self._seclistPayloadCorpora
+    @seclistPayloadCorpora.setter
+    def x(self, value):
+        self._seclistPayloadCorpora = value
     
     @property
     def stringCorpora(self):
-        return self.stringCorpora
-    
-    @property
-    def userSuppliedCorpora(self) -> Usersu:
-        return self.userSuppliedCorpora
+        return self._stringCorpora
+    @stringCorpora.setter
+    def x(self, value):
+        self._stringCorpora = value
     
     @property
     def usernameCorpora(self):
-        return self.usernameCorpora
+        return self._usernameCorpora
+    @usernameCorpora.setter
+    def x(self, value):
+        self._usernameCorpora = value
     

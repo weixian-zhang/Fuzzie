@@ -1,4 +1,5 @@
 import os, sys
+import asyncio
 from pathlib import Path
 currentDir = os.path.dirname(Path(__file__))
 sys.path.insert(0, currentDir)
@@ -8,21 +9,26 @@ models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
 from sqlalchemy.orm import scoped_session
-from db import session_factory, SeclistUsernameTable
-import os
-import asyncio
-
+from db import session_factory, SeclistPayloadTable
 from eventstore import EventStore
+import os
+import base64
 
-class UsernameCorpora:
+class FileCorpora:
+    
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(FileCorpora, cls).__new__(cls)
+        return cls.instance
     
     def __init__(self) -> None:
-        super().__init__()
+        self.rowPointer = 1
+        self.data = {}
         
         self.es = EventStore()
-        self.data = {}
+        
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
-
+    
     def load_corpora(self):
         try:
             loop = asyncio.get_event_loop()
@@ -40,7 +46,7 @@ class UsernameCorpora:
         
         Session = scoped_session(session_factory)
         
-        rows = Session.query(SeclistUsernameTable.c.RowNumber, SeclistUsernameTable.c.Content).all()
+        rows = Session.query(SeclistPayloadTable.c.RowNumber, SeclistPayloadTable.c.Content).all()
         
         Session.close()
         
@@ -50,11 +56,10 @@ class UsernameCorpora:
             rn = rowDict['RowNumber']
             content = rowDict['Content']
             
-            self.data[str(rn)].append(content)
+            self.data[str(rn)] = content
             
         rows = None
         
-    
     def next_corpora(self):
             
         if self.rowPointer > (len(self.data) - 1):
@@ -62,8 +67,9 @@ class UsernameCorpora:
             
         data = self.data[str(self.rowPointer)]
         
+        return base64.b64decode(data)
+        
         self.rowPointer += 1
         
         return data
-
         

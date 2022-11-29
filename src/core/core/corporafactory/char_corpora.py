@@ -24,8 +24,6 @@ class CharCorpora:
         self.data = {}
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
-        
-        self.load_corpora()
 
     
     def load_corpora(self):

@@ -26,16 +26,19 @@ class PasswordCorpora:
         
         self.es = EventStore()
         
-        self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
-        
-        try:
-            loop = asyncio.get_event_loop()
-            task = loop.create_task(self.load_corpora()),
-            loop.run_until_complete(asyncio.wait(task))
-        except Exception as e:
-            self.es.emitErr(e)
+        self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1        
 
     
+    def load_corpora(self):
+        try:
+            loop = asyncio.get_event_loop()
+            tasks = [
+                loop.create_task(self.load_corpora())
+            ]
+            loop.run_until_complete(asyncio.wait(tasks))
+        except Exception as e:
+            self.es.emitErr(e)
+            
     def load_corpora(self):
         
         if len(self.data) > 0:

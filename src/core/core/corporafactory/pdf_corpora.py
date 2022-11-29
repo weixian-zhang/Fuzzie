@@ -6,6 +6,19 @@ import os, sys
 from pathlib import Path
 from faker import Faker
 
+import os, sys
+import asyncio
+from pathlib import Path
+
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
+sys.path.insert(0, models_dir)
+
+from eventstore import EventStore
+
 class CustomFPDF(FPDF, HTMLMixin):
     pass
 
@@ -19,11 +32,23 @@ class PDFCorpora():
     
     def __init__(self) -> None:
         
+        self.es = EventStore()
+        
         self.data = []
         
         self.faker = Faker()
         
-    def load_corpora(self, size=500):
+    def load_corpora(self):
+        try:
+            loop = asyncio.get_event_loop()
+            tasks = [
+                loop.create_task(self.load_corpora_async())
+            ]
+            loop.run_until_complete(asyncio.wait(tasks))
+        except Exception as e:
+            self.es.emitErr(e)
+        
+    def load_corpora_async(self, size=500):
         
         if len(self.data) > 0:
             return

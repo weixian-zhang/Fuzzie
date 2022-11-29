@@ -29,17 +29,17 @@ class ImageCorpora:
         self.es = EventStore()
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
-        
-        
-    def load_corpora(self, size=500):
-        
+    
+    def load_corpora(self):
         try:
             loop = asyncio.get_event_loop()
-            task = loop.create_task(self.load_corpora_async()),
-            loop.run_until_complete(asyncio.wait(task))
+            tasks = [
+                loop.create_task(self.load_corload_corpora_asyncpora())
+            ]
+            loop.run_until_complete(asyncio.wait(tasks))
         except Exception as e:
             self.es.emitErr(e)
-            
+     
     def load_corpora_async(self):
             
         if len(self.data) > 0:

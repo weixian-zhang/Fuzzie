@@ -72,6 +72,9 @@ class CorporaContext:
             case 'pdf':
                 if not 'pdf' in self.context:
                     self.context['pdf'] = self.cp.pdfCorpora
+            case 'file':
+                if not 'file' in self.context:
+                    self.context['file'] = self.cp.pdfCorpora
             case 'datetime':
                 if not 'datetime' in self.context:
                     self.context['datetime'] = self.cp.datetimeCorpora

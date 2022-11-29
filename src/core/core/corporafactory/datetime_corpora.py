@@ -41,7 +41,7 @@ class DateTimeCorpora:
         
         if len(self.timeCorpora) > 0 and len(self.dateCorpora) > 0:
             return
-        
+            
         self.load_date_corpora()
         self.load_time_corpora()
     

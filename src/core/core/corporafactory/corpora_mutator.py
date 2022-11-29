@@ -1,5 +1,4 @@
 
-from corpora_base import CorporaBase
 from char_corpora import CharCorpora
 import random
 
