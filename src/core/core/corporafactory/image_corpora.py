@@ -1,8 +1,19 @@
-from faker import Faker
+import os, sys
+import asyncio
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
+sys.path.insert(0, models_dir)
+
+import base64
+from sqlalchemy.orm import scoped_session
+from db import session_factory, RandomImageTable
+from eventstore import EventStore
+import os
 import random
-import urllib.parse
-import urllib3
-from string_corpora import StringCorpora
 
 class ImageCorpora:
     
@@ -13,38 +24,62 @@ class ImageCorpora:
     
     def __init__(self) -> None:
 
-        self.data = []
+        self.data = {}
         
-        self.faker = Faker()
+        self.es = EventStore()
         
-        self.strCorpora = StringCorpora()
-        self.strCorpora.load_corpora()
+        self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
         
-        self.http = http = urllib3.PoolManager()
-        
-        self.imgSize = [25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,
-                        450,475,500,525,550,575,600,625,650,675,700,725,750,775,800,825,850,875,900,925,950,975,1000]
-        self.colors = ['0000FF', '808080', 'FF0000','008000', 'FFFFF']
-        self.ext = ['.png'] #'.gif', '.jpg' '.jpeg', 
         
     def load_corpora(self, size=500):
         
-        for i in range(size):
+        try:
+            loop = asyncio.get_event_loop()
+            task = loop.create_task(self.load_corpora_async()),
+            loop.run_until_complete(asyncio.wait(task))
+        except Exception as e:
+            self.es.emitErr(e)
             
-            randSizeW = self.imgSize[random.randint(0, len(self.imgSize) - 1)]
-            randSizeH = self.imgSize[random.randint(0, len(self.imgSize) - 1)]
-            randColor = self.colors[random.randint(0, len(self.colors) - 1)]
-            randExt = self.ext[random.randint(0, len(self.ext) - 1)]
-            texte = urllib.parse.quote_plus(self.faker.name())
-            url = f'https://via.placeholder.com/{randSizeW}x{randSizeH}{randExt}?text={texte}'
+    def load_corpora_async(self):
             
-            r = self.http.request('GET', url)
-            imgByte = r.data
+        if len(self.data) > 0:
+            return
+        
+        try:
+            Session = scoped_session(session_factory)
+        
+            rows = Session.query(RandomImageTable.c.RowNumber, RandomImageTable.c.Content).all()
             
-            self.data.append(imgByte)
+            Session.close()
+            
+            for row in rows:
+                
+                rowDict = row._asdict()
+                rn = rowDict['RowNumber']
+                content = rowDict['Content']
+                
+                imgStrCleansed = self.removeExtraEncodedChars(content)
+                imgByte = base64.b64decode(imgStrCleansed)
+                self.data[str(rn)] = imgByte
+                
+            rows = None
+            
+        except Exception as e:
+            self.es.emitErr(e)
+    
+    def removeExtraEncodedChars(self, imgStr: str):
+        
+        if imgStr.startswith('b\''):
+            imgStr = imgStr.replace('b\'', '')
+            
+        if imgStr.endswith('\''):
+            imgStr = imgStr[:-1]
+            
+        return imgStr
+        
     
     def next_corpora(self):
         
         randIdx = random.randint(0, len(self.data) - 1)
-        return self.data[randIdx]
+        return self.data[str(randIdx)]
     

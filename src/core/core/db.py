@@ -137,7 +137,10 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
 
 
 
-
+RandomImageTable = Table('RandomImage', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
 SeclistPasswordTable = Table('SeclistPassword', metadata,
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Content', String)

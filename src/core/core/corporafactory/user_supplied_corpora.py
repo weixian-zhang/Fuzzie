@@ -14,17 +14,17 @@ class UserSuppliedCorpora:
         self.mutator = CorporaMutator()
         
     
-    def load_single(self, value: str):
+    def load_corpora(self, value):
+        
+        if isinstance(value, list):
+            mutated = self.mutator.mutate_list(value, setSize=5)
+        
+            self.data = self.data + mutated
+        else:
+            mutated = self.mutator.mutate_single(value, setSize=5)
+        
+            self.data = self.data + mutated
                 
-        mutated = self.mutator.mutate_single(value, setSize=5)
-        
-        self.data = self.data + mutated
-    
-    def load_list(self, values: list[str]):
-        
-        mutated = self.mutator.mutate_list(values, setSize=5)
-        
-        self.data = self.data + mutated
         
     def next_corpora(self):
         
@@ -35,12 +35,3 @@ class UserSuppliedCorpora:
         self.dataCursor = self.dataCursor + 1
                          
         return data
-        
-        # if self.dataCursor > len(self.data):
-        #     self.dataCursor = 1
-        
-        # data = self.data[str(self.dataCursor)]
-        
-        # self.dataCursor = self.dataCursor + 1
-                         
-        # return data

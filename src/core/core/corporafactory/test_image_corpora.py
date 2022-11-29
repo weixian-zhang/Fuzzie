@@ -3,12 +3,12 @@
 import unittest
 from image_corpora import ImageCorpora
 
-class TestPasswordCorpora(unittest.TestCase):
+class TestImageCorpora(unittest.TestCase):
     
     def test_image_corpora(self):
         
         g = ImageCorpora()
-        g.load_corpora(size=10)
+        g.load_corpora()
         
         for x in range(0, 10):
             val = g.next_corpora()

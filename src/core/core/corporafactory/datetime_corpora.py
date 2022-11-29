@@ -35,9 +35,13 @@ class DateTimeCorpora:
         
         self.timeCorpora = {}
         
-        self.dateCorpora = {          }
+        self.dateCorpora = {}
         
     def load_corpora(self):
+        
+        if len(self.timeCorpora) > 0 and len(self.dateCorpora) > 0:
+            return
+        
         self.load_date_corpora()
         self.load_time_corpora()
     

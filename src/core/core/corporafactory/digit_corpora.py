@@ -15,6 +15,9 @@ class DigitCorpora:
             '2': self.int_corpora_strategy
         }
         
+        self.data = []
+    
+    def load_corpora(self):
         self.data= [
                             0.1000000000000000055511151231257827021181583404541015625,
                             16649142472222295162770764775,
