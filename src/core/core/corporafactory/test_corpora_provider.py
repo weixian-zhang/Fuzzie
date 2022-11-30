@@ -13,6 +13,9 @@ class TestImageCorpora(unittest.TestCase):
         self.assertTrue(ok)
         self.assertTrue(err == '')
         
+        fval = g.fileCorpora.next_corpora()
+        self.assertTrue(fval != None)
+        
         boolval = g.boolCorpora.next_corpora()
         self.assertTrue(boolval != '')
         

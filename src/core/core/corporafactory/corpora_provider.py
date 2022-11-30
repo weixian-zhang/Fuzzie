@@ -9,6 +9,8 @@ from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
+from file_corpora import FileCorpora
+
 import asyncio
 
 import os, sys
@@ -34,6 +36,7 @@ class CorporaProvider:
         
         self.es = EventStore()
         
+        self._fileCorpora = FileCorpora()
         self._boolCorpora = BoolCorpora()
         self._charCorpora = CharCorpora()
         self._datetimeCorpora = DateTimeCorpora()
@@ -50,6 +53,7 @@ class CorporaProvider:
         try:
             self.es.emitInfo('CorporaProvider: start loading corpora')
             
+            self._fileCorpora.load_corpora()
             self._boolCorpora.load_corpora()
             self._charCorpora.load_corpora()
             self._datetimeCorpora.load_corpora()
@@ -70,6 +74,12 @@ class CorporaProvider:
             self.es.emitErr(e)
             return False, Utils.errAsText(e)
 
+    @property
+    def fileCorpora(self):
+        return self._fileCorpora
+    @fileCorpora.setter
+    def x(self, value):
+        self._fileCorpora = value
         
     @property
     def boolCorpora(self):
