@@ -20,6 +20,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+from utils import Utils
 from eventstore import EventStore
 
 class CorporaProvider:
@@ -47,6 +48,8 @@ class CorporaProvider:
         
     def load_all(self):
         try:
+            self.es.emitInfo('CorporaProvider: start loading corpora')
+            
             self._boolCorpora.load_corpora()
             self._charCorpora.load_corpora()
             self._datetimeCorpora.load_corpora()
@@ -58,8 +61,14 @@ class CorporaProvider:
             self._seclistPayloadCorpora.load_corpora()
             self._stringCorpora.load_corpora()
             self._usernameCorpora.load_corpora()
+            
+            self.es.emitInfo('CorporaProvider: corpora fully loaded')
+            
+            return True, ''
+            
         except Exception as e:
             self.es.emitErr(e)
+            return False, Utils.errAsText(e)
 
         
     @property

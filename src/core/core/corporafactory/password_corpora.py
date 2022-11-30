@@ -46,7 +46,8 @@ class PasswordCorpora:
         
         Session = scoped_session(session_factory)
         
-        rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).all()
+        # first 350,000 passwords
+        rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).limit(350000).all()
         
         Session.close()
         

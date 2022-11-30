@@ -34,7 +34,7 @@ class ImageCorpora:
         try:
             loop = asyncio.get_event_loop()
             tasks = [
-                loop.create_task(self.load_corload_corpora_asyncpora())
+                loop.create_task(self.load_corpora_async())
             ]
             loop.run_until_complete(asyncio.wait(tasks))
         except Exception as e:
@@ -79,6 +79,9 @@ class ImageCorpora:
         
     
     def next_corpora(self):
+        
+        if len(self.data) == 0:
+            return None
         
         randIdx = random.randint(0, len(self.data) - 1)
         return self.data[str(randIdx)]

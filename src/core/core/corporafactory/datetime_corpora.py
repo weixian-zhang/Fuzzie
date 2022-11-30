@@ -139,7 +139,7 @@ class DateTimeCorpora:
         
         return data
     
-    def next_datetime_corpora(self):
+    def next_corpora(self):
             
         d = self.next_date_corpora()
         t = self.next_time_corpora()

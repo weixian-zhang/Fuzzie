@@ -50,7 +50,7 @@ class UsernameCorpora:
             rn = rowDict['RowNumber']
             content = rowDict['Content']
             
-            self.data[str(rn)].append(content)
+            self.data[str(rn)] = content
             
         rows = None
         
