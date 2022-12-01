@@ -6,14 +6,14 @@ from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
 from digit_corpora import DigitCorpora
-from file_corpora import FileCorpora
 from image_corpora import ImageCorpora
 from password_corpora import PasswordCorpora
 from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
-from file_corpora import FileCorpora
+
+import ast
 
 import os, sys
 from pathlib import Path
@@ -56,7 +56,7 @@ class CorporaContext:
                 
         except Exception as e:
             self.es.emitErr(e)
-            return False, e
+            return False, f'Invalid expression: {expression}'
         
     def resolve_expr(self, expression) -> tuple[bool, str]:
         
@@ -73,13 +73,14 @@ class CorporaContext:
         
     def eval_expression_by_build(self, expr: str):
         
-        expression = expr._undefined_name
+        expression = expr
         
         if expr is None or expression is None or expression == '':
             raise(Exception('Expression is invalid, detected empty string'))
         
         if expression.startswith('my'):
-            self.handle_my_expression(expr)
+            userSuppliedCorpora = self.handle_my_expression(expr)
+            self.context[expr] = userSuppliedCorpora
             return expr
         
         if expression.startswith('sha256'):
@@ -127,7 +128,7 @@ class CorporaContext:
                     return expr
             case 'file':
                 if not 'file' in self.context:
-                    self.context['file'] = self.cp.fileCorpora
+                    self.context['file'] = self.cp.seclistPayloadCorpora
                     return expr
             case 'datetime':
                 if not 'datetime' in self.context:
@@ -150,7 +151,8 @@ class CorporaContext:
                     self.context['password'] = self.cp.passwordCorpora
                     return expr
             case _:
-                raise(Exception(f'Expression is invalid, {expression}'))
+                self.context[expression] = self.cp.stringCorpora
+                #raise(Exception(f'Expression is invalid, {expression}'))
     
     def eval_expression_by_injection(self, expr: str):
         
@@ -166,8 +168,8 @@ class CorporaContext:
             if provider is not None and isinstance(provider, UserSuppliedCorpora):
                 data = provider.next_corpora()
                 return data
-            
-            raise(Exception(f'User supplied input detected {expression} but a corpora provider is not found in context'))
+            else:
+                raise(Exception(f'User supplied corpora not found in corpora context {expression}'))
         
         if expression.startswith('sha256'):
             return expr
@@ -194,101 +196,139 @@ class CorporaContext:
                 if provider is not None and type(provider) is StringCorpora:
                     data = provider.next_corpora()
                     return data
-                
-                raise(Exception(f'User supplied input detected {expression} but a corpora provider is not found in context'))
+                else:
+                    raise(Exception(f'string corpora not found in corpora_context {expression}'))
             
             case 'bool':
-                if not 'bool' in self.context:
-                    self.context['bool'] = self.cp.boolCorpora
-                    return expr
-            case 'digit':
-                if not 'digit' in self.context:
-                    self.context['digit'] = self.cp.digitCorpora
-                    return expr
-            case 'char':
-                if not 'char' in self.context:
-                    self.context['char'] = self.cp.charCorpora
-                    return expr
-            case 'image':
-                if not 'image' in self.context:
-                    self.context['image'] = self.cp.imageCorpora
-                    return expr
-            case 'pdf':
-                if not 'pdf' in self.context:
-                    self.context['pdf'] = self.cp.pdfCorpora
-                    return expr
-            case 'file':
-                if not 'file' in self.context:
-                    self.context['file'] = self.cp.fileCorpora
-                    return expr
-            case 'datetime':
-                if not 'datetime' in self.context:
-                    provider = self.context[expression]
-            
-                    if provider is not None and type(provider) is DateTimeCorpora:
-                        data = provider.next_corpora()
-                        return data
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is BoolCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'bool corpora not found in corpora_context {expression}'))
                     
-                    raise(Exception(f'User supplied input detected {expression} but a corpora provider is not found in context'))
+            case 'digit':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is DigitCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'digit corpora not found in corpora_context {expression}'))
+                
+            case 'char':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is CharCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'char corpora not found in corpora_context {expression}'))
+                    
+            case 'image':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is ImageCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'image corpora not found in corpora_context {expression}'))
+                    
+            case 'pdf':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is PDFCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'pdf corpora not found in corpora_context {expression}'))
+                    
+            case 'file':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is SeclistPayloadCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'file corpora not found in corpora_context {expression}'))
+                
+            case 'datetime':
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is DateTimeCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'datetime corpora not found in corpora_context {expression}'))
                 
             case 'date':
-                if not 'date' in self.context:
-                    self.context['date'] = self.cp.datetimeCorpora
-                    return expr
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is DateTimeCorpora:
+                    data = provider.dateCorpora()
+                    return data
+                else:
+                    raise(Exception(f'date corpora not found in corpora_context {expression}'))
+                
             case 'time':
-                if not 'time' in self.context:
-                    self.context['time'] = self.cp.datetimeCorpora
-                    return expr
+                provider = self.context[expression]
+        
+                if provider is not None and type(provider) is DateTimeCorpora:
+                    data = provider.timeCorpora()
+                    return data
+                else:
+                    raise(Exception(f'time corpora not found in corpora_context {expression}'))
+                
             case 'username':
-               if not 'username' in self.context:
-                    provider = self.context[expression]
+                
+                provider = self.context[expression]
             
-                    if provider is not None and type(provider) is UsernameCorpora:
-                        data = provider.next_corpora()
-                        return data
-                    
-                    raise(Exception(f'User supplied input detected {expression} but a corpora provider is not found in context'))
+                if provider is not None and type(provider) is UsernameCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'username corpora not found in corpora_context {expression}'))
                 
             case 'password':
-                if not 'password' in self.context:
-                    self.context['password'] = self.cp.passwordCorpora
-                    return expr
-            case _:
-                raise(Exception(f'Expression is invalid, {expression}'))
-            
-    def handle_my_expression(self, expr: str):
+                provider = self.context[expression]
         
-        exprStartIndex = expr.find(':')
-        startExpr = expr[exprStartIndex + 1]
+                if provider is not None and type(provider) is PasswordCorpora:
+                    data = provider.next_corpora()
+                    return data
+                else:
+                    raise(Exception(f'password corpora not found in corpora_context {expression}'))
+            
+    def handle_my_expression(self, expr: str) -> UserSuppliedCorpora:
+        
+        exprStartIndex = expr.find('=')
+        startExpr = expr[exprStartIndex + 1:]
         
         usc = UserSuppliedCorpora()
         
+        usrInputList = ast.literal_eval(startExpr)
+        
         # multiple user supplied string
-        if startExpr.startswith('['):
-            
-           textInbrackets = re.finditer('\[(.*?)\]')
-           
-           anyEmptStr = any([x for x in textInbrackets if x == ''])
-           
-           if anyEmptStr:
-               self.context[expr] = self.cp.stringCorpora
-               return
-           
-           for t in textInbrackets:
+        if type(usrInputList) is list and len(usrInputList) > 0:
+        
+           for t in usrInputList:
               if t != '':
                 usc.load_corpora(t)
             
-           self.context[expr] = usc
+           return usc
+        else:
+            raise(Exception('invalid "my" expression, did not find any string in list: {expr}'))
                
         # single
-        else:
-            if startExpr == '':
-                self.context[expr] = self.cp.stringCorpora
-                return
+        # else:
             
-            usc.load_corpora(expr)
+            # if startExpr == '':
+            #     self.context[expr] = self.cp.stringCorpora
+            #     return
             
-            self.context[expr] = usc
+            # usc.load_corpora(expr)
+            
+            # self.context[expr] = usc
             
     def handle_string_expression(self, expr: str):
 

@@ -15,6 +15,8 @@ class CorporaMutator:
         self.runningNumber = 0
         
         self.charC = CharCorpora()
+        self.charC.load_corpora()
+        
         self.es = EventStore()
         
         self.mutationStrategies = {

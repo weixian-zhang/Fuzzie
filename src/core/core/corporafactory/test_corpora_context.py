@@ -11,63 +11,72 @@ class TestPasswordCorpora(unittest.TestCase):
     
     def setUp(self) -> None:
         
-        
-        
         return super().setUp()
     
-    def test_invalid_expression(self):
+    # def test_invalid_expression(self):
         
-        r = '''
-            POST https://example.com/comments HTTP/1.1
-            Content-Type: application/xml
-            Authorization: token xxxx
+    #     r = '''
+    #         POST https://example.com/comments HTTP/1.1
+    #         Content-Type: application/xml
+    #         Authorization: token xxxx
 
-            <request>
-                <name>{{ eval(dassa) }}</name>
-                <time>{{ eval() }}</time>
-            </request>
-        '''
+    #         <request>
+    #             <name>{{ eval('dassa') }}</name>
+    #             <time>{{  }}</time>
+    #         </request>
+    #     '''
         
-        cc = CorporaContext(self.cp)
+    #     cc = CorporaContext(self.cp)
         
-        ok, err = cc.build(r)
+    #     ok, err = cc.build(r)
         
-        self.assertTrue(ok == False)
-        self.assertTrue(err != '')
+    #     self.assertTrue(ok == False)
+    #     self.assertTrue(err != '')
     
-    def test_build_context_with_post_xml(self):
+    
+    # def test_build_context_with_post_xml(self):
         
-        r = '''
-            POST https://example.com/comments HTTP/1.1
-            Content-Type: application/xml
-            Authorization: token {{ eval(string) }}
+    #     r = '''
+    #         POST https://example.com/comments HTTP/1.1
+    #         Content-Type: application/xml
+    #         Authorization: token {{ eval('string') }}
 
-            <request>
-                <name>{{ eval(username) }}</name>
-                <time>{{ eval(datetime) }}</time>
-            </request>
-        '''
+    #         <request>
+    #             <name>{{ eval('username') }}</name>
+    #             <time>{{ eval('datetime') }}</time>
+    #         </request>
+    #     '''
 
-        cc = CorporaContext(self.cp)
+    #     cc = CorporaContext(self.cp)
         
-        ok, err = cc.build(r)
+    #     ok, err = cc.build(r)
         
-        self.assertTrue(ok)
-        self.assertTrue(err == '')
+    #     self.assertTrue(ok)
+    #     self.assertTrue(err == '')
     
     def test_inject_corpora_with_post_xml(self):
         
-        self.cp.load_all()
+        
         
         r = '''
             POST https://example.com/comments HTTP/1.1
             Content-Type: application/xml
-            Authorization: token {{ eval(string) }}
+            Authorization: token {{ eval('string') }}
 
-            <request>
-                <name>{{ eval(username) }}</name>
-                <time>{{ eval(datetime) }}</time>
-            </request>
+            {
+                "my": "{{ eval( 'my=["journey","to","a","new","world"]' ) }}",
+                "bool": "{{ eval('bool') }}",
+                "char": "{{ eval('char') }}",
+                "file": "{{ eval('file') }}",
+                "image": "{{ eval('image') }}",
+                "pdf": "{{ eval('pdf') }}",
+                "password": "{{ eval('password') }}"
+                "username": "{{ eval('username') }}",
+                "datetime": "{{ eval('datetime') }}",
+                "date": "{{ eval('date') }}",
+                "time": "{{ eval('time') }}",
+                "digit": "{{ eval('digit') }}"
+            }
         '''
 
         cc = CorporaContext(self.cp)
@@ -76,6 +85,8 @@ class TestPasswordCorpora(unittest.TestCase):
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
+        
+        self.cp.load_all()
         
         renderedTpl = cc.resolve_expr(r)
         

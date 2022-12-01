@@ -2,14 +2,12 @@ from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
 from digit_corpora import DigitCorpora
-from file_corpora import FileCorpora
 from image_corpora import ImageCorpora
 from password_corpora import PasswordCorpora
 from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
-from file_corpora import FileCorpora
 
 import asyncio
 
@@ -36,12 +34,10 @@ class CorporaProvider:
         
         self.es = EventStore()
         
-        self._fileCorpora = FileCorpora()
         self._boolCorpora = BoolCorpora()
         self._charCorpora = CharCorpora()
         self._datetimeCorpora = DateTimeCorpora()
         self._digitCorpora = DigitCorpora()
-        self._fileCorpora = FileCorpora()
         self._imageCorpora = ImageCorpora()
         self._passwordCorpora = PasswordCorpora()
         self._pdfCorpora = PDFCorpora()
@@ -53,12 +49,10 @@ class CorporaProvider:
         try:
             self.es.emitInfo('CorporaProvider: start loading corpora')
             
-            self._fileCorpora.load_corpora()
             self._boolCorpora.load_corpora()
             self._charCorpora.load_corpora()
             self._datetimeCorpora.load_corpora()
             self._digitCorpora.load_corpora()
-            self._fileCorpora.load_corpora()
             self._imageCorpora.load_corpora()
             self._passwordCorpora.load_corpora()
             self._pdfCorpora.load_corpora()
@@ -108,13 +102,6 @@ class CorporaProvider:
     @digitCorpora.setter
     def x(self, value):
         self._digitCorpora = value
-    
-    @property
-    def fileCorpora(self):
-        return self._fileCorpora
-    @fileCorpora.setter
-    def x(self, value):
-        self._fileCorpora = value
         
     @property
     def imageCorpora(self):

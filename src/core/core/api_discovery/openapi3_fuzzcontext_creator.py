@@ -300,7 +300,7 @@ class OpenApi3FuzzContextCreator:
                     
     
     def insert_eval_keyword_fuzzdata_expression(self, type: str):
-        return f'{{{{eval({type})}}}}'
+        return f'{{{{eval(\'{type}\')}}}}'
     
     def is_path_param(self, paramType):
         if paramType.lower() == ParameterType.Path.value.lower():
