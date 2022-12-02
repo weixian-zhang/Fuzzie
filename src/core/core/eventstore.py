@@ -8,6 +8,7 @@ from  datetime import datetime
 from utils import Utils
 import asyncio
 import nest_asyncio
+
 nest_asyncio.apply()
 
 class MessageLevel:

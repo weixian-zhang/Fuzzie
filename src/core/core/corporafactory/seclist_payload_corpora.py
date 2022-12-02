@@ -8,6 +8,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+import base64
 from sqlalchemy.orm import scoped_session
 from db import session_factory, SeclistPayloadTable
 from eventstore import EventStore
@@ -61,13 +62,34 @@ class SeclistPayloadCorpora:
         rows = None
         
     def next_corpora(self):
-            
-        if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 1
-            
-        data = self.data[str(self.rowPointer)]
         
-        self.rowPointer += 1
+        try:
+            if self.rowPointer > (len(self.data) - 1):
+                self.rowPointer = 1
+            
+            fileCor = self.data[str(self.rowPointer)]
+
+            content = fileCor['content']
+            content = self.removeExtraEncodedChars(content)
+            content = base64.b64decode(content)
+            
+            self.rowPointer += 1
+            
+            return content
         
-        return data
+        except Exception as e:
+            self.es.emitErr(e, 'SeclistPayloadCorpora.next_corpora')
+            
+    
+    def removeExtraEncodedChars(self, imgStr: str):
+        
+        if imgStr.startswith('b\''):
+            imgStr = imgStr.replace('b\'', '')
+            
+        if imgStr.endswith('\''):
+            imgStr = imgStr[:-1]
+            
+        return imgStr
+        
+        
         

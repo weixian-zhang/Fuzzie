@@ -14,7 +14,6 @@ from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 
 import ast
-
 import os, sys
 from pathlib import Path
 currentDir = os.path.dirname(Path(__file__))
@@ -55,10 +54,10 @@ class CorporaContext:
             return True, ''
                 
         except Exception as e:
-            self.es.emitErr(e)
+            self.es.emitErr(e, 'CorporaContext.build')
             return False, f'Invalid expression: {expression}'
         
-    def resolve_expr(self, expression) -> tuple[bool, str]:
+    def resolve_expr(self, expression) -> tuple[bool, str, object]:
         
         try:
             
@@ -68,95 +67,98 @@ class CorporaContext:
             return True, '', rendered
             
         except Exception as e:
-            self.es.emitErr(e)
-            return False, e
+            self.es.emitErr(e, 'CorporaContext.resolve_expr')
+            return False, e, ''
         
     def eval_expression_by_build(self, expr: str):
         
         expression = expr
         
+        originalExpression = f'{{ eval(\'{expr}\') }}'
+        
         if expr is None or expression is None or expression == '':
             raise(Exception('Expression is invalid, detected empty string'))
         
         if expression.startswith('my'):
-            userSuppliedCorpora = self.handle_my_expression(expr)
-            self.context[expr] = userSuppliedCorpora
-            return expr
+            userSuppliedOrStringCorpora = self.build_MY_expression(expr)
+            self.context[expr] = userSuppliedOrStringCorpora
+            return originalExpression
         
         if expression.startswith('sha256'):
-            return expr
+            return originalExpression
         
         if expression.startswith('base64e'):
-            return expr
+            return originalExpression
         
         if expression.startswith('sha256'):
-            return expr
+            return originalExpression
         
         if expression.startswith('autonum'):
-            return expr
+            return originalExpression
             
         if expression.startswith('uuid'):
-            return expr
+            return originalExpression
         
         if expression.startswith('ip'):
-            return expr
+            return originalExpression
             
         match expression:
             case 'string':
                 if not 'string' in self.context:
                     self.context['string'] = self.cp.stringCorpora
-                    return expr
+                    return originalExpression
             case 'bool':
                 if not 'bool' in self.context:
                     self.context['bool'] = self.cp.boolCorpora
-                    return expr
+                    return originalExpression
             case 'digit':
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
-                    return expr
+                    return originalExpression
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
-                    return expr
+                    return originalExpression
             case 'image':
                 if not 'image' in self.context:
                     self.context['image'] = self.cp.imageCorpora
-                    return expr
+                    return originalExpression
             case 'pdf':
                 if not 'pdf' in self.context:
                     self.context['pdf'] = self.cp.pdfCorpora
-                    return expr
+                    return originalExpression
             case 'file':
                 if not 'file' in self.context:
                     self.context['file'] = self.cp.seclistPayloadCorpora
-                    return expr
+                    return originalExpression
             case 'datetime':
                 if not 'datetime' in self.context:
                     self.context['datetime'] = self.cp.datetimeCorpora
-                    return expr
+                    return originalExpression
             case 'date':
                 if not 'date' in self.context:
                     self.context['date'] = self.cp.datetimeCorpora
-                    return expr
+                    return originalExpression
             case 'time':
                 if not 'time' in self.context:
                     self.context['time'] = self.cp.datetimeCorpora
-                    return expr
+                    return originalExpression
             case 'username':
                if not 'username' in self.context:
                     self.context['username'] = self.cp.usernameCorpora
-                    return expr
+                    return originalExpression
             case 'password':
                 if not 'password' in self.context:
                     self.context['password'] = self.cp.passwordCorpora
-                    return expr
+                    return originalExpression
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                #raise(Exception(f'Expression is invalid, {expression}'))
+                self.es.emitErr(f'Expression is invalid: {expression}. Using string corpora instead', 'CorporaContext.eval_expression_by_build')
+                return originalExpression
     
     def eval_expression_by_injection(self, expr: str):
         
-        expression = expr._undefined_name
+        expression = expr
         
         if expr is None or expression is None or expression == '':
             raise(Exception('Expression is invalid, detected empty string'))
@@ -165,11 +167,11 @@ class CorporaContext:
             
             provider = self.context[expression]
             
-            if provider is not None and isinstance(provider, UserSuppliedCorpora):
-                data = provider.next_corpora()
-                return data
+            if provider is not None and type(provider) is UserSuppliedCorpora:
+                    data = provider.next_corpora()
+                    return data
             else:
-                raise(Exception(f'User supplied corpora not found in corpora context {expression}'))
+                raise(Exception(f'user supplied input not found in corpora_context {expression}'))
         
         if expression.startswith('sha256'):
             return expr
@@ -248,7 +250,7 @@ class CorporaContext:
                 provider = self.context[expression]
         
                 if provider is not None and type(provider) is SeclistPayloadCorpora:
-                    data = provider.next_corpora()
+                    data = provider.next_corpora()  
                     return data
                 else:
                     raise(Exception(f'file corpora not found in corpora_context {expression}'))
@@ -266,7 +268,7 @@ class CorporaContext:
                 provider = self.context[expression]
         
                 if provider is not None and type(provider) is DateTimeCorpora:
-                    data = provider.dateCorpora()
+                    data = provider.next_date_corpora()
                     return data
                 else:
                     raise(Exception(f'date corpora not found in corpora_context {expression}'))
@@ -275,7 +277,7 @@ class CorporaContext:
                 provider = self.context[expression]
         
                 if provider is not None and type(provider) is DateTimeCorpora:
-                    data = provider.timeCorpora()
+                    data = provider.next_time_corpora()
                     return data
                 else:
                     raise(Exception(f'time corpora not found in corpora_context {expression}'))
@@ -299,40 +301,39 @@ class CorporaContext:
                 else:
                     raise(Exception(f'password corpora not found in corpora_context {expression}'))
             
-    def handle_my_expression(self, expr: str) -> UserSuppliedCorpora:
+    def build_MY_expression(self, expr: str) -> UserSuppliedCorpora:
         
-        exprStartIndex = expr.find('=')
-        startExpr = expr[exprStartIndex + 1:]
-        
-        usc = UserSuppliedCorpora()
-        
-        usrInputList = ast.literal_eval(startExpr)
-        
-        # multiple user supplied string
-        if type(usrInputList) is list and len(usrInputList) > 0:
-        
-           for t in usrInputList:
-              if t != '':
-                usc.load_corpora(t)
+        try:
+            exprStartIndex = expr.find('=')
+            startExpr = expr[exprStartIndex + 1:]
             
-           return usc
-        else:
-            raise(Exception('invalid "my" expression, did not find any string in list: {expr}'))
-               
-        # single
-        # else:
+            usc = UserSuppliedCorpora()
             
-            # if startExpr == '':
-            #     self.context[expr] = self.cp.stringCorpora
-            #     return
+            usrInputList = ast.literal_eval(startExpr)
             
-            # usc.load_corpora(expr)
+            # multiple user supplied string
+            if type(usrInputList) is list and len(usrInputList) > 0:
             
-            # self.context[expr] = usc
+                for t in usrInputList:
+                    if t != '':
+                        usc.load_corpora(t)
+                        
+                return usc
+            
+            else:
+                return self.cp .stringCorpora       # my list is empty use string corpora instead
+            
+        except Exception as e:
+            raise(Exception(f'invalid "my" expression {expr}, {e.msg}. valid expression e.g: my=["fuzzie","is","great"]'))
+   
             
     def handle_string_expression(self, expr: str):
 
         self.context[expr] = self.cp.stringCorpora
+        
+    def replace_with_string_corpora(self) -> str:
+        data = self.context['string']
+        return data
         
         
         
