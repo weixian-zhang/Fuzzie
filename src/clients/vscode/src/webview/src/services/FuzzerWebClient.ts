@@ -99,52 +99,6 @@ export default class FuzzerWebClient
         }        
     }
 
-    // public async getFuzzCaseSetWithRunSummary(fuzzcontextId: string): Promise<any> {
-
-    //     const query = `
-    //     query {
-    //         fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
-    //             ok,
-    //             error,
-    //             result {
-    //                 fuzzCaseSetId
-    //                 fuzzCaseSetRunId
-    //                 fuzzcontextId
-    //                 selected 
-    //                 verb
-    //                 path
-    //                 querystringNonTemplate
-    //                 bodyNonTemplate
-    //                 headerNonTemplate
-    //                 authnType
-    //                 runSummaryId
-    //                 http2xx
-    //                 http3xx
-    //                 http4xx
-    //                 http5xx
-    //                 completedDataCaseRuns
-    //             }
-    //         }
-    //     }
-    //                     `
-        
-    //     try {
-
-    //         const response = await axios.post(this.gqlUrl, {query});
-
-    //         const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
-    //         const err = response.data.data.fuzzCaseSetWithRunSummary.error;
-    //         const result = response.data.data.fuzzCaseSetWithRunSummary.result;
-
-    //         return [ok, err, result];
-
-    //     } catch (err) {
-    //         //TODO: Handle Error Here
-    //         console.error(err);
-    //         return [];
-    //     }        
-    // }
-
     public async graphql(query): Promise<[boolean, string, AxiosResponse|null]> {
         
         try {

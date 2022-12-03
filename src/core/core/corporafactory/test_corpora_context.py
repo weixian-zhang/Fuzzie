@@ -13,6 +13,24 @@ class TestPasswordCorpora(unittest.TestCase):
         
         return super().setUp()
     
+    def test_no_expression_in_template(self):
+        
+        r = '''
+                POST https://example.com/comments HTTP/1.1
+                Content-Type: application/xml
+                Authorization: token xxxx
+
+                <request>
+                    
+                </request>
+            '''
+            
+        cc = CorporaContext(self.cp)
+        
+        ok, err = cc.build(r)
+        
+        self.assertTrue(ok)
+        
     def test_invalid_expression(self):
         
         r = '''

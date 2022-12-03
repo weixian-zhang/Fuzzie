@@ -9,7 +9,7 @@ from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 
-import asyncio
+from pubsub import pub
 
 import os, sys
 from pathlib import Path
@@ -46,9 +46,9 @@ class CorporaProvider:
         self._usernameCorpora = UsernameCorpora()
         
     def load_all(self):
-        try:
+        try:            
             self.es.emitInfo('CorporaProvider: start loading corpora')
-            
+    
             self._boolCorpora.load_corpora()
             self._charCorpora.load_corpora()
             self._datetimeCorpora.load_corpora()
@@ -62,11 +62,15 @@ class CorporaProvider:
             
             self.es.emitInfo('CorporaProvider: corpora fully loaded')
             
+            pub.sendMessage(self.es.CorporaEventTopic, command='corpora_loaded', msgData='')
+            
             return True, ''
             
         except Exception as e:
-            self.es.emitErr(e)
-            return False, Utils.errAsText(e)
+            errText = Utils.errAsText(e)
+            pub.sendMessage(topicName=self.es.CorporaEventTopic, command='corpora_load_error', msgData=errText)
+            self.es.emitErr(errText)
+            return False, errText
 
     @property
     def fileCorpora(self):

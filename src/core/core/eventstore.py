@@ -8,6 +8,7 @@ from  datetime import datetime
 from utils import Utils
 import asyncio
 import nest_asyncio
+from pubsub import pub
 
 nest_asyncio.apply()
 
@@ -45,6 +46,8 @@ class EventStore:
     websocket = None
     wsMsgQueue = []
     AppEventTopic = "AppEventTopic"
+    CorporaEventTopic = "corpora_loading"
+    CancelFuzzingEventTopic = 'cancel_fuzzing'
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -53,6 +56,7 @@ class EventStore:
     
     def __init__(self) -> None:
         
+        self.pub = pub
         self.genlogs = []
         self.fuzzProgress = []
         
@@ -132,4 +136,3 @@ class EventStore:
         except Exception as e:
             EventStore.wsMsgQueue.append(m.json())
             print(e)
-        

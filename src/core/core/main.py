@@ -15,9 +15,9 @@ from docopt import docopt
 
 from eventstore import EventStore
 eventstore = EventStore()
-from starlette_graphql import schema
 
-import json
+from starlette_graphql import schema
+from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import uvicorn
 from uvicorn.main import Server
@@ -29,6 +29,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
+
+from corporafactory.corpora_provider import CorporaProvider
 
 app = Starlette()
 app.add_middleware(
@@ -56,7 +58,7 @@ class WebSocketServer(WebSocketEndpoint):
         cmd = dataCmd['command']
         
         if cmd == 'cancel_fuzzing':
-            pub.sendMessage('command_relay', command='cancel_fuzzing')
+            pub.sendMessage('command_relay', command=eventstore.CancelFuzzingEventTopic)
             eventstore.send_websocket('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
             
             
@@ -86,6 +88,23 @@ def on_exit():
     asyncio.run(eventstore.emitInfo("fuzzer shutting down"))
 atexit.register(on_exit)
 
+
+def load_corpora_background_done(future):
+    eventstore.emitInfo('data loading complete')
+
+# load data background
+def load_corpora_background():
+    
+    eventstore.emitInfo('loading data')
+    
+    cp = CorporaProvider()
+        
+    executor = ThreadPoolExecutor()
+    
+    future = executor.submit(cp.load_all)
+                    
+    future.add_done_callback(load_corpora_background_done)
+
 #main entry point and startup
 def startup():
     
@@ -95,9 +114,7 @@ def startup():
     
     if args['webserver']:
         
-        # asyncio.run(eventstore.emitInfo('fuzzer started'))
-        
-        # asyncio.run(eventstore.emitInfo('starting GraphQL server'))
+        load_corpora_background()
         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         

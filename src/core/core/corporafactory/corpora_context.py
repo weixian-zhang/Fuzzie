@@ -1,3 +1,10 @@
+import os, sys
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+
 import jinja2
 from corpora_provider import CorporaProvider
 import re
@@ -14,12 +21,7 @@ from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 
 import ast
-import os, sys
-from pathlib import Path
-currentDir = os.path.dirname(Path(__file__))
-sys.path.insert(0, currentDir)
-core_core_dir = os.path.dirname(Path(__file__).parent)
-sys.path.insert(0, core_core_dir)
+
 
 from eventstore import EventStore
 
@@ -37,17 +39,18 @@ class CorporaContext:
             return 
             
     
-    def build(self, expression) -> tuple[bool, str]:
+    def build(self, template) -> tuple[bool, str]:
         
-        # allDTs: all data templates
+        if template == '' or template == '{}':
+            return True, ''
         
         try:
             
-            if isinstance(expression, str):
-                template = jinja2.Template(expression)
+            if isinstance(template, str):
+                template = jinja2.Template(template)
                 template.render({ 'eval': self.eval_expression_by_build })
             else:
-                for dt in expression:
+                for dt in template:
                     template = jinja2.Template(dt)
                     template.render({ 'eval': self.eval_expression_by_build })
                 
@@ -55,7 +58,7 @@ class CorporaContext:
                 
         except Exception as e:
             self.es.emitErr(e, 'CorporaContext.build')
-            return False, f'Invalid expression: {expression}'
+            return False, f'Invalid expression: {template}'
         
     def resolve_expr(self, expression) -> tuple[bool, str, object]:
         
