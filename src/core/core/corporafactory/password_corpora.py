@@ -47,21 +47,12 @@ class PasswordCorpora:
         Session = scoped_session(session_factory)
         
         # first 350,000 passwords
-        rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).limit(350000).all()
+        rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).limit(600000).all()
         
         self.data = rows
         
         Session.close()
         
-        # for row in rows:
-            
-        #     rowDict = row._asdict()
-        #     rn = rowDict['RowNumber']
-        #     content = rowDict['Content']
-            
-        #     self.data[str(rn)] = content
-            
-        # rows = None
         
     def next_corpora(self):
             
@@ -69,7 +60,6 @@ class PasswordCorpora:
             self.rowPointer = 0
         
         data = self.data[self.rowPointer][1]   # [1] is 'content'
-        #data = self.data[str(self.rowPointer)]
         
         self.rowPointer += 1
         
