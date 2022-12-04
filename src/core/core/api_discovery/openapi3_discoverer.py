@@ -178,11 +178,11 @@ class OpenApi3ApiDiscover:
                 
                 continue
             
-                
             else:
                 
+                # file 
                 if format is not None and format == 'binary':
-                    cp = ParamProp(propertyName=propName, type='file', format=format)
+                    cp = ParamProp(propertyName='__fileupload', type='file', format='binary')
                     result.append(cp)
                     continue
                     
@@ -197,10 +197,15 @@ class OpenApi3ApiDiscover:
                     
                     items =  schema.items # items exist for array type and is a class not iteratable
                     
-                    arrayItem = self.get_items_in_array_datatype(items, propName)
+                    # array of file 
+                    if items.type == 'string' and items.format == 'binary':
+                        cp = ParamProp(propertyName='__fileupload', type="file", arrayProp=ArrayItem('file'))
+                        result.append(cp)   
+                    else:
+                        arrayItem = self.get_items_in_array_datatype(items, propName)
+                        cp = ParamProp(propertyName=propName, type="array", parameters=None, arrayProp=arrayItem)
+                        result.append(cp)   
                     
-                    cp = ParamProp(propertyName=propName, type="array", parameters=None, arrayProp=arrayItem)
-                    result.append(cp)   
     
     def get_complex_object_datatype(self, schema, result: list):
                 
@@ -300,18 +305,14 @@ class OpenApi3ApiDiscover:
     # check for existence to prevent error
     def get_mutatorapi_body_props(self, mutatorOperation) -> list:
         
-        appJsonContentType = 'application/json'
+        #appJsonContentType = 'application/json'
         formDataWWWFormContentType = 'application/x-www-form-urlencoded'
         
         # Multipart requests combine one or more sets of data into a single body, separated by boundaries.
         # Typically use these requests for file uploads and for transferring data of several types in a single request
         # (for example, a file along with a JSON object)
         multipartFormContentType = 'multipart/form-data' # single file upload, multi-files upload, or Json data + file upload
-        streamFileUploadContentType = 'application/octet-stream'
-        appPdfContentType = 'application/pdf'
-        imagePngContentType = 'image/png'
-        imageAllContentType = 'image/*'
-        sameForOthersContentType = "*/*" #https://swagger.io/docs/specification/media-types/
+        sameForOthersContentType = "*/*" #https://swagger.io/docs/specification/media-types/        
         
         contentResult = []
         properties = None
@@ -351,32 +352,41 @@ class OpenApi3ApiDiscover:
                         self.get_nested_content_properties(properties, contentResult)
                    
                 # multipart/form-data
-                if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
+                if self.isMultiForm(content):
                     multipartFormContent = content[multipartFormContentType]
                     properties = multipartFormContent.schema.properties
                     
                     if not properties is None:
                         self.get_nested_content_properties(properties, contentResult)
+                
+                if (self.isFileBasedMediaType(content) == False and 
+                    self.isMultiForm(content) == False and 
+                    self.isWWWFormUrlEncoded(content) == False and
+                    hasattr(content, '*/*') == False):
                         
-                # application/* but not file type. e.g: application/json application/xml but not application/octet-stream
-                if (not self.isFileBasedMediaType(content) and 
-                    not hasattr(content, multipartFormContentType) and
-                    not  hasattr(content, formDataWWWFormContentType) and
-                    not hasattr(content, '*/*') ):
-                    
-                    for mediaType in content.keys():
-                        
-                        eachMediaType = content[mediaType]
-                        
-                        if not properties is None:
+                        if content.schema is not None and not content.schema.properties is None:
                             self.get_nested_content_properties(properties, contentResult)
+
                 
                 if self.isFileBasedMediaType(content):
                     
-                    propName = "fileupload" # fixed name for file
-                    contentResult.append(ParamProp(propName, 'file', 'binary'))
+
+                    # 'fileupload' is a fixed name for all file types
+                    fileParam = self.create_param_for_file_mediatypes(content)
+                    contentResult.append(fileParam)
                 
         return contentResult
+    
+    def create_param_for_file_mediatypes(self, content):
+        attrs = dict(content)
+        
+        for attr in attrs:
+            if self.isImage(attr):
+                return ParamProp('__fileupload', 'image', 'binary')
+            elif self.isPDF(attr):
+                return ParamProp('__fileupload', 'pdf', 'binary')
+            else:
+                return ParamProp('__fileupload', 'file', 'binary')
     
     def handleSchemaIsArray(self, items, dictResult):
         
@@ -415,16 +425,58 @@ class OpenApi3ApiDiscover:
         
         attrs = dict(obj)
         
-        fileBasedMediaTypes = ['audio', 'image', 'video', 'example', 'application/octet-stream', 
+        fileBasedMediaTypes = ['audio', 'image', 'video', 'application/octet-stream', 
                                'application/pdf', 'application/zip', 'application/pkcs8']
         
-        for attr in attrs.keys():
-            
-            exist = any(attr in x for x in fileBasedMediaTypes)
-            
-            if exist:
-                return True
+        for mt in fileBasedMediaTypes:
+            for attr in attrs.keys():
+                
+                if mt in attr:
+                    return True
         
+        return False
+    
+    def isMultiForm(self, content):
+
+        multipartFormContentType = 'multipart/form-data'
+        
+        if hasattr(content, multipartFormContentType) or self.has_attribute(content, multipartFormContentType):
+            return True
+        else:
+            return False
+    
+    def isWWWFormUrlEncoded(self, content):
+        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
+        
+        if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
+            return True
+        else:
+            return False
+        
+    # audio and video will be trated as images
+    def isImage(self, mediaType):
+        
+        imageType = ['audio', 'image', 'video']
+        
+        for x in imageType:
+            if x in mediaType:
+                return True
+            
+        return False
+            
+    def isPDF(self, mediaType: str):
+        
+        if mediaType.startswith('application'):
+                
+            s = mediaType.split('/')
+            
+            if len(s) == 2:
+                
+                secItem =  s[1]
+                
+                if secItem == 'pdf':
+                    return True
+            
         return False
     
     def has_attribute(self, obj, attrName):

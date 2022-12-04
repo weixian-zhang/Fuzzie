@@ -30,6 +30,7 @@ class ArrayItem:
         self.parameters = parameters    #for complex object only
 
 # format - generally for file property and format is binary
+# 'fileupload' is a fixed name for all file types
 class ParamProp:
     
     def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, paramType: str = '') -> None:

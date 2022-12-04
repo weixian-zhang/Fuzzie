@@ -392,12 +392,18 @@ class WebApiFuzzer:
         
     def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):
         
+         #     fields={
+            #         'filefield': ('example.txt', file_data, 'text/plain'),
+            #     })
+            
+            
         try:
             hostnamePort = fc.get_hostname_port()
             pathDT = fcs.get_path_datatemplate()
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
+            file = {}
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -409,6 +415,10 @@ class WebApiFuzzer:
             
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
+                return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            
+            okfile, errbody, file = self.corporaContext.resolve_file_from_openapi3(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            if not okfile:
                 return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
             # header - reason for looping over each header data template and getting fuzz data is to 

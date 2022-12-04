@@ -66,6 +66,27 @@ class CorporaContext:
         except Exception as e:
             self.es.emitErr(e, 'CorporaContext.resolve_expr')
             return False, e, ''
+    
+    # used by openapi 3 web fuzzer only
+    def resolve_file_from_openapi3(self, expression) -> tuple[bool, str, object]:
+        
+        try:
+            
+            template = jinja2.Template(expression)
+            rendered = template.render({ 'eval': self.eval_expression_by_openapi3_file_injection })
+            
+            return True, '', rendered
+        
+        # need to find an elegant solution rather than raising error
+        except FileExistsError as e:
+            data = e.args[0]
+            return True, '', data
+         
+        except Exception as e:
+            self.es.emitErr(e, 'CorporaContext.resolve_expr')
+            return False, e, ''
+        
+        
         
     def eval_expression_by_build(self, expr: str):
         
@@ -111,6 +132,10 @@ class CorporaContext:
             case 'digit':
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
+                    return originalExpression
+            case 'integer':                         # openapi 3 integer type, using digit corpora
+                if not 'integer' in self.context:
+                    self.context['integer'] = self.cp.digitCorpora
                     return originalExpression
             case 'char':
                 if not 'char' in self.context:
@@ -167,6 +192,18 @@ class CorporaContext:
             return data
         else:
             return expression
+        
+    def eval_expression_by_openapi3_file_injection(self, expr: str):
+        
+        expression = expr
+        
+        if expression != 'file' and expression != 'pdf' and expression != 'image':
+            return
+        
+        provider = self.context[expression]
+        if provider != None:
+            data = provider.next_corpora()
+            raise(FileExistsError(data))
         
         # if expression.startswith('my'):
             

@@ -148,8 +148,8 @@ class OpenApi3FuzzContextCreator:
        if datatemplate == '':
             return datatemplate
         
-       datatemplate = datatemplate.replace('{{eval(', '')
-       datatemplate = datatemplate.replace(')}}', '')
+       datatemplate = datatemplate.replace('{{ eval(\'', '')
+       datatemplate = datatemplate.replace(')\' }}', '')
        return datatemplate
     
     # does not support array in path, array is only supported in querystring

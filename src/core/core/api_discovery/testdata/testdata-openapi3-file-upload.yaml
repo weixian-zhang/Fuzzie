@@ -1,0 +1,81 @@
+openapi: "3.0.0"
+info:
+  title: Simple API overview
+  version: 2.0.0
+
+# To apply Basic auth to the whole API:
+security:
+  - basicAuth: []
+  - bearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # /post:
+  #   post:
+  #     summary: upload a kid's publication
+  #     operationId: uploadPublication
+  #     requestBody:
+  #       content:
+  #         image/png:
+  #           schema:
+  #             type: string
+  #             format: binary
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+
+  /post:
+    post:
+      summary: upload a kid's publication
+      operationId: uploadPublication
+      requestBody:
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Successful operation
+
+# To describe a file sent with other data, use the multipart media type
+  # /post:
+  #   post:
+  #     requestBody:
+  #       content:
+  #         multipart/form-data:
+  #           schema:
+  #             type: object
+  #             properties:
+  #               orderId:
+  #                 type: integer
+  #               userId:
+  #                 type: integer
+  #               fileName:
+  #                 type: string
+  #                 format: binary
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+
+
+# Use the multipart media type to define uploading an arbitrary number of files
+  # /post:
+  #   post:
+  #     requestBody:
+  #         content:
+  #           multipart/form-data:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 filename:
+  #                   type: array
+  #                   items:
+  #                     type: string      # seclist payload
+  #                     format: binary
+  #     responses:
+  #       '200':
+  #         description: Successful operation
+
+
+
