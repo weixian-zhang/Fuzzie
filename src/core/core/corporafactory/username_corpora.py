@@ -21,7 +21,7 @@ class UsernameCorpora:
         
         self.es = EventStore()
         self.data = {}
-        self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
+        self.rowPointer = 0; #important as sqlitre autoincrement id starts from 1
 
     def load_corpora(self):
         try:
@@ -42,25 +42,16 @@ class UsernameCorpora:
         
         rows = Session.query(SeclistUsernameTable.c.RowNumber, SeclistUsernameTable.c.Content).all()
         
+        self.data = rows
+        
         Session.close()
-        
-        for row in rows:
-            
-            rowDict = row._asdict()
-            rn = rowDict['RowNumber']
-            content = rowDict['Content']
-            
-            self.data[str(rn)] = content
-            
-        rows = None
-        
     
     def next_corpora(self):
             
         if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 1
+            self.rowPointer = 0
             
-        data = self.data[str(self.rowPointer)]
+        data = self.data[self.rowPointer][1]
         
         self.rowPointer += 1
         

@@ -105,8 +105,17 @@ class ServiceManager:
         openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
         
         if apiDiscoveryMethod == 'openapi3':
+            
+            if openapi3Str == '':
+                return False, 'OpenApi3 spec content is empty'
+            
             isApiDisOK, error, apicontext = openapi3Dis.create_apicontext_from_openapi3(openapi3Str)
+            
         elif apiDiscoveryMethod == 'request-text':
+            
+            if rtStr == '':
+                return False, 'Request text content is empty'
+            
             pass
         
         if not isApiDisOK:

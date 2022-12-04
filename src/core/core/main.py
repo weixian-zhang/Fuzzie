@@ -16,8 +16,9 @@ from docopt import docopt
 from eventstore import EventStore
 eventstore = EventStore()
 
+from corpora_loader import load_corpora_background
+
 from starlette_graphql import schema
-from concurrent.futures import ThreadPoolExecutor
 import asyncio
 import uvicorn
 from uvicorn.main import Server
@@ -29,8 +30,6 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
-
-from corporafactory.corpora_provider import CorporaProvider
 
 app = Starlette()
 app.add_middleware(
@@ -89,33 +88,15 @@ def on_exit():
 atexit.register(on_exit)
 
 
-def load_corpora_background_done(future):
-    eventstore.emitInfo('data loading complete')
-
-# load data background
-def load_corpora_background():
-    
-    eventstore.emitInfo('loading data')
-    
-    cp = CorporaProvider()
-        
-    executor = ThreadPoolExecutor()
-    
-    future = executor.submit(cp.load_all)
-                    
-    future.add_done_callback(load_corpora_background_done)
-
 #main entry point and startup
-def startup():
+def start_webserver():
     
     args = docopt(__doc__)
     
     global eventstore
     
     if args['webserver']:
-        
-        load_corpora_background()
-        
+         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
         asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
@@ -123,13 +104,14 @@ def startup():
          asyncio.run(eventstore.emitInfo('fuzzer started'))
     
 
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
     
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
-        startup()
+        
+        load_corpora_background()
+        
+        start_webserver()
+        
     except Exception as e:
         asyncio.run(eventstore.emitErr(e))
     

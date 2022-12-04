@@ -1,3 +1,12 @@
+import os, sys
+from pathlib import Path
+currentDir = os.path.dirname(Path(__file__))
+sys.path.insert(0, currentDir)
+core_core_dir = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, core_core_dir)
+models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
+sys.path.insert(0, models_dir)
+
 from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
@@ -8,17 +17,7 @@ from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
-
 from pubsub import pub
-
-import os, sys
-from pathlib import Path
-currentDir = os.path.dirname(Path(__file__))
-sys.path.insert(0, currentDir)
-core_core_dir = os.path.dirname(Path(__file__).parent)
-sys.path.insert(0, core_core_dir)
-models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
-sys.path.insert(0, models_dir)
 
 from utils import Utils
 from eventstore import EventStore
@@ -31,6 +30,9 @@ class CorporaProvider:
         return cls.instance
     
     def __init__(self) -> None:
+        
+        # if CorporaProvider.hasExistingInstance == True:
+        #     return
         
         self.es = EventStore()
         

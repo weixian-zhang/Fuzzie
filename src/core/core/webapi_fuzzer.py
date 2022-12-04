@@ -1,5 +1,3 @@
-
-
 import jsonpickle
 from utils import Utils
 from cProfile import run
@@ -13,8 +11,6 @@ from types import MappingProxyType
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore, MsgType
-
-from corporafactory.corpora_context import CorporaContext
 
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
@@ -32,21 +28,7 @@ from db import (insert_api_fuzzCaseSetRuns,
 
 from multiprocessing import Lock
 
-class ThreadTracker(dict):
-    
-    def __init__(self, all_tasks_completed_callback, *args, **kwargs):
-        self.all_tasks_completed_callback = all_tasks_completed_callback
-        self.update(*args, **kwargs)
-    
-    def __delitem__(self, key):
-        print(f'{key} is being poped')
-        
-        if dict.__len__ == 0:
-            self.all_tasks_completed_callback()
-            
-        del self.store[self._keytransform(key)]
-        
-        
+from corporafactory.corpora_context import CorporaContext        
 
 class WebApiFuzzer:
     
@@ -149,8 +131,8 @@ class WebApiFuzzer:
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             self.dbLock.release()
             
-            # fuzzCasesToTest = 1 # uncomment for testing only
-            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
+            self.totalFuzzRuns = 1 # uncomment for testing only
+            #self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -178,16 +160,16 @@ class WebApiFuzzer:
 
         for fcs in fcss:
             
-            if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
+            if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
                 self.corporaContext.build(fcs.pathDataTemplate)
                 
-            if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
+            if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
                 self.corporaContext.build(fcs.querystringDataTemplate)
                 
-            if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
+            if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
                 self.corporaContext.build(fcs.headerDataTemplate)
             
-            if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
+            if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
                 self.corporaContext.build(fcs.bodyDataTemplate)
         
     def fuzz_each_fuzzcaseset(self, fuzzCaseSetRunId, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
@@ -531,7 +513,7 @@ class WebApiFuzzer:
         return fdc
     
     def isDataTemplateEmpty(self, template):
-        if template == '' and template == '{}':
+        if template == '' or template == '{}':
             return True
         
         return False
