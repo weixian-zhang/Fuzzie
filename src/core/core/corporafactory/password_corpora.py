@@ -21,7 +21,7 @@ class PasswordCorpora:
         return cls.instance
     
     def __init__(self) -> None:
-        self.rowPointer = 1
+        self.rowPointer = 0
         self.data = {}
         
         self.es = EventStore()
@@ -49,24 +49,27 @@ class PasswordCorpora:
         # first 350,000 passwords
         rows = Session.query(SeclistPasswordTable.c.RowNumber, SeclistPasswordTable.c.Content).limit(350000).all()
         
+        self.data = rows
+        
         Session.close()
         
-        for row in rows:
+        # for row in rows:
             
-            rowDict = row._asdict()
-            rn = rowDict['RowNumber']
-            content = rowDict['Content']
+        #     rowDict = row._asdict()
+        #     rn = rowDict['RowNumber']
+        #     content = rowDict['Content']
             
-            self.data[str(rn)] = content
+        #     self.data[str(rn)] = content
             
-        rows = None
+        # rows = None
         
     def next_corpora(self):
             
         if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 1
-            
-        data = self.data[str(self.rowPointer)]
+            self.rowPointer = 0
+        
+        data = self.data[self.rowPointer][1]   # [1] is 'content'
+        #data = self.data[str(self.rowPointer)]
         
         self.rowPointer += 1
         

@@ -8,7 +8,7 @@ class TestPasswordCorpora(unittest.TestCase):
         g = PasswordCorpora()
         g.load_corpora()
         
-        for x in range(0, 500):
+        for x in range(0, 5000):
             val = g.next_corpora()
             self.assertIsNotNone(val)
             self.assertTrue(isinstance(val, str))
