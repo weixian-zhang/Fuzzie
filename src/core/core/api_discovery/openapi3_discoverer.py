@@ -17,6 +17,7 @@ class OpenApi3ApiDiscover:
     
     def __init__(self) -> None:
         self.eventstore = EventStore()
+        self.fileuploadPropName = '__fileupload'
     
     def load_openapi3_file(self, file_path: str):
         
@@ -147,13 +148,126 @@ class OpenApi3ApiDiscover:
             api.verb = ApiVerb.POST
             
             api.parameters = self.obtain_parameters(apiObj.post)
-            api.body = self.get_mutatorapi_body_props(apiObj.post)         
+            api.body, hasFile, fileType = self.get_mutatorapi_body_props(apiObj.post)
+            api.file = ''
+            
+            if hasFile:
+                api.file = fileType
             
             return True, api
         
+        # put
+        
+        # patch
+        
+        # delete
+        
         return False, None
-           
-             
+    
+    # requestBody and content are optional in OpenApi3 for Post/Put/Patch
+    # check for existence to prevent error
+    def get_mutatorapi_body_props(self, mutatorOperation) -> tuple[list, bool, str]:
+        
+        #appJsonContentType = 'application/json'
+        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
+        
+        # Multipart requests combine one or more sets of data into a single body, separated by boundaries.
+        # Typically use these requests for file uploads and for transferring data of several types in a single request
+        # (for example, a file along with a JSON object)
+        multipartFormContentType = 'multipart/form-data' # single file upload, multi-files upload, or Json data + file upload
+        sameForOthersContentType = "*/*" #https://swagger.io/docs/specification/media-types/        
+        
+        file = ''
+        contentResult = []
+        properties = None
+        
+        if not mutatorOperation.requestBody is None:
+            
+            if hasattr(mutatorOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
+                properties = mutatorOperation.requestBody.properties
+                self.get_nested_content_properties(properties, contentResult)
+                return contentResult
+            
+            if hasattr(mutatorOperation.requestBody, 'content'): # if content exists
+                
+                content = mutatorOperation.requestBody.content
+                
+                # */*
+                if hasattr(content, '*/*') or self.has_attribute(content, sameForOthersContentType): 
+                    sameForOthers = content[sameForOthersContentType]
+                    
+                    schema = sameForOthers.schema
+                                      
+                    #handle array params
+                    if schema.type == "array":
+                        self.get_items_in_array_datatype(schema.items, "")
+                    else:
+                        properties = sameForOthers.schema.properties
+                    
+                        if not properties is None:
+                            self.get_form_data_keyval(properties, contentResult) #same handling as for keyval
+                
+                # application/x-www-form-urlencoded
+                if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
+                    formContent = content[formDataWWWFormContentType] 
+                    properties = formContent.schema.properties
+                    
+                    if not properties is None:
+                        self.get_nested_content_properties(properties, contentResult)
+                   
+                # multipart/form-data
+                if self.isMultiForm(content):
+                    multipartFormContent = content[multipartFormContentType]
+                    properties = multipartFormContent.schema.properties
+                    
+                    if not properties is None:
+                        self.get_nested_content_properties(properties, contentResult)
+                
+                # application/*, nested properties could have file type
+                  #   post:
+                    #     requestBody:
+                    #       content:
+                    #         multipart/form-data:
+                    #           schema:
+                    #             type: object
+                    #             properties:
+                    #               orderId:
+                    #                 type: integer
+                    #               userId:
+                    #                 type: integer
+                    #               fileName:
+                    #                 type: string      <-- file
+                    #                 format: binary    <-- file
+                if (self.isFileBasedMediaType(content) == False and 
+                    self.isMultiForm(content) == False and 
+                    self.isWWWFormUrlEncoded(content) == False and
+                    hasattr(content, '*/*') == False):
+                        
+                        if content.schema is not None and content.schema.properties is not None:
+                            self.get_nested_content_properties(properties, contentResult)
+                            
+                # explicit file type e.g:
+                # content:
+                #   image/png
+                if self.isFileBasedMediaType(content):
+                    
+                    fileParam = self.create_ParamProp_for_file_mediatypes(content)
+                    contentResult.append(fileParam)
+        
+        hasFile, type = self.get_file_from_content_result(contentResult)
+                
+        return contentResult, hasFile, type
+    
+    def get_file_from_content_result(self, contentResult: list[ParamProp]):
+        
+        for pprop in contentResult:
+            if pprop.propertyName == self.fileuploadPropName:
+                type = pprop.type
+                
+                contentResult.remove(pprop) # remove prop so that it will not appear in Body Data Template
+                
+                return True, type
+        return False, '' 
         
     def get_nested_content_properties(self, props, result: list):
         
@@ -181,15 +295,15 @@ class OpenApi3ApiDiscover:
             else:
                 
                 # file 
-                if format is not None and format == 'binary':
-                    cp = ParamProp(propertyName='__fileupload', type='file', format='binary')
+                if self.is_content_prop_file_type(type, format):
+                    cp = ParamProp(propertyName=self.fileuploadPropName, type='file')
                     result.append(cp)
                     continue
                     
                 #base case - primitive type
                 if not type == "array":
                     
-                    cp = ParamProp(propertyName=propName, type=type, format=format)
+                    cp = ParamProp(propertyName=propName, type=type)
                     result.append(cp)
                     continue
                         
@@ -198,14 +312,20 @@ class OpenApi3ApiDiscover:
                     items =  schema.items # items exist for array type and is a class not iteratable
                     
                     # array of file 
-                    if items.type == 'string' and items.format == 'binary':
-                        cp = ParamProp(propertyName='__fileupload', type="file", arrayProp=ArrayItem('file'))
+                    if self.is_content_prop_file_type(items.type, items.format):
+                        cp = ParamProp(propertyName=self.fileuploadPropName, type="file", arrayProp=ArrayItem('file'))
                         result.append(cp)   
                     else:
                         arrayItem = self.get_items_in_array_datatype(items, propName)
                         cp = ParamProp(propertyName=propName, type="array", parameters=None, arrayProp=arrayItem)
                         result.append(cp)   
-                    
+
+
+    def is_content_prop_file_type(self, type, format):
+        if type == 'string' and format is not None and format in ['binary', 'base64']:
+            return True
+        else:
+            return False
     
     def get_complex_object_datatype(self, schema, result: list):
                 
@@ -242,12 +362,12 @@ class OpenApi3ApiDiscover:
             # is primitive type
             else:
                 
-                if format is not None and format == 'binary':
-                    cp = ParamProp(propertyName=propName, type='file', format=format)
+                if  self.is_content_prop_file_type(type, format):
+                    cp = ParamProp(propertyName=self.fileuploadPropName, type='file')
                     result.append(cp)
                     continue
                 else:
-                    cp = ParamProp(propertyName=propName, type=type, format=format)
+                    cp = ParamProp(propertyName=propName, type=type)
                     result.append(cp)
                                     
     # ParamProp.parameters will be populated with new ParamProp of item in array
@@ -296,97 +416,25 @@ class OpenApi3ApiDiscover:
             
             propSchema = props[propName]
             
-            format = propSchema.format
-            
-            result.append(ParamProp(propName, type, format=format))
+            result.append(ParamProp(propName, type))
             
             
-    # requestBody and content are optional in OpenApi3 for Post/Put/Patch
-    # check for existence to prevent error
-    def get_mutatorapi_body_props(self, mutatorOperation) -> list:
-        
-        #appJsonContentType = 'application/json'
-        formDataWWWFormContentType = 'application/x-www-form-urlencoded'
-        
-        # Multipart requests combine one or more sets of data into a single body, separated by boundaries.
-        # Typically use these requests for file uploads and for transferring data of several types in a single request
-        # (for example, a file along with a JSON object)
-        multipartFormContentType = 'multipart/form-data' # single file upload, multi-files upload, or Json data + file upload
-        sameForOthersContentType = "*/*" #https://swagger.io/docs/specification/media-types/        
-        
-        contentResult = []
-        properties = None
-        
-        if not mutatorOperation.requestBody is None:
-            
-            if hasattr(mutatorOperation.requestBody, 'properties'): # $ref: '#/components/name'. Class = Schema, Assume Json
-                properties = mutatorOperation.requestBody.properties
-                self.get_nested_content_properties(properties, contentResult)
-                return contentResult
-            
-            if hasattr(mutatorOperation.requestBody, 'content'): # if content exists
-                
-                content = mutatorOperation.requestBody.content
-                
-                # */*
-                if hasattr(content, '*/*') or self.has_attribute(content, sameForOthersContentType): 
-                    sameForOthers = content[sameForOthersContentType]
-                    
-                    schema = sameForOthers.schema
-                                      
-                    #handle array params
-                    if schema.type == "array":
-                        self.get_items_in_array_datatype(schema.items, "")
-                    else:
-                        properties = sameForOthers.schema.properties
-                    
-                        if not properties is None:
-                            self.get_form_data_keyval(properties, contentResult) #same handling as for keyval
-                
-                # application/x-www-form-urlencoded
-                if hasattr(content, formDataWWWFormContentType) or self.has_attribute(content, formDataWWWFormContentType):
-                    formContent = content[formDataWWWFormContentType] 
-                    properties = formContent.schema.properties
-                    
-                    if not properties is None:
-                        self.get_nested_content_properties(properties, contentResult)
-                   
-                # multipart/form-data
-                if self.isMultiForm(content):
-                    multipartFormContent = content[multipartFormContentType]
-                    properties = multipartFormContent.schema.properties
-                    
-                    if not properties is None:
-                        self.get_nested_content_properties(properties, contentResult)
-                
-                if (self.isFileBasedMediaType(content) == False and 
-                    self.isMultiForm(content) == False and 
-                    self.isWWWFormUrlEncoded(content) == False and
-                    hasattr(content, '*/*') == False):
-                        
-                        if content.schema is not None and not content.schema.properties is None:
-                            self.get_nested_content_properties(properties, contentResult)
-
-                
-                if self.isFileBasedMediaType(content):
-                    
-
-                    # 'fileupload' is a fixed name for all file types
-                    fileParam = self.create_param_for_file_mediatypes(content)
-                    contentResult.append(fileParam)
-                
-        return contentResult
     
-    def create_param_for_file_mediatypes(self, content):
+        
+    
+    def create_ParamProp_for_file_mediatypes(self, content):
+        
+        # self.fileuploadPropName is a fixed name for all file types
+        
         attrs = dict(content)
         
         for attr in attrs:
             if self.isImage(attr):
-                return ParamProp('__fileupload', 'image', 'binary')
+                return ParamProp(self.fileuploadPropName, 'image', 'binary')
             elif self.isPDF(attr):
-                return ParamProp('__fileupload', 'pdf', 'binary')
+                return ParamProp(self.fileuploadPropName, 'pdf', 'binary')
             else:
-                return ParamProp('__fileupload', 'file', 'binary')
+                return ParamProp(self.fileuploadPropName, 'file', 'binary')
     
     def handleSchemaIsArray(self, items, dictResult):
         

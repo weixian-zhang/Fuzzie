@@ -67,6 +67,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('querystringDataTemplate', String, nullable=True),
                             Column('headerDataTemplate', String, nullable=True),
                             Column('bodyDataTemplate', String, nullable=True),
+                            Column('file', String),
                             Column('progressState', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
@@ -557,6 +558,10 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                 header = json.dumps(fcset.headerDataTemplate)
                 body = json.dumps(fcset.bodyDataTemplate)
                 
+                fileStr = ''
+                if len(fcset.file) > 0:
+                    fileStr = ','.join(fcset.file)
+                
                 fcSetStmt = (
                     insert(ApiFuzzCaseSetTable).
                     values(
@@ -571,6 +576,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         headerDataTemplate = header,
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  body,
+                        file= fileStr,
                         fuzzcontextId = fuzzcontext.Id
                         )
                 )
@@ -731,7 +737,13 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
     fcs.selected = rowDict['selected']
     fcs.verb = rowDict['verb']
+    
+    f = rowDict['file']
+    if f != '':
+        fcs.file = f.split(',')
+    
     return fcs
+
 
 
 def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId, totalRunsToComplete=1):

@@ -24,39 +24,39 @@ paths:
   #       '200':
   #         description: Successful operation
 
-  /post:
-    post:
-      summary: upload a kid's publication
-      operationId: uploadPublication
-      requestBody:
-        content:
-          application/pdf:
-            schema:
-              type: string
-              format: binary
-      responses:
-        '200':
-          description: Successful operation
-
-# To describe a file sent with other data, use the multipart media type
   # /post:
   #   post:
+  #     summary: upload a kid's publication
+  #     operationId: uploadPublication
   #     requestBody:
   #       content:
-  #         multipart/form-data:
+  #         application/pdf:
   #           schema:
-  #             type: object
-  #             properties:
-  #               orderId:
-  #                 type: integer
-  #               userId:
-  #                 type: integer
-  #               fileName:
-  #                 type: string
-  #                 format: binary
+  #             type: string
+  #             format: binary
   #     responses:
   #       '200':
   #         description: Successful operation
+
+# To describe a file sent with other data, use the multipart media type
+  /post:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                userId:
+                  type: integer
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
 
 
 # Use the multipart media type to define uploading an arbitrary number of files

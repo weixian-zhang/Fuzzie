@@ -5,13 +5,14 @@ from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
 import urllib3 
+import requests
 from pubsub import pub
 from http import cookiejar
 from types import MappingProxyType
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore, MsgType
-
+import json
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
@@ -171,6 +172,8 @@ class WebApiFuzzer:
             
             if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
                 self.corporaContext.build(fcs.bodyDataTemplate)
+                
+            self.corporaContext.build_files(fcs.file)
         
     def fuzz_each_fuzzcaseset(self, fuzzCaseSetRunId, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
         
@@ -194,7 +197,7 @@ class WebApiFuzzer:
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
-            ok, err, hostnamePort, url, path, querystring, body, headers = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            ok, err, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
@@ -211,20 +214,32 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
-            # upload binary as multipart-form
-            # https://www.mrbluyee.com/2018/07/14/Python-urllib3/#Files-amp-binary-data
-            # r = http.request(
-            #     'POST',
-            #     'http://httpbin.org/post',
-            #     fields={
-            #         'filefield': ('example.txt', file_data, 'text/plain'),
-            #     })
+            resp = None
+            match fcs.verb:
+                case "GET":
+                    resp = requests.get(url, headers=headers)
+                case "POST":
+                    resp = requests.post(url, headers=headers, data=body)
+                case "PUT":
+                    resp = requests.put(url, headers=headers, data=body)
+                case "PATCH":
+                    resp = requests.patch(url, headers=headers, data=body)
             
-            resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
+            
+                
+            
+            # resp = self.http.request(fcs.verb, 
+            #                          url, 
+            #                          headers=headers, 
+            #                          body=body,
+            #                          fields= {
+            #                              'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+            #                          },
+            #                          retries=False, timeout=self.httpTimeoutInSec)
             
             fuzzResp: ApiFuzzResponse= self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
-            fuzzDataCase.response = fuzzResp 
+            # fuzzDataCase.response = fuzzResp 
             
             self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)
     
@@ -261,6 +276,34 @@ class WebApiFuzzer:
             
         return fuzzDataCase
     
+    def create_urllib3_file_field(self, fileType, fileContent):
+        
+        fileMediaTypes = {
+            'file': 'text/plain',
+            'pdf': 'application/pdf',
+            'image': 'image/png',
+        }
+        
+        fileField = {}
+        
+        mt = fileMediaTypes[fileType]
+        
+        if mt != '' and fileContent != None:
+            fileField = {
+                'filefield':('invoice.txt', fileContent )
+            }
+            
+            test_files = [
+                ("test_file_1", fileContent)
+                ]
+            
+    
+        
+            return  fileField
+        else:
+            return {}
+            
+                
     def fuzz_each_fuzzcaseset_done(self, future):
         
         try:
@@ -390,12 +433,7 @@ class WebApiFuzzer:
         if not hostname in self.cookiejar.keys():
             self.cookiejar[hostname] = cookie
         
-    def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):
-        
-         #     fields={
-            #         'filefield': ('example.txt', file_data, 'text/plain'),
-            #     })
-            
+    def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):            
             
         try:
             hostnamePort = fc.get_hostname_port()
@@ -403,7 +441,7 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            file = {}
+            files = [] #single file only for openapi3
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -417,9 +455,17 @@ class WebApiFuzzer:
             if not okbody:
                 return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okfile, errbody, file = self.corporaContext.resolve_file_from_openapi3(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
-            if not okfile:
-                return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            if len(fcs.file) > 0:
+                for fileType in fcs.file:
+                    ok, err, fileContent = self.corporaContext.resolve_file_from_openapi3(fileType)
+                    if ok:
+                        files.append(('file_name.txt', fileContent))    # list of tuple file names and binary content
+                        
+                        
+                    # # # if ok:
+                    # # #     ff = self.create_urllib3_file_field(fileType, fileContent)
+                    # # #     fileFields = {**ff, **fileFields}
+                            
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
@@ -430,7 +476,8 @@ class WebApiFuzzer:
                 
                 ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
                 if not ok:
-                    return [False, err, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                    self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
+                    continue
                 
                 headerDict[hk] = resolvedVal
                 
@@ -441,13 +488,15 @@ class WebApiFuzzer:
                     
             headers = {**authnHeader, **headerDict}     #merge 2 dicts
             
-            return [True, '', hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            return [True, '', hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
         
         except Exception as e:
-            ej =  Utils.jsone(e)
-            self.eventstore.emitErr(f'{ej}', data='WebApiFuzzer.dataprep_fuzzcaseset')
-            return [False]
-        
+            errText =  Utils.errAsText(e)
+            self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
+            return False, errText
+    
+    def create_http_headers(self):
+        pass
     
     # returns dict representing header
     def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:
@@ -473,45 +522,7 @@ class WebApiFuzzer:
                    }
             
         return {}
-            
-    # def inject_fuzzdata_in_datatemplate(self, tpl: str) -> str:
         
-    #     if tpl == '':
-    #         return ''
-        
-    #     template = jinja2.Template(tpl)
-    #     result =  template.render({ 'getFuzzData': self.getFuzzData })
-    #     return result
-            
-    # def getFuzzData(self, type: str):
-        
-    #     if type is None:
-    #         return self.stringGenerator.NextData() 
-    #     match type._undefined_name:
-    #         case 'string':
-    #             return self.stringGenerator.NextData()
-    #         case 'number':
-    #             return self.digitGenerator.NextData()
-    #         case 'integer':
-    #             return self.digitGenerator.NextData()
-    #         case 'int':
-    #             return self.digitGenerator.NextData()
-    #         case 'digit':
-    #             return self.digitGenerator.NextData()
-    #         case 'bool':
-    #             return self.boolGenerator.NextData()
-    #         case 'username':
-    #             return self.usernameGenerator.NextData()
-    #         case 'password':
-    #             return self.passwordGenerator.NextData()
-    #         case 'char':
-    #             return self.CharGenerator.NextData()
-    #         case 'datetime':
-    #             return self.datetimeGenerator.NextData()
-    #         case 'file':
-    #             return self.fileGenerator.NextData()
-    #         case _:
-    #             return self.stringGenerator.NextData()
 
     
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
