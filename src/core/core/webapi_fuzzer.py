@@ -228,14 +228,14 @@ class WebApiFuzzer:
             
                 
             
-            # resp = self.http.request(fcs.verb, 
-            #                          url, 
-            #                          headers=headers, 
-            #                          body=body,
-            #                          fields= {
-            #                              'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
-            #                          },
-            #                          retries=False, timeout=self.httpTimeoutInSec)
+            resp = self.http.request(fcs.verb, 
+                                     url, 
+                                     headers=headers, 
+                                     body=body,
+                                    #  fields= {
+                                    #      'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+                                    #  },
+                                     retries=False, timeout=self.httpTimeoutInSec)
             
             fuzzResp: ApiFuzzResponse= self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
