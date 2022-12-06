@@ -103,13 +103,13 @@ class FuzzerStatus(graphene.ObjectType):
 #     apikey  = graphene.String()  
 #     fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
 
-# class ApiFuzzCaseSet_RunSummary_ViewModel(graphene.ObjectType):
-#     Id: graphene.String()
-#     http2xx = graphene.Int()
-#     http3xx = graphene.Int()
-#     http4xx = graphene.Int()
-#     http5xx =  graphene.Int()
-#     completedDataCaseRuns = graphene.Int() 
+class ApiFuzzCaseSet_RunSummary_ViewModel(graphene.ObjectType):
+    Id: graphene.String()
+    http2xx = graphene.Int()
+    http3xx = graphene.Int()
+    http4xx = graphene.Int()
+    http5xx =  graphene.Int()
+    completedDataCaseRuns = graphene.Int() 
 
 class ApiFuzzCaseSetUpdate(graphene.InputObjectType):
     fuzzCaseSetId = graphene.String()

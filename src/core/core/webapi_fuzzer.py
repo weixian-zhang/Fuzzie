@@ -4,7 +4,7 @@ from cProfile import run
 from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
-import urllib3 
+from requests import Response
 import requests
 from pubsub import pub
 from http import cookiejar
@@ -60,7 +60,6 @@ class WebApiFuzzer:
         self.apikeyHeader = apikeyHeader,
         self.apikey = apikey
         
-        self.http = urllib3.PoolManager(num_pools=5)
         self.httpTimeoutInSec = 3.0
         self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
@@ -110,7 +109,6 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e)
         
         
-            
     def fuzz(self):
         
         if self.apifuzzcontext == None or len(self.apifuzzcontext.fuzzcaseSets) == 0:
@@ -132,8 +130,8 @@ class WebApiFuzzer:
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             self.dbLock.release()
             
-            self.totalFuzzRuns = 1 # uncomment for testing only
-            #self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
+            #self.totalFuzzRuns = 1 # uncomment for testing only
+            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -214,34 +212,45 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
-            resp = None
+            resp: Response = None
+            data = body.encode()
+            
             match fcs.verb:
-                case "GET":
+                case 'GET':
                     resp = requests.get(url, headers=headers)
-                case "POST":
-                    resp = requests.post(url, headers=headers, data=body)
-                case "PUT":
-                    resp = requests.put(url, headers=headers, data=body)
-                case "PATCH":
-                    resp = requests.patch(url, headers=headers, data=body)
+                    
+                case 'POST':
+                    resp = requests.post(url, headers=headers, data=data)
+                    
+                case 'PUT':
+                    resp = requests.put(url, headers=headers, data=data)
+                    
+                case 'PATCH':
+                    resp = requests.patch(url, headers=headers, data=data)
             
             
-                
+            fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
-            resp = self.http.request(fcs.verb, 
-                                     url, 
-                                     headers=headers, 
-                                     body=body,
-                                    #  fields= {
-                                    #      'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
-                                    #  },
-                                     retries=False, timeout=self.httpTimeoutInSec)
+            fuzzDataCase.response = fuzzResp
             
-            fuzzResp: ApiFuzzResponse= self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
+            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)   
+            
+            
+            
+            # resp = self.http.request(fcs.verb, 
+            #                          url, 
+            #                          headers=headers, 
+            #                          body=body,
+            #                         #  fields= {
+            #                         #      'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+            #                         #  },
+            #                          retries=False, timeout=self.httpTimeoutInSec)
+            
+            
             
             # fuzzDataCase.response = fuzzResp 
             
-            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)
+            
     
         except HTTPError as e:
             
@@ -263,15 +272,21 @@ class WebApiFuzzer:
             if self.fuzzCancel == True:
                 return
             
-            err =  Utils.jsone(e.args)
-                
             fr = ApiFuzzResponse()
             fr.Id = shortuuid.uuid()
             fr.datetime = datetime.now()
             fr.fuzzcontextId = self.apifuzzcontext.Id
             fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.statusCode = 400 if err.find('timed out') == -1 else 508 #4 00 client error
-            fr.reasonPharse = f'{err}'
+                
+            if resp != None:
+                fr.statusCode = resp.status_code
+                fr.reasonPharse = resp.reason
+                fr.body = resp.text
+            else:  
+                err =  Utils.jsone(e.args)
+                fr.statusCode = 400 if err.find('timed out') == -1 else 508 #4 00 client error
+                fr.reasonPharse = f'{err}'
+            
             fuzzDataCase.response = fr
             
         return fuzzDataCase
@@ -312,11 +327,11 @@ class WebApiFuzzer:
             print(f'fuzz runs: {self.currentFuzzRuns}/{self.totalFuzzRuns}')
     
             # check if last task, to end fuzzing
-            if self.totalFuzzRuns == 0:
+            if self.currentFuzzRuns  >= self.totalFuzzRuns:
                 self.dbLock.acquire()
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 self.dbLock.release()
-                self.eventstore.send_websocket('fuzzing is completed')
+                self.eventstore.feedback_client('fuzzing is completed')
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset_done')
@@ -387,7 +402,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.create_fuzzrequest')
         
             
-    def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp) -> ApiFuzzResponse:
+    def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp: Response) -> ApiFuzzResponse:
     
         fuzzResp = ApiFuzzResponse()
         
@@ -396,25 +411,25 @@ class WebApiFuzzer:
         fuzzResp.fuzzDataCaseId = fuzzDataCaseId
         fuzzResp.fuzzcontextId = fuzzcontextId 
         
-        fuzzResp.statusCode = resp.status
+        fuzzResp.statusCode = resp.status_code
         fuzzResp.reasonPharse = resp.reason
-        fuzzResp.body = resp.data.decode('utf-8')
+        fuzzResp.body = resp.text #.decode('utf-8')
         
         headers = {}
         headersMultilineText = ''
         for k in resp.headers.keys():
             headers[k] = resp.headers[k]
-            headersMultilineText = headersMultilineText + f'{resp.headers[k]}\n'
+            headersMultilineText = headersMultilineText + f'{k}: {resp.headers[k]}\n'
             
         fuzzResp.headersJson = Utils.jsone(headers)
             
         fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
         
         fuzzResp.responseDisplayText = f'''
-            # HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}
-              {headersMultilineText}
+    HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}
+        {headersMultilineText}
               
-              {fuzzResp.body}
+        {fuzzResp.body}
         '''
         
         return fuzzResp
@@ -507,18 +522,18 @@ class WebApiFuzzer:
         
         if fc.authnType == SupportedAuthnType.Basic.name:
             return {
-                    'Authorization': f'Basic {self.basicUsername}:{self.basicPassword}'
+                    'Authorization': f'Basic {self.apifuzzcontext.basicUsername}:{self.apifuzzcontext.basicPassword}'
                    }
         
         elif fc.authnType == SupportedAuthnType.Bearer.name:
             return {
-                    f'{fc.bearerTokenHeader}': f'{fc.bearerToken}'
+                    f'{self.apifuzzcontext.bearerTokenHeader}': f'{self.apifuzzcontext.bearerToken}'
                    }
 
         elif fc.authnType == SupportedAuthnType.ApiKey.name:
             
             return {
-                    f'{fc.apikeyHeader}': f'{fc.apikey}'
+                    f'{self.apifuzzcontext.apikeyHeader}': f'{self.apifuzzcontext.apikey}'
                    }
             
         return {}

@@ -58,7 +58,7 @@ class WebSocketServer(WebSocketEndpoint):
         
         if cmd == 'cancel_fuzzing':
             pub.sendMessage('command_relay', command=eventstore.CancelFuzzingEventTopic)
-            eventstore.send_websocket('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
+            eventstore.feedback_client('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
             
             
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
@@ -70,7 +70,7 @@ class WebSocketServer(WebSocketEndpoint):
         websocket = websocket
         
         eventstore.set_websocket(websocket)
-        eventstore.send_websocket('Fuzzer/main: client connected to websocket server ')
+        eventstore.feedback_client('Fuzzer/main: client connected to websocket server ')
 
 
 # init graphql server

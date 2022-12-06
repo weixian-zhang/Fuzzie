@@ -75,14 +75,14 @@ class OpenApi3ApiDiscover:
                   if hasGet:
                       apicontext.apis.append(getApi)
                   
-                  hasPost, postApi = self.create_mutator_api(apiObj, pathStr)
+                  hasPost, api = self.create_mutator_api(apiObj, pathStr)
                   if hasPost:
-                      apicontext.apis.append(postApi)
+                      apicontext.apis.append(api)
                     
             return True, '', apicontext
         
         except Exception as e:
-            self.eventstore.emitErr(e)
+            self.eventstore.emitErr(e, 'OpenApi3ApiDiscover.create_apicontext_from_openapi3')
             return False, e.message, ApiContext
         
         
@@ -141,7 +141,7 @@ class OpenApi3ApiDiscover:
     
     def create_mutator_api(self, apiObj, path):
         
-        if not apiObj.post is None:
+        if apiObj.post is not None:
             
             api = Api()
             api.path = path
@@ -149,6 +149,36 @@ class OpenApi3ApiDiscover:
             
             api.parameters = self.obtain_parameters(apiObj.post)
             api.body, hasFile, fileType = self.get_mutatorapi_body_props(apiObj.post)
+            api.file = ''
+            
+            if hasFile:
+                api.file = fileType
+            
+            return True, api
+        
+        elif apiObj.patch is not None:
+            
+            api = Api()
+            api.path = path
+            api.verb = ApiVerb.PATCH
+            
+            api.parameters = self.obtain_parameters(apiObj.patch)
+            api.body, hasFile, fileType = self.get_mutatorapi_body_props(apiObj.patch)
+            api.file = ''
+            
+            if hasFile:
+                api.file = fileType
+            
+            return True, api
+        
+        elif apiObj.put is not None:
+            
+            api = Api()
+            api.path = path
+            api.verb = ApiVerb.PUT
+            
+            api.parameters = self.obtain_parameters(apiObj.put)
+            api.body, hasFile, fileType = self.get_mutatorapi_body_props(apiObj.put)
             api.file = ''
             
             if hasFile:

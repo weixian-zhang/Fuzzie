@@ -543,7 +543,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     authnType = fuzzcontext.authnType,
                     basicUsername = fuzzcontext.basicUsername,
                     basicPassword = fuzzcontext.basicPassword,
-                    bearerTokenHeader = fuzzcontext.basicPassword,
+                    bearerTokenHeader = fuzzcontext.bearerTokenHeader,
                     bearerToken = fuzzcontext.bearerToken,
                     apikeyHeader = fuzzcontext.apikeyHeader,
                     apikey = fuzzcontext.apikey
@@ -846,14 +846,14 @@ def update_casesetrun_summary(Id, httpCode, completedDataCaseRuns = 0) -> ApiFuz
     Session.commit()
     Session.close()
     
-    summary = ApiFuzzCaseSet_RunSummary_ViewModel()
-    summary.Id = Id
-    summary.http2xx = existingHttp2xx
-    summary.http3xx = existingHttp3xx
-    summary.http4xx = existingHttp4xx
-    summary.http5xx = existingHttp5xx
-    summary.completedDataCaseRuns = existingCompletedDataCaseRuns
-    return summary
+    # summary = ApiFuzzCaseSet_RunSummary_ViewModel()
+    # summary.Id = Id
+    # summary.http2xx = existingHttp2xx
+    # summary.http3xx = existingHttp3xx
+    # summary.http4xx = existingHttp4xx
+    # summary.http5xx = existingHttp5xx
+    # summary.completedDataCaseRuns = existingCompletedDataCaseRuns
+    # return summary
         
                
     

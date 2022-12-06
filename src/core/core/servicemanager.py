@@ -32,7 +32,7 @@ def bgWorkerDataToClient():
             data = ServiceManager.dataQueue.get()
         
             if data != '':
-                ServiceManager.eventstore.send_websocket(data, MsgType.FuzzEvent)
+                ServiceManager.eventstore.feedback_client(data, MsgType.FuzzEvent)
                 
             time.sleep(1)
         except Exception as e:
