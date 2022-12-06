@@ -1,5 +1,6 @@
 import graphene
-import asyncio
+from datetime import datetime
+from pubsub import pub
 from servicemanager import ServiceManager
 from eventstore import EventStore
 from rx import Observable
@@ -7,14 +8,30 @@ from graphql_models import (ApiFuzzCaseSetUpdate,
                             FuzzContextRunQueryResult, 
                             ApiFuzzCaseSets_With_RunSummary_ViewModel, 
                             ApiFuzzContextUpdate,
-                            FuzzCaseSetRunSummaryQueryResult)
+                            FuzzCaseSetRunSummaryQueryResult,
+                            FuzzerStatus)
 from utils import Utils 
+
+es = EventStore()
 
 # queries
 class Query(graphene.ObjectType):
-
     
-    alive = graphene.String()
+    corporaLoaded = False
+    corporaLoadMsg = ''
+    
+    def on_event_received(command, msgData):
+        match command:
+            case 'corpora_loaded':
+                Query.corporaLoaded = True
+            case 'corpora_load_error':
+                Query.corporaLoaded = False
+                Query.corporaLoadMsg = msgData
+    
+    pub.subscribe(on_event_received, es.CorporaEventTopic)
+    
+    
+    fuzzerStatus = graphene.Field(FuzzerStatus)
     
     fuzzContexts = graphene.Field(FuzzContextRunQueryResult)
     
@@ -22,8 +39,15 @@ class Query(graphene.ObjectType):
                                               fuzzcontextId = graphene.Argument(graphene.String))
     
     
-    def resolve_alive(self, info):
-        return "alive"
+    def resolve_fuzzerStatus(self, info):
+        
+        s = FuzzerStatus()
+        s.timestamp = Utils.datetimeNowStr()
+        s.alive = True
+        s.isDataLoaded = Query.corporaLoaded
+        s.message = Query.corporaLoadMsg
+        
+        return s
     
     
     def resolve_fuzzContexts(self, info):

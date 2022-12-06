@@ -15,9 +15,10 @@ from docopt import docopt
 
 from eventstore import EventStore
 eventstore = EventStore()
-from starlette_graphql import schema
 
-import json
+from corpora_loader import load_corpora_background
+
+from starlette_graphql import schema
 import asyncio
 import uvicorn
 from uvicorn.main import Server
@@ -56,7 +57,7 @@ class WebSocketServer(WebSocketEndpoint):
         cmd = dataCmd['command']
         
         if cmd == 'cancel_fuzzing':
-            pub.sendMessage('command_relay', command='cancel_fuzzing')
+            pub.sendMessage('command_relay', command=eventstore.CancelFuzzingEventTopic)
             eventstore.send_websocket('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
             
             
@@ -86,19 +87,16 @@ def on_exit():
     asyncio.run(eventstore.emitInfo("fuzzer shutting down"))
 atexit.register(on_exit)
 
+
 #main entry point and startup
-def startup():
+def start_webserver():
     
     args = docopt(__doc__)
     
     global eventstore
     
     if args['webserver']:
-        
-        # asyncio.run(eventstore.emitInfo('fuzzer started'))
-        
-        # asyncio.run(eventstore.emitInfo('starting GraphQL server'))
-        
+         
         uvicorn.run(app, host="0.0.0.0", port=webserverPort)
         
         asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
@@ -106,13 +104,14 @@ def startup():
          asyncio.run(eventstore.emitInfo('fuzzer started'))
     
 
-# @app.teardown_appcontext
-# def shutdown_session(exception=None):
-#     eventstore.emitInfo('Fuzzie Core flask-graphql server shutting down')
     
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
-        startup()
+        
+        load_corpora_background()
+        
+        start_webserver()
+        
     except Exception as e:
         asyncio.run(eventstore.emitErr(e))
     

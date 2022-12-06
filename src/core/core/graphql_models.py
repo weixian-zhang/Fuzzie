@@ -39,7 +39,13 @@ class SecuritySchemes(graphene.ObjectType):
     bearerToken = graphene.String()
     apikeyHeader = graphene.String()
     apikey = graphene.String()
-        
+
+class FuzzerStatus(graphene.ObjectType):
+    timestamp = graphene.String()
+    alive = graphene.Boolean()
+    isDataLoaded = graphene.Boolean()
+    message = graphene.String()
+
 # class ApiFuzzRequest(graphene.ObjectType):
 #     Id = graphene.String()
 #     datetime = graphene.DateTime()

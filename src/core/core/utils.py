@@ -1,5 +1,6 @@
 import jsonpickle
 import shortuuid
+from datetime import datetime
 
 class Utils:
     def jsone(objDict):
@@ -28,4 +29,8 @@ class Utils:
             return True
         
         return False
+    
+    
+    def datetimeNowStr():
+        return datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         

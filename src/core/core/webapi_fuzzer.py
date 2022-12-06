@@ -1,26 +1,3 @@
-
-# supported type expression
-# openapi3 types
-    # {{ string }}                  this includes dates and files
-    # {{ number }}                  treated as Fuzzie digit
-    # {{ integer }}                 treated as Fuzzie digit
-    # {{ boolean }}
-# in addition, input expression for Request Message
-    # {{ my:[myvalue1,myvalue2,3,4] }}  # supply your own input
-    # {{ mutate:[a quick brown fox, Whatever you are, be a good one] }}   # mutates by per char add/alter/remove mutations
-    # {{ string }}                  
-    # {{ number }}                  
-    # {{ file }}
-    # {{ boolean }}
-    # {{ datetime }}
-    # {{ username }}                for login bruteforce entry test
-    # {{ password }}                for login bruteforce entry test
-    # {{ digit }}                   integer and float
-    # {{ char }}
-    # {{ base64e:value }}
-    # {{ base64e }}                 generate base64 encoded random string value
-    # {{ hashsha256:value }}        generates a sha256 hash from supplied value
-
 import jsonpickle
 from utils import Utils
 from cProfile import run
@@ -28,24 +5,14 @@ from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
 import urllib3 
+import requests
 from pubsub import pub
 from http import cookiejar
 from types import MappingProxyType
-import jinja2
-import httplib2
-import json
-import sys
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore, MsgType
-from datafactory.hacked_password_generator import HackedPasswordGenerator
-from datafactory.hacked_username_generator  import HackedUsernameGenerator
-from datafactory.naughty_file_generator import NaughtyFileGenerator
-from datafactory.naughty_datetime_generator import NaughtyDateTimeGenerator
-from datafactory.naughty_digits_generator import NaughtyDigitGenerator
-from datafactory.naughty_string_generator import NaughtyStringGenerator
-from datafactory.naughty_bool_generator import NaughtyBoolGenerator
-from datafactory.obedient_data_generators import ObedientCharGenerator 
+import json
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
@@ -62,21 +29,7 @@ from db import (insert_api_fuzzCaseSetRuns,
 
 from multiprocessing import Lock
 
-class ThreadTracker(dict):
-    
-    def __init__(self, all_tasks_completed_callback, *args, **kwargs):
-        self.all_tasks_completed_callback = all_tasks_completed_callback
-        self.update(*args, **kwargs)
-    
-    def __delitem__(self, key):
-        print(f'{key} is being poped')
-        
-        if dict.__len__ == 0:
-            self.all_tasks_completed_callback()
-            
-        del self.store[self._keytransform(key)]
-        
-        
+from corporafactory.corpora_context import CorporaContext        
 
 class WebApiFuzzer:
     
@@ -120,17 +73,20 @@ class WebApiFuzzer:
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
-        self.passwordGenerator = HackedPasswordGenerator()
-        self.usernameGenerator = HackedUsernameGenerator()
-        self.fileGenerator = NaughtyFileGenerator() 
-        self.datetimeGenerator = NaughtyDateTimeGenerator() 
-        self.digitGenerator = NaughtyDigitGenerator() 
-        self.stringGenerator = NaughtyStringGenerator() 
-        self.boolGenerator = NaughtyBoolGenerator() 
-        self.usernameGenerator = HackedUsernameGenerator()
-        self.CharGenerator = ObedientCharGenerator()
         
-        pub.subscribe(self.pubsub_command_receiver, 'command_relay')
+        self.corporaContext = CorporaContext()
+        
+        # self.passwordGenerator = HackedPasswordGenerator()
+        # self.usernameGenerator = HackedUsernameGenerator()
+        # self.fileGenerator = NaughtyFileGenerator() 
+        # self.datetimeGenerator = NaughtyDateTimeGenerator() 
+        # self.digitGenerator = NaughtyDigitGenerator() 
+        # self.stringGenerator = NaughtyStringGenerator() 
+        # self.boolGenerator = NaughtyBoolGenerator() 
+        # self.usernameGenerator = HackedUsernameGenerator()
+        # self.CharGenerator = ObedientCharGenerator()
+        
+        pub.subscribe(self.pubsub_command_receiver, self.eventstore.CancelFuzzingEventTopic)
 
 
     def pubsub_command_receiver(self, command):
@@ -167,18 +123,17 @@ class WebApiFuzzer:
         
     def begin_fuzzing(self):
           
-    
         try:
             
-            fuzzCasesToTest = self.determine_no_of_fuzzcases_to_run(self.apifuzzcontext.fuzzMode, self.apifuzzcontext.fuzzcaseToExec)
+            self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
             # create a fuzzcaserun record
             self.dbLock.acquire()
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             self.dbLock.release()
             
-            # fuzzCasesToTest = 1 # uncomment for testing only
-            self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * fuzzCasesToTest
+            self.totalFuzzRuns = 1 # uncomment for testing only
+            #self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -192,16 +147,35 @@ class WebApiFuzzer:
                                           totalRunsToComplete = self.totalFuzzRuns)   
                 self.dbLock.release()           
                 
-                for count in range(0, fuzzCasesToTest):
+                for count in range(0, self.totalFuzzRuns):
 
-                    future = self.executor.submit(self.fuzz_data_case, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
+                    future = self.executor.submit(self.fuzz_each_fuzzcaseset, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
                     
-                    future.add_done_callback(self.fuzz_data_case_done)      
+                    future.add_done_callback(self.fuzz_each_fuzzcaseset_done)      
                     
         except Exception as e:
-            self.eventstore.emitErr(e, data='begin_fuzzing')
+            self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
+            
+    def build_corpora_context(self, fcss: list[ApiFuzzCaseSet]):
         
-    def fuzz_data_case(self, fuzzCaseSetRunId, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
+
+        for fcs in fcss:
+            
+            if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
+                self.corporaContext.build(fcs.pathDataTemplate)
+                
+            if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
+                self.corporaContext.build(fcs.querystringDataTemplate)
+                
+            if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
+                self.corporaContext.build(fcs.headerDataTemplate)
+            
+            if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
+                self.corporaContext.build(fcs.bodyDataTemplate)
+                
+            self.corporaContext.build_files(fcs.file)
+        
+    def fuzz_each_fuzzcaseset(self, fuzzCaseSetRunId, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
         
         try:
             fuzzDataCase = self.http_call_api(fcs)
@@ -210,11 +184,10 @@ class WebApiFuzzer:
             
             self.dataQueue.put(Utils.jsone(summaryViewModel))
             
-            
         except Exception as e:
             if self.fuzzCancel == True:
                 return
-            self.eventstore.emitErr(e, data='fuzz_data_case')
+            self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
     
@@ -224,11 +197,11 @@ class WebApiFuzzer:
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
-            OK, hostnamePort, url, path, querystring, body, headers = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            ok, err, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
-            if not OK:
-                return
+            if not ok:
+                raise(Exception('Error at data prep when fuzzing: {err}'))
             
             fuzzDataCase.request = self.create_fuzzrequest(
                                     fuzzDataCaseId=fuzzDataCase.Id,
@@ -241,12 +214,32 @@ class WebApiFuzzer:
                                     headers=headers,
                                     body=body)
             
+            resp = None
+            match fcs.verb:
+                case "GET":
+                    resp = requests.get(url, headers=headers)
+                case "POST":
+                    resp = requests.post(url, headers=headers, data=body)
+                case "PUT":
+                    resp = requests.put(url, headers=headers, data=body)
+                case "PATCH":
+                    resp = requests.patch(url, headers=headers, data=body)
             
-            resp = self.http.request(fcs.verb, url, headers=headers, body=body, retries=False, timeout=self.httpTimeoutInSec)
+            
+                
+            
+            resp = self.http.request(fcs.verb, 
+                                     url, 
+                                     headers=headers, 
+                                     body=body,
+                                    #  fields= {
+                                    #      'filefield': ('invoice.txt', 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+                                    #  },
+                                     retries=False, timeout=self.httpTimeoutInSec)
             
             fuzzResp: ApiFuzzResponse= self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
-            fuzzDataCase.response = fuzzResp 
+            # fuzzDataCase.response = fuzzResp 
             
             self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)
     
@@ -259,7 +252,7 @@ class WebApiFuzzer:
             fr.datetime = datetime.now()
             fr.fuzzcontextId = self.apifuzzcontext.Id
             fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.statusCode = 500
+            fr.statusCode = e.code
             fr.reasonPharse = err
             fuzzDataCase.response = fr
             
@@ -277,13 +270,41 @@ class WebApiFuzzer:
             fr.datetime = datetime.now()
             fr.fuzzcontextId = self.apifuzzcontext.Id
             fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.statusCode = 500 if err.find('timed out') == -1 else 508
+            fr.statusCode = 400 if err.find('timed out') == -1 else 508 #4 00 client error
             fr.reasonPharse = f'{err}'
             fuzzDataCase.response = fr
             
         return fuzzDataCase
     
-    def fuzz_data_case_done(self, future):
+    def create_urllib3_file_field(self, fileType, fileContent):
+        
+        fileMediaTypes = {
+            'file': 'text/plain',
+            'pdf': 'application/pdf',
+            'image': 'image/png',
+        }
+        
+        fileField = {}
+        
+        mt = fileMediaTypes[fileType]
+        
+        if mt != '' and fileContent != None:
+            fileField = {
+                'filefield':('invoice.txt', fileContent )
+            }
+            
+            test_files = [
+                ("test_file_1", fileContent)
+                ]
+            
+    
+        
+            return  fileField
+        else:
+            return {}
+            
+                
+    def fuzz_each_fuzzcaseset_done(self, future):
         
         try:
             self.currentFuzzRuns = self.currentFuzzRuns + 1
@@ -298,7 +319,7 @@ class WebApiFuzzer:
                 self.eventstore.send_websocket('fuzzing is completed')
                 
         except Exception as e:
-            self.eventstore.emitErr(e, data='fuzz_data_case_done')
+            self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset_done')
         
 
     def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
@@ -326,7 +347,7 @@ class WebApiFuzzer:
             #error occurs when fuzzing cancel, if is cancelled, ignore error
             if not self.fuzzCancel is True:
                 ej = Utils.jsone(e)
-                self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='save_fuzzDataCase')
+                self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
                 
     
     def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostnamePort, verb, path, qs, url, headers, body):
@@ -363,7 +384,7 @@ class WebApiFuzzer:
         
         except Exception as e:
             ej = Utils.jsone(e)
-            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='create_fuzzrequest')
+            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.create_fuzzrequest')
         
             
     def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp) -> ApiFuzzResponse:
@@ -412,44 +433,70 @@ class WebApiFuzzer:
         if not hostname in self.cookiejar.keys():
             self.cookiejar[hostname] = cookie
         
-    def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):
-        
+    def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):            
+            
         try:
             hostnamePort = fc.get_hostname_port()
             pathDT = fcs.get_path_datatemplate()
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
+            files = [] #single file only for openapi3
             
-            path = self.inject_fuzzdata_in_datatemplate(pathDT)
-            querystring = self.inject_fuzzdata_in_datatemplate(querystringDT)
-            body = self.inject_fuzzdata_in_datatemplate(bodyDT)
+            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
+            if not okpath:
+                return [False, errpath, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            
+            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_expr(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
+            if not okqs:
+                return [False, errqs, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            
+            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            if not okbody:
+                return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+            
+            if len(fcs.file) > 0:
+                for fileType in fcs.file:
+                    ok, err, fileContent = self.corporaContext.resolve_file_from_openapi3(fileType)
+                    if ok:
+                        files.append(('file_name.txt', fileContent))    # list of tuple file names and binary content
+                        
+                        
+                    # # # if ok:
+                    # # #     ff = self.create_urllib3_file_field(fileType, fileContent)
+                    # # #     fileFields = {**ff, **fileFields}
+                            
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
             headerDict = {}
             headerDTObj = jsonpickle.decode(headerDT, safe=False, keys=False)
             for hk in headerDTObj.keys():
-                dataTemplate = headerDTObj[hk]
-                transformedValue = self.inject_fuzzdata_in_datatemplate(dataTemplate)
-                headerDict[hk] = transformedValue
+                dt = headerDTObj[hk]
                 
-            # headerStr = self.inject_fuzzdata_in_datatemplate(headerDT)
-            # headerDict = jsonpickle.decode(headerStr, safe=False, keys=False)
+                ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                if not ok:
+                    self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
+                    continue
+                
+                headerDict[hk] = resolvedVal
+                
             
-            url = f'{hostnamePort}{path}{querystring}'
+            url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
             authnHeader= self.determine_authn_scheme(fc)
                     
             headers = {**authnHeader, **headerDict}     #merge 2 dicts
             
-            return [True, hostnamePort, url, path, querystring, body, headers]
+            return [True, '', hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
         
         except Exception as e:
-            ej =  Utils.jsone(e)
-            self.eventstore.emitErr(f'{ej}', data='Fuzzer/DataPrep')
-            return [False]
-        
+            errText =  Utils.errAsText(e)
+            self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
+            return False, errText
+    
+    def create_http_headers(self):
+        pass
     
     # returns dict representing header
     def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:
@@ -475,48 +522,8 @@ class WebApiFuzzer:
                    }
             
         return {}
-            
-    def inject_fuzzdata_in_datatemplate(self, tpl: str) -> str:
         
-        if tpl == '':
-            return ''
-        
-        template = jinja2.Template(tpl)
-        result =  template.render({ 'getFuzzData': self.getFuzzData })
-        return result
-            
-    def getFuzzData(self, type: str):
-        
-        if type is None:
-            return self.stringGenerator.NextData() 
-        match type._undefined_name:
-            case 'string':
-                return self.stringGenerator.NextData()
-            case 'number':
-                return self.digitGenerator.NextData()
-            case 'integer':
-                return self.digitGenerator.NextData()
-            case 'int':
-                return self.digitGenerator.NextData()
-            case 'digit':
-                return self.digitGenerator.NextData()
-            case 'bool':
-                return self.boolGenerator.NextData()
-            case 'username':
-                return self.usernameGenerator.NextData()
-            case 'password':
-                return self.passwordGenerator.NextData()
-            case 'char':
-                return self.CharGenerator.NextData()
-            case 'datetime':
-                return self.datetimeGenerator.NextData()
-            case 'file':
-                return self.fileGenerator.NextData()
-            case _:
-                return self.stringGenerator.NextData()
-    
 
-        
     
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
         
@@ -525,22 +532,10 @@ class WebApiFuzzer:
         fdc.fuzzCaseSetId = fuzzcaseSetId
         fdc.fuzzcontextId = fuzzcontextId
         return fdc
-
-         
+    
+    def isDataTemplateEmpty(self, template):
+        if template == '' or template == '{}':
+            return True
         
-        
-    # minimum 100 fuzz cases to run
-    def determine_no_of_fuzzcases_to_run(self, fuzzmode: str, fuzzcaseToExec):
-        
-        default = 100
-        
-        if fuzzmode == FuzzMode.Quick.name:
-            return default
-        elif fuzzmode == FuzzMode.Full.name:
-            return self.stringGenerator.get_dbsize()
-        elif fuzzmode == FuzzMode.Custom.name:
-            if fuzzcaseToExec <= default:
-                return default
-            else:
-                return fuzzcaseToExec
+        return False
     

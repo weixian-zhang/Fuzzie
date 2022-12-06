@@ -16,7 +16,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
 from eventstore import EventStore
 
 evts = EventStore()
-dbPath = os.path.join(os.path.dirname(Path(__file__)), 'datafactory/data/fuzzie.sqlite')
+dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data/fuzzie.sqlite')
 connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
 
@@ -67,6 +67,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('querystringDataTemplate', String, nullable=True),
                             Column('headerDataTemplate', String, nullable=True),
                             Column('bodyDataTemplate', String, nullable=True),
+                            Column('file', String),
                             Column('progressState', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
@@ -137,7 +138,10 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
 
 
 
-
+RandomImageTable = Table('RandomImage', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                            )
 SeclistPasswordTable = Table('SeclistPassword', metadata,
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Content', String)
@@ -163,7 +167,11 @@ SeclistPayloadTable = Table('SeclistPayload', metadata,
                             Column('Filename', String),
                             Column('Content', String)
                             )
-
+SeclistCharTable = Table('SeclistChar', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                        )
+                            
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
     j = ApiFuzzContextTable.join(ApiFuzzCaseSetTable,
@@ -550,6 +558,10 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                 header = json.dumps(fcset.headerDataTemplate)
                 body = json.dumps(fcset.bodyDataTemplate)
                 
+                fileStr = ''
+                if len(fcset.file) > 0:
+                    fileStr = ','.join(fcset.file)
+                
                 fcSetStmt = (
                     insert(ApiFuzzCaseSetTable).
                     values(
@@ -564,6 +576,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         headerDataTemplate = header,
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  body,
+                        file= fileStr,
                         fuzzcontextId = fuzzcontext.Id
                         )
                 )
@@ -724,7 +737,13 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
     fcs.selected = rowDict['selected']
     fcs.verb = rowDict['verb']
+    
+    f = rowDict['file']
+    if f != '':
+        fcs.file = f.split(',')
+    
     return fcs
+
 
 
 def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId, totalRunsToComplete=1):

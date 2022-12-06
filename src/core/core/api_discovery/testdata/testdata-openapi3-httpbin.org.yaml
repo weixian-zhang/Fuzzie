@@ -64,7 +64,6 @@ paths:
       tags:
         - time
       servers:
-        - url: http://now.httpbin.org
         - url: https://now.httpbin.org
       parameters:
         - in: path

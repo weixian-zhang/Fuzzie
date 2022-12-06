@@ -30,9 +30,10 @@ class ArrayItem:
         self.parameters = parameters    #for complex object only
 
 # format - generally for file property and format is binary
+# 'fileupload' is a fixed name for all file types
 class ParamProp:
     
-    def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format: str = None, paramType: str = '') -> None:
+    def __init__(self, propertyName, type, parameters: any = None, arrayProp:ArrayItem = None, format='binary', paramType: str = '') -> None:
         
         self.propertyName = propertyName
         self.type = type
@@ -63,6 +64,7 @@ class Api:
         self.authTypes = []
         self.parameters: list[ParamProp] = []
         self.body = {} 
+        self.file= ''
         
 class ApiContext:
     def __init__(self) -> None:

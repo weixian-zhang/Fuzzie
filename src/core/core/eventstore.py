@@ -8,6 +8,8 @@ from  datetime import datetime
 from utils import Utils
 import asyncio
 import nest_asyncio
+from pubsub import pub
+
 nest_asyncio.apply()
 
 class MessageLevel:
@@ -44,6 +46,8 @@ class EventStore:
     websocket = None
     wsMsgQueue = []
     AppEventTopic = "AppEventTopic"
+    CorporaEventTopic = "corpora_loading"
+    CancelFuzzingEventTopic = 'cancel_fuzzing'
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -52,6 +56,7 @@ class EventStore:
     
     def __init__(self) -> None:
         
+        self.pub = pub
         self.genlogs = []
         self.fuzzProgress = []
         
@@ -70,7 +75,7 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
                 
-        self.send_websocket(message, MsgType.AppEvent)
+        self.feedback_client(message, MsgType.AppEvent)
 
     
     def emitErr(self, err , data = "") -> None:
@@ -101,7 +106,7 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        self.send_websocket(errMsg, MsgType.AppEvent)
+        self.feedback_client(errMsg, MsgType.AppEvent)
         
     
     def handleGeneralLogs(self, msg: str):
@@ -110,11 +115,11 @@ class EventStore:
     def set_websocket(self, websocket):
         EventStore.websocket = websocket
         
-    def send_websocket(self, data: str, msgType: MsgType = MsgType.AppEvent):
-        asyncio.run(self.send_websocket_async(data, msgType))
+    def feedback_client(self, data: str, msgType: MsgType = MsgType.AppEvent):
+        asyncio.run(self.feedback_client_async(data, msgType))
     
     # send to websocket clients
-    async def send_websocket_async(self, data: str, msgType: MsgType = MsgType.AppEvent):
+    async def feedback_client_async(self, data: str, msgType: MsgType = MsgType.AppEvent):
         
         try:
                    
@@ -131,4 +136,3 @@ class EventStore:
         except Exception as e:
             EventStore.wsMsgQueue.append(m.json())
             print(e)
-        

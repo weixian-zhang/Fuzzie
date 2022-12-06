@@ -95,7 +95,8 @@ class ApiFuzzCaseSet:
         self.bodyNonTemplate = ''
         self.headerNonTemplate = ''
         
-
+        self.file = []
+        
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
         self.bodyDataTemplate = ''

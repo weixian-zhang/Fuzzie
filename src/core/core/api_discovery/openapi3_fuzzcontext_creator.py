@@ -112,6 +112,9 @@ class OpenApi3FuzzContextCreator:
             header = self.create_header_data_template(api)
             fuzzcaseSet.headerDataTemplate = header
             fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
+            
+            if api.file != '':
+                fuzzcaseSet.file.append(api.file)
                     
             fcSets.append(fuzzcaseSet)
             
@@ -135,21 +138,19 @@ class OpenApi3FuzzContextCreator:
             return SupportedAuthnType.Anonymous.name
             
             
-    
     def set_hostname(self, apicontext: ApiContext):
         
         if self.fuzzcontext.hostname == '':
             if len(apicontext.baseUrl) > 0:
                 self.fuzzcontext.hostname = apicontext.baseUrl[0]
         
-    
                 
     def remove_micro_template_for_gui_display(self, datatemplate: str):
        if datatemplate == '':
             return datatemplate
         
-       datatemplate = datatemplate.replace('{{eval(', '')
-       datatemplate = datatemplate.replace(')}}', '')
+       datatemplate = datatemplate.replace('{{ eval(\'', '')
+       datatemplate = datatemplate.replace('\') }}', '')
        return datatemplate
     
     # does not support array in path, array is only supported in querystring
@@ -300,7 +301,7 @@ class OpenApi3FuzzContextCreator:
                     
     
     def insert_eval_keyword_fuzzdata_expression(self, type: str):
-        return f'{{{{eval({type})}}}}'
+        return f'{{{{ eval(\'{type}\') }}}}'
     
     def is_path_param(self, paramType):
         if paramType.lower() == ParameterType.Path.value.lower():

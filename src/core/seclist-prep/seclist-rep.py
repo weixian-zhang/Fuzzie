@@ -10,12 +10,19 @@ modelPath = os.path.join(os.path.dirname(Path(__file__).parent), 'core', 'models
 sys.path.insert(0, dbModulePath)
 sys.path.insert(0, modelPath)
 
+from faker import Faker
+import random
+import urllib.parse
+import urllib3
+from faker import Faker
+import base64
+
 from db import metadata
 
 # create tables if not exist
 metadata.create_all()
 
-dbpath = os.getcwd() + "\src\core\core\datafactory\data\\fuzzie.sqlite"
+dbpath = os.getcwd() + "\src\core\core\corporafactory\data\\fuzzie.sqlite"
 
 sqliteconn = sqlite3.connect(dbpath, isolation_level=None)
 
@@ -56,6 +63,58 @@ usernamePath = os.path.join(dataPath, 'seclist', 'username')
 passwordPath = os.path.join(dataPath, 'seclist', 'password')
 sqlinjPath = os.path.join(dataPath, 'seclist', 'sql-injection')
 xssPath = os.path.join(dataPath, 'seclist', 'xss')
+charPath = os.path.join(dataPath, 'seclist', 'char')
+
+def load_image(size=300):
+    imgSize = [25,50,75,100,125,150,175,200,225,250,275,300,325,350,375,400,425,
+                        450,475,500,525,550,575,600,625,650,675,700,725,750,775,800,825,850,875,900,925,950,975,1000]
+    colors = ['0000FF', '808080', 'FF0000','008000', 'FFFFF']
+    ext = ['.png', '.gif', '.jpg' '.jpeg']
+    faker = Faker()
+    http = urllib3.PoolManager()
+    
+    for i in range(size):
+            
+            randSizeW = imgSize[random.randint(0, len(imgSize) - 1)]
+            randSizeH = imgSize[random.randint(0, len(imgSize) - 1)]
+            randColor = colors[random.randint(0, len(colors) - 1)]
+            randExt = ext[random.randint(0, len(ext) - 1)]
+            texte = urllib.parse.quote_plus(faker.name())
+            url = f'https://via.placeholder.com/{randSizeW}x{randSizeH}{randExt}?text={texte}'
+            
+            r = http.request('GET', url)
+            imgByte = r.data
+            imgStr = base64.b64encode(imgByte)
+            
+            cursor.execute(f'''
+                    insert into RandomImage (Content)
+                    values ("{imgStr}")
+                    ''')
+        
+# chars
+def load_seclist_char():
+    
+        ffPath = os.path.join(charPath, 'chars-final.txt')
+            
+        f = io.open(ffPath, mode="r", encoding="utf-8")
+        content = f.readlines()
+        
+        for ns in content:        
+            
+            ns = ns.replace('"', '')
+            ns = ns.replace('\n', '')
+            ns = ns.replace('\r\n', '')
+            
+            if ns == '':
+                continue
+            
+            cursor.execute(f'''
+                    insert into SeclistChar (Content)
+                    values ("{ns}")
+                    ''')
+           
+                
+        print('seclist char completed')
 
 # strings
 def load_seclist_string():
@@ -197,9 +256,13 @@ def removeDoubleQuotes(content: str):
 
 if __name__ == '__main__':
     
+    load_image()
+    
+    # load_seclist_char()
+    
     #load_seclist_payload()
     
-    #load_seclist_string()
+    # load_seclist_string()
     
     #load_seclist_username()
     

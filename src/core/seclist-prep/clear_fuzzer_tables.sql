@@ -6,7 +6,7 @@ delete from ApiFuzzCaseSetRuns;
 delete from ApiFuzzCaseSet;
 delete from ApiFuzzContext;
 
-
+drop table RandomImage;
 drop table ApiFuzzRequest;
 drop table ApiFuzzResponse;
 drop table ApiFuzzDataCase;
@@ -15,12 +15,14 @@ drop table ApiFuzzCaseSetRuns;
 drop table ApiFuzzCaseSet;
 drop table ApiFuzzContext;
 
-delete from SeclistBLNS;
-delete from SeclistPassword;
-delete from SeclistPayload;
-delete from SeclistSqlInjection;
-delete from SeclistUsername;
-delete from SeclistXSS;
+-- delete from RandomImage
+-- delete from SeclistChar;
+-- delete from SeclistBLNS;
+-- delete from SeclistPassword;
+-- delete from SeclistPayload;
+-- delete from SeclistSqlInjection;
+-- delete from SeclistUsername;
+-- delete from SeclistXSS;
 
 -- drop table SeclistBLNS;
 -- drop table SeclistPassword;
