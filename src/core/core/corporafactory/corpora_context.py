@@ -90,7 +90,7 @@ class CorporaContext:
             return False, e, ''
     
     # used by openapi 3 web fuzzer only
-    def resolve_file_from_openapi3(self, expression) -> tuple[bool, str, object]:
+    def resolve_file(self, expression) -> tuple[bool, str, object]:
         
         try:
         
@@ -162,6 +162,10 @@ class CorporaContext:
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
+                    return originalExpression
+            case 'filename':
+                if not 'filename' in self.context:
+                    self.context['filename'] = self.cp.fileNameCorpora
                     return originalExpression
             # case 'image':
             #     if not 'image' in self.context:

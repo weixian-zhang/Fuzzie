@@ -33,15 +33,13 @@ from corporafactory.corpora_context import CorporaContext
 
 class WebApiFuzzer:
     
-    def __init__(self,
-                    dataQueue,
-                    apifuzzcontext: ApiFuzzContext,
-                    basicUsername = '',
-                    basicPassword = '',
-                    bearerTokenHeader = 'Authorization',
-                    bearerToken = '',
-                    apikeyHeader = '',
-                    apikey = '') -> None:
+    def __init__(self, clientDataQueue, apifuzzcontext: ApiFuzzContext) -> None:
+                    # basicUsername = '',
+                    # basicPassword = '',
+                    # bearerTokenHeader = 'Authorization',
+                    # bearerToken = '',
+                    # apikeyHeader = '',
+                    # apikey = '') -> None:
         
         # supports remember Set-Cookie from response
         #cookie example
@@ -50,17 +48,17 @@ class WebApiFuzzer:
         # Set-Cookie: milk=shape
         self.cookiejar = {}
         
-        self.dataQueue = dataQueue
+        self.clientDataQueue = clientDataQueue
         
         # security creds
-        self.basicUsername = basicUsername,
-        self.basicPassword = basicPassword,
-        self.bearerTokenHeader = bearerTokenHeader,
-        self.bearerToken = bearerToken,
-        self.apikeyHeader = apikeyHeader,
-        self.apikey = apikey
+        self.basicUsername = apifuzzcontext.basicUsername,
+        self.basicPassword = apifuzzcontext.basicPassword,
+        self.bearerTokenHeader = apifuzzcontext.bearerTokenHeader,
+        self.bearerToken = apifuzzcontext.bearerToken,
+        self.apikeyHeader = apifuzzcontext.apikeyHeader,
+        self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 3.0
+        self.httpTimeoutInSec = 2.0
         self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.totalFuzzRuns = 0
@@ -131,7 +129,16 @@ class WebApiFuzzer:
             self.dbLock.release()
             
             #self.totalFuzzRuns = 1 # uncomment for testing only
+            fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
+            
+            if fcsLen == 0:
+                self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
+                return
+            
             self.totalFuzzRuns = len(self.apifuzzcontext.fuzzcaseSets) * self.apifuzzcontext.fuzzcaseToExec
+            
+            # notify fuzzing started
+            pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_start', msgData=self.apifuzzcontext.Id)
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -149,7 +156,7 @@ class WebApiFuzzer:
 
                     future = self.executor.submit(self.fuzz_each_fuzzcaseset, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
                     
-                    future.add_done_callback(self.fuzz_each_fuzzcaseset_done)      
+                    future.add_done_callback(self.fuzzcaseset_done)      
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
@@ -180,7 +187,7 @@ class WebApiFuzzer:
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            self.dataQueue.put(Utils.jsone(summaryViewModel))
+            self.clientDataQueue.put(Utils.jsone(summaryViewModel))
             
         except Exception as e:
             if self.fuzzCancel == True:
@@ -217,16 +224,16 @@ class WebApiFuzzer:
             
             match fcs.verb:
                 case 'GET':
-                    resp = requests.get(url, headers=headers)
+                    resp = requests.get(url, headers=headers, timeout=self.httpTimeoutInSec)
                     
                 case 'POST':
-                    resp = requests.post(url, headers=headers, data=data)
+                    resp = requests.post(url, headers=headers, data=data, files=files, timeout=self.httpTimeoutInSec) #, files=files)
                     
                 case 'PUT':
-                    resp = requests.put(url, headers=headers, data=data)
+                    resp = requests.put(url, headers=headers, data=data, files=files, timeout=self.httpTimeoutInSec) #, files=files)
                     
                 case 'PATCH':
-                    resp = requests.patch(url, headers=headers, data=data)
+                    resp = requests.patch(url, headers=headers, data=data, files=files, timeout=self.httpTimeoutInSec) #, files=files)
             
             
             fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
@@ -290,36 +297,9 @@ class WebApiFuzzer:
             fuzzDataCase.response = fr
             
         return fuzzDataCase
-    
-    def create_urllib3_file_field(self, fileType, fileContent):
-        
-        fileMediaTypes = {
-            'file': 'text/plain',
-            'pdf': 'application/pdf',
-            'image': 'image/png',
-        }
-        
-        fileField = {}
-        
-        mt = fileMediaTypes[fileType]
-        
-        if mt != '' and fileContent != None:
-            fileField = {
-                'filefield':('invoice.txt', fileContent )
-            }
-            
-            test_files = [
-                ("test_file_1", fileContent)
-                ]
-            
-    
-        
-            return  fileField
-        else:
-            return {}
             
                 
-    def fuzz_each_fuzzcaseset_done(self, future):
+    def fuzzcaseset_done(self, future):
         
         try:
             self.currentFuzzRuns = self.currentFuzzRuns + 1
@@ -334,7 +314,7 @@ class WebApiFuzzer:
                 self.eventstore.feedback_client('fuzzing is completed')
                 
         except Exception as e:
-            self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset_done')
+            self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
         
 
     def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
@@ -456,7 +436,7 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            files = [] #single file only for openapi3
+            files = {} #single file only for openapi3
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -472,14 +452,10 @@ class WebApiFuzzer:
             
             if len(fcs.file) > 0:
                 for fileType in fcs.file:
-                    ok, err, fileContent = self.corporaContext.resolve_file_from_openapi3(fileType)
+                    ok, err, fileContent = self.corporaContext.resolve_file(fileType)
                     if ok:
-                        files.append(('file_name.txt', fileContent))    # list of tuple file names and binary content
-                        
-                        
-                    # # # if ok:
-                    # # #     ff = self.create_urllib3_file_field(fileType, fileContent)
-                    # # #     fileFields = {**ff, **fileFields}
+                        filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                        files[filename] = fileContent   # list of tuple file names and binary content
                             
             
             # header - reason for looping over each header data template and getting fuzz data is to 

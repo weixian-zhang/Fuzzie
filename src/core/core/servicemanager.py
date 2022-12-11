@@ -219,21 +219,19 @@ class ServiceManager:
         
         return get_fuzzcontext(Id)
     
-    def fuzz(self, 
-                   Id, basicUsername = '', basicPassword= '', 
-                   bearerTokenHeader= '', bearerToken= '', 
-                   apikeyHeader= '', apikey= '') -> None:
+    def fuzz(self, Id): #, basicUsername = '', basicPassword= '', 
+                #    bearerTokenHeader= '', bearerToken= '', 
+                #    apikeyHeader= '', apikey= '') -> None:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
-        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue,
-                                    fuzzcontext, 
-                                    basicUsername = basicUsername, 
-                                    basicPassword= basicPassword, 
-                                    bearerTokenHeader= bearerTokenHeader,
-                                    bearerToken= bearerToken, 
-                                    apikeyHeader=  apikeyHeader, 
-                                    apikey= apikey)
+        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue, fuzzcontext)
+                                    # basicUsername = basicUsername, 
+                                    # basicPassword= basicPassword, 
+                                    # bearerTokenHeader= bearerTokenHeader,
+                                    # bearerToken= bearerToken, 
+                                    # apikeyHeader=  apikeyHeader, 
+                                    # apikey= apikey)
         
         webapifuzzer.fuzz()
         

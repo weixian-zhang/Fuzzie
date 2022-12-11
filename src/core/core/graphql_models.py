@@ -44,6 +44,7 @@ class FuzzerStatus(graphene.ObjectType):
     timestamp = graphene.String()
     alive = graphene.Boolean()
     isDataLoaded = graphene.Boolean()
+    isFuzzing = graphene.Boolean()
     message = graphene.String()
 
 # class ApiFuzzRequest(graphene.ObjectType):

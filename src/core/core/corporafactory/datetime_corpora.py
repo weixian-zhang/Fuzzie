@@ -24,7 +24,6 @@ class DateTimeCorpora:
         return cls.instance
     
     def __init__(self) -> None:
-        super().__init__()
         
         self.dateCursor = 1
         self.timeCursor = 1

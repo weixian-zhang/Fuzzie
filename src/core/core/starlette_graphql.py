@@ -19,6 +19,7 @@ class Query(graphene.ObjectType):
     
     corporaLoaded = False
     corporaLoadMsg = ''
+    isFuzzing = False
     
     def on_event_received(command, msgData):
         match command:
@@ -27,6 +28,13 @@ class Query(graphene.ObjectType):
             case 'corpora_load_error':
                 Query.corporaLoaded = False
                 Query.corporaLoadMsg = msgData
+            case 'fuzzing_start':
+                Query.isFuzzing = True
+                Query.corporaLoadMsg = msgData
+            case 'fuzzing_stop':
+                Query.isFuzzing = False
+                Query.corporaLoadMsg = msgData
+                
     
     pub.subscribe(on_event_received, es.CorporaEventTopic)
     
@@ -42,9 +50,11 @@ class Query(graphene.ObjectType):
     def resolve_fuzzerStatus(self, info):
         
         s = FuzzerStatus()
+        
         s.timestamp = Utils.datetimeNowStr()
         s.alive = True
         s.isDataLoaded = Query.corporaLoaded
+        s.isFuzzing = Query.isFuzzing
         s.message = Query.corporaLoadMsg
         
         return s
@@ -212,31 +222,30 @@ class NewApiFuzzContext(graphene.Mutation):
 class Fuzz(graphene.Mutation):
     class Arguments:
         fuzzcontextId = graphene.String()
-        basicUsername = graphene.String()
-        basicPassword = graphene.String()
-        bearerTokenHeader = graphene.String()
-        bearerToken = graphene.String()
-        apikeyHeader = graphene.String()
-        apikey = graphene.String()
-        openapi3Url = graphene.String()
+        # basicUsername = graphene.String()
+        # basicPassword = graphene.String()
+        # bearerTokenHeader = graphene.String()
+        # bearerToken = graphene.String()
+        # apikeyHeader = graphene.String()
+        # apikey = graphene.String()
+        # openapi3Url = graphene.String()
 
     #define output
     ok = graphene.Boolean()
     
-    def mutate(self, info, 
-                     fuzzcontextId,
-                     basicUsername = '',
-                    basicPassword = '',
-                    bearerTokenHeader = '',
-                    bearerToken = '',
-                    apikeyHeader = '',
-                    apikey = ''):
+    def mutate(self, info, fuzzcontextId):
+                    #  basicUsername = '',
+                    # basicPassword = '',
+                    # bearerTokenHeader = '',
+                    # bearerToken = '',
+                    # apikeyHeader = '',
+                    # apikey = ''):
         
         ok = True
         
         sm = ServiceManager()
         
-        sm.fuzz(fuzzcontextId, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        sm.fuzz(fuzzcontextId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
         return Fuzz(ok=ok)
     
