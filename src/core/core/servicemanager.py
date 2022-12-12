@@ -184,6 +184,7 @@ class ServiceManager:
                 fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
                 fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
+                fcsSum.file = rowDict['file']
                 
                 summaryId = rowDict['runSummaryId']
                 

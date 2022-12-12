@@ -2,18 +2,34 @@
     
     <div class="container-fluid h-100 d-flex flex-column">
       <Toast />
-        <div class="row h-50">
-            <div class="col-3">
-                <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
+      
+        <div class="row h-50" >
+          <Splitter>
+            <SplitterPanel class="col-3">
+              <div >
+                  <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
+              </div>
+            </SplitterPanel>
+            <SplitterPanel class="col-9">
+              <div >
+                  <FuzzCaseSetPanel  :eventemitter="eventemitter" />
+              </div>
+            </SplitterPanel>
+            <div class="row flex-fill d-flex">
+              <SplitterPanel >
+               <Splitter  layout="vertical">
+                 <SplitterPanel  >
+                    <FuzzResultPanel />
+                 </SplitterPanel>
+               </Splitter>
+              </SplitterPanel>
             </div>
-            <div class="col-9">
-                <FuzzCaseSetPanel  :eventemitter="eventemitter" />
-            </div>
+            
+           
+          </Splitter>
+          
         </div>
-
-        <div class="row flex-fill d-flex">
-            <FuzzResultPanel />
-        </div>
+        
     </div>
 </template>
   
@@ -25,13 +41,17 @@
   import EventEmitter from 'eventemitter3'
   import VSCodeMessager from '../services/VSCodeMessager';
   import Toast from 'primevue/toast';
+  import Splitter from 'primevue/splitter';
+  import SplitterPanel from 'primevue/splitterpanel';
 
   @Options({
     components: {
       ApiDiscovery,
       FuzzCaseSetPanel,
       FuzzResultPanel,
-      Toast
+      Toast,
+      Splitter,
+      SplitterPanel
     },
   })
   export default class Master extends Vue {

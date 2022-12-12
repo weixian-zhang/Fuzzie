@@ -61,6 +61,9 @@
               Body
             </th>
             <th class="text-left">
+              File Type
+            </th>
+            <th class="text-left">
               2xx
             </th>
             <th class="text-left">
@@ -90,7 +93,16 @@
 
             </td>
             <td>{{ item.verb }}</td>
-            <td>{{ item.path }}</td>
+            
+            <td>
+              <span style="cursor: pointer" @click="(
+                onTableValueNonJsonSeeInFullClicked(item.path),
+                showFullValueSideBar = true
+              )">
+                {{ item.path }}
+              </span>
+            </td>
+            
             <td>
               <span style="cursor: pointer" @click="(
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
@@ -107,7 +119,9 @@
               {{ shortenJsonValueInTable(item.bodyNonTemplate, 40) }} 
               </span>
             </td>
-
+            <td>
+              {{ item.file }}
+            </td>
             <td>
               {{ item.http2xx }}
             </td>
@@ -132,8 +146,7 @@
   
 </template>
       
- 
-    
+
 <script lang="ts">
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
@@ -191,6 +204,10 @@ class Props {
 
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
+  }
+
+  onTableValueNonJsonSeeInFullClicked(val) {
+    this.tableValViewInSizeBar = val
   }
 
   

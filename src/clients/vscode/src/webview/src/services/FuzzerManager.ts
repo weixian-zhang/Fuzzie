@@ -49,6 +49,7 @@ export default class FuzzerManager
                     headerNonTemplate
                     authnType
                     runSummaryId
+                    file
                     http2xx
                     http3xx
                     http4xx
@@ -70,7 +71,7 @@ export default class FuzzerManager
         const error = resp?.data.data.fuzzCaseSetWithRunSummary.error;
         const result = resp?.data.data.fuzzCaseSetWithRunSummary.result;
 
-        return [ok, error, result];
+        return [gqlOK, error, result];
     }
 
     public async saveFuzzCaseSetSelected(fuzzCaseSetSelected): Promise<[boolean, string]> {
