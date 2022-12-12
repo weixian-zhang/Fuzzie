@@ -102,7 +102,7 @@ class PDFCorpora():
                 </body>
             </html>
             '''
-       #
+       
         pdf = CustomFPDF()
         pdf.add_page()
         pdf.author = 'Fuzzie'

@@ -4,7 +4,7 @@ currentDir = os.path.dirname(Path(__file__))
 sys.path.insert(0, currentDir)
 core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
-
+import json
 import jinja2
 import ast
 
@@ -204,7 +204,7 @@ class CorporaContext:
                 self.es.emitErr(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
                 return originalExpression
     
-    def eval_expression_by_injection(self, expr: str):
+    def eval_expression_by_injection(self, expr: str, jsonEscape=True):
         
         expression = expr
         
@@ -212,6 +212,10 @@ class CorporaContext:
         
         if provider != None:
             data = provider.next_corpora()
+            
+            if jsonEscape and not self.is_byte_data(data):
+                data = json.dumps(data)
+                    
             return data
         else:
             return expression
@@ -250,5 +254,11 @@ class CorporaContext:
         data = self.context['string']
         return data
         
-        
+    def is_byte_data(self, data):
+        try:
+            data = data.decode()
+            return True
+        except (UnicodeDecodeError, AttributeError):
+            return False
+       
         

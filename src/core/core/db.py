@@ -117,6 +117,7 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('headers', String),
                             Column('body', String),
                             Column('requestMessage', String),
+                            Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -132,6 +133,7 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('setcookieHeader', String),
                             Column('headerJson', String),
                             Column('body', String),
+                            Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -658,7 +660,8 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
                     url = fr.url,
                     headers = fr.headers,
                     body = fr.body,
-                    requestMessage = fr.requestMessage
+                    requestMessage = fr.requestMessage,
+                    contentLength = fr.contentLength
                    )
          )
     
@@ -683,6 +686,7 @@ def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
                     setcookieHeader = fr.setcookieHeader,
                     headerJson = fr.headerJson,
                     body = fr.body,
+                    contentLength = fr.contentLength
                    )
          )
 
