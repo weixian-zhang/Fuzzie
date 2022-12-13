@@ -707,7 +707,7 @@ def is_data_exist_in_fuzzcontexts(fuzzcontextId: str, fuzzcontexts: list[ApiFuzz
 def create_fuzzcontext_from_dict(rowDict):
         
     fuzzcontext = ApiFuzzContext()       
-    fuzzcontext.Id = rowDict['Id']
+    fuzzcontext.Id = rowDict['fuzzContextId']
     fuzzcontext.datetime = rowDict['datetime']
     fuzzcontext.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
     fuzzcontext.name = rowDict['name']
@@ -775,7 +775,7 @@ def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId
     Session.commit()
     Session.close()
     
-def update_casesetrun_summary(Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
+def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId, Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
     
     Session = scoped_session(session_factory)
 
@@ -850,14 +850,16 @@ def update_casesetrun_summary(Id, httpCode, completedDataCaseRuns = 0) -> ApiFuz
     Session.commit()
     Session.close()
     
-    # summary = ApiFuzzCaseSet_RunSummary_ViewModel()
-    # summary.Id = Id
-    # summary.http2xx = existingHttp2xx
-    # summary.http3xx = existingHttp3xx
-    # summary.http4xx = existingHttp4xx
-    # summary.http5xx = existingHttp5xx
-    # summary.completedDataCaseRuns = existingCompletedDataCaseRuns
-    # return summary
+    summary = ApiFuzzCaseSets_With_RunSummary_ViewModel()
+    summary.Id = Id
+    summary.fuzzCaseSetId = fuzzCaseSetId
+    summary.fuzzcontextId = fuzzcontextId
+    summary.http2xx = existingHttp2xx
+    summary.http3xx = existingHttp3xx
+    summary.http4xx = existingHttp4xx
+    summary.http5xx = existingHttp5xx
+    summary.completedDataCaseRuns = existingCompletedDataCaseRuns
+    return summary
         
                
     

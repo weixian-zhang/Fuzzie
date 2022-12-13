@@ -1,11 +1,49 @@
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
 import axios, {  AxiosError, AxiosResponse } from "axios";
+import ReconnectingWebSocket from 'reconnecting-websocket'
 
 export default class FuzzerWebClient
 {
     private gqlUrl = 'http://localhost:50001/graphql';
+    private wsUrl = 'http://localhost:50001/ws';
+    private _ws;
 
+    public constructor() {
+        this._ws = new ReconnectingWebSocket(this.wsUrl, "", {WebSocket: WebSocket});
+        this.initWSClient()
+    }
 
+    private initWSClient()
+    {
+        this._ws.addEventListener("error", (err) => {
+            //this._logger.log(err.message)
+        });
+
+        this._ws.addEventListener('open', () => {
+            //this._logger.log('connected to fuzzer websocket server')
+        });
+
+        this._ws.addEventListener('close', () => {
+            //this._logger.log(`websocket client closed, retrying...`)
+        });
+
+        this._ws.addEventListener('message', (event) => {
+            const msg = event.data.toString()
+            
+            if (msg == "") {
+                return;
+            }
+
+            const jobj = JSON.parse(msg)
+
+            switch(jobj.topic)
+            {
+                
+            }
+
+            //this._logger.log();
+        });
+    }
     
     //const wsUrl: string = 'ws://localhost:50001/ws'
 

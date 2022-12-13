@@ -229,7 +229,8 @@ class ServiceManager:
         if fuzzcontext is None:
             return False, 'Context not found or no FuzzCaseSet is selected'
         
-        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue, fuzzcontext)
+        webapifuzzer = WebApiFuzzer(fuzzcontext)
+                                    # ServiceManager.dataQueue, 
                                     # basicUsername = basicUsername, 
                                     # basicPassword= basicPassword, 
                                     # bearerTokenHeader= bearerTokenHeader,

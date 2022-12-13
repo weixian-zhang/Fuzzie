@@ -13,6 +13,7 @@ sys.path.insert(0, currentDir)
 core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
 
+from utils import Utils
 from eventstore import EventStore
 
 
@@ -111,7 +112,8 @@ class DateTimeCorpora:
                 i = i + 1
 
         except Exception as e:
-            self.es.emitErr(e)
+            if Utils.errAsText(e) != 'day is out of range for month':
+                self.es.emitErr(e)
         
        
             

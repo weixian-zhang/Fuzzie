@@ -31,35 +31,28 @@ class SeclistPayloadCorpora:
         
     def load_corpora(self):
         try:
-            loop = asyncio.get_event_loop()
-            tasks = [
-                loop.create_task(self.load_corpora_async())
-            ]
-            loop.run_until_complete(asyncio.wait(tasks))
+            if len(self.data) > 0:
+                return
+        
+            Session = scoped_session(session_factory)
+            
+            rows = Session.query(SeclistPayloadTable.c.RowNumber, SeclistPayloadTable.c.Filename, SeclistPayloadTable.c.Content).all()
+            
+            Session.close()
+            
+            for row in rows:
+                
+                rowDict = row._asdict()
+                rn = rowDict['RowNumber']
+                filename = rowDict['Filename']
+                content = rowDict['Content']
+                
+                self.data[str(rn)] = {'filename': filename, 'content': content}
+                
+            rows = None
         except Exception as e:
             self.es.emitErr(e)
-            
-    def load_corpora_async(self):
-        
-        if len(self.data) > 0:
-            return
-        
-        Session = scoped_session(session_factory)
-        
-        rows = Session.query(SeclistPayloadTable.c.RowNumber, SeclistPayloadTable.c.Filename, SeclistPayloadTable.c.Content).all()
-        
-        Session.close()
-        
-        for row in rows:
-            
-            rowDict = row._asdict()
-            rn = rowDict['RowNumber']
-            filename = rowDict['Filename']
-            content = rowDict['Content']
-            
-            self.data[str(rn)] = {'filename': filename, 'content': content}
-            
-        rows = None
+
         
     def next_corpora(self):
         

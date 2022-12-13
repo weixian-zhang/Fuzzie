@@ -53,18 +53,50 @@ class CorporaProvider:
     def load_all(self):
         try:            
             self.es.emitInfo('CorporaProvider: start loading corpora')
-    
+
+            self.es.emitInfo('CorporaProvider: loading boolean corpora')
             self._boolCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: boolean corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading char corpora')
             self._charCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: char corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading datetime corpora')
             self._datetimeCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: datetime corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading digit corpora')
             self._digitCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: digit corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading image corpora')
             self._imageCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: image corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading password corpora')
             self._passwordCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: password corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading pdf corpora')
             self._pdfCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: pdf corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading payload corpora')
             self._seclistPayloadCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: payload corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading string corpora')
             self._stringCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: string corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading username corpora')
             self._usernameCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: username corpora loaded')
+            
+            self.es.emitInfo('CorporaProvider: loading file corpora')
             self._filenameCorpora.load_corpora()
+            self.es.emitInfo('CorporaProvider: file corpora loaded')
             
             self.es.emitInfo('CorporaProvider: corpora fully loaded')
             

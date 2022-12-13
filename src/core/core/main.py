@@ -48,18 +48,22 @@ class WebSocketServer(WebSocketEndpoint):
 
     async def on_receive(self, websocket, data):
         
-        ok, dataCmd = Utils.jsondc(data)
+        try:
+            ok, dataCmd = Utils.jsondc(data)
         
-        if not ok:
-            eventstore.emitErr('invaid json command from websocket client')
-            return
-         
-        cmd = dataCmd['command']
-        
-        if cmd == 'cancel_fuzzing':
-            pub.sendMessage('command_relay', command=eventstore.CancelFuzzingEventTopic)
-            eventstore.feedback_client('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
+            if not ok:
+                eventstore.emitErr('invaid json command from websocket client')
+                return
             
+            cmd = dataCmd['command']
+            
+            if cmd == 'cancel_fuzzing':
+                pub.sendMessage(eventstore.CancelFuzzingEventTopic, command=eventstore.CancelFuzzingEventTopic)
+                eventstore.feedback_client('fuzz.cancel','Fuzzing was cancelled, finishing up some running test cases')
+                
+        except Exception as e:
+            eventstore.emitErr(e)
+        
             
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
         print(f'Fuzzer/main: client disconnected from websocket server, close_code {close_code}')
@@ -70,7 +74,7 @@ class WebSocketServer(WebSocketEndpoint):
         websocket = websocket
         
         eventstore.set_websocket(websocket)
-        eventstore.feedback_client('Fuzzer/main: client connected to websocket server ')
+        eventstore.feedback_client('connection', 'client connected to websocket server ')
 
 
 # init graphql server

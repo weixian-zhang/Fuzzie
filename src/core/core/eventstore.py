@@ -21,10 +21,10 @@ class MsgType(Enum):
     FuzzEvent = 2
 
 class WebsocketClientMessage:
-    def __init__(self, data, msgType: MsgType = MsgType.AppEvent):
+    def __init__(self, topic, data): #, msgType: MsgType = MsgType.AppEvent):
         self.timestamp = datetime.now()
         self.data = data
-        self.msgType = msgType.name
+        self.topic = topic
     
     def json(self):
         return jsonpickle.encode(self, unpicklable=False)
@@ -66,7 +66,7 @@ class EventStore:
         self.ee.on(EventStore.AppEventTopic, self.handleGeneralLogs)
         
         
-    def emitInfo(self, message: str, data = "") -> None:
+    def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
                     
         m = Message(
             datetime.now(),
@@ -76,8 +76,9 @@ class EventStore:
             )
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
-                
-        self.feedback_client(message, MsgType.AppEvent)
+        
+        if alsoToClient:        
+            self.feedback_client('event.info', message)
 
     
     def emitErr(self, err , data = "") -> None:
@@ -108,7 +109,7 @@ class EventStore:
         
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
-        self.feedback_client(errMsg, MsgType.AppEvent)
+        self.feedback_client('event.error', errMsg)
         
     
     def handleGeneralLogs(self, msg: str):
@@ -116,16 +117,17 @@ class EventStore:
     
     def set_websocket(self, websocket):
         EventStore.websocket = websocket
-        
-    def feedback_client(self, data: str, msgType: MsgType = MsgType.AppEvent):
-        asyncio.run(self.feedback_client_async(data, msgType))
+    
+    # data must be json format
+    def feedback_client(self, topic: str, data: str):
+        asyncio.run(self.feedback_client_async(topic, data))
     
     # send to websocket clients
-    async def feedback_client_async(self, data: str, msgType: MsgType = MsgType.AppEvent):
+    async def feedback_client_async(self, topic: str, data: str):
         
         try:
                    
-            m = WebsocketClientMessage(data, msgType)
+            m = WebsocketClientMessage(topic, data)
             
             if EventStore.websocket != None:
                 if len(EventStore.wsMsgQueue) > 0:
@@ -135,6 +137,7 @@ class EventStore:
                 await EventStore.websocket.send_text(m.json())
             else:
                 EventStore.wsMsgQueue.append(m.json())
+                
         except Exception as e:
             EventStore.wsMsgQueue.append(m.json())
             print(e)

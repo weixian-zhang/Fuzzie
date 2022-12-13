@@ -14,10 +14,9 @@
               </SplitterPanel>
             </Splitter>
           </SplitterPanel>
-          <SplitterPanel class="flex align-items-center justify-content-center" :size="60">
+          <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3">
             <FuzzResultPanel />
           </SplitterPanel>
-          
         </Splitter>
       </SplitterPanel>
     </Splitter>

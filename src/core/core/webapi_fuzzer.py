@@ -33,7 +33,7 @@ from corporafactory.corpora_context import CorporaContext
 
 class WebApiFuzzer:
     
-    def __init__(self, clientDataQueue, apifuzzcontext: ApiFuzzContext) -> None:
+    def __init__(self, apifuzzcontext: ApiFuzzContext) -> None:
                     # basicUsername = '',
                     # basicPassword = '',
                     # bearerTokenHeader = 'Authorization',
@@ -47,8 +47,6 @@ class WebApiFuzzer:
         # Set-Cookie: chocolate=chips; expires=Sun, 15-Nov-2009 18:47:08 GMT; path=/; domain=thaorius.net; secure; httponly
         # Set-Cookie: milk=shape
         self.cookiejar = {}
-        
-        self.clientDataQueue = clientDataQueue
         
         # security creds
         self.basicUsername = apifuzzcontext.basicUsername,
@@ -83,7 +81,7 @@ class WebApiFuzzer:
         # self.usernameGenerator = HackedUsernameGenerator()
         # self.CharGenerator = ObedientCharGenerator()
         
-        pub.subscribe(self.pubsub_command_receiver, self.eventstore.CancelFuzzingEventTopic)
+        pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzingEventTopic)
 
 
     def pubsub_command_receiver(self, command):
@@ -191,7 +189,9 @@ class WebApiFuzzer:
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            self.clientDataQueue.put(Utils.jsone(summaryViewModel))
+            #send data to GUI pver websocket
+            self.eventstore.feedback_client('fuzz.case_set_run_summary', summaryViewModel)
+            self.eventstore.feedback_client('fuzz.fuzzdatacase', fuzzDataCase)
             
         except Exception as e:
             if self.fuzzCancel == True:
@@ -289,6 +289,9 @@ class WebApiFuzzer:
     def fuzzcaseset_done(self, future):
         
         try:
+            if self.fuzzCancel:
+                return
+            
             self.currentFuzzRuns = self.currentFuzzRuns + 1
             
             print(f'fuzz runs: {self.currentFuzzRuns}/{self.totalFuzzRuns}')
@@ -324,7 +327,7 @@ class WebApiFuzzer:
             insert_api_fuzzresponse(fdc.response)
             
             # update run summary
-            summaryViewModel = update_casesetrun_summary(caseSetRunSummaryId,
+            summaryViewModel = update_casesetrun_summary(fdc.fuzzcontextId, fdc.fuzzCaseSetId, caseSetRunSummaryId,
                                       int(fdc.response.statusCode),
                                       completedDataCaseRuns=1)
             

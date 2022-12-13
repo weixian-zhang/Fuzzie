@@ -23,6 +23,7 @@
     "material-design-icons": "^3.0.1",
     "primeicons": "^6.0.1",
     "primevue": "^3.18.1",
+    "reconnecting-websocket": "^4.4.0",
     "roboto-fontface": "*",
     "styled-components": "^5.3.6",
     "vue": "^3.2.13",
