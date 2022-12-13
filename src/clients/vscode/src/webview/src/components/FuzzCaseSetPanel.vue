@@ -152,15 +152,18 @@
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
-import FuzzerManager from '../services/FuzzerManager';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
 import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import { useToast } from "primevue/usetoast";
+import FuzzerWebClient from "../services/FuzzerWebClient";
+import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
   // optional prop
   eventemitter: any = {}
+  fuzzermanager: FuzzerManager
+  webclient : FuzzerWebClient
 }
 
 
@@ -175,9 +178,7 @@ class Props {
 })
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
-  
 
-  fm = new FuzzerManager();
 
   fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
@@ -216,6 +217,9 @@ class Props {
     // listen to ApiDiscovery Tree item select event
     this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
+
+    //websocket receive message from fuzzer
+
   }
 
   async saveFuzzCaseSets() {
@@ -235,7 +239,7 @@ class Props {
       }
     });
 
-    const [ok, error] = await this.fm.saveFuzzCaseSetSelected(newFCS);
+    const [ok, error] = await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
     if(!ok)
       {
@@ -275,7 +279,7 @@ class Props {
     }
     else
     {
-      const [ok, error, result] = await this.fm.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId);
+      const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId);
 
       if(!ok)
       {

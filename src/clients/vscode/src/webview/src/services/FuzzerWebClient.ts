@@ -1,16 +1,26 @@
+///<reference path="../../node_modules/@types/node/index.d.ts"/>
+
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
-import axios, {  AxiosError, AxiosResponse } from "axios";
-import ReconnectingWebSocket from 'reconnecting-websocket'
+import axios, {  AxiosError, AxiosResponse, } from "axios";
+import ReconnectingWebSocket from 'reconnecting-websocket';
+var https = require('https');
 
 export default class FuzzerWebClient
 {
-    private gqlUrl = 'http://localhost:50001/graphql';
-    private wsUrl = 'http://localhost:50001/ws';
+    private gqlUrl = 'https://localhost:50001/graphql';
+    private wsUrl = 'wss://localhost:50001/ws';
     private _ws;
+    private fuzzerEventSubscribers = [];
+    private axiosinstance;
 
     public constructor() {
+        
         this._ws = new ReconnectingWebSocket(this.wsUrl, "", {WebSocket: WebSocket});
         this.initWSClient()
+
+       // axios = axios.create({maxRedirects: 0, httpsAgent: new https.Agent({rejectUnauthorized: false})});
+
+        
     }
 
     private initWSClient()
@@ -28,18 +38,21 @@ export default class FuzzerWebClient
         });
 
         this._ws.addEventListener('message', (event) => {
+
             const msg = event.data.toString()
             
             if (msg == "") {
                 return;
             }
 
-            const jobj = JSON.parse(msg)
+            const jmsg = JSON.parse(msg)
 
-            switch(jobj.topic)
-            {
+            console.log(jmsg)
+
+            // switch(jmsg.topic)
+            // {
                 
-            }
+            // }
 
             //this._logger.log();
         });

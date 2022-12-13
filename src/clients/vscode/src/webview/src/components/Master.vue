@@ -7,10 +7,10 @@
           <SplitterPanel :size="40" >
             <Splitter gutterSize="5">
               <SplitterPanel class="flex align-items-center justify-content-center" :size="25" >
-                <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
+                <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
               <SplitterPanel class="flex align-items-center justify-content-center" :size="75">
-                <FuzzCaseSetPanel  :eventemitter="eventemitter" />
+                <FuzzCaseSetPanel  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
             </Splitter>
           </SplitterPanel>
@@ -34,6 +34,9 @@
   import Splitter from 'primevue/splitter';
   import SplitterPanel from 'primevue/splitterpanel';
 
+  import FuzzerWebClient from "../services/FuzzerWebClient";
+  import FuzzerManager from "../services/FuzzerManager";
+
   @Options({
     components: {
       ApiDiscovery,
@@ -47,8 +50,9 @@
   export default class Master extends Vue {
 
     eventemitter = new EventEmitter();
-
     vscodeMsger = new VSCodeMessager();
+    wc = new FuzzerWebClient()
+    fm = new FuzzerManager(this.wc);
 
   }
   </script>

@@ -13,6 +13,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
             ApiFuzzCaseSets_With_RunSummary_ViewModel,
             ApiFuzzContextUpdate)
 
+from utils import Utils
 from eventstore import EventStore
 
 evts = EventStore()
@@ -343,10 +344,11 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
             fcList.append(fcViews[x])
         
         
-        return fcList
+        return True, '', fcList
         
     except Exception as e:
-        print(e)
+       evts.emitErr(e)
+       return False, Utils.errAsText(e), []
     finally:
         Session.close()
         

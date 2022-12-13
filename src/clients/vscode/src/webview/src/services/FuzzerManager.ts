@@ -8,9 +8,9 @@ export default class FuzzerManager
     private isFuzzerWSConnected = false;
     private isFuzzerGraphQLRunning = true;
     
-    public constructor()
+    public constructor(wc: FuzzerWebClient)
     {
-        this._wc = new FuzzerWebClient()
+        this._wc = wc;
     }
 
     public async isFuzzerReady(): Promise<boolean>

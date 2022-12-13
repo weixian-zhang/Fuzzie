@@ -622,8 +622,6 @@
 <script lang="ts">
 
 import { Options, Vue } from 'vue-class-component';
-import FuzzerManager from '../services/FuzzerManager';
-
 import { useToast } from "primevue/usetoast";
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
@@ -631,11 +629,15 @@ import Sidebar from 'primevue/sidebar';
 import VSCodeMessager, {Message} from '../services/VSCodeMessager';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
+import FuzzerWebClient from "../services/FuzzerWebClient";
+import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
   // optional prop
   eventemitter: any = {}
   vscodeMsger: VSCodeMessager;
+  fuzzermanager: FuzzerManager
+  webclient : FuzzerWebClient
 }
 
 @Options({
@@ -648,9 +650,7 @@ class Props {
 
 export default class ApiDiscovery extends Vue.with(Props) {
   
-  //properties
-
-  fm = new FuzzerManager();
+  
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
@@ -712,7 +712,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     try {
 
       this.isGetFuzzContextFinish = false;
-      const [OK, err, fcs] = await this.fm.getFuzzcontexts()    
+      const [OK, err, fcs] = await this.fuzzermanager.getFuzzcontexts()    
 
       if (OK)
       {
@@ -843,7 +843,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   async deleteApiFuzzContext() {
       const id = this.apiContextToDelete.Id;
-      const [ok, error] = await this.fm.deleteApiFuzzContext(id);
+      const [ok, error] = await this.fuzzermanager.deleteApiFuzzContext(id);
 
     if(!ok)
     {
@@ -867,7 +867,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     Utils.mapProp(this.apiContextEdit, apiFCUpdate);
 
-    const [ok, error] = await this.fm.updateApiFuzzContext(apiFCUpdate);
+    const [ok, error] = await this.fuzzermanager.updateApiFuzzContext(apiFCUpdate);
 
     if(!ok)
     {
@@ -895,7 +895,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
 
     if(this.newApiContext.openapi3Url != '') {
-      const [ok, error, data] = await this.fm.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+      const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
 
       if(!ok)
       {
@@ -918,7 +918,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
     apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
 
-    const result =  await this.fm.newFuzzContext(apifc);
+    const result =  await this.fuzzermanager.newFuzzContext(apifc);
     const ok = result['ok'];
     const error =result['error'];
 
