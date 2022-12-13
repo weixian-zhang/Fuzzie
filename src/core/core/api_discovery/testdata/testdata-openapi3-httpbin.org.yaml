@@ -99,21 +99,21 @@ paths:
         '500':
           description: oops
 
-  /get:
-    get:
-      tags:
-        - HTTP methods
-      summary: |
-        Returns the GET request's data. Accepts any query parameters and any headers.
-      parameters:
-        - $ref: '#/components/parameters/freeFormQuery'
-      responses:
-        '200':  # Change to 'default' ???
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+  # /get:
+  #   get:
+  #     tags:
+  #       - HTTP methods
+  #     summary: |
+  #       Returns the GET request's data. Accepts any query parameters and any headers.
+  #     parameters:
+  #       - $ref: '#/components/parameters/freeFormQuery'
+  #     responses:
+  #       '200':  # Change to 'default' ???
+  #         description: OK
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
 
   /delete:
     delete:

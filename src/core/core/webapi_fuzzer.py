@@ -129,8 +129,8 @@ class WebApiFuzzer:
             self.dbLock.release()
             
             
-            self.totalFuzzRuns = 1 # uncomment for testing only
-            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            # self.totalFuzzRuns = 1 # uncomment for testing only
+            # self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
             
