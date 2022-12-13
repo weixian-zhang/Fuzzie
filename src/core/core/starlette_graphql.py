@@ -232,6 +232,7 @@ class Fuzz(graphene.Mutation):
 
     #define output
     ok = graphene.Boolean()
+    msg = graphene.String()
     
     def mutate(self, info, fuzzcontextId):
                     #  basicUsername = '',
@@ -242,12 +243,13 @@ class Fuzz(graphene.Mutation):
                     # apikey = ''):
         
         ok = True
+        msg = ''
         
         sm = ServiceManager()
         
-        sm.fuzz(fuzzcontextId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        ok, msg = sm.fuzz(fuzzcontextId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
-        return Fuzz(ok=ok)
+        return Fuzz(ok=ok, msg=msg)
     
 class Mutation(graphene.ObjectType):
     

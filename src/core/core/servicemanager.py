@@ -226,6 +226,9 @@ class ServiceManager:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
+        if fuzzcontext is None:
+            return False, 'Context not found or no FuzzCaseSet is selected'
+        
         webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue, fuzzcontext)
                                     # basicUsername = basicUsername, 
                                     # basicPassword= basicPassword, 
@@ -235,6 +238,8 @@ class ServiceManager:
                                     # apikey= apikey)
         
         webapifuzzer.fuzz()
+        
+        return True, ''
         
     
     

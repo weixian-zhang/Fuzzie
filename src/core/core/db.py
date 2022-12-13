@@ -229,8 +229,8 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         Session.close()
         
+        # None can means FuzzCaseSet is unselected
         if fcRows is None or len(fcRows) == 0:
-            evts.emitErr(f'Cannot get fuzz context with Id: {Id}')
             return None
         
         singleRow = fcRows[0]._asdict()
