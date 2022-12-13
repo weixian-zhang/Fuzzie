@@ -1,36 +1,59 @@
 <template>
     
-    <div class="container-fluid h-100 d-flex flex-column">
-      <Toast />
+    
       
-        <div class="row h-50" >
-          <Splitter>
-            <SplitterPanel class="col-3">
-              <div >
-                  <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
-              </div>
+      
+        
+          <div class="container-fluid h-100 d-flex flex-column">
+            <Toast />
+          <Splitter style="height: 100%">
+            <SplitterPanel :size="100">
+              <Splitter layout="vertical">
+                <SplitterPanel :size="40">
+                  <Splitter>
+                    <SplitterPanel class="flex align-items-center justify-content-center" :size="25">
+                      <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
+                    </SplitterPanel>
+                    <SplitterPanel class="flex align-items-center justify-content-center" :size="75">
+                      <FuzzCaseSetPanel  :eventemitter="eventemitter" />
+                    </SplitterPanel>
+                  </Splitter>
+                </SplitterPanel>
+                <SplitterPanel class="flex align-items-center justify-content-center" :size="60">
+                  <FuzzResultPanel />
+                </SplitterPanel>
+                
+              </Splitter>
             </SplitterPanel>
-            <SplitterPanel class="col-9">
-              <div >
-                  <FuzzCaseSetPanel  :eventemitter="eventemitter" />
-              </div>
-            </SplitterPanel>
-            <div class="row flex-fill d-flex">
-              <SplitterPanel >
-               <Splitter  layout="vertical">
-                 <SplitterPanel  >
-                    <FuzzResultPanel />
-                 </SplitterPanel>
-               </Splitter>
-              </SplitterPanel>
-            </div>
-            
-           
           </Splitter>
-          
         </div>
         
-    </div>
+    
+    <!-- <div class="container-fluid h-100 d-flex flex-column">
+    <Splitter layout="vertical" class="row h-50" :size="100">
+            <SplitterPanel :size="40">
+                 <Splitter layout="horizontal">
+                    <SplitterPanel class="col-3" :size="30">
+                    
+                          <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" />
+                      
+                    </SplitterPanel>
+                    <SplitterPanel class="col-9" :size="70">
+                    
+                          <FuzzCaseSetPanel  :eventemitter="eventemitter" />
+                      
+                    </SplitterPanel>
+                </Splitter>
+            </SplitterPanel>
+           
+          <class="row flex-fill d-flex"> -->
+            <!-- <SplitterPanel 
+                  <FuzzResultPanel />
+            </SplitterPanel>
+         
+
+          </Splitter> 
+          </div> -->
 </template>
   
 <script lang="ts">

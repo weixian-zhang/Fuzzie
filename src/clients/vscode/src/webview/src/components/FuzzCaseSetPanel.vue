@@ -2,12 +2,12 @@
 <!-- https://primefaces.org/primevue/treetable/responsive -->
 
 <template>
-
+  
+  <!--v-card height affects Splitter in Master height="455px" -->
   <v-card
   color="white"
-  outlined
-  height="455px"
-  >
+  outlined>
+  
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
     <code >
       <v-textarea auto-grow
@@ -35,7 +35,8 @@
         <v-icon>mdi-lightning-bolt</v-icon>
       </v-btn>
     </v-toolbar>
-      <v-table density="compact" fixed-header height="455px">
+      <!--table height affects Splitter in Master height="455px" -->
+      <v-table density="compact" fixed-header>
         <thead>
           <tr>
             <th class="text-left">

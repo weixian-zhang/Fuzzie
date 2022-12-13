@@ -2,15 +2,11 @@
 
 <template>
 
-
-    
+    <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
     color="white"
-    outlined
-    height="455px"
-    >
+    outlined>
 
-    
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
