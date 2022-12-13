@@ -32,7 +32,7 @@ def bgWorkerDataToClient():
             data = ServiceManager.dataQueue.get()
         
             if data != '':
-                ServiceManager.eventstore.send_websocket(data, MsgType.FuzzEvent)
+                ServiceManager.eventstore.feedback_client(data, MsgType.FuzzEvent)
                 
             time.sleep(1)
         except Exception as e:
@@ -184,6 +184,7 @@ class ServiceManager:
                 fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
                 fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
+                fcsSum.file = rowDict['file']
                 
                 summaryId = rowDict['runSummaryId']
                 
@@ -219,23 +220,26 @@ class ServiceManager:
         
         return get_fuzzcontext(Id)
     
-    def fuzz(self, 
-                   Id, basicUsername = '', basicPassword= '', 
-                   bearerTokenHeader= '', bearerToken= '', 
-                   apikeyHeader= '', apikey= '') -> None:
+    def fuzz(self, Id): #, basicUsername = '', basicPassword= '', 
+                #    bearerTokenHeader= '', bearerToken= '', 
+                #    apikeyHeader= '', apikey= '') -> None:
         
         fuzzcontext = self.get_fuzzcontext(Id)
         
-        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue,
-                                    fuzzcontext, 
-                                    basicUsername = basicUsername, 
-                                    basicPassword= basicPassword, 
-                                    bearerTokenHeader= bearerTokenHeader,
-                                    bearerToken= bearerToken, 
-                                    apikeyHeader=  apikeyHeader, 
-                                    apikey= apikey)
+        if fuzzcontext is None:
+            return False, 'Context not found or no FuzzCaseSet is selected'
+        
+        webapifuzzer = WebApiFuzzer(ServiceManager.dataQueue, fuzzcontext)
+                                    # basicUsername = basicUsername, 
+                                    # basicPassword= basicPassword, 
+                                    # bearerTokenHeader= bearerTokenHeader,
+                                    # bearerToken= bearerToken, 
+                                    # apikeyHeader=  apikeyHeader, 
+                                    # apikey= apikey)
         
         webapifuzzer.fuzz()
+        
+        return True, ''
         
     
     

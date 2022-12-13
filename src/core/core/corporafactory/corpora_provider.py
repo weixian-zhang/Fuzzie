@@ -17,6 +17,8 @@ from pdf_corpora import PDFCorpora
 from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
+from filename_corpora import FileNameCorpora
+
 from pubsub import pub
 
 from utils import Utils
@@ -46,6 +48,7 @@ class CorporaProvider:
         self._seclistPayloadCorpora = SeclistPayloadCorpora()
         self._stringCorpora = StringCorpora()
         self._usernameCorpora = UsernameCorpora()
+        self._filenameCorpora = FileNameCorpora()
         
     def load_all(self):
         try:            
@@ -61,10 +64,9 @@ class CorporaProvider:
             self._seclistPayloadCorpora.load_corpora()
             self._stringCorpora.load_corpora()
             self._usernameCorpora.load_corpora()
+            self._filenameCorpora.load_corpora()
             
             self.es.emitInfo('CorporaProvider: corpora fully loaded')
-            
-            pub.sendMessage(self.es.CorporaEventTopic, command='corpora_loaded', msgData='')
             
             return True, ''
             
@@ -74,6 +76,13 @@ class CorporaProvider:
             self.es.emitErr(errText)
             return False, errText
 
+    @property
+    def fileNameCorpora(self):
+        return self._filenameCorpora
+    @fileNameCorpora.setter
+    def x(self, value):
+        self._filenameCorpora = value
+        
     @property
     def fileCorpora(self):
         return self._fileCorpora

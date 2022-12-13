@@ -42,6 +42,7 @@ class ApiFuzzRequest:
         self.headers = {}    # json 
         self.body = {}       # json 
         self.requestMessage = ''
+        self.contentLength = 0
 
 # rfc 2616
 # https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html#sec6
@@ -57,6 +58,7 @@ class ApiFuzzResponse:
         self.headerJson = ''
         self.setcookieHeader = ''
         self.body = ''
+        self.contentLength = 0
 
 class ApiFuzzCaseSetRun:
     

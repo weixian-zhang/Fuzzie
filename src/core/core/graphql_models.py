@@ -44,6 +44,7 @@ class FuzzerStatus(graphene.ObjectType):
     timestamp = graphene.String()
     alive = graphene.Boolean()
     isDataLoaded = graphene.Boolean()
+    isFuzzing = graphene.Boolean()
     message = graphene.String()
 
 # class ApiFuzzRequest(graphene.ObjectType):
@@ -103,13 +104,13 @@ class FuzzerStatus(graphene.ObjectType):
 #     apikey  = graphene.String()  
 #     fuzzcaseSets = graphene.List(ApiFuzzCaseSetViewModel)
 
-# class ApiFuzzCaseSet_RunSummary_ViewModel(graphene.ObjectType):
-#     Id: graphene.String()
-#     http2xx = graphene.Int()
-#     http3xx = graphene.Int()
-#     http4xx = graphene.Int()
-#     http5xx =  graphene.Int()
-#     completedDataCaseRuns = graphene.Int() 
+class ApiFuzzCaseSet_RunSummary_ViewModel(graphene.ObjectType):
+    Id: graphene.String()
+    http2xx = graphene.Int()
+    http3xx = graphene.Int()
+    http4xx = graphene.Int()
+    http5xx =  graphene.Int()
+    completedDataCaseRuns = graphene.Int() 
 
 class ApiFuzzCaseSetUpdate(graphene.InputObjectType):
     fuzzCaseSetId = graphene.String()
@@ -140,6 +141,7 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     bodyNonTemplate = graphene.String()
     headerNonTemplate = graphene.String()
     authnType = graphene.Field(SupportedAuthnType)
+    file = graphene.String()
     
     runSummaryId = graphene.String()
     http2xx = graphene.Int()

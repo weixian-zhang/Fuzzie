@@ -58,6 +58,44 @@ paths:
         '200':
           description: Successful operation
 
+  /patch:
+    patch:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                userId:
+                  type: integer
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+
+  /put:
+    put:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                userId:
+                  type: integer
+                fileName:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successful operation
+
 
 # Use the multipart media type to define uploading an arbitrary number of files
   # /post:

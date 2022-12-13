@@ -2,12 +2,12 @@
 <!-- https://primefaces.org/primevue/treetable/responsive -->
 
 <template>
-
+  
+  <!--v-card height affects Splitter in Master height="455px" -->
   <v-card
   color="white"
-  outlined
-  height="455px"
-  >
+  outlined>
+  
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
     <code >
       <v-textarea auto-grow
@@ -35,7 +35,8 @@
         <v-icon>mdi-lightning-bolt</v-icon>
       </v-btn>
     </v-toolbar>
-      <v-table density="compact" fixed-header height="455px">
+      <!--table height affects Splitter in Master height="455px" -->
+      <v-table density="compact" fixed-header>
         <thead>
           <tr>
             <th class="text-left">
@@ -59,6 +60,9 @@
             </th>
             <th class="text-left">
               Body
+            </th>
+            <th class="text-left">
+              File Type
             </th>
             <th class="text-left">
               2xx
@@ -90,7 +94,16 @@
 
             </td>
             <td>{{ item.verb }}</td>
-            <td>{{ item.path }}</td>
+            
+            <td>
+              <span style="cursor: pointer" @click="(
+                onTableValueNonJsonSeeInFullClicked(item.path),
+                showFullValueSideBar = true
+              )">
+                {{ item.path }}
+              </span>
+            </td>
+            
             <td>
               <span style="cursor: pointer" @click="(
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
@@ -107,7 +120,9 @@
               {{ shortenJsonValueInTable(item.bodyNonTemplate, 40) }} 
               </span>
             </td>
-
+            <td>
+              {{ item.file }}
+            </td>
             <td>
               {{ item.http2xx }}
             </td>
@@ -132,8 +147,7 @@
   
 </template>
       
- 
-    
+
 <script lang="ts">
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
@@ -191,6 +205,10 @@ class Props {
 
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
+  }
+
+  onTableValueNonJsonSeeInFullClicked(val) {
+    this.tableValViewInSizeBar = val
   }
 
   

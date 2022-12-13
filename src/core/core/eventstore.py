@@ -48,6 +48,8 @@ class EventStore:
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
     CancelFuzzingEventTopic = 'cancel_fuzzing'
+    FuzzingStartEventTopic = 'fuzzing_start'
+    FuzzingStopEventTopic = 'fuzzing_stop'
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):

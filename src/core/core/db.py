@@ -117,6 +117,7 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('headers', String),
                             Column('body', String),
                             Column('requestMessage', String),
+                            Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -132,6 +133,7 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('setcookieHeader', String),
                             Column('headerJson', String),
                             Column('body', String),
+                            Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
@@ -227,8 +229,8 @@ def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:
         
         Session.close()
         
+        # None can means FuzzCaseSet is unselected
         if fcRows is None or len(fcRows) == 0:
-            evts.emitErr(f'Cannot get fuzz context with Id: {Id}')
             return None
         
         singleRow = fcRows[0]._asdict()
@@ -543,7 +545,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     authnType = fuzzcontext.authnType,
                     basicUsername = fuzzcontext.basicUsername,
                     basicPassword = fuzzcontext.basicPassword,
-                    bearerTokenHeader = fuzzcontext.basicPassword,
+                    bearerTokenHeader = fuzzcontext.bearerTokenHeader,
                     bearerToken = fuzzcontext.bearerToken,
                     apikeyHeader = fuzzcontext.apikeyHeader,
                     apikey = fuzzcontext.apikey
@@ -658,7 +660,8 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
                     url = fr.url,
                     headers = fr.headers,
                     body = fr.body,
-                    requestMessage = fr.requestMessage
+                    requestMessage = fr.requestMessage,
+                    contentLength = fr.contentLength
                    )
          )
     
@@ -683,6 +686,7 @@ def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
                     setcookieHeader = fr.setcookieHeader,
                     headerJson = fr.headerJson,
                     body = fr.body,
+                    contentLength = fr.contentLength
                    )
          )
 
@@ -846,14 +850,14 @@ def update_casesetrun_summary(Id, httpCode, completedDataCaseRuns = 0) -> ApiFuz
     Session.commit()
     Session.close()
     
-    summary = ApiFuzzCaseSet_RunSummary_ViewModel()
-    summary.Id = Id
-    summary.http2xx = existingHttp2xx
-    summary.http3xx = existingHttp3xx
-    summary.http4xx = existingHttp4xx
-    summary.http5xx = existingHttp5xx
-    summary.completedDataCaseRuns = existingCompletedDataCaseRuns
-    return summary
+    # summary = ApiFuzzCaseSet_RunSummary_ViewModel()
+    # summary.Id = Id
+    # summary.http2xx = existingHttp2xx
+    # summary.http3xx = existingHttp3xx
+    # summary.http4xx = existingHttp4xx
+    # summary.http5xx = existingHttp5xx
+    # summary.completedDataCaseRuns = existingCompletedDataCaseRuns
+    # return summary
         
                
     
