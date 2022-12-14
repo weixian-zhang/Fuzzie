@@ -5,7 +5,7 @@
     <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
     color="white"
-    outlined>
+    outlined >
 
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
@@ -570,10 +570,11 @@
       </v-btn>
 
     </v-toolbar>
-
-    <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" width="100%" scrollHeight="455px" class="pa-1">
+    <div maximizable
+            class="p-fluid">
+            <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="300px" width="100%"  >
           <template #default="slotProps">
-            <small><b v-on:click="onFuzzContextSelected(slotProps.node.key)">{{slotProps.node.label}}</b></small>
+            <small><b v-on:click="onFuzzContextSelected(slotProps.node.fuzzcontextId)">{{slotProps.node.label}}</b></small>
                 <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
                     <v-spaces />
                     [<v-icon
@@ -613,6 +614,8 @@
           </template>
 
       </Tree>
+    </div>
+    
 
     
       
@@ -756,6 +759,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
         {
             const fcNode: any = {
               key: fc.Id,
+              fuzzcontextId: fc.Id,
               label: fc.name,
               data: fc
             };
@@ -766,8 +770,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
             const casesetNode = {
               key: fcsr.fuzzCaseSetRunsId,
+              fuzzcontextId: fcsr.fuzzcontextId,
+              fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
-              label: dateformat(fcsr.startTime, "ddd, mmm dS, yyyy, h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr
             };
           
@@ -787,8 +793,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  onFuzzContextSelected(fuzzContextId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId);
+  onFuzzContextSelected(fuzzcontextId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
   }
 
   async onRequestTextFileChange(event) {

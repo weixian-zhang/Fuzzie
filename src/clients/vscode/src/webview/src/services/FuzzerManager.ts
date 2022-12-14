@@ -49,7 +49,6 @@ export default class FuzzerManager
                     headerNonTemplate
                     authnType
                     runSummaryId
-                    file
                     http2xx
                     http3xx
                     http4xx
@@ -67,8 +66,8 @@ export default class FuzzerManager
             return [ok, err, [null]];
         }
 
-        const gqlOK = resp?.data.data.fuzzCaseSetWithRunSummary.ok;
-        const error = resp?.data.data.fuzzCaseSetWithRunSummary.error;
+        const gqlOK = ok;
+        const error = err;
         const result = resp?.data.data.fuzzCaseSetWithRunSummary.result;
 
         return [gqlOK, error, result];

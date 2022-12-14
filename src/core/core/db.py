@@ -280,7 +280,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                         ApiFuzzCaseSetRunsTable.columns.status
                         
                     )
-                    #.join(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id)
                     .join(ApiFuzzCaseSetRunsTable, ApiFuzzCaseSetRunsTable.columns.fuzzcontextId == ApiFuzzContextTable.columns.Id, isouter=True)
                     .all()
         )
@@ -324,20 +323,21 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
            
            fcsRunId = rowDict['fuzzCaseSetRunsId']
            #outer join causing "empty" records to also create, ignore empty FuzzCaseSetRun records
-           if fcsRunId == None:
-               continue
-           
-           fcRunView = ApiFuzzCaseSetRunViewModel()
-           fcRunView.fuzzCaseSetRunsId = fcsRunId
-           fcRunView.fuzzcontextId = rowDict['fuzzcontextId']
-           fcRunView.startTime = rowDict['startTime']
-           fcRunView.endTime =  rowDict['endTime']
-           fcRunView.status = rowDict['status']
-           
-           fcView = fcViews[fcRunView.fuzzcontextId]
-           fcView.fuzzCaseSetRuns.append(fcRunView)
-           
-           
+           if fcsRunId is not None:
+                fcRunView = ApiFuzzCaseSetRunViewModel()
+                fcRunView.fuzzCaseSetRunsId = fcsRunId
+                fcRunView.fuzzcontextId = rowDict['fuzzcontextId']
+                fcRunView.startTime = rowDict['startTime']
+                fcRunView.endTime =  rowDict['endTime']
+                fcRunView.status = rowDict['status']
+                
+                fcView = fcViews[fcRunView.fuzzcontextId]
+                
+                if fcView.fuzzCaseSetRuns is None:
+                        fcView.fuzzCaseSetRuns = []
+                        
+                fcView.fuzzCaseSetRuns.append(fcRunView)
+            
         fcList = []
         
         for x in fcViews.keys():
@@ -369,7 +369,7 @@ def get_caseSets_with_runSummary(fuzzcontextId):
                             ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
                             )
                 .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-                .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzCaseSetTable.columns.Id == ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId, isouter=True)
+                .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
                 .all()
             )
         

@@ -210,8 +210,8 @@ class ServiceManager:
     
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:
         try:
-            fcRuns = get_fuzzContexts_and_runs()
-            return (True, '', fcRuns)
+            ok, err, fcRuns = get_fuzzContexts_and_runs()
+            return (ok, err, fcRuns)
         except Exception as e:
             return (False, Utils.errAsText(e), [])
     

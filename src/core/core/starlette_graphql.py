@@ -44,7 +44,10 @@ class Query(graphene.ObjectType):
     fuzzContexts = graphene.Field(FuzzContextRunQueryResult)
     
     fuzzCaseSetWithRunSummary = graphene.Field(FuzzCaseSetRunSummaryQueryResult,
-                                              fuzzcontextId = graphene.Argument(graphene.String))
+                                              fuzzcontextId = graphene.Argument(graphene.String),
+                                              fuzzCaseSetId = graphene.Argument(graphene.String),
+                                              fuzzCaseSetRunId = graphene.Argument(graphene.String)
+                                              )
     
     
     def resolve_fuzzerStatus(self, info):
