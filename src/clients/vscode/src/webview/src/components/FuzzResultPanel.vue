@@ -18,18 +18,19 @@
         <thead>
           <tr>
             <th class="text-left">
-            </th>
-            <th class="text-left">
-              Verb
-            </th>
-            <th class="text-left">
               Path
             </th>
             <th class="text-left">
-              Header
+              Status Code
             </th>
             <th class="text-left">
-              Body
+              Reason
+            </th>
+            <th class="text-left">
+              Content Length
+            </th>
+            <th class="text-left">
+              Duration
             </th>
             <th class="text-left">
               File Type
@@ -55,7 +56,8 @@
           <tr
             v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
-            @click="onRowClick(item)">
+            @click="onRowClick(item)"
+            :class="key === selectedRow ? 'custom-highlight-row' : ''">
             <td>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 

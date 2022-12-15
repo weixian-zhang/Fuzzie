@@ -35,7 +35,7 @@
       </v-btn>
     </v-toolbar>
       
-      <v-table density="compact" fixed-header height="350px" >
+      <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
             <th class="text-left">
@@ -84,7 +84,9 @@
           <tr
             v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
-            @click="onRowClick(item)">
+            @click="onRowClick(item), selectedRow= item.fuzzCaseSetId"
+            :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
+
             <td>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 
@@ -149,6 +151,7 @@
 
 <script lang="ts">
 import { Options, Vue  } from 'vue-class-component';
+import { ref } from 'vue'
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
 import Sidebar from 'primevue/sidebar';
@@ -182,6 +185,8 @@ class Props {
 
   dataCache = {};
 
+  selectedRow = '';
+
   selectAll = true;
 
   showTable = true;
@@ -195,6 +200,11 @@ class Props {
   tableValViewInSizeBar = '';
 
   toast = useToast();
+
+  isbotheq(a, b) {
+    console.log(a);
+
+  }
 
   // @Watch('fcsRunSums', { immediate: true, deep: true })
   // onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
@@ -302,7 +312,7 @@ class Props {
   }
 
   onRowClick(fcsrs) {
-    return;
+    return
   }
 
   selectAllChanged(event) {
@@ -331,6 +341,10 @@ class Props {
  
  <!-- Add "scoped" attribute to limit CSS to this component only -->
  <style scoped>
+
+.custom-highlight-row{
+   background-color: pink
+}
 
 .v-card {
   display: flex !important;
