@@ -45,7 +45,6 @@ class Query(graphene.ObjectType):
     
     fuzzCaseSetWithRunSummary = graphene.Field(FuzzCaseSetRunSummaryQueryResult,
                                               fuzzcontextId = graphene.Argument(graphene.String),
-                                              fuzzCaseSetId = graphene.Argument(graphene.String),
                                               fuzzCaseSetRunId = graphene.Argument(graphene.String)
                                               )
     
@@ -73,9 +72,9 @@ class Query(graphene.ObjectType):
         r.result = result
         return r       
     
-    def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId):
+    def resolve_fuzzCaseSetWithRunSummary(self, info, fuzzcontextId, fuzzCaseSetRunId):
         sm = ServiceManager()
-        ok, err, result = sm.get_caseSets_with_runSummary(fuzzcontextId)
+        ok, err, result = sm.get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId)
         
         r = FuzzCaseSetRunSummaryQueryResult(ok, err, result)
         r.ok = ok

@@ -74,7 +74,7 @@ class WebSocketServer(WebSocketEndpoint):
         websocket = websocket
         
         eventstore.set_websocket(websocket)
-        eventstore.feedback_client('connection', 'client connected to websocket server ')
+        eventstore.feedback_client(eventstore.InfoEventTopic, 'client connected to websocket server ')
 
 
 # init graphql server

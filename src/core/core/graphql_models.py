@@ -132,7 +132,7 @@ class ApiFuzzContextUpdate(graphene.InputObjectType):
     
 class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzCaseSetId = graphene.String()
-    fuzzCaseSetRunId = graphene.String()
+    fuzzCaseSetRunId = graphene.String('')
     fuzzcontextId = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
@@ -143,12 +143,12 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     authnType = graphene.Field(SupportedAuthnType)
     file = graphene.String()
     
-    runSummaryId = graphene.String()
-    http2xx = graphene.Int()
-    http3xx = graphene.Int()
-    http4xx = graphene.Int()
-    http5xx =  graphene.Int()
-    completedDataCaseRuns = graphene.Int() 
+    runSummaryId = graphene.String(default_value='')
+    http2xx = graphene.Int(default_value=0)
+    http3xx = graphene.Int(default_value=0)
+    http4xx = graphene.Int(default_value=0)
+    http5xx =  graphene.Int(default_value=0)
+    completedDataCaseRuns = graphene.Int(default_value=0) 
     
 class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     fuzzCaseSetRunsId = graphene.String()

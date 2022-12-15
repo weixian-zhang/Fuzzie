@@ -353,25 +353,44 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
         Session.close()
         
 
-def get_caseSets_with_runSummary(fuzzcontextId):
+def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     
     Session = scoped_session(session_factory)
-        
-    fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                            ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
-                            ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
-                            )
-                .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-                .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
-                .all()
-            )
+    
+    if fuzzCaseSetRunId == '':
+        fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                                ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId")
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx ,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
+                                # ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
+                                )
+                    .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                    .all()
+                )
+    else:
+        fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                                ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
+                                ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
+                                )
+                    .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId,
+                            ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+                    .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
+                    .all()
+                )
+    
+    
         
     Session.close()
     

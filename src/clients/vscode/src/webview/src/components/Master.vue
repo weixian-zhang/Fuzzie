@@ -47,14 +47,32 @@
       SplitterPanel
     },
   })
+
   export default class Master extends Vue {
 
-    eventemitter = new EventEmitter();
-    vscodeMsger = new VSCodeMessager();
-    wc = new FuzzerWebClient()
-    fm = new FuzzerManager(this.wc);
+    private eventemitter = new EventEmitter();
+    private vscodeMsger = new VSCodeMessager();
+    private wc = new FuzzerWebClient()
+    private fm = new FuzzerManager(this.wc);
+
+    public beforeMount() {
+
+      this.wc.subscribeWS('event.info', this.sendEventToVSCodeConsole);
+      this.wc.subscribeWS('event.error', this.sendEventToVSCodeConsole);
+    }
+
+    public mounted() {
+      
+      this.wc.connectWSServer()
+    }
+
+    private sendEventToVSCodeConsole(msg: string) {
+      this.vscodeMsger.send(msg);
+    }
 
   }
+  
+
   </script>
 
 <style>

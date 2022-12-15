@@ -162,10 +162,10 @@ class ServiceManager:
             return (False, Utils.errAsText(e))
         
     
-    def get_caseSets_with_runSummary(self, fuzzcontextId):
+    def get_caseSets_with_runSummary(self, fuzzcontextId, fuzzCaseSetRunId):
         
         try:
-            fcsSumRows = get_caseSets_with_runSummary(fuzzcontextId)
+            fcsSumRows = get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId)
         
             result = []
         
@@ -175,8 +175,7 @@ class ServiceManager:
                 
                 fcsSum = ApiFuzzCaseSets_With_RunSummary_ViewModel()
             
-                fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']
-                fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']
+                fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']                    
                 fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
                 fcsSum.selected = rowDict['selected']
                 fcsSum.verb = rowDict['verb']
@@ -186,9 +185,13 @@ class ServiceManager:
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
                 
-                summaryId = rowDict['runSummaryId']
-                
-                if not summaryId is None:
+                if 'fuzzCaseSetRunId' in rowDict:
+                    fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']
+                else:
+                    fcsSum.fuzzCaseSetRunId = ''
+                    
+                if 'runSummaryId' in rowDict:
+                    summaryId = rowDict['runSummaryId']
                     fcsSum.runSummaryId = summaryId
                     fcsSum.http2xx = rowDict['http2xx']
                     fcsSum.http3xx = rowDict['http3xx']
@@ -196,6 +199,9 @@ class ServiceManager:
                     fcsSum.http5xx = rowDict['http5xx']
                     fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
                     fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+                
+                
+                    
                 
                 result.append(fcsSum)
             

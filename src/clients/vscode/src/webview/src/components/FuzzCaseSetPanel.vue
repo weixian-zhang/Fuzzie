@@ -269,9 +269,15 @@ class Props {
       }
   }
 
-  async onFuzzContextSelected(fuzzcontextId)
+  async onFuzzContextSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
   {
-    const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[fuzzcontextId];
+    if(fuzzCaseSetRunsId == undefined) {
+      fuzzCaseSetRunsId = ''
+    }
+    
+    const key = fuzzcontextId.concat(fuzzCaseSetRunsId);
+
+    const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[key];
 
     if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
     {
@@ -279,7 +285,7 @@ class Props {
     }
     else
     {
-      const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId);
+      const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
 
       if(!ok)
       {
@@ -287,8 +293,8 @@ class Props {
       }
       else
       {
-        this.dataCache[fuzzcontextId] = result;
-        this.fcsRunSums = this.dataCache[fuzzcontextId];
+        this.dataCache[key] = result;
+        this.fcsRunSums = this.dataCache[key];
       }
     }
   }

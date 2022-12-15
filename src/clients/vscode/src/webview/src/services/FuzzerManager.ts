@@ -15,12 +15,7 @@ export default class FuzzerManager
 
     public async isFuzzerReady(): Promise<boolean>
     {
-        //this.isFuzzerWSConnected = await this.webclient.connectToFuzzerWSServer();
-
         return true;
-        //is websocket connected
-
-        //
     }
 
     public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {
@@ -30,11 +25,13 @@ export default class FuzzerManager
         return [ok, error, spec];
     }
 
-    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
+    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
         
         const query = `
         query {
-            fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
+            fuzzCaseSetWithRunSummary(
+                    fuzzcontextId: "${fuzzcontextId}",
+                    fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
                 ok,
                 error,
                 result {

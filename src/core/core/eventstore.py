@@ -50,6 +50,7 @@ class EventStore:
     CancelFuzzingEventTopic = 'cancel_fuzzing'
     FuzzingStartEventTopic = 'fuzzing_start'
     FuzzingStopEventTopic = 'fuzzing_stop'
+    InfoEventTopic = 'event.info'
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -78,7 +79,7 @@ class EventStore:
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
         if alsoToClient:        
-            self.feedback_client('event.info', message)
+            self.feedback_client(self.InfoEventTopic, message)
 
     
     def emitErr(self, err , data = "") -> None:

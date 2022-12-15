@@ -1,29 +1,21 @@
-///<reference path="../../node_modules/@types/node/index.d.ts"/>
-
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import ReconnectingWebSocket from 'reconnecting-websocket';
-var https = require('https');
 
 export default class FuzzerWebClient
 {
     private gqlUrl = 'https://localhost:50001/graphql';
     private wsUrl = 'wss://localhost:50001/ws';
     private _ws;
-    private fuzzerEventSubscribers = [];
+    private fuzzerEventSubscribers = {};
     private axiosinstance;
 
     public constructor() {
         
         this._ws = new ReconnectingWebSocket(this.wsUrl, "", {WebSocket: WebSocket});
-        this.initWSClient()
-
-       // axios = axios.create({maxRedirects: 0, httpsAgent: new https.Agent({rejectUnauthorized: false})});
-
-        
     }
 
-    private initWSClient()
+    public connectWSServer()
     {
         this._ws.addEventListener("error", (err) => {
             //this._logger.log(err.message)
@@ -44,18 +36,31 @@ export default class FuzzerWebClient
             if (msg == "") {
                 return;
             }
-
+            
+            // timestamp
+            // data
+            // topic
             const jmsg = JSON.parse(msg)
 
-            console.log(jmsg)
+            if(jmsg.topic == '') {
+                //TODO: log
+                return
+            }
 
-            // switch(jmsg.topic)
-            // {
-                
-            // }
+            const func = this.fuzzerEventSubscribers[jmsg.topic];
 
-            //this._logger.log();
+            if (func == undefined){
+                //TODO: logger log
+                return;
+            }
+            
+            //exec subscriber's registered func
+            func(jmsg.data);
         });
+    }
+
+    public subscribeWS(topic: string, func: any) {
+        this.fuzzerEventSubscribers[topic] = func;
     }
     
     //const wsUrl: string = 'ws://localhost:50001/ws'

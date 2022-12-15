@@ -31,7 +31,7 @@ export default class VSCodeMessager
             this._vscode = acquireVsCodeApi();
           }
 
-        this.startListening();
+        //this.startListening();
     }
 
     public send(message: unknown)
@@ -59,22 +59,22 @@ export default class VSCodeMessager
         this.msgHandlers[command] = msgHandlerFunc;
     }
 
-    private startListening() {
+    // private startListening() {
         
-        window.addEventListener('message', event => {
+    //     window.addEventListener('message', event => {
             
-            try {
-                const message = event.data; // The JSON data our extension sent
-                const command = message.command;
-                const content = message.content;
+    //         try {
+    //             const message = event.data; // The JSON data our extension sent
+    //             const command = message.command;
+    //             const content = message.content;
 
-                const msgHandle = this.msgHandlers[command];
+    //             const msgHandle = this.msgHandlers[command];
 
-                msgHandle(content);
-            } catch (error) {
-                //TODO: log error
-                console.log(error);
-            }
-        });
-    }
+    //             msgHandle(content);
+    //         } catch (error) {
+    //             //TODO: log error
+    //             console.log(error);
+    //         }
+    //     });
+    // }
 }

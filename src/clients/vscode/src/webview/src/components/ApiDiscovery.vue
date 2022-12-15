@@ -5,7 +5,7 @@
     <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
     color="white"
-    outlined >
+    outlined  style="display: flex; flex-flow: column; height: 100%;">
 
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
@@ -551,9 +551,9 @@
       </v-card>
     </v-dialog>
 
-    <v-toolbar card color="cyan" flat dense height="50px">
+    <v-toolbar card color="lightgrey" flat dense height="50px">
 
-      <v-toolbar-title>Fuzz Contexts</v-toolbar-title>
+      <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
         <v-icon>mdi-message-plus-outline</v-icon>
@@ -570,31 +570,31 @@
       </v-btn>
 
     </v-toolbar>
-    <div maximizable
-            class="p-fluid">
-            <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="300px" width="100%"  >
+        
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px">
           <template #default="slotProps">
-            <small><b v-on:click="onFuzzContextSelected(slotProps.node.fuzzcontextId)">{{slotProps.node.label}}</b></small>
-                <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
-                    <v-spaces />
-                    [<v-icon
+            <small><b v-on:click="onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId)">{{slotProps.node.label}}</b></small>
+                <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == undefined">
+                    &nbsp;
+                    <v-icon
                       variant="flat"
                       icon="mdi-pencil"
                       color="primary"
                       size="x-small"
                       @click="(
-                        onEditFuzzContextClicked(slotProps.node.data)
+                        onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
                       )"
-                      ></v-icon>]
-                      [<v-icon
+                      ></v-icon>
+                      &nbsp;
+                      <v-icon
                       variant="flat"
                       icon="mdi-delete"
                       color="primary"
                       size="x-small"
                       @click="(
-                        onDeleteFuzzContextClicked(slotProps.node.data)
+                        onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
                       )"
-                      ></v-icon>]
+                      ></v-icon>
                   </span>
           </template>
 
@@ -610,15 +610,8 @@
                   </v-progress-linear>
                 </div>
               </span>
-            
           </template>
-
       </Tree>
-    </div>
-    
-
-    
-      
     </v-card>
 </template>
 
@@ -757,6 +750,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
         if(fc instanceof ApiFuzzContext)
         {
+            // fuzz-context
             const fcNode: any = {
               key: fc.Id,
               fuzzcontextId: fc.Id,
@@ -767,14 +761,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
             apiNode.children.push(fcNode);
 
             fc.fuzzCaseSetRuns.forEach(fcsr => {
-
+            
+            // fuzz-case-set-run
             const casesetNode = {
               key: fcsr.fuzzCaseSetRunsId,
               fuzzcontextId: fcsr.fuzzcontextId,
               fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
               label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
-              data: fcsr
+              data: fcsr,
+              isFuzzCaseRun: true
             };
           
             if(fcNode.children == undefined)
@@ -793,8 +789,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  onFuzzContextSelected(fuzzcontextId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
+  onFuzzContextSelected(fuzzcontextId, fuzzCaseSetRunsId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, fuzzCaseSetRunsId);
   }
 
   async onRequestTextFileChange(event) {
