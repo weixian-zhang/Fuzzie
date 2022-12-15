@@ -5,7 +5,8 @@
     <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
     color="white"
-    outlined  style="display: flex; flex-flow: column; height: 100%;">
+    outlined
+    style="display: flex; flex-flow: column; height: 100%;">
 
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
@@ -571,8 +572,8 @@
 
     </v-toolbar>
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px">
-          <template #default="slotProps">
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px" class="border-0">
+          <template #default="slotProps" >
             <small><b v-on:click="onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId)">{{slotProps.node.label}}</b></small>
                 <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == undefined">
                     &nbsp;

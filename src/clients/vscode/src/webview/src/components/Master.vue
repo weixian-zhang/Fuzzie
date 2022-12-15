@@ -3,9 +3,10 @@
     <Toast />
     <Splitter style="height: 100%" >
       <SplitterPanel :size="100">
-        <Splitter layout="vertical" gutterSize="5">
+        <Splitter layout="vertical" gutterSize="8" >
+
           <SplitterPanel :size="40" >
-            <Splitter gutterSize="5">
+            <Splitter gutterSize="8" >
               <SplitterPanel class="flex align-items-center justify-content-center" :size="30" >
                 <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
@@ -14,7 +15,8 @@
               </SplitterPanel>
             </Splitter>
           </SplitterPanel>
-          <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3">
+
+          <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3" >
             <FuzzResultPanel />
           </SplitterPanel>
         </Splitter>
@@ -62,7 +64,7 @@
     }
 
     public mounted() {
-      
+     
       this.wc.connectWSServer()
     }
 

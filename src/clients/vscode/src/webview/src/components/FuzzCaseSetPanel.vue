@@ -2,11 +2,10 @@
 <!-- https://primefaces.org/primevue/treetable/responsive -->
 
 <template>
-  
-  <!--v-card height affects Splitter in Master height="455px" -->
   <v-card
-  color="white"
-  outlined>
+    color="white"
+    outlined
+    style="display: flex; flex-flow: column; height: 100%;">
   
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
     <code >
@@ -18,7 +17,7 @@
     </code>
   </Sidebar>
 
-    <v-toolbar card color="cyan" flat dense height="50px">
+    <v-toolbar card color="lightgrey" flat dense height="50px">
       <v-toolbar-title>Fuzz Cases</v-toolbar-title>
       
       
@@ -35,8 +34,8 @@
         <v-icon>mdi-lightning-bolt</v-icon>
       </v-btn>
     </v-toolbar>
-      <!--table height affects Splitter in Master height="455px" -->
-      <v-table density="compact" fixed-header>
+      
+      <v-table density="compact" fixed-header height="350px" >
         <thead>
           <tr>
             <th class="text-left">
@@ -142,9 +141,9 @@
           </tr>
         </tbody>
       </v-table>
-  
+
   </v-card>
-  
+
 </template>
       
 
@@ -221,6 +220,7 @@ class Props {
     //websocket receive message from fuzzer
 
   }
+
 
   async saveFuzzCaseSets() {
 
