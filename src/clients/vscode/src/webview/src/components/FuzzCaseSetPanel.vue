@@ -165,7 +165,6 @@ class Props {
   webclient : FuzzerWebClient
 }
 
-
 @Options({
   components: {
     DataTable,
