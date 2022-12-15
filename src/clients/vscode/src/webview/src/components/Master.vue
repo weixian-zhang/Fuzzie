@@ -3,8 +3,7 @@
     <Toast />
     <Splitter style="height: 100%" >
       <SplitterPanel :size="100">
-        <Splitter layout="vertical" gutterSize="8" >
-
+        <Splitter layout="vertical" gutterSize="0" >
           <SplitterPanel :size="40" >
             <Splitter gutterSize="8" >
               <SplitterPanel class="flex align-items-center justify-content-center" :size="30" >

@@ -211,6 +211,9 @@ class Props {
     this.tableValViewInSizeBar = val
   }
 
+  beforeMount() {
+    return;
+  }
   
   mounted(){
     // listen to ApiDiscovery Tree item select event

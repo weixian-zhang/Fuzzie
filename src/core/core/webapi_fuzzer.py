@@ -205,7 +205,7 @@ class WebApiFuzzer:
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
-            ok, err, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
@@ -228,6 +228,8 @@ class WebApiFuzzer:
             fuzzDataCase.request = self.create_fuzzrequest(
                                     fuzzDataCaseId=fuzzDataCase.Id,
                                     fuzzcontextId=self.apifuzzcontext.Id,
+                                    hostname=hostname, 
+                                    port=port,
                                     hostnamePort=hostnamePort,
                                     url=url,
                                     path=path,
@@ -342,7 +344,7 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
                 
     
-    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostnamePort, verb, path, qs, url, headers, body, contentLength):
+    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength):
         
         try:
             fr = ApiFuzzRequest()
@@ -350,7 +352,9 @@ class WebApiFuzzer:
             fr.Id = shortuuid.uuid()
             fr.datetime = datetime.now()
             fr.fuzzDataCaseId = fuzzDataCaseId
-            fr.fuzzcontextId =fuzzcontextId
+            fr.fuzzcontextId = fuzzcontextId
+            fr.hostname = hostname
+            fr.port = port
             fr.hostnamePort = hostnamePort
             fr.verb = verb
             fr.path = path
@@ -432,6 +436,8 @@ class WebApiFuzzer:
     def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):            
             
         try:
+            hostname = fc.hostname
+            port = fc.port
             hostnamePort = fc.get_hostname_port()
             pathDT = fcs.get_path_datatemplate()
             querystringDT = fcs.querystringDataTemplate
@@ -441,15 +447,15 @@ class WebApiFuzzer:
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
-                return [False, errpath, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
             okqs, errqs, resolvedQSDT = self.corporaContext.resolve_expr(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
             if not okqs:
-                return [False, errqs, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
-                return [False, errbody, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
             if len(fcs.file) > 0:
                 for fileType in fcs.file:
@@ -483,7 +489,7 @@ class WebApiFuzzer:
                     
             headers = {**authnHeader, **headerDict}     #merge 2 dicts
             
-            return [True, '', hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
+            return [True, '', hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
         
         except Exception as e:
             errText =  Utils.errAsText(e)
