@@ -191,10 +191,39 @@ class FuzzCaseSetRunSummaryQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
-    
-    def __init__(self, ok, error, result) -> None:
-        super().__init__()
         
-        ok = ok
-        error = error
-        result = result
+    
+class FuzzRequest_ViewModel(graphene.ObjectType):
+    Id = graphene.String()
+    requestDateTime = graphene.DateTime()
+    hostname = graphene.String()
+    port =  graphene.Int()
+    verb = graphene.String()
+    url = graphene.String()
+    path = graphene.String()
+    querystring = graphene.String()
+    headers = graphene.String()
+    body = graphene.String()
+    contentLength = graphene.Int()
+
+class FuzzResponse_ViewModel(graphene.ObjectType): 
+    Id = graphene.String()
+    responseDateTime = graphene.DateTime()
+    statusCode = graphene.String()
+    reasonPharse = graphene.String()
+    headerJson = graphene.String()
+    setcookieHeader = graphene.String()
+    body = graphene.String()
+    contentLength = graphene.Int()
+    
+class FuzzDataCase_ViewModel(graphene.ObjectType):
+    fuzzDataCaseId = graphene.String()
+    fuzzCaseSetId = graphene.String()
+    request = graphene.Field(FuzzRequest_ViewModel)
+    response = graphene.Field(FuzzResponse_ViewModel)
+    
+
+class FuzzRequestResponseQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(FuzzDataCase_ViewModel)

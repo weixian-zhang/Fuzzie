@@ -362,14 +362,6 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     if fuzzCaseSetRunId == '':
         fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
                                 ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId")
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx ,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
-                                # ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
                                 )
                     .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
                     .all()
@@ -397,6 +389,43 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     Session.close()
     
     return fcsSumRows
+
+def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
+    
+    Session = scoped_session(session_factory)
+    
+    rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+                                ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
+                                ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
+                                ApiFuzzRequestTable.columns.hostname,
+                                ApiFuzzRequestTable.columns.port,
+                                ApiFuzzRequestTable.columns.hostnamePort,
+                                ApiFuzzRequestTable.columns.verb,
+                                ApiFuzzRequestTable.columns.path,
+                                ApiFuzzRequestTable.columns.querystring,
+                                ApiFuzzRequestTable.columns.url,
+                                ApiFuzzRequestTable.columns.headers,
+                                ApiFuzzRequestTable.columns.body,
+                                ApiFuzzRequestTable.columns.contentLength,
+                                ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
+                                ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
+                                ApiFuzzResponseTable.columns.statusCode,
+                                ApiFuzzResponseTable.columns.reasonPharse,
+                                ApiFuzzResponseTable.columns.setcookieHeader,
+                                ApiFuzzResponseTable.columns.headerJson,
+                                ApiFuzzResponseTable.columns.body,
+                                ApiFuzzResponseTable.columns.contentLength
+                                )
+                    .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+                            ApiFuzzDataCaseTable.c.fuzzcaseSetRunIdId == fuzzCaseSetRunId)
+                    .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .all()
+                )
+        
+    Session.close()
+    
+    return rows
 
 
 

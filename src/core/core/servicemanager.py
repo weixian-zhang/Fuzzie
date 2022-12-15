@@ -5,18 +5,21 @@ from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreato
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
 from graphql_models import (ApiFuzzContext_Runs_ViewModel, 
                             ApiFuzzContextUpdate, 
-                            ApiFuzzCaseSets_With_RunSummary_ViewModel)
+                            ApiFuzzCaseSets_With_RunSummary_ViewModel,
+                            FuzzRequest_ViewModel,
+                            FuzzResponse_ViewModel,
+                            FuzzDataCase_ViewModel)
 from webapi_fuzzer import WebApiFuzzer
 from automapper import mapper
 from eventstore import EventStore, MsgType
 from utils import Utils
-from db import  (get_fuzzcontext, 
-                 get_caseSets_with_runSummary, 
+from db import  (get_caseSets_with_runSummary,
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
                  get_fuzzContexts_and_runs,
-                 save_caseset_selected)
+                 save_caseset_selected,
+                 get_fuzz_request_response)
 from sqlalchemy.sql import select, insert
 import base64
 
@@ -151,11 +154,6 @@ class ServiceManager:
         if caseSetSelected is None or len(caseSetSelected) == 0:
             return (True, '')
         
-        # formattedFCS = {}
-        
-        # for x in caseSetSelected:
-        #     formattedFCS[x.fuzzCaseSetId] = x.selected
-        
         try:
             return save_caseset_selected(caseSetSelected)
         except Exception as e:
@@ -200,9 +198,6 @@ class ServiceManager:
                     fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
                     fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
                 
-                
-                    
-                
                 result.append(fcsSum)
             
             return (True, '', result)
@@ -211,9 +206,55 @@ class ServiceManager:
             return (False, Utils.errAsText(e), [])
         
             
+    def get_fuzz_request_response(self, fuzzCaseSetId, fuzzCaseSetRunId) -> tuple[bool, str, list[FuzzDataCase_ViewModel]]:
         
-    
-    
+        try:
+            rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId)
+            
+            if rows is None or len(rows) == 0:
+                return True, '', []
+            
+            result = []
+            
+            for row in rows:
+                
+                rowDict = row._asdict()
+                
+                fdc = FuzzDataCase_ViewModel()
+                fdc.fuzzDataCaseId = rowDict['fuzzDataCaseId']
+                fdc.fuzzCaseSetId = fuzzCaseSetId
+                
+                fdc.request = FuzzRequest_ViewModel()
+                fdc.request.Id = row['fuzzRequestId']
+                fdc.request.requestDateTime = row['requestDateTime']
+                fdc.request.hostname
+                fdc.request.port = rowDict['port']
+                fdc.request.verb = rowDict['verb']
+                fdc.request.path = rowDict['path']
+                fdc.request.querystring = rowDict['querystring']
+                fdc.request.url = rowDict['url']
+                fdc.request.headers = rowDict['headers']
+                fdc.request.body = rowDict['body']
+                fdc.request.contentLength = rowDict['contentLength']
+                
+                fdc.response = FuzzResponse_ViewModel()
+                fdc.response.Id = rowDict['fuzzResponseId']
+                fdc.response.responseDateTime = row['responseDateTime']
+                fdc.response.statusCode = rowDict['statusCode']
+                fdc.response.reasonPharse = rowDict['reasonPharse']
+                fdc.response.setcookieHeader = rowDict['setcookieHeader']
+                fdc.response.headerJson = rowDict['headerJson']
+                fdc.response.body = rowDict['body']
+                fdc.response.contentLength = rowDict['contentLength']
+                
+                result.append(fdc)
+
+            return True, '', result
+            
+        except Exception as e:
+            return (False, Utils.errAsText(e), [])
+        
+        
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:
         try:
             ok, err, fcRuns = get_fuzzContexts_and_runs()
@@ -221,16 +262,10 @@ class ServiceManager:
         except Exception as e:
             return (False, Utils.errAsText(e), [])
     
-    
-    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+
+    def fuzz(self, fuzzcontextId):
         
-        return get_fuzzcontext(Id)
-    
-    def fuzz(self, Id): #, basicUsername = '', basicPassword= '', 
-                #    bearerTokenHeader= '', bearerToken= '', 
-                #    apikeyHeader= '', apikey= '') -> None:
-        
-        fuzzcontext = self.get_fuzzcontext(Id)
+        fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
         
         if fuzzcontext is None:
             return False, 'Context not found or no FuzzCaseSet is selected'

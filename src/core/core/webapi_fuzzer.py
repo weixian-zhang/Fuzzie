@@ -280,7 +280,7 @@ class WebApiFuzzer:
                 fr.body = resp.text
             else:  
                 err =  Utils.jsone(e.args)
-                fr.statusCode = 400 if err.find('timed out') == -1 else 508 #4 00 client error
+                fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
                 fr.reasonPharse = f'{err}'
             
             fuzzDataCase.response = fr

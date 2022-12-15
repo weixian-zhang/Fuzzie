@@ -6,10 +6,10 @@
         <Splitter layout="vertical" gutterSize="0" >
           <SplitterPanel :size="40" >
             <Splitter gutterSize="8" >
-              <SplitterPanel class="flex align-items-center justify-content-center" :size="30" >
+              <SplitterPanel class="flex align-items-center justify-content-center" :size="25" >
                 <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
-              <SplitterPanel class="flex align-items-center justify-content-center" :size="70">
+              <SplitterPanel class="flex align-items-center justify-content-center" :size="75">
                 <FuzzCaseSetPanel  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
             </Splitter>
