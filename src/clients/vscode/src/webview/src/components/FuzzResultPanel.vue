@@ -5,21 +5,23 @@
       style="display: flex; flex-flow: column; height: 100%;"
       class="mt-2 border-1">
 
-     <v-toolbar color="#F6F6F6" flat dense height="40px" width="100px" density="compact">
+     <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
+      <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
       <v-text-field
+        class="form-control-sm"
         color="cyan darken-3"
         hide-details
         clearable
+        dense 
         density="compact"
         label="search"
         height="20px"
-        width="30px"
-        single-line>
+        solo>
         <template v-slot:prepend-inner>
         <v-icon
           color="cyan darken-3"
           icon="mdi-magnify"
-        />
+        /> 
       </template>
       </v-text-field>
       <v-spacer></v-spacer>
@@ -28,7 +30,7 @@
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
-      <v-spacer></v-spacer>
+      <v-icon color="cyan darken-3">mdi-content-save-settings-outline</v-icon>
     </v-toolbar>
 
     <Splitter  style="height: 100%" >
@@ -54,7 +56,7 @@
               Response Content Length
             </th>
             <th class="text-left">
-              Duration
+              Duration(secs)
             </th>
           </tr>
         </thead>
@@ -227,15 +229,9 @@ class Props {
        const aDate: Date = new Date(a);
        const bDate: Date = new Date(b);
 
-       const value_start = a.split(':');
-       const value_end = b.split(':');
+       var seconds = (bDate.getTime() - aDate.getTime()) / 1000;
 
-      aDate.setHours(+value_start[0], +value_start[1], +value_start[2], 0);
-      bDate.setHours(+value_end[0], +value_end[1], +value_end[2], 0);
-
-       const diff = (new Date(bDate)).getTime() - (new Date(aDate)).getTime(); // millisecond 
-
-       return diff;
+       return parseFloat(seconds.toFixed(2));
     }
  }
  
