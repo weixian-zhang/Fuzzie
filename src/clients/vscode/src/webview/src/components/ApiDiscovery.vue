@@ -574,29 +574,38 @@
         
         <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px" class="border-0">
           <template #default="slotProps" >
-            <small><b v-on:click="onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId)">{{slotProps.node.label}}</b></small>
-                <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == undefined">
-                    &nbsp;
-                    <v-icon
-                      variant="flat"
-                      icon="mdi-pencil"
-                      color="cyan darken-3"
-                      size="x-small"
-                      @click="(
-                        onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
-                      )"
-                      ></v-icon>
-                      &nbsp;
-                      <v-icon
-                      variant="flat"
-                      icon="mdi-delete"
-                      color="cyan darken-3"
-                      size="x-small"
-                      @click="(
-                        onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
-                      )"
-                      ></v-icon>
-                  </span>
+            <small :class="slotProps.node.fuzzcontextId === selectedContextNode ? 'p-1 border border-info border-2' : ''">
+              <b 
+                v-on:click="(
+                  onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
+                  selectedContextNode = slotProps.node.fuzzcontextId
+                )">
+                {{slotProps.node.label}}
+              </b>
+            </small>
+
+            <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == undefined">
+                &nbsp;
+                <v-icon
+                  variant="flat"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
+                  )"
+                  ></v-icon>
+                  &nbsp;
+                  <v-icon
+                  variant="flat"
+                  icon="mdi-delete"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
+                  )"
+                  ></v-icon>
+              </span>
           </template>
 
           <!-- fuzz run -->
@@ -661,6 +670,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];
+
+  selectedContextNode = ''
+  selectedRunNode = ''
 
   securityBtnVisibility = {
     anonymous: true,

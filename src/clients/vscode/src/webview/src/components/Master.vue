@@ -77,15 +77,16 @@
       this.vscodeMsger.send(msg);
     }
 
-    private notifyFuzzStart() {
+    // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
+    private notifyFuzzStart(data) {
+      this.eventemitter.emit('fuzz.start')
+    }
+
+    private notifyFuzzComplete(data) {
       return;
     }
 
-    private notifyFuzzComplete() {
-      return;
-    }
-
-    private notifyFuzzCancel() {
+    private notifyFuzzCancel(data) {
       return;
     }
   }
