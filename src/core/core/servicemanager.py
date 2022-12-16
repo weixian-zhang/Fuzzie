@@ -28,31 +28,17 @@ import threading, time
 from datetime import datetime
 import queue
 
-def bgWorkerDataToClient():
-    
-    while True:
-        
-        try:
-            data = ServiceManager.dataQueue.get()
-        
-            if data != '':
-                ServiceManager.eventstore.feedback_client(data, MsgType.FuzzEvent)
-                
-            time.sleep(1)
-        except Exception as e:
-            print(e)
         
         
 class ServiceManager:
     
     eventstore = EventStore()
     dataQueue = queue.Queue()
-    bgWorkerDataToClient = None
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(ServiceManager, cls).__new__(cls)
-            threading.Thread(target=bgWorkerDataToClient, daemon=True).start()
+            
         return cls.instance
     
     def __init__(self) -> None:   

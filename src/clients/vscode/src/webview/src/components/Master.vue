@@ -35,7 +35,7 @@
   import { useToast } from "primevue/usetoast";
   import Splitter from 'primevue/splitter';
   import SplitterPanel from 'primevue/splitterpanel';
- 
+  import {FuzzerStatus} from '../Model'; 
   import FuzzerWebClient from "../services/FuzzerWebClient";
   import FuzzerManager from "../services/FuzzerManager";
 
@@ -57,6 +57,7 @@
     private wc = new FuzzerWebClient()
     private fm = new FuzzerManager(this.wc);
     private toast = useToast();
+    
 
     public beforeMount() {
 
@@ -77,10 +78,38 @@
     public mounted() {
      
       this.wc.connectWSServer()
+
+
+      setInterval(this.intervalCheckFuzzerReady, 3000)
     }
+
+    
+    intervalCheckFuzzerReady =  async ()  => {
+      const [ok, err, result] = await this.fm.isFuzzerReady();
+
+         if(!ok) {
+            //stop any fuzzing activity
+            this.notifyFuzzerIsNotReady();
+         }
+
+         if (!result.alive || !result.isDataLoaded) {
+            this.notifyFuzzerIsNotReady()
+         } else {
+            this.notifyFuzzerReady()
+         }
+    }
+
 
     private sendEventToVSCodeConsole(msg: string) {
       this.vscodeMsger.send(msg);
+    }
+
+    private notifyFuzzerIsNotReady() {
+         this.eventemitter.emit('fuzzer.notready')
+    }
+
+    private notifyFuzzerReady() {
+         this.eventemitter.emit('fuzzer.ready')
     }
 
     // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}

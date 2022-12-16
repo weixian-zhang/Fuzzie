@@ -546,8 +546,26 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <button class="btn btn-primary mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
-          <button class="btn btn-danger" @click="deleteApiFuzzContext">Delete</button>
+          <button class="btn btn-outline-info mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
+          <button class="btn btn-outline-danger" @click="deleteApiFuzzContext">Delete</button>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- fuzz confirmation -->
+    <v-dialog
+      v-model="showFuzzConfirmDialog"
+      width="400"
+    >
+      <v-card>
+        <v-card-title class="text-h5 grey lighten-2">
+          Start Fuzzing
+        </v-card-title>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <button class="btn btn-outline-info mr-3" @click="showFuzzConfirmDialog = false">Cancel</button>
+          <button class="btn btn-outline-info" @click="fuzzApiFuzzContext">Fuzz</button>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -599,7 +617,9 @@
                   @click="(
                     onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
                   )"
-                  ></v-icon>
+                  >
+
+                  </v-icon>
                   &nbsp;
                   <v-icon
                   variant="flat"
@@ -610,6 +630,20 @@
                     onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
                   )"
                   ></v-icon>
+
+            
+                  &nbsp;
+                  <v-icon
+                  v-show="isFuzzerReady"
+                  variant="flat"
+                  icon="mdi-lightning-bolt"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onFuzzFuzzContextClicked(slotProps.node.fuzzcontextId)
+                  )"
+                  ></v-icon>
+
               </span>
 
               <v-progress-linear
@@ -660,17 +694,21 @@ export default class ApiDiscovery extends Vue.with(Props) {
   nodes: TreeNode[] = [];
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
+  showFuzzConfirmDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
   apiContextToDelete: any = {};
+  apiContextIdToFuzz = '';
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];
 
   selectedContextNode = ''
   selectedCaseSetRunNode = ''
-
+  
+  isFuzzerReady = false;
+  isFuzzingInProgress = false;
   currentFuzzingContextId = ''
   currentFuzzingCaseSetRunId = ''
 
@@ -689,6 +727,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   
   mounted() {
 
+    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.complete', this.onFuzzStop);
     this.eventemitter.on('fuzz.cancel', this.onFuzzStop);
@@ -696,17 +736,45 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.getFuzzcontexts()
   }
 
+  //#### websocket events ####
+
+  onFuzzStartReady() {
+    this.isFuzzerReady = true;
+  }
+
+  onFuzzerNotReady() {
+    this.isFuzzerReady = false;
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
+    this.determineIsFuzzingInProgress()
+  }
+
   onFuzzStart(data) {
 
-    const jobj = JSON.parse(data);
-    this.currentFuzzingContextId = jobj.fuzzcontextId;
-    this.currentFuzzingCaseSetRunId = jobj.fuzzCaseSetRunId;
+    try {
+
+      if(Utils.isNothing(data)) {
+        this.toast.add({severity:'info', summary: 'On Fuzz Start', detail: 'data from fuzzer is missing', life: 5000});
+        return;
+      }
+
+      const jobj = JSON.parse(data);
+      this.currentFuzzingContextId = jobj.fuzzcontextId;
+      this.currentFuzzingCaseSetRunId = jobj.fuzzCaseSetRunId;
+      
+    } catch (error) {
+      //TODO: logging
+      this.toast.add({severity:'error', summary: 'On Fuzz Start', detail: 'data from fuzzer is missing', life: 5000});
+    }
   }
 
   onFuzzStop(data) {
      this.currentFuzzingContextId = '';
      this.currentFuzzingCaseSetRunId = '';
+     this.determineIsFuzzingInProgress()
   }
+
+  //#### websocket event ends ####
 
   onEditFuzzContextClicked(data) {
     this.apiContextEdit = data;
@@ -719,6 +787,20 @@ export default class ApiDiscovery extends Vue.with(Props) {
                           name: data.name,
                         },
     this.showDeleteConfirmDialog = true
+  }
+
+  onFuzzFuzzContextClicked(fuzzcontextId: string) {
+    this.apiContextIdToFuzz = fuzzcontextId;
+    this.showFuzzConfirmDialog = true
+  }
+
+  determineIsFuzzingInProgress() {
+
+    if (!Utils.isNothing(this.currentFuzzingContextId) && !Utils.isNothing(this.currentFuzzingContextId )) {
+        this.isFuzzingInProgress = true;
+    } else {
+        this.isFuzzingInProgress = false;
+    }
   }
 
   readFileContentResult(message)
@@ -869,6 +951,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.openapi3FileInputFileVModel = [];
       this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'OpenAPI3 spec files are yaml or json', life: 5000});
     }
+  }
+
+  fuzzApiFuzzContext(fuzzconextId: string) {
+    return;
   }
 
   async deleteApiFuzzContext() {

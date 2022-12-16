@@ -40,7 +40,7 @@ export default class FuzzerManager
 
         const gqlOK = ok;
         const error = err;
-        const result = resp?.data.data.fuzzerStatus.result;
+        const result = resp?.data.data.fuzzerStatus;
 
         return [gqlOK, error, result];
     }
