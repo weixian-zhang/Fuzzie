@@ -170,6 +170,7 @@ class Props {
 
     mounted() {
       this.eventemitter.on("onFuzzCaseSetSelected", this.onFuzzCaseSetSelected);
+      this.eventemitter.on("onFuzzContextSelected", this.clearData);
     }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
@@ -215,6 +216,14 @@ class Props {
 
       this.selectedRequest = fcs.request.requestMessage;
       this.selectedResponse = fcs.response.responseDisplayText;
+    }
+
+    //clear data on fuzz-context change but leave "fdcsFuzzingData" alone
+    clearData() {
+        this.fdcsDataOriginal = [];
+        this.fdcsDataFiltered = [];
+        this.selectedRequest = '';
+        this.selectedResponse = '';
     }
 
     shortenStringForDisplay(str: string) {

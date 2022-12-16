@@ -131,7 +131,7 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
-                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                  <label class="btn btn-outline-info small" for="authn-noauthn" @click="(
                     newApiContext.authnType='Anonymous',
                     securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
@@ -257,8 +257,8 @@
                 <v-slider
                   v-model="newApiContext.fuzzcaseToExec"
                   label=''
-                  track-color="blue"
-                  thumb-color="red"
+                  track-color="cyan"
+                  thumb-color="cyan"
                   thumb-label="always"
                   min=100
                   max=50000
@@ -270,8 +270,8 @@
               <v-divider />
 
               <div style="text-align:right">
-                <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn btn-primary" @click="createNewApiContext">Create</button>
+                <button class="btn  btn-outline-info mr-3" @click="clearContextForm">Reset</button>
+                <button class="btn  btn-outline-info" @click="createNewApiContext">Create</button>
               </div>
             <!-- col end-->
             </div>
@@ -381,7 +381,7 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
-                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                  <label class="btn btn-outline-info small" for="authn-noauthn" @click="(
                     newApiContext.authnType='Anonymous',
                     securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
@@ -507,8 +507,8 @@
                 <v-slider
                   v-model="apiContextEdit.fuzzcaseToExec"
                   label=''
-                  track-color="blue"
-                  thumb-color="red"
+                  track-color="cyan"
+                  thumb-color="cyan"
                   thumb-label="always"
                   min=100
                   max=50000
@@ -520,7 +520,7 @@
               <v-divider />
 
               <div style="text-align:right">
-                <button class="btn btn-primary" @click="updateApiContext">Update</button>
+                <button class="btn btn-outline-info" @click="updateApiContext">Update</button>
               </div>
             <!-- col end-->
             </div>
@@ -574,11 +574,16 @@
         
         <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px" class="border-0">
           <template #default="slotProps" >
-            <small :class="slotProps.node.fuzzcontextId === selectedContextNode ? 'p-1 border border-info border-2' : ''">
+            <small :class="( slotProps.node.fuzzcontextId === selectedContextNode &&
+            (slotProps.node.isFuzzCaseRun == undefined ? true : (slotProps.node.isFuzzCaseRun != undefined &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode) ) &&
+            slotProps.node.key != '-1' && 
+            slotProps.node.key != '-2') ? 'p-1 border border-info border-2' : ''">
               <b 
                 v-on:click="(
-                  onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
-                  selectedContextNode = slotProps.node.fuzzcontextId
+                  (slotProps.node.key != '-1' && slotProps.node.key != '-2') ?
+                      onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId) : '' ,
+                  selectedContextNode = slotProps.node.fuzzcontextId,
+                  selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId
                 )">
                 {{slotProps.node.label}}
               </b>
@@ -606,20 +611,12 @@
                   )"
                   ></v-icon>
               </span>
-          </template>
 
-          <!-- fuzz run -->
-          <template #url="slotProps">
-              <span>
-                {{slotProps.node.label}}
-                <div v-show="slotProps.node.isFuzzing">
-                  <b class="text-info">fuzzing</b>
-                  <v-progress-linear
-                      indeterminate
-                      color="teal">
-                  </v-progress-linear>
-                </div>
-              </span>
+              <v-progress-linear
+                indeterminate
+                color="cyan"
+                v-show="false"
+                style="width:100%" />
           </template>
       </Tree>
     </v-card>
@@ -672,7 +669,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   ];
 
   selectedContextNode = ''
-  selectedRunNode = ''
+  selectedCaseSetRunNode = ''
+
+  currentFuzzingContextId = ''
+  currentFuzzingCaseSetRunId = ''
 
   securityBtnVisibility = {
     anonymous: true,
@@ -688,7 +688,24 @@ export default class ApiDiscovery extends Vue.with(Props) {
   //methods
   
   mounted() {
+
+    this.eventemitter.on('fuzz.start', this.onFuzzStart);
+    this.eventemitter.on('fuzz.complete', this.onFuzzStop);
+    this.eventemitter.on('fuzz.cancel', this.onFuzzStop);
+
     this.getFuzzcontexts()
+  }
+
+  onFuzzStart(data) {
+
+    const jobj = JSON.parse(data);
+    this.currentFuzzingContextId = jobj.fuzzcontextId;
+    this.currentFuzzingCaseSetRunId = jobj.fuzzCaseSetRunId;
+  }
+
+  onFuzzStop(data) {
+     this.currentFuzzingContextId = '';
+     this.currentFuzzingCaseSetRunId = '';
   }
 
   onEditFuzzContextClicked(data) {

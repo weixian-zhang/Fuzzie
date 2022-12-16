@@ -122,6 +122,10 @@ export default class Utils
 
         if(!Utils.isNothing(str))
         {
+            if(str == "{}") {
+                return "";
+            }
+            
             return str.substring(0, length) + "...";
         }
         else

@@ -370,7 +370,7 @@ class WebApiFuzzer:
                 for x in headers.keys():
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
-            fr.requestMessage = f'{fr.verb} {fr.path} HTTP/1.1' \
+            fr.requestMessage = f'{fr.verb} {fr.url} HTTP/1.1' \
                                  '\n' \
                                  '\n' \
                                 f'{headerMultilineText}' \

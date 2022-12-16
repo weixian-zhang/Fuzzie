@@ -106,3 +106,11 @@ export class FuzzDataCase {
     public response: FuzzResponse;
 }
 
+export class FuzzerStatus {
+    public timestamp;
+    public alive = false
+    public isDataLoaded = false
+    public isFuzzing = false
+    public message =''
+}
+

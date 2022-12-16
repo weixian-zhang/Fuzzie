@@ -1,6 +1,10 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, ApiFuzzCaseSetsWithRunSummaries, FuzzDataCase } from "../Model";
+import { 
+    ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, 
+    ApiFuzzCaseSetsWithRunSummaries, FuzzDataCase, FuzzerStatus
+}
+from "../Model";
 
 export default class FuzzerManager
 {
@@ -13,9 +17,32 @@ export default class FuzzerManager
         this._wc = wc;
     }
 
-    public async isFuzzerReady(): Promise<boolean>
+    public async isFuzzerReady(): Promise<[boolean, string, FuzzerStatus]>
     {
-        return true;
+        const query = `
+            query {
+                fuzzerStatus {
+                    timestamp,
+                    alive,
+                    isDataLoaded,
+                    isFuzzing,
+                    message
+                } 
+            }
+        `;
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err, new FuzzerStatus()];
+        }
+
+        const gqlOK = ok;
+        const error = err;
+        const result = resp?.data.data.fuzzerStatus.result;
+
+        return [gqlOK, error, result];
     }
 
     public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {

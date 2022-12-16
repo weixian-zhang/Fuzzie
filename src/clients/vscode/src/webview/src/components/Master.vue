@@ -66,6 +66,12 @@
       this.wc.subscribeWS('fuzz.start', this.notifyFuzzStart);
       this.wc.subscribeWS('fuzz.complete', this.notifyFuzzComplete);
       this.wc.subscribeWS('fuzz.cancel', this.notifyFuzzCancel);
+
+      this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.notifyUpdateCaseSetRunSummary);
+      this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.notifyUpdateCaseSetRunSummary);
+
+      // self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+      //       self.eventstore.feedback_client('', fuzzDataCase)
     }
 
     public mounted() {
@@ -83,11 +89,15 @@
     }
 
     private notifyFuzzComplete(data) {
-      return;
+      this.eventemitter.emit('fuzz.complete')
     }
 
     private notifyFuzzCancel(data) {
-      return;
+      this.eventemitter.emit('fuzz.cancel')
+    }
+
+    private notifyUpdateCaseSetRunSummary(data) {
+      this.eventemitter.emit('fuzz.update.casesetrunsummary')
     }
   }
   
