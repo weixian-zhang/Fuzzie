@@ -17,7 +17,7 @@
     </code>
   </Sidebar>
 
-    <v-toolbar card color="lightgrey" flat dense height="50px">
+    <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
       <v-toolbar-title>Fuzz Cases</v-toolbar-title>
       
       
@@ -27,12 +27,9 @@
             saveFuzzCaseSets
             )">
           <v-badge  color="pink" dot v-model="isTableDirty">
-            <v-icon>mdi-content-save-settings-outline</v-icon>
+            <v-icon color="cyan darken-3">mdi-content-save-settings-outline</v-icon>
           </v-badge>
         </v-btn>
-      <v-btn v-tooltip.left="'start fuzzing'" icon  variant="plain" height="30px" plain >
-        <v-icon>mdi-lightning-bolt</v-icon>
-      </v-btn>
     </v-toolbar>
       
       <v-table density="compact" fixed-header height="350px" hover="true" >
@@ -40,12 +37,14 @@
           <tr>
             <th class="text-left">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" 
+                <v-checkbox color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
+                  selectAllChanged($event))"  hide-details />
+                <!-- <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" 
                 @change="(
                   selectAllChanged($event))">
                 <label class="form-check-label" for="flexCheckDefault">
                   All
-                </label>
+                </label> -->
               </div>
             </th>
             <th class="text-left">
@@ -89,8 +88,10 @@
 
             <td>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 
-                @click="isTableDirty=true">
+                <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
+
+                <!-- <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 
+                @click="isTableDirty=true"> -->
               </div>
 
             </td>
@@ -101,7 +102,7 @@
                 onTableValueNonJsonSeeInFullClicked(item.path),
                 showFullValueSideBar = true
               )">
-                {{ item.path }}
+                {{ shortenJsonValueInTable(item.path) }}
               </span>
             </td>
             
@@ -151,18 +152,16 @@
 
 <script lang="ts">
 import { Options, Vue  } from 'vue-class-component';
-import { ref } from 'vue'
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
 import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
-import { useToast } from "primevue/usetoast";
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
-  // optional prop
+  toast: any = {};
   eventemitter: any = {}
   fuzzermanager: FuzzerManager
   webclient : FuzzerWebClient
@@ -199,13 +198,6 @@ class Props {
 
   tableValViewInSizeBar = '';
 
-  toast = useToast();
-
-  isbotheq(a, b) {
-    console.log(a);
-
-  }
-
   // @Watch('fcsRunSums', { immediate: true, deep: true })
   // onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
   //   console.log(val);
@@ -220,9 +212,6 @@ class Props {
     this.tableValViewInSizeBar = val
   }
 
-  beforeMount() {
-    return;
-  }
   
   mounted(){
     // listen to ApiDiscovery Tree item select event
@@ -230,6 +219,13 @@ class Props {
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
 
     //websocket receive message from fuzzer
+    //this.webclient.subscribeWS('fuzz.update.casesetrunsummary', this.onWSFuzzerFuzzRunSummaryUpdate)
+
+  }
+
+  onWSFuzzerFuzzRunSummaryUpdate(runSummary: string) {
+
+    const jRunSum = JSON.parse(runSummary);
 
   }
 
@@ -293,7 +289,7 @@ class Props {
 
     if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
     {
-      this.fcsRunSums = this.dataCache[fuzzcontextId];
+      this.fcsRunSums = this.dataCache[key];
     }
     else
     {
@@ -311,8 +307,9 @@ class Props {
     }
   }
 
-  onRowClick(fcsrs) {
-    return
+  onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+    // send event to FuzzResult panel to display request and response
+    this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
   }
 
   selectAllChanged(event) {
@@ -322,17 +319,9 @@ class Props {
     this.isTableDirty = true;
   }
 
-  shortenJsonValueInTable(bodyJson, length=100)
+  shortenJsonValueInTable(bodyJson, length=40)
   {
-    const pj = Utils.prettifyJson(bodyJson);
-    if(pj != undefined && pj.length > length)
-    {
-      return pj.substring(0, length) + "...";
-    }
-    else
-    {
-      return pj;
-    }
+    return Utils.shortenStr(bodyJson, length);
   }
 
  }

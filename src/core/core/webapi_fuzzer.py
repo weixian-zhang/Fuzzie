@@ -138,9 +138,9 @@ class WebApiFuzzer:
             
             self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
             
-            
             # notify fuzzing started
-            pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_start', msgData=self.apifuzzcontext.Id)
+            # pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_start', msgData=self.apifuzzcontext.Id)
+            self.eventstore.feedback_client('fuzz.start', {'fuzzCaseSetRunId': self.fuzzCaseSetRunId, 'fuzzcontextId': self.apifuzzcontext.Id})
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -190,8 +190,8 @@ class WebApiFuzzer:
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
             #send data to GUI pver websocket
-            self.eventstore.feedback_client('fuzz.case_set_run_summary', summaryViewModel)
-            self.eventstore.feedback_client('fuzz.fuzzdatacase', fuzzDataCase)
+            self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
         except Exception as e:
             if self.fuzzCancel == True:
@@ -307,7 +307,7 @@ class WebApiFuzzer:
                 
                 self.dbLock.release()
                 
-                self.eventstore.feedback_client('fuzzing is completed')
+                self.eventstore.feedback_client('fuzz.complete', '')
                 
                 # notify fuzzing started
                 pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_stop', msgData=self.apifuzzcontext.Id)

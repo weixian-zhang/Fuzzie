@@ -7,16 +7,16 @@
           <SplitterPanel :size="40" >
             <Splitter gutterSize="8" >
               <SplitterPanel class="flex align-items-center justify-content-center" :size="25" >
-                <ApiDiscovery :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
+                <ApiDiscovery :toast="toast" :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
               <SplitterPanel class="flex align-items-center justify-content-center" :size="75">
-                <FuzzCaseSetPanel  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
+                <FuzzCaseSetPanel :toast="toast"  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
               </SplitterPanel>
             </Splitter>
           </SplitterPanel>
 
           <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3" >
-            <FuzzResultPanel />
+            <FuzzResultPanel  :toast="toast"  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
           </SplitterPanel>
         </Splitter>
       </SplitterPanel>
@@ -32,9 +32,10 @@
   import EventEmitter from 'eventemitter3'
   import VSCodeMessager from '../services/VSCodeMessager';
   import Toast from 'primevue/toast';
+  import { useToast } from "primevue/usetoast";
   import Splitter from 'primevue/splitter';
   import SplitterPanel from 'primevue/splitterpanel';
-
+ 
   import FuzzerWebClient from "../services/FuzzerWebClient";
   import FuzzerManager from "../services/FuzzerManager";
 
@@ -55,11 +56,16 @@
     private vscodeMsger = new VSCodeMessager();
     private wc = new FuzzerWebClient()
     private fm = new FuzzerManager(this.wc);
+    private toast = useToast();
 
     public beforeMount() {
 
       this.wc.subscribeWS('event.info', this.sendEventToVSCodeConsole);
       this.wc.subscribeWS('event.error', this.sendEventToVSCodeConsole);
+
+      this.wc.subscribeWS('fuzz.start', this.notifyFuzzStart);
+      this.wc.subscribeWS('fuzz.complete', this.notifyFuzzComplete);
+      this.wc.subscribeWS('fuzz.cancel', this.notifyFuzzCancel);
     }
 
     public mounted() {
@@ -71,6 +77,17 @@
       this.vscodeMsger.send(msg);
     }
 
+    private notifyFuzzStart() {
+      return;
+    }
+
+    private notifyFuzzComplete() {
+      return;
+    }
+
+    private notifyFuzzCancel() {
+      return;
+    }
   }
   
 

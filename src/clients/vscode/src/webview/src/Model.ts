@@ -71,3 +71,38 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public completedDataCaseRuns = 0; 
 }
 
+export class FuzzRequest {
+    public Id = '';
+    public requestDateTime;
+    public hostname = '';
+    public port =  0;
+    public verb = '';
+    public url = '';
+    public path = '';
+    public querystring = '';
+    public headers = '';
+    public body = '';
+    public contentLength = 0;
+    public requestMessage = ''
+}
+
+export class FuzzResponse {
+    public Id = '';
+    public responseDateTime;
+    public statusCode = '';
+    public reasonPharse = '';
+    public headerJson = '';
+    public setcookieHeader = '';
+    public body = '';
+    public contentLength = 0;
+    public responseDisplayText = ''
+}
+
+
+export class FuzzDataCase {
+    public fuzzDataCaseId = '';
+    public fuzzCaseSetId = '';
+    public request: FuzzRequest;
+    public response: FuzzResponse;
+}
+

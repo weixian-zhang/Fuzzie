@@ -1,6 +1,6 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, ApiFuzzCaseSetsWithRunSummaries } from "../Model";
+import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, ApiFuzzCaseSetsWithRunSummaries, FuzzDataCase } from "../Model";
 
 export default class FuzzerManager
 {
@@ -171,6 +171,61 @@ export default class FuzzerManager
         });
 
         return [true, '', fcs];
+    }
+
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+        const query = `
+        query {
+            fuzzRequestResponse(
+                fuzzCaseSetId: "${fuzzCaseSetId}",
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                ok,
+                error,
+                result {
+                    fuzzDataCaseId
+                    fuzzCaseSetId
+                    request {
+                        Id
+                        requestDateTime
+                        hostname
+                        port
+                        verb
+                        path
+                        querystring
+                        url
+                        headers
+                        body
+                        contentLength
+                        requestMessage
+                    }
+                    response {
+                        Id
+                        responseDateTime
+                        statusCode
+                        reasonPharse
+                        setcookieHeader
+                        headerJson
+                        body
+                        contentLength
+                        responseDisplayText
+                    }
+                }
+            }
+        }
+    `
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err, []];
+        }
+
+        const gqlOK = resp?.data.data.fuzzRequestResponse.ok;
+        //const err = resp?.data.data.fuzzRequestResponse.error;
+        const result = resp?.data.data.fuzzRequestResponse.result;
+
+        return [gqlOK, '', result];
     }
 
     private propMap(obj: any, mappedObject: any ) {

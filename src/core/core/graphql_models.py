@@ -205,6 +205,7 @@ class FuzzRequest_ViewModel(graphene.ObjectType):
     headers = graphene.String()
     body = graphene.String()
     contentLength = graphene.Int()
+    requestMessage = graphene.String()
 
 class FuzzResponse_ViewModel(graphene.ObjectType): 
     Id = graphene.String()
@@ -215,6 +216,7 @@ class FuzzResponse_ViewModel(graphene.ObjectType):
     setcookieHeader = graphene.String()
     body = graphene.String()
     contentLength = graphene.Int()
+    responseDisplayText = graphene.String()
     
 class FuzzDataCase_ViewModel(graphene.ObjectType):
     fuzzDataCaseId = graphene.String()

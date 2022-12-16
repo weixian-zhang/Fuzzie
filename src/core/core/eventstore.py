@@ -120,7 +120,7 @@ class EventStore:
         EventStore.websocket = websocket
     
     # data must be json format
-    def feedback_client(self, topic: str, data: str):
+    def feedback_client(self, topic: str, data: str = ''):
         asyncio.run(self.feedback_client_async(topic, data))
     
     # send to websocket clients

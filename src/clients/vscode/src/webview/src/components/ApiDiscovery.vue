@@ -552,22 +552,22 @@
       </v-card>
     </v-dialog>
 
-    <v-toolbar card color="lightgrey" flat dense height="50px">
+    <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-        <v-icon>mdi-message-plus-outline</v-icon>
+        <v-icon color="cyan darken-3">mdi-message-plus-outline</v-icon>
       </v-btn>
 
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
-            <v-icon>mdi-refresh</v-icon>
+            <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
       <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
-        <v-icon>mdi-api</v-icon>
+        <v-icon color="cyan darken-3">mdi-api</v-icon>
       </v-btn>
 
     </v-toolbar>
@@ -580,7 +580,7 @@
                     <v-icon
                       variant="flat"
                       icon="mdi-pencil"
-                      color="primary"
+                      color="cyan darken-3"
                       size="x-small"
                       @click="(
                         onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
@@ -590,7 +590,7 @@
                       <v-icon
                       variant="flat"
                       icon="mdi-delete"
-                      color="primary"
+                      color="cyan darken-3"
                       size="x-small"
                       @click="(
                         onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
@@ -619,7 +619,6 @@
 <script lang="ts">
 
 import { Options, Vue } from 'vue-class-component';
-import { useToast } from "primevue/usetoast";
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
@@ -631,10 +630,11 @@ import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
   // optional prop
-  eventemitter: any = {}
+  toast: any = {};
+  eventemitter: any = {};
   vscodeMsger: VSCodeMessager;
-  fuzzermanager: FuzzerManager
-  webclient : FuzzerWebClient
+  fuzzermanager: FuzzerManager;
+  webclient : FuzzerWebClient;
 }
 
 @Options({
@@ -658,8 +658,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
   apiContextToDelete: any = {};
-  toast = useToast();
-
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];

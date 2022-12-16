@@ -236,6 +236,7 @@ class ServiceManager:
                 fdc.request.headers = rowDict['headers']
                 fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
+                fdc.request.requestMessage = rowDict['requestMessage']
                 
                 fdc.response = FuzzResponse_ViewModel()
                 fdc.response.Id = rowDict['fuzzResponseId']
@@ -246,6 +247,7 @@ class ServiceManager:
                 fdc.response.headerJson = rowDict['headerJson']
                 fdc.response.body = rowDict['body']
                 fdc.response.contentLength = rowDict['contentLength']
+                fdc.response.responseDisplayText = rowDict['responseDisplayText']
                 
                 result.append(fdc)
 

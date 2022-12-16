@@ -7,7 +7,7 @@ export default class FuzzerWebClient
     private gqlUrl = 'https://localhost:50001/graphql';
     private wsUrl = 'wss://localhost:50001/ws';
     private _ws;
-    private fuzzerEventSubscribers = {};
+    private fuzzerEventSubscribers = {};  // dict with value as list  
     private axiosinstance;
 
     public constructor() {
@@ -47,20 +47,29 @@ export default class FuzzerWebClient
                 return
             }
 
-            const func = this.fuzzerEventSubscribers[jmsg.topic];
+            const funcList = this.fuzzerEventSubscribers[jmsg.topic];
 
-            if (func == undefined){
+            if (funcList == undefined){
                 //TODO: logger log
                 return;
             }
             
+            funcList.forEach(func => {
+                func(jmsg.data);
+            });
             //exec subscriber's registered func
-            func(jmsg.data);
+            
         });
     }
 
     public subscribeWS(topic: string, func: any) {
-        this.fuzzerEventSubscribers[topic] = func;
+
+        if(this.fuzzerEventSubscribers[topic] == undefined) {
+            this.fuzzerEventSubscribers[topic] = []
+        }
+        
+        const funcList = this.fuzzerEventSubscribers[topic];
+        funcList.push(func);
     }
     
     //const wsUrl: string = 'ws://localhost:50001/ws'

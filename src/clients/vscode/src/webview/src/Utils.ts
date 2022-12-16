@@ -91,4 +91,42 @@ export default class Utils
     public static prettifyJson(json: string) {
         return JSON.stringify(JSON.parse(json),null,'\t')
     }
+
+    public static isNothing(obj) {
+        if(obj == null || obj == '') {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public static isLenZero(arr: Array<any>) {
+
+        if(Utils.isNothing(arr)) {
+            return true;
+        }
+
+        if (!Array.isArray(arr)) {
+            return true;
+        }
+
+        if(arr.length > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public static shortenStr(str: string, length=10) {
+
+        if(!Utils.isNothing(str))
+        {
+            return str.substring(0, length) + "...";
+        }
+        else
+        {
+            return str;
+        }
+    }
 }
