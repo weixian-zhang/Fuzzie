@@ -13,7 +13,8 @@ from webapi_fuzzer import WebApiFuzzer
 from automapper import mapper
 from eventstore import EventStore, MsgType
 from utils import Utils
-from db import  (get_caseSets_with_runSummary,
+from db import  (get_fuzzcontext,
+                 get_caseSets_with_runSummary,
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
@@ -156,6 +157,13 @@ class ServiceManager:
         
         try:
             return save_caseset_selected(caseSetSelected)
+        except Exception as e:
+            return (False, Utils.errAsText(e))
+    
+    # used internally when fuzzing occurs to get fuzzcontext to fuzz
+    def get_fuzzcontext(self, Id) -> ApiFuzzContext:
+        try:
+            return get_fuzzcontext(Id)
         except Exception as e:
             return (False, Utils.errAsText(e))
         

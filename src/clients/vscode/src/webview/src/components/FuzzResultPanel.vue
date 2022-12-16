@@ -100,12 +100,12 @@
 
                 <SplitterPanel :size="50">
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
-                  :value="selectedRequest"  rows="10" />
+                  :value="selectedRequest" />
                 </SplitterPanel>
 
                 <SplitterPanel :size="50">
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
-                  :value="selectedResponse"  rows="10" />
+                  :value="selectedResponse" />
                 </SplitterPanel>
 
             </Splitter>

@@ -370,12 +370,12 @@ class WebApiFuzzer:
                 for x in headers.keys():
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
-            fr.requestMessage = f'''
-            {fr.verb} {fr.path} HTTP/1.1
-            {headerMultilineText}
-
-            {fr.body if fr.body != '{}' else ''}
-            '''
+            fr.requestMessage = f'{fr.verb} {fr.path} HTTP/1.1' \
+                                 '\n' \
+                                 '\n' \
+                                f'{headerMultilineText}' \
+                                 '\n' \
+                                f'{fr.body if fr.body != "{}" else ""}'
             
             return fr
         
@@ -409,13 +409,16 @@ class WebApiFuzzer:
         
         fuzzResp.contentLength = resp.headers['Content-Length']
         
-        fuzzResp.responseDisplayText = f'''
-        
-    HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}
-        {headersMultilineText}
-              
-        {fuzzResp.body}
-        '''
+        fuzzResp.responseDisplayText = f'HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
+                                       f'{headersMultilineText}' \
+                                       '\n' \
+                                       '\n' \
+                                       f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S.%f")}' \
+                                       '\n' \
+                                       f'Content-Length: {fuzzResp.contentLength}' \
+                                       '\n' \
+                                       '\n' \
+                                       f'{fuzzResp.body}'
         
         return fuzzResp
     
