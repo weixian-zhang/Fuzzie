@@ -1,5 +1,3 @@
-
-
 export default class Utils
 {
     public static copy(obj: any) {

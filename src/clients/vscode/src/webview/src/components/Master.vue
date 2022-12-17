@@ -7,16 +7,35 @@
           <SplitterPanel :size="40" >
             <Splitter gutterSize="8" >
               <SplitterPanel class="flex align-items-center justify-content-center" :size="25" >
-                <ApiDiscovery :toast="toast" :vscodeMsger="vscodeMsger" :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
+                <ApiDiscovery
+                  :toastInfo="toastInfo" 
+                  :toastError="toastError"
+                  :toastSuccess="toastSuccess"
+                  :vscodeMsger="vscodeMsger" 
+                  :eventemitter="eventemitter" 
+                  :fuzzermanager="fm" 
+                  :webclient="wc" />
               </SplitterPanel>
               <SplitterPanel class="flex align-items-center justify-content-center" :size="75">
-                <FuzzCaseSetPanel :toast="toast"  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
+                <FuzzCaseSetPanel :toast="toast" 
+                   :toastInfo="toastInfo" 
+                   :toastError="toastError"
+                   :toastSuccess="toastSuccess"
+                   :eventemitter="eventemitter" 
+                   :fuzzermanager="fm" 
+                   :webclient="wc" />
               </SplitterPanel>
             </Splitter>
           </SplitterPanel>
 
           <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3" >
-            <FuzzResultPanel  :toast="toast"  :eventemitter="eventemitter" :fuzzermanager="fm" :webclient="wc" />
+            <FuzzResultPanel  :toast="toast"  
+              :toastInfo="toastInfo" 
+              :toastError="toastError"
+              :toastSuccess="toastSuccess"
+              :eventemitter="eventemitter" 
+              :fuzzermanager="fm" 
+              :webclient="wc" />
           </SplitterPanel>
         </Splitter>
       </SplitterPanel>
@@ -52,12 +71,12 @@
 
   export default class Master extends Vue {
 
-    private eventemitter = new EventEmitter();
-    private vscodeMsger = new VSCodeMessager();
-    private wc = new FuzzerWebClient()
-    private fm = new FuzzerManager(this.wc);
-    private toast = useToast();
-    
+    eventemitter = new EventEmitter();
+    vscodeMsger = new VSCodeMessager();
+    wc = new FuzzerWebClient()
+    fm = new FuzzerManager(this.wc);
+    toast = useToast();
+    fuzzerConnected = false;
 
     public beforeMount() {
 
@@ -70,32 +89,38 @@
 
       this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.notifyUpdateCaseSetRunSummary);
       this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.notifyUpdateCaseSetRunSummary);
-
-      // self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
-      //       self.eventstore.feedback_client('', fuzzDataCase)
     }
 
     public mounted() {
-     
+
+      this.toastInfo('trying to connect to fuzzer');
+
       this.wc.connectWSServer()
 
-
-      setInterval(this.intervalCheckFuzzerReady, 3000)
+      setInterval(this.checkFuzzerReady, 4000)
     }
 
     
-    intervalCheckFuzzerReady =  async ()  => {
+    async checkFuzzerReady(): Promise<void> {
       const [ok, err, result] = await this.fm.isFuzzerReady();
 
          if(!ok) {
             //stop any fuzzing activity
+            this.fuzzerConnected = false;
             this.notifyFuzzerIsNotReady();
+            this.toastError('fuzzer is not ready, retrying...');
+            return;
          }
 
-         if (!result.alive || !result.isDataLoaded) {
-            this.notifyFuzzerIsNotReady()
+         if (!result.isDataLoaded) {
+            this.toastInfo('connected to fuzzer, loading corpora, this may take a moment')
+            return;
          } else {
-            this.notifyFuzzerReady()
+            if(!this.fuzzerConnected) {
+              this.notifyFuzzerReady();
+              this.toastSuccuss('fuzzer is ready');
+              this.fuzzerConnected = true;
+            }
          }
     }
 
@@ -128,7 +153,20 @@
     private notifyUpdateCaseSetRunSummary(data) {
       this.eventemitter.emit('fuzz.update.casesetrunsummary')
     }
+    
+    toastInfo (msg: string, title = '', duration=4000)  {
+        this.$toast.add({severity:'info', summary: title, detail: msg, life: duration});
+    }
+
+    toastError (msg: string, title = '', duration=4000)  {
+        this.$toast.add({severity:'error', summary: title, detail: msg, life: duration});
+    }
+
+    toastSuccuss (msg: string, title = '', duration=4000) {
+        this.$toast.add({severity:'success', summary: title, detail: msg, life: duration});
+    }
   }
+  
   
 
   </script>

@@ -70,7 +70,13 @@ export default class FuzzerWebClient
         funcList.push(func);
     }
     
-    //const wsUrl: string = 'ws://localhost:50001/ws'
+    public wsSend(data: string) {
+        try {
+            this._ws.send(data);
+        } catch (error) {
+            //TODO: logging
+        }
+    }
 
     public async httpGetString(url: string): Promise<[boolean, string, string]> {
 

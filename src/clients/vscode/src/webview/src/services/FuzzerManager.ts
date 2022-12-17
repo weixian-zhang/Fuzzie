@@ -31,18 +31,47 @@ export default class FuzzerManager
             }
         `;
 
-        const [ok, err, resp] = await this._wc.graphql(query)
+        try {
+            const [ok, err, resp] = await this._wc.graphql(query)
 
-        if(!ok)
-        {
-            return [ok, err, new FuzzerStatus()];
+            if(!ok)
+            {
+                return [ok, err, new FuzzerStatus()];
+            }
+
+            const gqlOK = ok;
+            const error = err;
+            const result = resp?.data.data.fuzzerStatus;
+
+            return [gqlOK, error, result];
+            
+        } catch (error: any) {
+            return [false, error.message, new FuzzerStatus()];
         }
+    }
 
-        const gqlOK = ok;
-        const error = err;
-        const result = resp?.data.data.fuzzerStatus;
+    public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
+        const query = `
+        mutation fuzz {
+            fuzz(fuzzcontextId:"${fuzzContextId}") {
+                  ok,
+                  msg
+            }
+          }
+        `;
 
-        return [gqlOK, error, result];
+        try {
+            const [ok, msg] = await this._wc.graphql(query)
+
+            return [ok, msg];
+            
+        } catch (error: any) {
+            return [false, error.message];
+        }
+    }
+
+    public async cancelFuzzing() {
+        this._wc.wsSend(JSON.stringify({'command': 'cancel_fuzzing'}));
     }
 
     public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {

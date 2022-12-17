@@ -565,7 +565,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <button class="btn btn-outline-info mr-3" @click="showFuzzConfirmDialog = false">Cancel</button>
-          <button class="btn btn-outline-info" @click="fuzzApiFuzzContext">Fuzz</button>
+          <button class="btn btn-outline-info" @click="fuzz">Fuzz</button>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -628,28 +628,44 @@
                   size="x-small"
                   @click="(
                     onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
-                  )"
-                  ></v-icon>
+                  )"/>
 
             
                   &nbsp;
                   <v-icon
-                  v-show="isFuzzerReady"
+                  v-tooltip="'start fuzzing'"
+                  v-show="showFuzzIcon"
                   variant="flat"
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    onFuzzFuzzContextClicked(slotProps.node.fuzzcontextId)
-                  )"
-                  ></v-icon>
+                    onFuzzIconClicked(slotProps.node.isFuzzCaseRun, 
+                    slotProps.node.fuzzcontextId,
+                    slotProps.node.fuzzCaseSetRunId,
+                    slotProps.node.name)
+                  )" />
+
+                  <v-icon
+                  v-tooltip="'cancel fuzzing'"
+                  v-show="showCancelFuzzIcon"
+                  variant="flat"
+                  icon="mdi-cancel"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onCancelFuzzIconClicked(slotProps.node.isFuzzCaseRun,
+                    slotProps.node.fuzzcontextId,
+                    slotProps.node.fuzzCaseSetRunId)
+                  )" />
+                  
 
               </span>
 
               <v-progress-linear
                 indeterminate
                 color="cyan"
-                v-show="false"
+                v-show="showFuzzProgressBar"
                 style="width:100%" />
           </template>
       </Tree>
@@ -670,7 +686,9 @@ import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
   // optional prop
-  toast: any = {};
+  toastInfo: any = {};
+  toastError: any = {};
+  toastSuccess: any = {};
   eventemitter: any = {};
   vscodeMsger: VSCodeMessager;
   fuzzermanager: FuzzerManager;
@@ -686,7 +704,6 @@ class Props {
 
 
 export default class ApiDiscovery extends Vue.with(Props) {
-  
   
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
@@ -707,10 +724,14 @@ export default class ApiDiscovery extends Vue.with(Props) {
   selectedContextNode = ''
   selectedCaseSetRunNode = ''
   
-  isFuzzerReady = false;
+  fuzzerConnected = false;
   isFuzzingInProgress = false;
   currentFuzzingContextId = ''
   currentFuzzingCaseSetRunId = ''
+
+  showFuzzIcon = true;
+  showCancelFuzzIcon = false;
+  showFuzzProgressBar = false;
 
   securityBtnVisibility = {
     anonymous: true,
@@ -736,17 +757,18 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.getFuzzcontexts()
   }
 
-  //#### websocket events ####
+  // #### websocket events ####
 
   onFuzzStartReady() {
-    this.isFuzzerReady = true;
+    this.fuzzerConnected = true;
+    this.getFuzzcontexts();
   }
 
   onFuzzerNotReady() {
-    this.isFuzzerReady = false;
+    this.clearData()
+    this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
-    this.currentFuzzingCaseSetRunId = ''
-    this.determineIsFuzzingInProgress()
+    this.currentFuzzingCaseSetRunId = '';
   }
 
   onFuzzStart(data) {
@@ -754,24 +776,26 @@ export default class ApiDiscovery extends Vue.with(Props) {
     try {
 
       if(Utils.isNothing(data)) {
-        this.toast.add({severity:'info', summary: 'On Fuzz Start', detail: 'data from fuzzer is missing', life: 5000});
+        this.toastInfo('data from fuzzer is missing', 'Fuzzing Started');
         return;
       }
 
       const jobj = JSON.parse(data);
+
+      this.isFuzzingInProgress = true
       this.currentFuzzingContextId = jobj.fuzzcontextId;
       this.currentFuzzingCaseSetRunId = jobj.fuzzCaseSetRunId;
       
     } catch (error) {
       //TODO: logging
-      this.toast.add({severity:'error', summary: 'On Fuzz Start', detail: 'data from fuzzer is missing', life: 5000});
+      this.toastError('data from fuzzer is missing', 'On Fuzz Start');
     }
   }
 
   onFuzzStop(data) {
+    this.isFuzzingInProgress = false;
      this.currentFuzzingContextId = '';
      this.currentFuzzingCaseSetRunId = '';
-     this.determineIsFuzzingInProgress()
   }
 
   //#### websocket event ends ####
@@ -794,15 +818,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.showFuzzConfirmDialog = true
   }
 
-  determineIsFuzzingInProgress() {
-
-    if (!Utils.isNothing(this.currentFuzzingContextId) && !Utils.isNothing(this.currentFuzzingContextId )) {
-        this.isFuzzingInProgress = true;
-    } else {
-        this.isFuzzingInProgress = false;
-    }
-  }
-
   readFileContentResult(message)
   {
     const msgObj: Message = JSON.parse(message);
@@ -817,20 +832,24 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     try {
 
-      this.isGetFuzzContextFinish = false;
-      const [OK, err, fcs] = await this.fuzzermanager.getFuzzcontexts()    
+        if(!this.fuzzerConnected){
+          return;
+        }
 
-      if (OK)
-      {
-        this.nodes = [];
-        this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
-      }
-      else
-      {
-        this.toast.add({severity:'error', summary: '', detail:err, life: 5000});
-      }
+        this.isGetFuzzContextFinish = false;
+        const [OK, err, fcs] = await this.fuzzermanager.getFuzzcontexts()    
 
-      this.isGetFuzzContextFinish = true;
+        if (OK)
+        {
+          this.nodes = [];
+          this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
+        }
+        else
+        {
+          this.toastError(err, 'Get Fuzz Context');
+        }
+
+        this.isGetFuzzContextFinish = true;
 
     } catch (error) {
         //TODO: log
@@ -865,6 +884,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
               key: fc.Id,
               fuzzcontextId: fc.Id,
               label: fc.name,
+              name: fc.name,
               data: fc
             };
 
@@ -891,13 +911,80 @@ export default class ApiDiscovery extends Vue.with(Props) {
             fcNode.children.push(casesetNode);
 
           });
-
         }
     });
 
     return nodes;
 
   }
+
+  shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId) {
+    if(!this.isFuzzingInProgress && !isFuzzCaseRun && this.currentFuzzingContextId == fuzzcontextId) {
+        return true;
+    }
+
+    return false;
+  }
+
+  shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
+    if(!this.isFuzzingInProgress) {
+        // is parent node fuzz context
+      if(!isFuzzCaseRun) {
+          if(this.currentFuzzingContextId == fuzzcontextId) {
+            return true;
+          }
+      } else {
+          if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
+            return true;
+          }
+      }
+    }
+
+    return false;
+  }
+
+  shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
+
+    if(!this.isFuzzingInProgress) {
+      return false;
+    }
+
+    // is parent node fuzz context
+    if(!isFuzzCaseRun) {
+        if(this.currentFuzzingContextId == fuzzcontextId) {
+          return true;
+        }
+    } else {
+        if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
+          return true;
+        }
+    }
+
+    return false;
+  }
+
+  async onFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId, name) {
+    this.toastInfo(`initiatiated fuzzing on ${name}`);
+    const [ok, msg] = await this.fuzzermanager.fuzz(fuzzcontextId)
+    if(!ok) {
+      this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
+      return;
+    }
+
+    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
+    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+  }
+
+  onCancelFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
+    this.fuzzermanager.cancelFuzzing();
+    this.toastInfo('cancelling fuzzing');
+
+    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
+    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+  }
+
 
   onFuzzContextSelected(fuzzcontextId, fuzzCaseSetRunsId) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, fuzzCaseSetRunsId);
@@ -924,7 +1011,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     else
     {
       this.requestTextFileInputFileVModel = [];
-      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'Request Text file has ext of .http, .text or .fuzzie', life: 5000});
+      this.toastError('Request Text file has ext of .http, .text or .fuzzie', 'Invalid File Type');
     }
   }
 
@@ -949,27 +1036,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
     else
     {
       this.openapi3FileInputFileVModel = [];
-      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'OpenAPI3 spec files are yaml or json', life: 5000});
+      this.toastError('OpenAPI3 spec files are yaml or json', 'Invalid File Type');
     }
   }
 
-  fuzzApiFuzzContext(fuzzconextId: string) {
-    return;
-  }
 
   async deleteApiFuzzContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
+
       const id = this.apiContextToDelete.Id;
       const [ok, error] = await this.fuzzermanager.deleteApiFuzzContext(id);
 
     if(!ok)
     {
-      this.toast.add({severity:'error', summary: 'Delete API FuzzContext', detail:error, life: 5000});
+      this.toastError(error, 'Delete API FuzzContext');
     }
     else
     {
       this.eventemitter.emit("onFuzzContextDelete", id);
       this.getFuzzcontexts();
-      this.toast.add({severity:'success', summary: 'Delete API FuzzContext', detail:`${this.apiContextToDelete.name} updated successfully`, life: 5000});
+
+      this.toastSuccess(`${this.apiContextToDelete.name} updated successfully`, 'Delete API FuzzContext');
     }
 
     this.showDeleteConfirmDialog = false;
@@ -977,6 +1067,11 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async updateApiContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
+
     const apiFCUpdate = new ApiFuzzContextUpdate();
     
     apiFCUpdate.fuzzcontextId = this.apiContextEdit.Id;
@@ -987,18 +1082,23 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(!ok)
     {
-      this.toast.add({severity:'error', summary: 'Update API FuzzContext', detail:error, life: 5000});
+      this.toastError(error, 'Update API FuzzContext');
     }
     else
     {
       this.apiContextEdit = new ApiFuzzContext();
-      this.toast.add({severity:'success', summary: 'Update API FuzzContext', detail:`${apiFCUpdate.name} updated successfully`, life: 5000});
+
+      this.toastSuccess(`${apiFCUpdate.name} updated successfully`, 'Update API FuzzContext');
     }
 
     this.updateContextSideBarVisible = false;
   }
 
   async createNewApiContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
     
     this.newApiContext.authnType = this.determineAuthnType();
 
@@ -1006,7 +1106,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
     {
-      this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
+      this.toastError('Name, hostname, port are required', 'New API Context - Missing Info');
       return;
     }
 
@@ -1015,7 +1115,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
       if(!ok)
       {
-        this.toast.add({severity:'error', summary: 'Trying to get OpenApi3 spec by Url', detail:error, life: 5000});
+        this.toastError(error, 'Trying to get OpenApi3 spec by Url');
+
         return;
       }
 
@@ -1025,10 +1126,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
     {
-      this.toast.add({severity:'error', summary: 'API Discovery', detail:'need either OpenAPI 3 spec or Request Text to create context', life: 5000});
+      this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
       return;
     }
-
    
     const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
     apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
@@ -1040,14 +1140,15 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(!ok && error != '')
     {
-      this.toast.add({severity:'error', summary: 'Create new API context', detail:error, life: 5000});
+      this.toastError(error, 'Create new API context');
       return;
     }
     else
     {
       this.newContextSideBarVisible = false;
       this.getFuzzcontexts();
-      this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+
+      this.toastSuccess(error, 'API Fuzz Context created');
 
       //reset form
       this.openapi3FileInputFileVModel = [];
@@ -1088,6 +1189,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
         return 'request-text';
     }
     return 'openapi3';
+  }
+
+  clearData() {
+    this.nodes = [];
+    this.selectedContextNode = '';
+    this.selectedCaseSetRunNode = '';
+    this.clearContextForm();
   }
 
   clearContextForm() {

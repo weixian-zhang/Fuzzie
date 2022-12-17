@@ -161,7 +161,9 @@ import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
-  toast: any = {};
+  toastInfo: any = {};
+  toastError: any = {};
+  toastSuccess: any = {};
   eventemitter: any = {}
   fuzzermanager: FuzzerManager
   webclient : FuzzerWebClient
@@ -198,6 +200,8 @@ class Props {
 
   tableValViewInSizeBar = '';
 
+  fuzzerConnected = false;
+
   // @Watch('fcsRunSums', { immediate: true, deep: true })
   // onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
   //   console.log(val);
@@ -214,6 +218,10 @@ class Props {
 
   
   mounted(){
+    //event from master
+    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+
     // listen to ApiDiscovery Tree item select event
     this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
@@ -221,6 +229,17 @@ class Props {
     //websocket receive message from fuzzer
     //this.webclient.subscribeWS('fuzz.update.casesetrunsummary', this.onWSFuzzerFuzzRunSummaryUpdate)
 
+  }
+
+  // #### websocket events ####
+
+  onFuzzStartReady() {
+    this.fuzzerConnected = true;
+  }
+
+  onFuzzerNotReady() {
+    this.clearData()
+    this.fuzzerConnected = false;
   }
 
   onWSFuzzerFuzzRunSummaryUpdate(runSummary: string) {
@@ -233,7 +252,7 @@ class Props {
   async saveFuzzCaseSets() {
 
     if(!this.isTableDirty) {
-      this.toast.add({severity:'info', summary: '', detail:'no changes to save', life: 5000});
+      this.toastInfo('no changes to save');
       return;
     }
     
@@ -251,12 +270,12 @@ class Props {
 
     if(!ok)
       {
-        this.toast.add({severity:'error', summary: 'Update Fuzz Cases', detail:error, life: 5000});
+        this.toastError(error, 'Update Fuzz Cases');
       }
       else
       {
         this.isTableDirty = false;
-        this.toast.add({severity:'success', summary: 'Update Fuzz Cases', detail:'Fuzz Cases are updated successfully', life: 5000});
+        this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
       }
 
     this.saveBtnDisabled = false;
@@ -297,7 +316,7 @@ class Props {
 
       if(!ok)
       {
-        this.toast.add({severity:'error', summary: 'Get Fuzz Cases', detail:error, life: 5000});
+        this.toastError(error, 'Get Fuzz Cases');
       }
       else
       {
@@ -322,6 +341,12 @@ class Props {
   shortenJsonValueInTable(bodyJson, length=40)
   {
     return Utils.shortenStr(bodyJson, length);
+  }
+
+  clearData() {
+      this.fcsRunSums = [];
+      this.dataCache = {};
+      this.selectedRow = ''
   }
 
  }

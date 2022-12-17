@@ -370,7 +370,7 @@ class WebApiFuzzer:
                 for x in headers.keys():
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
-            fr.requestMessage = f'{fr.verb} {fr.url} HTTP/1.1' \
+            fr.requestMessage = f'{fr.verb} {fr.url}' \
                                  '\n' \
                                  '\n' \
                                 f'{headerMultilineText}' \
@@ -409,7 +409,7 @@ class WebApiFuzzer:
         
         fuzzResp.contentLength = resp.headers['Content-Length']
         
-        fuzzResp.responseDisplayText = f'HTTP/1.1 {fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
+        fuzzResp.responseDisplayText = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
                                        f'{headersMultilineText}' \
                                        '\n' \
                                        '\n' \

@@ -129,14 +129,15 @@ import { Options, Vue  } from 'vue-class-component';
 import Splitter from 'primevue/splitter';
 import SplitterPanel from 'primevue/splitterpanel';
 import Dropdown from 'primevue/dropdown';
-import { useToast } from "primevue/usetoast";
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
 import { FuzzDataCase, FuzzRequest, FuzzResponse } from "../Model";
 
 class Props {
-  toast: any = {};
+  toastInfo: any = {};
+  toastError: any = {};
+  toastSuccess: any = {};
   eventemitter: any = {};
   fuzzermanager: FuzzerManager;
   webclient : FuzzerWebClient;
@@ -155,8 +156,6 @@ class Props {
 
  export default class FuzzResultPanel extends Vue.with(Props) {
  
-
-    toast = useToast();
     selectedRow = '';
     showDropDownStatusCodeFilter = false;
 
@@ -183,7 +182,7 @@ class Props {
       const [ok, error, result] = await this.fuzzermanager.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
 
       if(!ok) {
-        this.toast.add({severity:'error', summary: 'Fuzz Result Panel', detail:'error', life: 5000})
+        this.toastError.add('error', 'Fuzz Result Panel');
       }
 
       if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
