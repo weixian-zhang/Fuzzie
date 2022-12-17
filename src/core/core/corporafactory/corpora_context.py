@@ -201,7 +201,7 @@ class CorporaContext:
                     return originalExpression
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                self.es.emitErr(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
+                self.es.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
                 return originalExpression
     
     def eval_expression_by_injection(self, expr: str, jsonEscape=True):
