@@ -55,7 +55,7 @@ export default class FuzzerWebClient
             }
             
             funcList.forEach(func => {
-                func(jmsg.data);
+                func(jmsg);
             });
         });
     }

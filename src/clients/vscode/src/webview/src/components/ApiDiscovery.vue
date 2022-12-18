@@ -590,12 +590,12 @@
 
     </v-toolbar>
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="350px" class="border-0">
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="300px" class="border-0">
           <template #default="slotProps" >
-            <small :class="( slotProps.node.fuzzcontextId === selectedContextNode &&
-            (slotProps.node.isFuzzCaseRun == undefined ? true : (slotProps.node.isFuzzCaseRun != undefined &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode) ) &&
-            slotProps.node.key != '-1' && 
-            slotProps.node.key != '-2') ? 'p-1 border border-info border-2' : ''">
+            <small 
+              :class="( slotProps.node.isFuzzCaseRun == false? (slotProps.node.fuzzcontextId === selectedContextNode) :
+               (slotProps.node.fuzzcontextId === selectedContextNode &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode)  &&
+               (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 'p-1 border border-info border-2' : ''">
               <b 
                 v-on:click="(
                   (slotProps.node.key != '-1' && slotProps.node.key != '-2') ?
@@ -607,7 +607,7 @@
               </b>
             </small>
 
-            <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == undefined">
+            <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == false">
                 &nbsp;
                 <v-icon
                   variant="flat"
@@ -630,11 +630,11 @@
                     onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
                   )"/>
 
-            
                   &nbsp;
+
                   <v-icon
                   v-tooltip="'start fuzzing'"
-                  v-show="showFuzzIcon"
+                  v-show="(isFuzzingInProgress == false && slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
@@ -648,7 +648,9 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="showCancelFuzzIcon"
+                  v-show="(isFuzzingInProgress == true && 
+                  slotProps.node.isFuzzCaseRun == false && 
+                  currentFuzzingContextId == slotProps.node.fuzzcontextId)"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -665,7 +667,9 @@
               <v-progress-linear
                 indeterminate
                 color="cyan"
-                v-show="showFuzzProgressBar"
+                v-show="((isFuzzingInProgress == true && isFuzzCaseRun == false) ? 
+                (currentFuzzingContextId == slotProps.node.fuzzcontextId) : 
+                (currentFuzzingContextId == slotProps.node.fuzzcontextId && currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunId))"
                 style="width:100%" />
           </template>
       </Tree>
@@ -751,8 +755,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
-    this.eventemitter.on('fuzz.complete', this.onFuzzStop);
-    this.eventemitter.on('fuzz.cancel', this.onFuzzStop);
+    this.eventemitter.on('fuzz.complete', this.onFuzzComplete);
+    this.eventemitter.on('fuzz.cancel', this.onFuzzCancel);
 
     this.getFuzzcontexts()
   }
@@ -772,27 +776,33 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzStart(data) {
+    return;
+    // try {
 
-    try {
-
-      if(Utils.isNothing(data)) {
-        this.toastInfo('data from fuzzer is missing', 'Fuzzing Started');
-        return;
-      }
-
-      const jobj = JSON.parse(data);
-
-      this.isFuzzingInProgress = true
-      this.currentFuzzingContextId = jobj.fuzzcontextId;
-      this.currentFuzzingCaseSetRunId = jobj.fuzzCaseSetRunId;
       
-    } catch (error) {
-      //TODO: logging
-      this.toastError('data from fuzzer is missing', 'On Fuzz Start');
-    }
+
+    //   // if(Utils.isNothing(data)) {
+    //   //   this.toastInfo('data from fuzzer is missing', 'Fuzzing Started');
+    //   //   return;
+    //   // }
+
+    //   // const jobj = data;
+
+
+      
+    // } catch (error) {
+    //   //TODO: logging
+    //   this.toastError('data from fuzzer is missing', 'On Fuzz Start');
+    // }
   }
 
-  onFuzzStop(data) {
+  onFuzzComplete(data) {
+    this.isFuzzingInProgress = false;
+     this.currentFuzzingContextId = '';
+     this.currentFuzzingCaseSetRunId = '';
+  }
+
+  onFuzzCancel() {
     this.isFuzzingInProgress = false;
      this.currentFuzzingContextId = '';
      this.currentFuzzingCaseSetRunId = '';
@@ -885,7 +895,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
               fuzzcontextId: fc.Id,
               label: fc.name,
               name: fc.name,
-              data: fc
+              data: fc,
+              isFuzzCaseRun: false
             };
 
             apiNode.children.push(fcNode);
@@ -918,71 +929,89 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
+  determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
+    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
+    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+  }
+
   shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId) {
     if(!this.isFuzzingInProgress && !isFuzzCaseRun && this.currentFuzzingContextId == fuzzcontextId) {
-        return true;
+        this.showFuzzIcon = true;
+        return;
     }
 
-    return false;
+    this.showFuzzIcon = false;
   }
 
   shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
-    if(!this.isFuzzingInProgress) {
+    if(this.isFuzzingInProgress) {
         // is parent node fuzz context
       if(!isFuzzCaseRun) {
           if(this.currentFuzzingContextId == fuzzcontextId) {
-            return true;
+            this.showCancelFuzzIcon = true;
+            return;
           }
       } else {
           if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
-            return true;
+            this.showCancelFuzzIcon = true;
+            return;
           }
       }
     }
 
-    return false;
+    this.showCancelFuzzIcon  = false;
   }
 
   shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
 
     if(!this.isFuzzingInProgress) {
-      return false;
+      this.showFuzzProgressBar = false;
+      return;
     }
 
     // is parent node fuzz context
     if(!isFuzzCaseRun) {
         if(this.currentFuzzingContextId == fuzzcontextId) {
-          return true;
+          this.showFuzzProgressBar = true;
+          return;
         }
     } else {
         if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
-          return true;
+          this.showFuzzProgressBar = true;
+          return;
         }
     }
 
-    return false;
+    this.showFuzzProgressBar = false;
   }
 
   async onFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId, name) {
     this.toastInfo(`initiatiated fuzzing on ${name}`);
+
     const [ok, msg] = await this.fuzzermanager.fuzz(fuzzcontextId)
     if(!ok) {
       this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
       return;
     }
 
-    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
-    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
-    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    this.isFuzzingInProgress = true
+    this.currentFuzzingContextId = fuzzcontextId;
+    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
+
+    //this.determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
   }
 
   onCancelFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
     this.fuzzermanager.cancelFuzzing();
     this.toastInfo('cancelling fuzzing');
 
-    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
-    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
-    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    this.isFuzzingInProgress = true
+    this.currentFuzzingContextId = fuzzcontextId;
+    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
+
+    //this.determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+
   }
 
 

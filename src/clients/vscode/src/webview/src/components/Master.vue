@@ -139,7 +139,7 @@
 
     // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
     private notifyFuzzStart(data) {
-      this.eventemitter.emit('fuzz.start')
+      this.eventemitter.emit('fuzz.start', data);
     }
 
     private notifyFuzzComplete(data) {
@@ -167,8 +167,6 @@
     }
   }
   
-  
-
   </script>
 
 <style>
