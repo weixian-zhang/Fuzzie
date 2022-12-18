@@ -118,7 +118,7 @@
          } else {
             if(!this.fuzzerConnected) {
               this.notifyFuzzerReady();
-              this.toastSuccuss('fuzzer is ready');
+              this.toastSuccess('fuzzer is ready');
               this.fuzzerConnected = true;
             }
          }
@@ -162,7 +162,7 @@
         this.$toast.add({severity:'error', summary: title, detail: msg, life: duration});
     }
 
-    toastSuccuss (msg: string, title = '', duration=4000) {
+    toastSuccess (msg: string, title = '', duration=4000) {
         this.$toast.add({severity:'success', summary: title, detail: msg, life: duration});
     }
   }

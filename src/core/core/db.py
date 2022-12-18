@@ -102,7 +102,7 @@ ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
                             Column('Id', String),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
-                            Column('fuzzcaseSetRunIdId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
+                            Column('fuzzCaseSetRunId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
                             )
 
 # RowNumber for pagination
@@ -119,6 +119,7 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('url', String),
                             Column('headers', String),
                             Column('body', String),
+                            Column('invalidRequestError', String),
                             Column('requestMessage', String),
                             Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
@@ -419,7 +420,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzResponseTable.columns.responseDisplayText
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
-                            ApiFuzzDataCaseTable.c.fuzzcaseSetRunIdId == fuzzCaseSetRunId)
+                            ApiFuzzDataCaseTable.c.fuzzcaseSetRunId == fuzzCaseSetRunId)
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .all()
@@ -682,7 +683,7 @@ def insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc: ApiFuzzDataCase) -> None:
             insert(ApiFuzzDataCaseTable).
             values(
                     Id = fdc.Id,
-                    fuzzcaseSetRunIdId = fuzzCaseSetRunId,
+                    fuzzCaseSetRunId = fuzzCaseSetRunId,
                     fuzzCaseSetId = fdc.fuzzCaseSetId,
                     fuzzcontextId = fdc.fuzzcontextId
                    )
@@ -716,6 +717,7 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
                     url = fr.url,
                     headers = fr.headers,
                     body = fr.body,
+                    invalidRequestError = fr.invalidRequestError,
                     requestMessage = fr.requestMessage,
                     contentLength = fr.contentLength
                    )

@@ -590,12 +590,13 @@
 
     </v-toolbar>
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" scrollHeight="300px" class="border-0">
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" class="border-0">
           <template #default="slotProps" >
             <small 
               :class="( slotProps.node.isFuzzCaseRun == false? (slotProps.node.fuzzcontextId === selectedContextNode) :
                (slotProps.node.fuzzcontextId === selectedContextNode &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode)  &&
-               (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 'p-1 border border-info border-2' : ''">
+               (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 
+               'p-1 border border-info border-2' : '' ">
               <b 
                 v-on:click="(
                   (slotProps.node.key != '-1' && slotProps.node.key != '-2') ?
@@ -634,31 +635,31 @@
 
                   <v-icon
                   v-tooltip="'start fuzzing'"
-                  v-show="(isFuzzingInProgress == false && slotProps.node.isFuzzCaseRun == false)"
+                  v-show="(
+                      isFuzzingInProgress == false && 
+                      slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    onFuzzIconClicked(slotProps.node.isFuzzCaseRun, 
-                    slotProps.node.fuzzcontextId,
-                    slotProps.node.fuzzCaseSetRunId,
-                    slotProps.node.name)
+                    onFuzzIconClicked(
+                      slotProps.node.fuzzcontextId,
+                      slotProps.node.name)
                   )" />
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="(isFuzzingInProgress == true && 
-                  slotProps.node.isFuzzCaseRun == false && 
-                  currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                  v-show="(
+                      isFuzzingInProgress == true && 
+                      slotProps.node.isFuzzCaseRun == false && 
+                      currentFuzzingContextId == slotProps.node.fuzzcontextId)"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    onCancelFuzzIconClicked(slotProps.node.isFuzzCaseRun,
-                    slotProps.node.fuzzcontextId,
-                    slotProps.node.fuzzCaseSetRunId)
+                    onCancelFuzzIconClicked()
                   )" />
                   
 
@@ -667,9 +668,10 @@
               <v-progress-linear
                 indeterminate
                 color="cyan"
-                v-show="((isFuzzingInProgress == true && isFuzzCaseRun == false) ? 
-                (currentFuzzingContextId == slotProps.node.fuzzcontextId) : 
-                (currentFuzzingContextId == slotProps.node.fuzzcontextId && currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunId))"
+                v-show="(
+                  isFuzzingInProgress == true && 
+                  slotProps.node.isFuzzCaseRun == false && 
+                  currentFuzzingContextId == slotProps.node.fuzzcontextId)"
                 style="width:100%" />
           </template>
       </Tree>
@@ -713,6 +715,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
   nodes: TreeNode[] = [];
+  expandedNodeKeys = {};
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
   showFuzzConfirmDialog = false;
@@ -730,8 +733,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   
   fuzzerConnected = false;
   isFuzzingInProgress = false;
-  currentFuzzingContextId = ''
-  currentFuzzingCaseSetRunId = ''
+  currentFuzzingContextId = '';
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -750,7 +752,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   //methods
   
-  mounted() {
+  async mounted() {
 
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
@@ -772,7 +774,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.clearData()
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
-    this.currentFuzzingCaseSetRunId = '';
   }
 
   onFuzzStart(data) {
@@ -799,13 +800,15 @@ export default class ApiDiscovery extends Vue.with(Props) {
   onFuzzComplete(data) {
     this.isFuzzingInProgress = false;
      this.currentFuzzingContextId = '';
-     this.currentFuzzingCaseSetRunId = '';
+
+    this.toastSuccess('fuzzing is completed');
   }
 
   onFuzzCancel() {
     this.isFuzzingInProgress = false;
-     this.currentFuzzingContextId = '';
-     this.currentFuzzingCaseSetRunId = '';
+    this.currentFuzzingContextId = '';
+
+    this.toastInfo('fuzzing is cancelled');
   }
 
   //#### websocket event ends ####
@@ -869,6 +872,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   createTreeNodesFromFuzzcontexts(fcs: ApiFuzzContext[]): TreeNode[] {
 
+    this.expandedNodeKeys = {};
+    this.expandedNodeKeys['-1'] = true;
+    this.expandedNodeKeys['-2'] = true;
+
     const nodes: TreeNode[] = [];
 
     const apiNode = {
@@ -898,6 +905,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
               data: fc,
               isFuzzCaseRun: false
             };
+
+            this.expandedNodeKeys[fc.Id] = true;
 
             apiNode.children.push(fcNode);
 
@@ -929,64 +938,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
-    this.shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId);
-    this.shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
-    this.shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
-  }
 
-  shouldShowFuzzIcon(isFuzzCaseRun, fuzzcontextId) {
-    if(!this.isFuzzingInProgress && !isFuzzCaseRun && this.currentFuzzingContextId == fuzzcontextId) {
-        this.showFuzzIcon = true;
-        return;
-    }
-
-    this.showFuzzIcon = false;
-  }
-
-  shouldShowCancelFuzzIcon(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
-    if(this.isFuzzingInProgress) {
-        // is parent node fuzz context
-      if(!isFuzzCaseRun) {
-          if(this.currentFuzzingContextId == fuzzcontextId) {
-            this.showCancelFuzzIcon = true;
-            return;
-          }
-      } else {
-          if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
-            this.showCancelFuzzIcon = true;
-            return;
-          }
-      }
-    }
-
-    this.showCancelFuzzIcon  = false;
-  }
-
-  shouldShowFuzzProgressBar(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
-
-    if(!this.isFuzzingInProgress) {
-      this.showFuzzProgressBar = false;
-      return;
-    }
-
-    // is parent node fuzz context
-    if(!isFuzzCaseRun) {
-        if(this.currentFuzzingContextId == fuzzcontextId) {
-          this.showFuzzProgressBar = true;
-          return;
-        }
-    } else {
-        if(this.currentFuzzingContextId == fuzzcontextId && this.currentFuzzingCaseSetRunId == fuzzCaseSetRunId) {
-          this.showFuzzProgressBar = true;
-          return;
-        }
-    }
-
-    this.showFuzzProgressBar = false;
-  }
-
-  async onFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId, name) {
+  async onFuzzIconClicked (fuzzcontextId, name)  {
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
     const [ok, msg] = await this.fuzzermanager.fuzz(fuzzcontextId)
@@ -997,23 +950,19 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.isFuzzingInProgress = true
     this.currentFuzzingContextId = fuzzcontextId;
-    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
 
-    //this.determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
+    await Utils.delay(2000);
+
+    this.getFuzzcontexts();
   }
 
-  onCancelFuzzIconClicked(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId) {
+  onCancelFuzzIconClicked() {
     this.fuzzermanager.cancelFuzzing();
     this.toastInfo('cancelling fuzzing');
 
-    this.isFuzzingInProgress = true
-    this.currentFuzzingContextId = fuzzcontextId;
-    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
-
-    //this.determineShouldShowIcons(isFuzzCaseRun, fuzzcontextId, fuzzCaseSetRunId);
-
-  }
-
+    this.isFuzzingInProgress = false
+    this.currentFuzzingContextId = '';
+ }
 
   onFuzzContextSelected(fuzzcontextId, fuzzCaseSetRunsId) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, fuzzCaseSetRunsId);

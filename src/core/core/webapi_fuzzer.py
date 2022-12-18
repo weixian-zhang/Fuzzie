@@ -190,7 +190,9 @@ class WebApiFuzzer:
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
             #send data to GUI pver websocket
-            self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            if summaryViewModel is not None:
+                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+                
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
         except Exception as e:
@@ -220,26 +222,48 @@ class WebApiFuzzer:
                 req = Request(fcs.verb, url, headers=headers, json=body, files=files)
             else:
                 req = Request(fcs.verb, url, headers=headers, json=body)
+            
+            # catch invalid url, request exception  
+            try:
                 
-            prepReq = req.prepare()
+                prepReq = req.prepare()
             
-            reqContentLength = prepReq.headers['Content-Length']
+                reqContentLength = prepReq.headers['Content-Length']
+                
+                fuzzDataCase.request = self.create_fuzzrequest(
+                                        fuzzDataCaseId=fuzzDataCase.Id,
+                                        fuzzcontextId=self.apifuzzcontext.Id,
+                                        hostname=hostname, 
+                                        port=port,
+                                        hostnamePort=hostnamePort,
+                                        url=url,
+                                        path=path,
+                                        qs=querystring,
+                                        verb=fcs.verb,
+                                        headers=headers,
+                                        body=body,
+                                        contentLength=reqContentLength)
+                
+                resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, verify=False)
             
-            fuzzDataCase.request = self.create_fuzzrequest(
-                                    fuzzDataCaseId=fuzzDataCase.Id,
-                                    fuzzcontextId=self.apifuzzcontext.Id,
-                                    hostname=hostname, 
-                                    port=port,
-                                    hostnamePort=hostnamePort,
-                                    url=url,
-                                    path=path,
-                                    qs=querystring,
-                                    verb=fcs.verb,
-                                    headers=headers,
-                                    body=body,
-                                    contentLength=reqContentLength)
-            
-            resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, verify=False)
+            except Exception as e:
+                err =  Utils.jsone(e.args)
+                fuzzDataCase.request = self.create_fuzzrequest(
+                                        fuzzDataCaseId=fuzzDataCase.Id,
+                                        fuzzcontextId=self.apifuzzcontext.Id,
+                                        hostname=hostname, 
+                                        port=port,
+                                        hostnamePort=hostnamePort,
+                                        url=url,
+                                        path=path,
+                                        qs=querystring,
+                                        verb=fcs.verb,
+                                        headers=headers,
+                                        body=body,
+                                        contentLength=0,
+                                        invalidRequestError=err)
+                return fuzzDataCase
+                
             
             fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
@@ -326,16 +350,19 @@ class WebApiFuzzer:
             
             insert_api_fuzzrequest(fdc.request)
             
-            insert_api_fuzzresponse(fdc.response)
-            
-            # update run summary
-            summaryViewModel = update_casesetrun_summary(fdc.fuzzcontextId, fdc.fuzzCaseSetId, caseSetRunSummaryId,
+            if len(fdc.response) > 0:
+                insert_api_fuzzresponse(fdc.response)
+                
+                # update run summary
+                summaryViewModel = update_casesetrun_summary(fdc.fuzzcontextId, fdc.fuzzCaseSetId, caseSetRunSummaryId,
                                       int(fdc.response.statusCode),
                                       completedDataCaseRuns=1)
+                
+                return summaryViewModel
             
             self.dbLock.release()
             
-            return summaryViewModel
+            return None
             
         except Exception as e:
             #error occurs when fuzzing cancel, if is cancelled, ignore error
@@ -344,7 +371,7 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
                 
     
-    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength):
+    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError=''):
         
         try:
             fr = ApiFuzzRequest()
@@ -363,6 +390,7 @@ class WebApiFuzzer:
             fr.headers = Utils.jsone(headers)
             fr.body = body
             fr.contentLength = contentLength
+            fr.invalidRequestError = invalidRequestError
             
             headerMultilineText = ''
             

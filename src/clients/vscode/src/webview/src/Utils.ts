@@ -131,4 +131,11 @@ export default class Utils
             return str;
         }
     }
+
+    private static sleep = m => new Promise(r => setTimeout(r, m))
+
+    public static async delay(sec) {
+        await Utils.sleep(sec);
+    }
+    
 }

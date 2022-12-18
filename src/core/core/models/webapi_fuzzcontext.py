@@ -43,6 +43,7 @@ class ApiFuzzRequest:
         self.url: str = ''
         self.headers = {}    # json 
         self.body = {}       # json 
+        self.invalidRequestError = ''
         self.requestMessage = ''
         self.contentLength = 0
 
