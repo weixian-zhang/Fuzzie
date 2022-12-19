@@ -856,6 +856,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
         {
           this.nodes = [];
           this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
+
+          this.eventemitter.emit('onFuzzContextRefreshClicked');
+          
         }
         else
         {

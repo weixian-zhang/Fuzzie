@@ -207,18 +207,22 @@ class WebApiFuzzer:
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
+            # url already includes hostname, port, path and qs
             ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
                 raise(Exception('Error at data prep when fuzzing: {err}'))
             
-            
             req: Request = None
             resp: Response = None
             httpSession = Session()
             
-            if len(files) > 0:
+            contentType = headers['Content-Type']
+            
+            if contentType == 'application/x-www-form-urlencoded':
+                req = Request(fcs.verb, url, headers=headers, data=body)
+            elif len(files) > 0:
                 req = Request(fcs.verb, url, headers=headers, json=body, files=files)
             else:
                 req = Request(fcs.verb, url, headers=headers, json=body)
@@ -511,8 +515,8 @@ class WebApiFuzzer:
                 headerDict[hk] = resolvedVal
                 
             
-            if len(files) > 0:
-                headerDict["Content-Type"] = "multipart/form-data"
+            # if len(files) > 0:
+            #     headerDict["Content-Type"] = "multipart/form-data"
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
