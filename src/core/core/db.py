@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import *
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.functions import coalesce
 import os
 import json
 from pathlib import Path
@@ -85,12 +86,12 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
 
 ApiFuzzRunSummaryPerCaseSetTable = Table(apifuzzRunSummaryPerCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
-                            Column('http2xx', Integer),
-                            Column('http3xx', Integer),
-                            Column('http4xx', Integer),
-                            Column('http5xx', Integer),
-                            Column('completedDataCaseRuns', Integer),
-                            Column('totalDataCaseRunsToComplete', Integer),
+                            Column('http2xx', Integer, default=0), 
+                            Column('http3xx', Integer, default=0),
+                            Column('http4xx', Integer, default=0),
+                            Column('http5xx', Integer, default=0),
+                            Column('completedDataCaseRuns', Integer, default=0),
+                            Column('totalDataCaseRunsToComplete', Integer, default=0),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzCaseSetRunId', String, ForeignKey(f'{ApiFuzzCaseSetRunsTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
@@ -361,29 +362,30 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     Session = scoped_session(session_factory)
     
     if fuzzCaseSetRunId == '':
-        fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+        fcsSumRows = (
+                        Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
                                 ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId")
                                 )
-                    .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-                    .all()
-                )
+                        .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                        .all()
+                     )
     else:
-        fcsSumRows = (Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                                ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
-                                ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
-                                )
-                    .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId,
-                            ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
-                    .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
-                    .all()
-                )
+        fcsSumRows = (
+                        Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                                    ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
+                                    )
+                        .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                        .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
+                        .all()
+                    )
     
     
         

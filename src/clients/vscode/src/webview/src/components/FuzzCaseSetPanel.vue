@@ -126,19 +126,19 @@
               {{ item.file }}
             </td>
             <td>
-              {{ item.http2xx }}
+              {{ item.http2xx == undefined ? 0 : item.http2xx }}
             </td>
             <td>
-              {{ item.http3xx }}
+              {{ item.http3xx == undefined ? 0 : item.http3xx }}
             </td>
             <td>
-              {{ item.http4xx }}
+              {{ item.http4xx == undefined ? 0 : item.http4xx }}
             </td>
             <td>
-              {{ item.http5xx }}
+              {{ item.http5xx == undefined ? 0 : item.http5xx }}
             </td>
             <td>
-              {{ item.completedDataCaseRuns }}
+              {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns }}
             </td>
             
           </tr>
@@ -181,7 +181,6 @@ class Props {
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
 
-
   fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
   dataCache = {};
@@ -202,12 +201,6 @@ class Props {
 
   fuzzerConnected = false;
 
-  // @Watch('fcsRunSums', { immediate: true, deep: true })
-  // onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
-  //   console.log(val);
-  //   return;
-  // }
-
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
   }
@@ -216,7 +209,6 @@ class Props {
     this.tableValViewInSizeBar = val
   }
 
-  
   mounted(){
     //event from master
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);

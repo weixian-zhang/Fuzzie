@@ -218,9 +218,7 @@ class WebApiFuzzer:
             resp: Response = None
             httpSession = Session()
             
-            contentType = headers['Content-Type']
-            
-            if contentType == 'application/x-www-form-urlencoded':
+            if 'application/x-www-form-urlencoded' in headers:
                 req = Request(fcs.verb, url, headers=headers, data=body)
             elif len(files) > 0:
                 req = Request(fcs.verb, url, headers=headers, json=body, files=files)
