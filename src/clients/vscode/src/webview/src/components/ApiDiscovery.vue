@@ -284,7 +284,7 @@
      <Sidebar v-model:visible="updateContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
+        <div class="row mb-3"><h5>Update Fuzz Context</h5></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -307,7 +307,7 @@
 
               <div class="form-group mb-3" >
                 <v-text-field
-                    v-model="newApiContext.hostname"
+                    v-model="apiContextEdit.hostname"
                     variant="underlined"
                     :rules="[() => !!apiContextEdit.hostname || 'This field is required']"
                     density="compact"
@@ -382,7 +382,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
                   <label class="btn btn-outline-info small" for="authn-noauthn" @click="(
-                    newApiContext.authnType='Anonymous',
+                    apiContextEdit.authnType='Anonymous',
                     securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
@@ -391,7 +391,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-basic" :checked="securityBtnVisibility.basic == true">
                   <label class="btn btn-outline-success small" for="authn-basic" @click="(
-                    newApiContext.authnType='Basic',
+                    apiContextEdit.authnType='Basic',
                     securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=true,
                     securityBtnVisibility.bearer=false,
@@ -400,7 +400,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" :checked="securityBtnVisibility.bearer == true">
                   <label class="btn btn-outline-success small" for="authn-bearer" @click="(
-                    newApiContext.authnType='Bearer',
+                    apiContextEdit.authnType='Bearer',
                     securityBtnVisibility.anonymous =false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=true,
@@ -409,7 +409,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" :checked="securityBtnVisibility.apikey == true">
                   <label class="btn btn-outline-success small" for="authn-apikey" @click="(
-                    newApiContext.authnType='ApiKey',
+                    apiContextEdit.authnType='ApiKey',
                     securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
@@ -584,7 +584,8 @@
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
+      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain 
+         @click="(newContextSideBarVisible = true )">
         <v-icon color="cyan darken-3">mdi-api</v-icon>
       </v-btn>
 
@@ -616,7 +617,7 @@
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    onEditFuzzContextClicked(slotProps.node.fuzzcontextId)
+                    onEditFuzzContextClicked(slotProps.node.data)
                   )"
                   >
 
@@ -777,24 +778,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzStart(data) {
-    return;
-    // try {
-
-      
-
-    //   // if(Utils.isNothing(data)) {
-    //   //   this.toastInfo('data from fuzzer is missing', 'Fuzzing Started');
-    //   //   return;
-    //   // }
-
-    //   // const jobj = data;
-
-
-      
-    // } catch (error) {
-    //   //TODO: logging
-    //   this.toastError('data from fuzzer is missing', 'On Fuzz Start');
-    // }
+    this.toastInfo('fuzzing started');
   }
 
   onFuzzComplete(data) {

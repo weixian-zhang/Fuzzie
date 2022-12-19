@@ -83,7 +83,8 @@ export class FuzzRequest {
     public headers = '';
     public body = '';
     public contentLength = 0;
-    public requestMessage = ''
+    public requestMessage = '';
+    public invalidRequestError = '';
 }
 
 export class FuzzResponse {

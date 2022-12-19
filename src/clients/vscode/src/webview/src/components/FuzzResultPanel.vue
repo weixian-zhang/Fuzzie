@@ -35,7 +35,7 @@
 
     <Splitter  style="height: 100%" >
       <SplitterPanel :size="50">
-        <v-table density="compact" fixed-header class="style=display: flex; flex-flow: column; height: 100%;">
+        <v-table density="compact" fixed-header height="400px" hover="true">
         <thead>
           <tr>
             <th class="text-left">
@@ -64,18 +64,18 @@
           <tr
             v-for="item in fdcsDataFiltered"
             :key="item.response.Id"
-            @click="(onRowClick(item), selectedRow= item.response.Id)"
-            :style="item.response.Id === selectedRow ? 'background-color:lightgrey;' : ''">
+            @click="(onRowClick(item), selectedRow= item.request.Id)"
+            :style="item.request.Id === selectedRow ? 'background-color:lightgrey;' : ''">
 
 
             <td>{{ item.response.statusCode }}</td>
             
             <td>
-              {{ item.request.path }}
+              {{ shortenValueInTable(item.request.path, 15) }}
             </td>
             
             <td>
-              {{shortenStringForDisplay(item.response.reasonPharse) }}
+              {{shortenValueInTable(item.response.reasonPharse, 15) }}
             </td>
 
             <td>
@@ -170,6 +170,7 @@ class Props {
     mounted() {
       this.eventemitter.on("onFuzzCaseSetSelected", this.onFuzzCaseSetSelected);
       this.eventemitter.on("onFuzzContextSelected", this.clearData);
+      this.eventemitter.on("onFuzzContextRefreshClicked", this.clearData)
     }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
@@ -212,9 +213,16 @@ class Props {
     }
 
     onRowClick(fcs: FuzzDataCase) {
-
-      this.selectedRequest = fcs.request.requestMessage;
-      this.selectedResponse = fcs.response.responseDisplayText;
+      
+      if (fcs.request.invalidRequestError != '') {
+        this.selectedRequest = fcs.request.invalidRequestError;
+      } else {
+        this.selectedRequest = fcs.request.requestMessage;
+      }
+      
+      if(fcs.response.Id != null) {
+        this.selectedResponse = fcs.response.responseDisplayText;
+      }
     }
 
     //clear data on fuzz-context change but leave "fdcsFuzzingData" alone
@@ -234,12 +242,22 @@ class Props {
     }
 
     timeDiff(a: string, b: string) {
+
+      if(b == null) {
+        return 0;
+      }
+
        const aDate: Date = new Date(a);
        const bDate: Date = new Date(b);
 
        var seconds = (bDate.getTime() - aDate.getTime()) / 1000;
 
        return parseFloat(seconds.toFixed(2));
+    }
+
+    shortenValueInTable(bodyJson, length=40)
+    {
+      return Utils.shortenStr(bodyJson, length);
     }
  }
  

@@ -231,6 +231,7 @@ class ServiceManager:
                 fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
                 fdc.request.requestMessage = rowDict['requestMessage']
+                fdc.request.invalidRequestError = rowDict['invalidRequestError']
                 
                 fdc.response = FuzzResponse_ViewModel()
                 fdc.response.Id = rowDict['fuzzResponseId']

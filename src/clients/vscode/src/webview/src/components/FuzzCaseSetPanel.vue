@@ -217,7 +217,7 @@ class Props {
     // listen to ApiDiscovery Tree item select event
     this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
-     this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked)
+    this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked)
 
     //websocket receive message from fuzzer
     //this.webclient.subscribeWS('fuzz.update.casesetrunsummary', this.onWSFuzzerFuzzRunSummaryUpdate)

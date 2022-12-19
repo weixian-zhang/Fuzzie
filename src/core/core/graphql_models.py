@@ -206,6 +206,7 @@ class FuzzRequest_ViewModel(graphene.ObjectType):
     body = graphene.String()
     contentLength = graphene.Int()
     requestMessage = graphene.String()
+    invalidRequestError = graphene.String()
 
 class FuzzResponse_ViewModel(graphene.ObjectType): 
     Id = graphene.String()

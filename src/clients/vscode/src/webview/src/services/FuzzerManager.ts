@@ -253,6 +253,7 @@ export default class FuzzerManager
                         body
                         contentLength
                         requestMessage
+                        invalidRequestError
                     }
                     response {
                         Id

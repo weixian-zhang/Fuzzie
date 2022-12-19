@@ -370,28 +370,68 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                         .all()
                      )
     else:
-        fcsSumRows = (
-                        Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                                    ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
-                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
+        
+        
+        runSummaryQuery = (
+                        Session.query(ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"),
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
                                     )
-                        .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-                        .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
-                        .all()
+                        .filter(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzcontextId == fuzzcontextId,
+                                ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+                        .subquery()
                     )
+        
+        result = (
+                        Session.query(
+                                    ApiFuzzCaseSetTable, 
+                                    ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+                                    ApiFuzzCaseSetTable.columns.fuzzcontextId,
+                                    runSummaryQuery.columns.fuzzCaseSetRunId,
+                                    runSummaryQuery.columns.http2xx,
+                                    runSummaryQuery.columns.http3xx,
+                                    runSummaryQuery.columns.http4xx,
+                                    runSummaryQuery.columns.http5xx,
+                                    runSummaryQuery.columns.completedDataCaseRuns,
+                                    runSummaryQuery.columns.totalDataCaseRunsToComplete
+                                )
+                        .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                        .outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == ApiFuzzCaseSetTable.c.Id )
+                        .all()
+                     )
+        
+        # joinQuery = fuzzcasesetsQuery.join(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == fuzzcasesetsQuery.c.fuzzCaseSetId, isouter=True)
+
+        # result = joinQuery.all()
+        
+        # fcsSumRows = (
+        #                 Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
+        #                             ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete, 0),
+        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"), ''),
+        #                             ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
+        #                             )
+        #                 .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+        #                 .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
+        #                 .distinct().all()
+        #             )
     
     
         
     Session.close()
     
-    return fcsSumRows
+    return result
 
 def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
     
