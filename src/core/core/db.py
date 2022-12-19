@@ -411,6 +411,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzRequestTable.columns.body,
                                 ApiFuzzRequestTable.columns.contentLength,
                                 ApiFuzzRequestTable.columns.requestMessage,
+                                ApiFuzzRequestTable.columns.invalidRequestError,
                                 ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
                                 ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
                                 ApiFuzzResponseTable.columns.statusCode,
@@ -422,7 +423,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzResponseTable.columns.responseDisplayText
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
-                            ApiFuzzDataCaseTable.c.fuzzcaseSetRunId == fuzzCaseSetRunId)
+                            ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .all()

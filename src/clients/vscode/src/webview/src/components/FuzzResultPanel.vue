@@ -182,7 +182,7 @@ class Props {
       const [ok, error, result] = await this.fuzzermanager.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
 
       if(!ok) {
-        this.toastError.add('error', 'Fuzz Result Panel');
+        this.toastError(error, 'Fuzz Result Panel');
       }
 
       if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
