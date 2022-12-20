@@ -322,7 +322,7 @@ class WebApiFuzzer:
             
             self.currentFuzzRuns = self.currentFuzzRuns + 1
             
-            print(f'fuzz runs: {self.currentFuzzRuns}/{self.totalFuzzRuns}')
+            self.eventstore.emitInfo('fuzzing test cases: {self.currentFuzzRuns}/{self.totalFuzzRuns} ')
     
             # check if last task, to end fuzzing
             if self.currentFuzzRuns  >= self.totalFuzzRuns:

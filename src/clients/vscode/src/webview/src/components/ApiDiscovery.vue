@@ -629,7 +629,7 @@
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId)
+                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
                   )"/>
 
                   &nbsp;
@@ -802,10 +802,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.updateContextSideBarVisible = true;
   }
 
-  onDeleteFuzzContextClicked(data) {
+  onDeleteFuzzContextClicked(fuzzcontextId, name) {
     this.apiContextToDelete = {
-                          Id: data.Id,
-                          name: data.name,
+                          Id: fuzzcontextId,
+                          name: name,
                         },
     this.showDeleteConfirmDialog = true
   }
