@@ -5,59 +5,84 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 export default class FuzzerWebClient
 {
     private gqlUrl = 'https://localhost:50001/graphql';
-    private wsUrl = 'wss://localhost:50001/ws';
+    private wsUrl = 'wss://localhost:50001';
     private _ws;
     private fuzzerEventSubscribers = {};  // dict with value as list  
     private axiosinstance;
+    isWSConnected = false;
 
     public constructor() {
-        
-        this._ws = new ReconnectingWebSocket(this.wsUrl, "", {WebSocket: WebSocket});
+        // this._ws = new ReconnectingWebSocket(this.wsUrl);
+        //this._ws = new WebSocket(this.wsUrl);
     }
 
-    public connectWSServer()
-    {
-        this._ws.addEventListener("error", (err) => {
-            //this._logger.log(err.message)
-        });
+    connectWS() {
+        this.retryWSInternal();
+    }
 
-        this._ws.addEventListener('open', () => {
-            //this._logger.log('connected to fuzzer websocket server')
-        });
+    private retryWSInternal() {
 
-        this._ws.addEventListener('close', () => {
-            //this._logger.log(`websocket client closed, retrying...`)
-        });
+        this.connectWSInternal()
 
-        this._ws.addEventListener('message', (event) => {
-
-            const msg = event.data.toString()
+        // setInterval(() => {
+        //     if(!this.isWSConnected) {
+        //         this.connectWSInternal();
+        //     }
             
-            if (msg == "") {
-                return;
-            }
-            
-            // timestamp
-            // data
-            // topic
-            const jmsg = JSON.parse(msg)
+        // }, 2000);
+    }
 
-            if(jmsg.topic == '') {
+    private connectWSInternal = () => {
+        
+        try {
+
+            this._ws = new WebSocket(this.wsUrl);
+
+            this._ws.onopen = () => {
+
+                this.isWSConnected = true;
+    
+                console.log('connected to fuzzer websocket server')
+    
+              // subscribe to some channels
+            //   this._ws.send(JSON.stringify({
+            //       //.... some message the I must send when I connect ....
+            //   }));
+            };
+          
+            this._ws.onmessage = (e)  => {
+              console.log('Message:', e.data);
+            };
+          
+            this._ws.onclose = (e) => {
+
                 //TODO: log
-                return
-            }
+                
+                this.isWSConnected = false;
+    
+                console.log('cannot connect to fuzzer websocket server, retrying', e.reason);
+                
+                this._ws = null;
+                setTimeout( () => {
+                    this.connectWSInternal();
+                }, 1500);
+            };
+          
+            this._ws.onerror = (err) => {
+              
+              //TODO: log
+              console.error('cannot connect to fuzzer websocket server, retrying');
 
-            const funcList = this.fuzzerEventSubscribers[jmsg.topic];
+              this._ws = null;
 
-            if (funcList == undefined){
-                //TODO: logger log
-                return;
-            }
-            
-            funcList.forEach(func => {
-                func(jmsg);
-            });
-        });
+              if(this._ws != undefined){
+                this._ws.close();
+              }
+            };
+        } catch (error) {
+            console.log(error);
+        }
+        
     }
 
     public subscribeWS(topic: string, func: any) {
@@ -72,7 +97,11 @@ export default class FuzzerWebClient
     
     public wsSend(data: string) {
         try {
-            this._ws.send(data);
+
+            if(this._ws.connected) {
+                this._ws.send(data);
+            }
+            
         } catch (error) {
             //TODO: logging
         }

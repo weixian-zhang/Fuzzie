@@ -32,7 +32,7 @@
     "vuetify": "^3.0.0-beta.0",
     "webfontloader": "^1.0.0",
     "webpack-plugin-vuetify": "^2.0.0",
-    "ws": "^8.10.0"
+    "ws": "^8.11.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.14",

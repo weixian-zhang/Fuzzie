@@ -43,7 +43,7 @@ class Message(object):
  
 class EventStore:
     
-    websocket = None
+    websocketClients = []
     wsMsgQueue = []
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
@@ -116,8 +116,8 @@ class EventStore:
     def handleGeneralLogs(self, msg: str):
         print(msg)
     
-    def set_websocket(self, websocket):
-        EventStore.websocket = websocket
+    def add_websocket(self, websocket):
+        self.websocketClients.append(websocket)
     
     # data must be json format
     def feedback_client(self, topic: str, data: str = ''):
@@ -130,15 +130,20 @@ class EventStore:
                    
             m = WebsocketClientMessage(topic, data)
             
-            if EventStore.websocket != None:
-                if len(EventStore.wsMsgQueue) > 0:
-                    while len(EventStore.wsMsgQueue) > 0:
-                        await EventStore.websocket.send_text(self.wsMsgQueue.pop())
+            if len(EventStore.websocketClients) > 0:
+                for w in EventStore.websocketClients:
+                    await w.send_text(m.json())
+                
+            
+            # if EventStore.websocket != None:
+            #     if len(EventStore.wsMsgQueue) > 0:
+            #         while len(EventStore.wsMsgQueue) > 0:
+            #             await EventStore.websocket.send_text(self.wsMsgQueue.pop())
                     
-                await EventStore.websocket.send_text(m.json())
-            else:
-                EventStore.wsMsgQueue.append(m.json())
+            #     await EventStore.websocket.send_text(m.json())
+            # else:
+            #     EventStore.wsMsgQueue.append(m.json())
                 
         except Exception as e:
-            EventStore.wsMsgQueue.append(m.json())
+            #EventStore.wsMsgQueue.append(m.json())
             print(e)

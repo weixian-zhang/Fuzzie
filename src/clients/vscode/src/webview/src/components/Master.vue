@@ -95,7 +95,7 @@
 
       this.toastInfo('trying to connect to fuzzer');
 
-      this.wc.connectWSServer()
+      this.wc.connectWS()
 
       setInterval(this.checkFuzzerReady, 4000)
     }
@@ -108,7 +108,7 @@
             //stop any fuzzing activity
             this.fuzzerConnected = false;
             this.notifyFuzzerIsNotReady();
-            this.toastError('fuzzer is not ready, retrying...');
+            this.toastError('fuzzer is not ready, retrying...', '', 1000);
             return;
          }
 

@@ -41,7 +41,7 @@ app.add_middleware(
 
 websocket: WebSocket = None
 
-@app.websocket_route("/ws")
+@app.websocket_route("/")
 class WebSocketServer(WebSocketEndpoint):
     counter = 0
     encoding = "text"
@@ -69,12 +69,22 @@ class WebSocketServer(WebSocketEndpoint):
         print(f'Fuzzer/main: client disconnected from websocket server, close_code {close_code}')
         
     async def on_connect(self, websocket):
-        await websocket.accept()
         
-        websocket = websocket
+        try:
+            await websocket.accept()
         
-        eventstore.set_websocket(websocket)
-        eventstore.feedback_client(eventstore.InfoEventTopic, 'client connected to websocket server ')
+            websocket = websocket
+            
+            eventstore.add_websocket(websocket)
+            
+            while True:
+                eventstore.feedback_client(eventstore.InfoEventTopic, f'client connected to websocket server from client port {websocket.client.port}')
+                import time
+                time.sleep(1.5)
+            
+        except Exception as e:
+            eventstore.emitErr(e)
+        
 
 
 # init graphql server
@@ -95,22 +105,27 @@ atexit.register(on_exit)
 #main entry point and startup
 def start_webserver():
     
-    args = docopt(__doc__)
+    try:
+        args = docopt(__doc__)
     
-    global eventstore
-    
-    if args['webserver']:
-         
-        uvicorn.run(app, 
-                    host="0.0.0.0", 
-                    port=webserverPort,
-                    ssl_keyfile=".\certs\localhost+2-key.pem",
-                    ssl_certfile=".\certs\localhost+2.pem"
-                    )
+        global eventstore
         
-        asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
-    else:
-         asyncio.run(eventstore.emitInfo('fuzzer started'))
+        if args['webserver']:
+            
+            uvicorn.run(app, 
+                        host="0.0.0.0", 
+                        port=webserverPort,
+                        ssl_keyfile=".\certs\localhost+2-key.pem",
+                        ssl_certfile=".\certs\localhost+2.pem"
+                        )
+            
+            asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
+        else:
+            asyncio.run(eventstore.emitInfo('fuzzer started'))
+            
+    except Exception as e:
+        asyncio.run(eventstore.emitErr(e))
+    
     
 
     

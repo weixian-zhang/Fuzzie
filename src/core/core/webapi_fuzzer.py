@@ -56,7 +56,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 2
+        self.httpTimeoutInSec = 4
         self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.totalFuzzRuns = 0
@@ -97,9 +97,9 @@ class WebApiFuzzer:
             self.totalFuzzRuns = 0
             self.currentFuzzRuns = 0
             
-            self.dbLock.acquire()
+            #self.dbLock.acquire()
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
-            self.dbLock.release()
+            #self.dbLock.release()
             
         except Exception as e:
             self.eventstore.emitErr(e)
@@ -184,6 +184,7 @@ class WebApiFuzzer:
         
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
         
+        return
         try:
             fuzzDataCase = self.http_call_api(fcs)
             
@@ -201,7 +202,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
-    
+        
         try:
         
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
@@ -216,13 +217,15 @@ class WebApiFuzzer:
             
             req: Request = None
             resp: Response = None
-            httpSession = Session()
+            
             
             if 'application/x-www-form-urlencoded' in headers:
                 req = Request(fcs.verb, url, headers=headers, data=body)
             elif len(files) > 0:
+                body = json.dumps(body)
                 req = Request(fcs.verb, url, headers=headers, json=body, files=files)
             else:
+                body = json.dumps(body)
                 req = Request(fcs.verb, url, headers=headers, json=body)
             
             # catch invalid url, request exception  
@@ -246,7 +249,14 @@ class WebApiFuzzer:
                                         body=body,
                                         contentLength=reqContentLength)
                 
-                resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, verify=False)
+                try:
+                    pass
+                    # httpSession = Session()
+                    # resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec)
+                    return
+                except Exception as e:
+                    pass
+                
             
             except Exception as e:
                 err =  Utils.jsone(e.args)
@@ -271,9 +281,10 @@ class WebApiFuzzer:
             
             fuzzDataCase.response = fuzzResp
             
-            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader)          
+            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
             
-    
+            
+        
         except HTTPError as e:
             
             err = Utils.jsone(e.args)
@@ -312,6 +323,7 @@ class WebApiFuzzer:
             fuzzDataCase.response = fr
             
         return fuzzDataCase
+
             
                 
     def fuzzcaseset_done(self, future):
@@ -322,7 +334,7 @@ class WebApiFuzzer:
             
             self.currentFuzzRuns = self.currentFuzzRuns + 1
             
-            self.eventstore.emitInfo('fuzzing test cases: {self.currentFuzzRuns}/{self.totalFuzzRuns} ')
+            self.eventstore.emitInfo(f'fuzzing test cases: {self.currentFuzzRuns}/{self.totalFuzzRuns} ')
     
             # check if last task, to end fuzzing
             if self.currentFuzzRuns  >= self.totalFuzzRuns:
@@ -352,7 +364,7 @@ class WebApiFuzzer:
             
             insert_api_fuzzrequest(fdc.request)
             
-            if len(fdc.response) > 0:
+            if fdc.response is not None and fdc.response != {}:
                 insert_api_fuzzresponse(fdc.response)
                 
                 # update run summary
@@ -415,7 +427,10 @@ class WebApiFuzzer:
         
             
     def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp: Response) -> ApiFuzzResponse:
-    
+        
+        if resp is None:
+            return None
+        
         fuzzResp = ApiFuzzResponse()
         
         fuzzResp.Id = shortuuid.uuid()
