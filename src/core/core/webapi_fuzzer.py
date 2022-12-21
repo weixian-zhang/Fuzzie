@@ -3,8 +3,9 @@ from utils import Utils
 from cProfile import run
 from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
+from threading import Event
 from urllib.error import HTTPError
-from requests import Request, Response, Session
+from requests import Request, Response
 import requests
 from pubsub import pub
 from http import cookiejar
@@ -12,7 +13,6 @@ from types import MappingProxyType
 import shortuuid
 from datetime import datetime
 from eventstore import EventStore, MsgType
-import json
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, 
@@ -57,14 +57,15 @@ class WebApiFuzzer:
         self.apikey = apifuzzcontext.apikey
         
         self.httpTimeoutInSec = 4
-        self.fuzzCancel = False
         self.fuzzCaseSetRunId = shortuuid.uuid()
         self.totalFuzzRuns = 0
         self.currentFuzzRuns = 0
         self.executor = ThreadPoolExecutor(max_workers=5)
         
-        self.processLock = Lock()
-        self.dbLock = Lock()
+        self.multithreadEventSet = Event()
+        
+        # self.processLock = Lock()
+        # self.dbLock = Lock()
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
@@ -92,16 +93,19 @@ class WebApiFuzzer:
     def cancel_fuzzing(self):
         try:
             
-            self.fuzzCancel = True
+            self.multithreadEventSet.set()
+            
+            self.eventstore.feedback_client('fuzz.cancel')
+            
             self.executor.shutdown(wait=False, cancel_futures=True)
             self.totalFuzzRuns = 0
             self.currentFuzzRuns = 0
             
-            self.eventstore.emitInfo('acquire dblock update_api_fuzzCaseSetRun_status')
+            #self.eventstore.emitInfo('acquire dblock update_api_fuzzCaseSetRun_status')
             #self.dbLock.acquire()
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
             #self.dbLock.release()
-            self.eventstore.emitInfo('dblock release update_api_fuzzCaseSetRun_status')
+            #self.eventstore.emitInfo('dblock release update_api_fuzzCaseSetRun_status')
             
         except Exception as e:
             self.eventstore.emitErr(e)
@@ -190,7 +194,7 @@ class WebApiFuzzer:
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
         
         try:
-            if self.fuzzCancel:
+            if self.self.multithreadEventSet.is_set():
                 return
             
             fuzzDataCase = self.http_call_api(fcs)
@@ -198,17 +202,18 @@ class WebApiFuzzer:
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
             if summaryViewModel is not None:
-                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
-                
-            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
+                eSVM = Utils.b64e(Utils.jsone(summaryViewModel))
+                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', eSVM)
+            
+            
+            eFDC = Utils.b64e(Utils.jsone(fuzzDataCase))
+            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', eFDC)
             
             # update run status
             self.fuzzcaseset_done(caseSetRunSummaryId, self.apifuzzcontext.Id)
                 
             
         except Exception as e:
-            if self.fuzzCancel == True:
-                return
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
@@ -349,11 +354,6 @@ class WebApiFuzzer:
             
         except Exception as e:
             
-            # when cancelled during http call due to user cancelling and executor being shutdown,
-            # error will occured, just ignore
-            if self.fuzzCancel == True:
-                return
-            
             fr = ApiFuzzResponse()
             fr.Id = shortuuid.uuid()
             fr.datetime = datetime.now()
@@ -378,8 +378,6 @@ class WebApiFuzzer:
     def fuzzcaseset_done(self, caseSetRunId, fuzzContextId):
         
         try:
-            if self.fuzzCancel:
-                return
             
             self.currentFuzzRuns = self.currentFuzzRuns + 1
             

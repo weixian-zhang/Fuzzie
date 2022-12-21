@@ -212,6 +212,33 @@ export default class FuzzerWebClient
         }        
     }
 
+    public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
+        const query = `
+        mutation fuzz {
+            fuzz(fuzzcontextId:"${fuzzContextId}") {
+                  ok,
+                  msg
+            }
+          }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.fuzz.ok;
+                const error = response.data.data.fuzz.msg;
+                return [ok, error];
+            }
+
+            return [false, '']
+            
+        } catch (error: any) {
+            return [false, error.message];
+        }
+    }
+
     public async graphql(query): Promise<[boolean, string, AxiosResponse|null]> {
         
         try {

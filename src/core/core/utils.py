@@ -1,6 +1,7 @@
 import jsonpickle
 import shortuuid
 from datetime import datetime
+import base64
 
 class Utils:
     def jsone(objDict):
@@ -33,4 +34,9 @@ class Utils:
     
     def datetimeNowStr():
         return datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    
+    def b64e(data):
+        if not Utils.isNoneEmpty(data):
+            return
         
+        return base64.b64encode(data)

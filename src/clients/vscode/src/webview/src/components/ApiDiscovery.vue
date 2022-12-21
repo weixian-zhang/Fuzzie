@@ -936,7 +936,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   async onFuzzIconClicked (fuzzcontextId, name)  {
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
-    const [ok, msg] = await this.fuzzermanager.fuzz(fuzzcontextId)
+    const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
     if(!ok) {
       this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
       return;
