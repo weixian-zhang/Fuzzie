@@ -65,7 +65,8 @@ class WebSocketServer(WebSocketEndpoint):
         
             
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
-        print(f'Fuzzer/main: client disconnected from websocket server, close_code {close_code}')
+        eventstore.rm_websocket(websocket.client.port)
+        eventstore.emitInfo(f'client disconnected from websocket server, close_code {close_code}', 'main.WebSocketServer')
         
     async def on_connect(self, websocket):
         
@@ -74,7 +75,7 @@ class WebSocketServer(WebSocketEndpoint):
         
             websocket = websocket
             
-            eventstore.add_websocket(websocket)
+            eventstore.add_websocket(websocket.client.port, websocket)
             
         except Exception as e:
             eventstore.emitErr(e)

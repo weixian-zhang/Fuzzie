@@ -137,5 +137,4 @@ export default class Utils
     public static async delay(sec) {
         await Utils.sleep(sec);
     }
-    
 }

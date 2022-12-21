@@ -44,6 +44,7 @@
 </template>
   
 <script lang="ts">
+  import { inject } from 'vue';
   import { Options, Vue } from 'vue-class-component';
   import ApiDiscovery from './ApiDiscovery.vue';
   import FuzzCaseSetPanel from './FuzzCaseSetPanel.vue';
@@ -57,6 +58,7 @@
   import {FuzzerStatus} from '../Model'; 
   import FuzzerWebClient from "../services/FuzzerWebClient";
   import FuzzerManager from "../services/FuzzerManager";
+  import Logger from "../Logger";
 
   @Options({
     components: {
@@ -77,11 +79,15 @@
     fm = new FuzzerManager(this.wc);
     toast = useToast();
     fuzzerConnected = false;
+    $logger;
+
 
     public beforeMount() {
 
-      this.wc.subscribeWS('event.info', this.sendEventToVSCodeConsole);
-      this.wc.subscribeWS('event.error', this.sendEventToVSCodeConsole);
+      this.$logger = inject('$logger'); 
+
+      this.wc.subscribeWS('event.info', this.onEventInfo);
+      this.wc.subscribeWS('event.error', this.onEventError);
 
       this.wc.subscribeWS('fuzz.start', this.onFuzzStart);
       this.wc.subscribeWS('fuzz.complete', this.onFuzzComplete);
@@ -125,8 +131,12 @@
     }
 
 
-    private sendEventToVSCodeConsole(msg: string) {
-      this.vscodeMsger.send(msg);
+    private onEventInfo(msg: string) {
+      this.$logger.info(msg);
+    }
+
+    private onEventError(errorMsg: string) {
+      this.$logger.errorMsg(errorMsg);
     }
 
     private notifyFuzzerIsNotReady() {

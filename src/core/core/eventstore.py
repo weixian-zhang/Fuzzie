@@ -9,6 +9,7 @@ from utils import Utils
 import asyncio
 import nest_asyncio
 from pubsub import pub
+from collections import deque
 
 nest_asyncio.apply()
 
@@ -43,8 +44,8 @@ class Message(object):
  
 class EventStore:
     
-    websocketClients = []
-    wsMsgQueue = []
+    websocketClients = {}
+    wsMsgQueue = deque( maxlen=5000 )
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
     CancelFuzzingEventTopic = 'cancel_fuzzing'
@@ -116,8 +117,12 @@ class EventStore:
     def handleGeneralLogs(self, msg: str):
         print(msg)
     
-    def add_websocket(self, websocket):
-        self.websocketClients.append(websocket)
+    def add_websocket(self, portId, websocket):
+        self.websocketClients[portId] = websocket
+    
+    def rm_websocket(self, portId):
+        if portId in self.websocketClients:
+            del self.websocketClients[portId]
     
     # data must be json format
     def feedback_client(self, topic: str, data: str = ''):
@@ -130,20 +135,20 @@ class EventStore:
                    
             m = WebsocketClientMessage(topic, data)
             
-            if len(EventStore.websocketClients) > 0:
-                for w in EventStore.websocketClients:
-                    await w.send_text(m.json())
-                
-            
-            # if EventStore.websocket != None:
-            #     if len(EventStore.wsMsgQueue) > 0:
-            #         while len(EventStore.wsMsgQueue) > 0:
-            #             await EventStore.websocket.send_text(self.wsMsgQueue.pop())
+            if len(self.websocketClients) > 0:
+                for portid in self.websocketClients:
                     
-            #     await EventStore.websocket.send_text(m.json())
-            # else:
-            #     EventStore.wsMsgQueue.append(m.json())
+                    wsClient = self.websocketClients[portid]
+                    
+                    while len(self.wsMsgQueue) > 0:
+                        
+                        msg = self.wsMsgQueue.pop()
+                        await wsClient.send_text(msg.json())
+                        
+                    await wsClient.send_text(m.json())
+            else:
+                self.wsMsgQueue.append(m)
                 
         except Exception as e:
             self.emitErr(e)
-            print(e)
+            self.wsMsgQueue.append(m)
