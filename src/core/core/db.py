@@ -362,7 +362,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     Session = scoped_session(session_factory)
     
     if fuzzCaseSetRunId == '':
-        fcsSumRows = (
+        result = (
                         Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
                                 ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId")
                                 )
@@ -393,6 +393,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                                     ApiFuzzCaseSetTable, 
                                     ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
                                     ApiFuzzCaseSetTable.columns.fuzzcontextId,
+                                    runSummaryQuery.columns.runSummaryId,
                                     runSummaryQuery.columns.fuzzCaseSetRunId,
                                     runSummaryQuery.columns.http2xx,
                                     runSummaryQuery.columns.http3xx,

@@ -767,6 +767,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
   // #### websocket events ####
 
   onFuzzStartReady() {
+
+    //if fuzzer is just ready, there would not be fuzzing.
+    //this is to cancel fuzzing in case fuzzer process is kill manually by user or crashed
+    if(this.isFuzzingInProgress) {
+      this.isFuzzingInProgress = false
+    }
+      
     this.fuzzerConnected = true;
     this.getFuzzcontexts();
   }

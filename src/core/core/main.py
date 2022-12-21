@@ -39,7 +39,6 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
-websocket: WebSocket = None
 
 @app.websocket_route("/")
 class WebSocketServer(WebSocketEndpoint):
@@ -76,11 +75,6 @@ class WebSocketServer(WebSocketEndpoint):
             websocket = websocket
             
             eventstore.add_websocket(websocket)
-            
-            while True:
-                eventstore.feedback_client(eventstore.InfoEventTopic, f'client connected to websocket server from client port {websocket.client.port}')
-                import time
-                time.sleep(1.5)
             
         except Exception as e:
             eventstore.emitErr(e)

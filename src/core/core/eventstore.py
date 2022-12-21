@@ -121,6 +121,7 @@ class EventStore:
     
     # data must be json format
     def feedback_client(self, topic: str, data: str = ''):
+        return
         asyncio.run(self.feedback_client_async(topic, data))
     
     # send to websocket clients
@@ -130,9 +131,9 @@ class EventStore:
                    
             m = WebsocketClientMessage(topic, data)
             
-            if len(EventStore.websocketClients) > 0:
-                for w in EventStore.websocketClients:
-                    await w.send_text(m.json())
+            # if len(EventStore.websocketClients) > 0:
+            #     for w in EventStore.websocketClients:
+            #         await w.send_text(m.json())
                 
             
             # if EventStore.websocket != None:
@@ -145,5 +146,5 @@ class EventStore:
             #     EventStore.wsMsgQueue.append(m.json())
                 
         except Exception as e:
-            #EventStore.wsMsgQueue.append(m.json())
+            self.emitErr(e)
             print(e)

@@ -107,6 +107,7 @@ export default class FuzzerManager
                     http4xx
                     http5xx
                     completedDataCaseRuns
+                    file
                 }
             }
         }
