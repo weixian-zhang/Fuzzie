@@ -168,10 +168,13 @@ class Props {
     unqStatusCodesFromFDCS: Array<string> = []
 
     mounted() {
+      //this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+      this.eventemitter.on('fuzzer.notready', this.clearData);
       this.eventemitter.on("onFuzzCaseSetSelected", this.onFuzzCaseSetSelected);
       this.eventemitter.on("onFuzzContextSelected", this.clearData);
       this.eventemitter.on("onFuzzContextRefreshClicked", this.clearData)
     }
+
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 

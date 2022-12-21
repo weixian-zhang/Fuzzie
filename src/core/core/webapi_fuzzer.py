@@ -124,14 +124,13 @@ class WebApiFuzzer:
             self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
             # create a fuzzcaserun record
-            self.eventstore.emitInfo('acquire dblock insert_api_fuzzCaseSetRuns')
+            #self.eventstore.emitInfo('acquire dblock insert_api_fuzzCaseSetRuns')
             #self.dbLock.acquire()
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             #self.dbLock.release()
-            self.eventstore.emitInfo('dblock release insert_api_fuzzCaseSetRuns')
+            #self.eventstore.emitInfo('dblock release insert_api_fuzzCaseSetRuns')
             
-            
-            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
             
@@ -141,7 +140,7 @@ class WebApiFuzzer:
             
             self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
             
-            self.totalFuzzRuns = 1 # uncomment for testing only
+            #self.totalFuzzRuns = 1 # uncomment for testing only
             
             # notify fuzzing started
             # pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_start', msgData=self.apifuzzcontext.Id)
@@ -151,7 +150,7 @@ class WebApiFuzzer:
                 
                 caseSetRunSummaryId = shortuuid.uuid()
                 
-                self.eventstore.emitInfo('acquire dblock create_casesetrun_summary')
+                #self.eventstore.emitInfo('acquire dblock create_casesetrun_summary')
                 #self.dbLock.acquire()
                 
                 create_casesetrun_summary(Id = caseSetRunSummaryId,
@@ -160,13 +159,12 @@ class WebApiFuzzer:
                                           fuzzcontextId = self.apifuzzcontext.Id,
                                           totalRunsToComplete = self.totalFuzzRuns)
                 #self.dbLock.release()
-                self.eventstore.emitInfo('dblock release create_casesetrun_summary')
+                #self.eventstore.emitInfo('dblock release create_casesetrun_summary')
                 
                 for _ in range(self.apifuzzcontext.fuzzcaseToExec):
 
-                    future = self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs )#, self.fuzzCaseSetRunId, caseSetRunSummaryId, fcs )
+                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs )
                     
-                    #future.add_done_callback(self.fuzzcaseset_done)      
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
@@ -199,14 +197,13 @@ class WebApiFuzzer:
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            #send data to GUI pver websocket
             if summaryViewModel is not None:
                 self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
                 
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
             # update run status
-            self.fuzzcaseset_done()
+            self.fuzzcaseset_done(caseSetRunSummaryId, self.apifuzzcontext.Id)
                 
             
         except Exception as e:
@@ -226,7 +223,8 @@ class WebApiFuzzer:
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
-                raise(Exception('Error at data prep when fuzzing: {err}'))
+                self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
+                return
             
             reqContentLength = 0
             req: Request = None
@@ -249,23 +247,50 @@ class WebApiFuzzer:
             
                 match fcs.verb:
                     case 'GET':
-                        prepReq = Request(url, headers=headers).prepare()
-                        reqContentLength = prepReq.headers['Content-Length']
+                        
+                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        
+                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers)
+                        
                         resp = requests.get(url, headers=headers, timeout=self.httpTimeoutInSec)
                     case 'POST':
-                        prepReq = Request(fcs.verb, url, headers=headers, json=body, files=files).prepare()
-                        reqContentLength = prepReq.headers['Content-Length']
-                        resp = requests.post(url, headers=headers, json=body, files=files, timeout=self.httpTimeoutInSec) #, files=files)
+                        
+                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        
+                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body, files=files)
+                        
+                        if 'application/x-www-form-urlencoded' in headers:
+                            resp = requests.post(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
+                        elif 'multipart/form-data' in headers and len(files) > 0:   
+                            resp = requests.post(url, headers=headers, json=body, files=files, timeout=self.httpTimeoutInSec, verify=False)
+                        else:
+                            resp = requests.post(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                            
                     case 'PUT':
-                        prepReq = Request(fcs.verb, url, headers=headers, json=body, files=files).prepare()
-                        resp = requests.put(url, headers=headers, json=body, files=files, timeout=self.httpTimeoutInSec) #, files=files)
+                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        
+                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body)
+                        
+                        if 'application/x-www-form-urlencoded' in headers:
+                            resp = requests.put(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
+                        else:
+                            resp = requests.put(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                    
                     case 'PATCH':
-                        prepReq = Request(fcs.verb, url, headers=headers, json=body, files=files).prepare()
-                        resp = requests.patch(url, headers=headers, json=body, files=files, timeout=self.httpTimeoutInSec) #, files=files)
+                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        
+                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body)
+                       
+                        if 'application/x-www-form-urlencoded' in headers:
+                            resp = requests.patch(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
+                        else:
+                            resp = requests.patch(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                            
                     case _:
+                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        reqContentLength = self.estimate_request_content_length(url, headers=headers)
                         resp = requests.get(url, headers=headers, timeout=self.httpTimeoutInSec)
                         
-                
                 fuzzDataCase.request = self.create_fuzzrequest(
                         fuzzDataCaseId=fuzzDataCase.Id,
                         fuzzcontextId=self.apifuzzcontext.Id,
@@ -350,7 +375,7 @@ class WebApiFuzzer:
 
             
                 
-    def fuzzcaseset_done(self):
+    def fuzzcaseset_done(self, caseSetRunId, fuzzContextId):
         
         try:
             if self.fuzzCancel:
@@ -363,18 +388,16 @@ class WebApiFuzzer:
             # check if last task, to end fuzzing
             if self.currentFuzzRuns  >= self.totalFuzzRuns:
                 
-                self.eventstore.emitInfo('acquire dblock fuzzcaseset_done')
+                #self.eventstore.emitInfo('acquire dblock fuzzcaseset_done')
                 ##self.dbLock.acquire()
                 
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
                 #self.dbLock.release()
-                self.eventstore.emitInfo('dblock release fuzzcaseset_done')
+                #self.eventstore.emitInfo('dblock release fuzzcaseset_done')
                 
-                self.eventstore.feedback_client('fuzz.complete', '')
-                
-                # notify fuzzing started
-                pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_stop', msgData=self.apifuzzcontext.Id)
+                # notify fuzzing completed
+                self.eventstore.feedback_client(self.eventstore.FuzzingCompleteEventTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
@@ -383,7 +406,7 @@ class WebApiFuzzer:
     def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
-            self.eventstore.emitInfo('acquire dblock save_fuzzDataCase')
+            #self.eventstore.emitInfo('acquire dblock save_fuzzDataCase')
             #self.dbLock.acquire()
             
             insert_api_fuzzdatacase(self.fuzzCaseSetRunId, fdc)
@@ -401,7 +424,7 @@ class WebApiFuzzer:
                 return summaryViewModel
             
             #self.dbLock.release()
-            self.eventstore.emitInfo('dblock release save_fuzzDataCase')
+            #self.eventstore.emitInfo('dblock release save_fuzzDataCase')
             
             return None
             
@@ -600,7 +623,6 @@ class WebApiFuzzer:
         return {}
         
 
-    
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
         
         fdc = ApiFuzzDataCase()
@@ -614,4 +636,10 @@ class WebApiFuzzer:
             return True
         
         return False
+    
+    def estimate_request_content_length(self,verb, url, headers, data='', files={}):
+        prepReq = Request(verb, url, headers=headers, data=data, files=files).prepare()
+        cl = prepReq.headers['Content-Length']
+        return cl
+    
     

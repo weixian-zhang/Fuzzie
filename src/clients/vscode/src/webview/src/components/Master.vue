@@ -83,21 +83,21 @@
       this.wc.subscribeWS('event.info', this.sendEventToVSCodeConsole);
       this.wc.subscribeWS('event.error', this.sendEventToVSCodeConsole);
 
-      this.wc.subscribeWS('fuzz.start', this.notifyFuzzStart);
-      this.wc.subscribeWS('fuzz.complete', this.notifyFuzzComplete);
-      this.wc.subscribeWS('fuzz.cancel', this.notifyFuzzCancel);
+      this.wc.subscribeWS('fuzz.start', this.onFuzzStart);
+      this.wc.subscribeWS('fuzz.complete', this.onFuzzComplete);
+      this.wc.subscribeWS('fuzz.cancel', this.onFuzzCancel);
 
-      this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.notifyUpdateCaseSetRunSummary);
-      this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.notifyUpdateCaseSetRunSummary);
+      this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.onUpdateCaseSetRunSummary);
+      this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.onNewFuzzDataCase);
     }
 
     public mounted() {
 
       this.toastInfo('trying to connect to fuzzer');
 
-      this.wc.connectWS()
+      this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 4000)
+      setInterval(this.checkFuzzerReady, 4000);
     }
 
     
@@ -138,20 +138,25 @@
     }
 
     // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
-    private notifyFuzzStart(data) {
+    private onFuzzStart(data) {
       this.eventemitter.emit('fuzz.start', data);
     }
 
-    private notifyFuzzComplete(data) {
+    private onFuzzComplete(data) {
       this.eventemitter.emit('fuzz.complete')
     }
 
-    private notifyFuzzCancel(data) {
+    private onFuzzCancel(data) {
       this.eventemitter.emit('fuzz.cancel')
     }
 
-    private notifyUpdateCaseSetRunSummary(data) {
+    private onUpdateCaseSetRunSummary(data) {
       this.eventemitter.emit('fuzz.update.casesetrunsummary')
+    }
+
+    private onNewFuzzDataCase(data) {
+      
+      this.eventemitter.emit('fuzz.update.fuzzdatacase')
     }
     
     toastInfo (msg: string, title = '', duration=4000)  {

@@ -1,6 +1,6 @@
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
-import ReconnectingWebSocket from 'reconnecting-websocket';
+import {inject} from 'vue';
 
 export default class FuzzerWebClient
 {
@@ -10,27 +10,27 @@ export default class FuzzerWebClient
     private fuzzerEventSubscribers = {};  // dict with value as list  
     private axiosinstance;
     isWSConnected = false;
+    $logger;
 
     public constructor() {
-        // this._ws = new ReconnectingWebSocket(this.wsUrl);
-        //this._ws = new WebSocket(this.wsUrl);
+        this.$logger = inject('$logger'); 
     }
 
     connectWS() {
-        this.retryWSInternal();
+        this.connectWSInternal();
     }
 
-    private retryWSInternal() {
+    // private retryWSInternal() {
 
-        this.connectWSInternal()
 
-        // setInterval(() => {
-        //     if(!this.isWSConnected) {
-        //         this.connectWSInternal();
-        //     }
+
+    //     setInterval(() => {
+    //         if(!this.isWSConnected) {
+    //             this.connectWSInternal();
+    //         }
             
-        // }, 2000);
-    }
+    //     }, 2000);
+    // }
 
     private connectWSInternal = () => {
         
@@ -42,16 +42,33 @@ export default class FuzzerWebClient
 
                 this.isWSConnected = true;
     
-                console.log('connected to fuzzer websocket server')
-    
-              // subscribe to some channels
-            //   this._ws.send(JSON.stringify({
-            //       //.... some message the I must send when I connect ....
-            //   }));
+                this.$logger.info('connected to fuzzer websocket server')
             };
           
             this._ws.onmessage = (e)  => {
-              console.log('Message:', e.data);
+              
+                try {
+                    const msg = e.data;
+
+                    if (msg == '') {
+                        this.$logger.errorMsg('received empty ws message from fuzzer')
+                        return;
+                    }
+
+                    const jmsg = JSON.parse(msg)
+
+                    const topic = jmsg.topic;
+                    const data = jmsg.data;
+
+                    const funcs = this.fuzzerEventSubscribers[topic];
+
+                    funcs.forEach(f => {
+                            f(data);
+                    })
+                } catch (err) {
+                    console.error(err);
+                    this.$logger.error(err);
+                }
             };
           
             this._ws.onclose = (e) => {
@@ -60,7 +77,7 @@ export default class FuzzerWebClient
                 
                 this.isWSConnected = false;
     
-                console.log('cannot connect to fuzzer websocket server, retrying', e.reason);
+                this.$logger.info('cannot connect to fuzzer websocket server, retrying', e.reason);
                 
                 this._ws = null;
                 setTimeout( () => {
@@ -71,7 +88,7 @@ export default class FuzzerWebClient
             this._ws.onerror = (err) => {
               
               //TODO: log
-              console.error('cannot connect to fuzzer websocket server, retrying');
+              this.$logger.errorMsg('cannot connect to fuzzer websocket server, retrying');
 
               this._ws = null;
 
@@ -80,7 +97,7 @@ export default class FuzzerWebClient
               }
             };
         } catch (error) {
-            console.log(error);
+            this.$logger.info(error);
         }
         
     }
@@ -103,7 +120,7 @@ export default class FuzzerWebClient
             }
             
         } catch (error) {
-            //TODO: logging
+            this.$logger.error(error);
         }
     }
 
@@ -121,10 +138,9 @@ export default class FuzzerWebClient
 
             return [false, '', ''];
             
-        } catch (err) {
-            //TODO: log error
-
-            return[false, this.errAsText(err as any[]), '']
+        } catch (error) {
+            this.$logger.error(error);
+            return[false, this.errAsText(error as any[]), '']
         }
 
     }
@@ -190,8 +206,7 @@ export default class FuzzerWebClient
 
         } catch (err) {
 
-            //TODO: Handle Error Here
-            console.log(err);
+            this.$logger.error(err);
 
             return [false, this.errAsText(err as any[]), []];
         }        
@@ -221,8 +236,7 @@ export default class FuzzerWebClient
             return [false, '', null];
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return [false, this.errAsText(err as any), null];
         }  
     }
@@ -277,8 +291,7 @@ export default class FuzzerWebClient
             
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return [false, this.errAsText(err as any)];
         }  
     }
@@ -350,8 +363,7 @@ export default class FuzzerWebClient
             
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return {
                 ok: false,
                 error: err,

@@ -49,7 +49,7 @@ class EventStore:
     CorporaEventTopic = "corpora_loading"
     CancelFuzzingEventTopic = 'cancel_fuzzing'
     FuzzingStartEventTopic = 'fuzzing_start'
-    FuzzingStopEventTopic = 'fuzzing_stop'
+    FuzzingCompleteEventTopic = 'fuzz.complete'
     InfoEventTopic = 'event.info'
     
     def __new__(cls):
@@ -121,7 +121,6 @@ class EventStore:
     
     # data must be json format
     def feedback_client(self, topic: str, data: str = ''):
-        return
         asyncio.run(self.feedback_client_async(topic, data))
     
     # send to websocket clients
@@ -131,9 +130,9 @@ class EventStore:
                    
             m = WebsocketClientMessage(topic, data)
             
-            # if len(EventStore.websocketClients) > 0:
-            #     for w in EventStore.websocketClients:
-            #         await w.send_text(m.json())
+            if len(EventStore.websocketClients) > 0:
+                for w in EventStore.websocketClients:
+                    await w.send_text(m.json())
                 
             
             # if EventStore.websocket != None:
