@@ -36,7 +36,11 @@ class Utils:
         return datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     
     def b64e(data):
-        if not Utils.isNoneEmpty(data):
+        if Utils.isNoneEmpty(data):
             return
         
-        return base64.b64encode(data)
+        b64B = base64.b64encode(bytes(data, "utf-8"))
+        
+        b64str = b64B.decode('utf-8')
+        
+        return b64str

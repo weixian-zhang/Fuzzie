@@ -135,6 +135,11 @@ class EventStore:
                    
             m = WebsocketClientMessage(topic, data)
             
+            mj = m.json()
+            
+            # reason for b64 encoding is message can contain binary data from file/pdf/image/ corpora
+            # b64mj = Utils.b64e(mj)
+            
             if len(self.websocketClients) > 0:
                 for portid in self.websocketClients:
                     
@@ -143,12 +148,12 @@ class EventStore:
                     while len(self.wsMsgQueue) > 0:
                         
                         msg = self.wsMsgQueue.pop()
-                        await wsClient.send_text(msg.json())
+                        await wsClient.send_text(msg)
                         
-                    await wsClient.send_text(m.json())
+                    await wsClient.send_text(mj)
             else:
-                self.wsMsgQueue.append(m)
+                self.wsMsgQueue.append(mj)
                 
         except Exception as e:
             self.emitErr(e)
-            self.wsMsgQueue.append(m)
+            self.wsMsgQueue.append(mj)

@@ -742,37 +742,44 @@ def insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc: ApiFuzzDataCase) -> None:
     
 def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
     
-    if fr.Id is None:
-        raise Exception('ApiFuzzRequest is None while persisting')
+    try:
+        if fr.Id is None:
+            raise Exception('ApiFuzzRequest is None while persisting')
                         
-    stmt = (
-            insert(ApiFuzzRequestTable).
-            values(
-                    Id = fr.Id,
-                    datetime = fr.datetime,
-                    fuzzDataCaseId = fr.fuzzDataCaseId,
-                    fuzzcontextId = fr.fuzzcontextId,
-                    hostname = fr.hostname,
-                    port = fr.port,
-                    hostnamePort = fr.hostnamePort,
-                    verb = fr.verb,
-                    path = fr.path,
-                    querystring = fr.querystring,
-                    url = fr.url,
-                    headers = fr.headers,
-                    body = fr.body,
-                    invalidRequestError = fr.invalidRequestError,
-                    requestMessage = fr.requestMessage,
-                    contentLength = fr.contentLength
-                   )
-         )
-    
-    Session = scoped_session(session_factory)
+        stmt = (
+                insert(ApiFuzzRequestTable).
+                values(
+                        Id = fr.Id,
+                        datetime = fr.datetime,
+                        fuzzDataCaseId = fr.fuzzDataCaseId,
+                        fuzzcontextId = fr.fuzzcontextId,
+                        hostname = fr.hostname,
+                        port = fr.port,
+                        hostnamePort = fr.hostnamePort,
+                        verb = fr.verb,
+                        path = fr.path,
+                        querystring = fr.querystring,
+                        url = fr.url,
+                        headers = fr.headers,
+                        body = fr.body,
+                        invalidRequestError = fr.invalidRequestError,
+                        requestMessage = fr.requestMessage,
+                        contentLength = fr.contentLength
+                    )
+            )
         
-    Session.execute(stmt)
+        Session = scoped_session(session_factory)
+            
+        Session.execute(stmt)
+        
+        Session.commit()
+        Session.close()
+        
+    except Exception as e:
+        evts.emitErr(e)
     
-    Session.commit()
-    Session.close()
+    
+    
     
 def insert_api_fuzzresponse(fr: ApiFuzzResponse) -> None:
     stmt = (

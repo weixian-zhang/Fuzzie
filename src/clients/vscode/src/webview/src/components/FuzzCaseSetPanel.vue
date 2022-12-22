@@ -8,13 +8,11 @@
     style="display: flex; flex-flow: column; height: 100%;">
   
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
-    <code >
-      <v-textarea auto-grow
+    <v-textarea auto-grow
           outlined
           rows="1"
           readonly
           v-model="tableValViewInSizeBar" />
-    </code>
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">

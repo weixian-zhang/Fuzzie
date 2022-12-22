@@ -44,13 +44,14 @@ export default class FuzzerWebClient
     
                 this.$logger.info('connected to fuzzer websocket server')
             };
-          
+            
+            //messages are all b64 encoded json
             this._ws.onmessage = (e)  => {
               
                 try {
                     const msg = e.data;
 
-                    if (msg == '') {
+                    if (msg == '' || msg == undefined) {
                         this.$logger.errorMsg('received empty ws message from fuzzer')
                         return;
                     }

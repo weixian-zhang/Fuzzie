@@ -161,12 +161,13 @@
     }
 
     private onUpdateCaseSetRunSummary(data) {
-      this.eventemitter.emit('fuzz.update.casesetrunsummary')
+      this.$logger.info(data);
+      this.eventemitter.emit('fuzz.update.casesetrunsummary', data)
     }
 
     private onNewFuzzDataCase(data) {
-      
-      this.eventemitter.emit('fuzz.update.fuzzdatacase')
+      this.$logger.info(data);
+      this.eventemitter.emit('fuzz.update.fuzzdatacase', data)
     }
     
     toastInfo (msg: string, title = '', duration=4000)  {

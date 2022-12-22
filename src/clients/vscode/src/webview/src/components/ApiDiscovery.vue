@@ -780,6 +780,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   onFuzzerNotReady() {
     this.clearData()
+    this.isFuzzingInProgress = false;
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
   }
@@ -790,7 +791,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   onFuzzComplete(data) {
     this.isFuzzingInProgress = false;
-     this.currentFuzzingContextId = '';
+    this.currentFuzzingContextId = '';
 
     this.toastSuccess('fuzzing is completed');
   }

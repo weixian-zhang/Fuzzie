@@ -5,7 +5,7 @@ from cmath import pi
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 from urllib.error import HTTPError
-from requests import Request, Response
+from requests import Request, Response, Session
 import requests
 from pubsub import pub
 from http import cookiejar
@@ -134,7 +134,7 @@ class WebApiFuzzer:
             #self.dbLock.release()
             #self.eventstore.emitInfo('dblock release insert_api_fuzzCaseSetRuns')
             
-            #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
             
@@ -144,30 +144,21 @@ class WebApiFuzzer:
             
             self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
             
-            #self.totalFuzzRuns = 1 # uncomment for testing only
-            
-            # notify fuzzing started
-            # pub.sendMessage(self.eventstore.FuzzingStartEventTopic, command='fuzzing_start', msgData=self.apifuzzcontext.Id)
-            self.eventstore.feedback_client('fuzz.start', {'fuzzCaseSetRunId': self.fuzzCaseSetRunId, 'fuzzcontextId': self.apifuzzcontext.Id})
+            self.totalFuzzRuns = 1 # uncomment for testing only
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
                 caseSetRunSummaryId = shortuuid.uuid()
-                
-                #self.eventstore.emitInfo('acquire dblock create_casesetrun_summary')
-                #self.dbLock.acquire()
                 
                 create_casesetrun_summary(Id = caseSetRunSummaryId,
                                           fuzzCaseSetId=  fcs.Id,
                                           fuzzCaseSetRunId = self.fuzzCaseSetRunId,
                                           fuzzcontextId = self.apifuzzcontext.Id,
                                           totalRunsToComplete = self.totalFuzzRuns)
-                #self.dbLock.release()
-                #self.eventstore.emitInfo('dblock release create_casesetrun_summary')
                 
                 for _ in range(self.apifuzzcontext.fuzzcaseToExec):
 
-                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs )
+                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet )
                     
                     
         except Exception as e:
@@ -191,10 +182,10 @@ class WebApiFuzzer:
                 
             self.corporaContext.build_files(fcs.file)
         
-    def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet):
+    def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event):
         
         try:
-            if self.self.multithreadEventSet.is_set():
+            if multithreadEventSet.is_set():
                 return
             
             fuzzDataCase = self.http_call_api(fcs)
@@ -202,12 +193,9 @@ class WebApiFuzzer:
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
             if summaryViewModel is not None:
-                eSVM = Utils.b64e(Utils.jsone(summaryViewModel))
-                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', eSVM)
+                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
-            
-            eFDC = Utils.b64e(Utils.jsone(fuzzDataCase))
-            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', eFDC)
+            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
             # update run status
             self.fuzzcaseset_done(caseSetRunSummaryId, self.apifuzzcontext.Id)
@@ -231,71 +219,50 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
                 return
             
-            reqContentLength = 0
-            req: Request = None
-            resp: Response = None
-            
-            
-            # if 'application/x-www-form-urlencoded' in headers:
-            #     req = Request(fcs.verb, url, headers=headers, data=body)
-            # elif len(files) > 0:
-            #     req = Request(fcs.verb, url, headers=headers, json=body, files=files)
-            # else:
-            #     req = Request(fcs.verb, url, headers=headers, json=body)
-            
-            # catch invalid url, request exception  
             try:
-                
-                # prepReq = req.prepare()
-            
-                # reqContentLength = prepReq.headers['Content-Length']
+                req = None
             
                 match fcs.verb:
                     case 'GET':
                         
-                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
+                        req = Request(fcs.verb, url, headers=headers, timeout=self.httpTimeoutInSec)
                         
-                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers)
-                        
-                        resp = requests.get(url, headers=headers, timeout=self.httpTimeoutInSec)
                     case 'POST':
                         
-                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
-                        
-                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body, files=files)
-                        
                         if 'application/x-www-form-urlencoded' in headers:
-                            resp = requests.post(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
-                        elif 'multipart/form-data' in headers and len(files) > 0:   
-                            resp = requests.post(url, headers=headers, json=body, files=files, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers,data=body)
+                        elif len(files) > 0:   
+                            req = Request(fcs.verb, url, headers=headers, json=body, files=files)
                         else:
-                            resp = requests.post(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers, json=body, )
                             
                     case 'PUT':
-                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
-                        
-                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body)
                         
                         if 'application/x-www-form-urlencoded' in headers:
-                            resp = requests.put(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers,data=body)
                         else:
-                            resp = requests.put(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers, json=body)
                     
                     case 'PATCH':
-                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
                         
-                        reqContentLength = self.estimate_request_content_length(verb=fcs.verb, url=url, headers=headers, data=body)
-                       
                         if 'application/x-www-form-urlencoded' in headers:
-                            resp = requests.patch(url, headers=headers,data=body, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers,data=body)
                         else:
-                            resp = requests.patch(url, headers=headers, json=body, timeout=self.httpTimeoutInSec, verify=False)
+                            req = Request(fcs.verb, url, headers=headers, json=body)
                             
                     case _:
-                        self.eventstore.emitInfo(f'fuzzing (fcs.verb){url}')
-                        reqContentLength = self.estimate_request_content_length(url, headers=headers)
-                        resp = requests.get(url, headers=headers, timeout=self.httpTimeoutInSec)
-                        
+                        req = Request(fcs.verb, url, headers=headers)
+                
+                
+                prepReq = req.prepare()
+                
+                reqBody = ''
+                if hasattr(prepReq, 'body'):
+                    reqBody = prepReq.body.decode('utf-8')
+                
+                reqHeaders = prepReq.headers
+                reqContentLength =  prepReq.headers['Content-Length']
+                
                 fuzzDataCase.request = self.create_fuzzrequest(
                         fuzzDataCaseId=fuzzDataCase.Id,
                         fuzzcontextId=self.apifuzzcontext.Id,
@@ -306,12 +273,12 @@ class WebApiFuzzer:
                         path=path,
                         qs=querystring,
                         verb=fcs.verb,
-                        headers=headers,
-                        body=body,
+                        headers=reqHeaders,
+                        body=reqBody,
                         contentLength=reqContentLength)
                 
-                # httpSession = Session()
-                # resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False)
+                httpSession = Session()
+                resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
             
             except Exception as e:
                 err =  Utils.jsone(e.args)
@@ -427,12 +394,10 @@ class WebApiFuzzer:
             return None
             
         except Exception as e:
-            #error occurs when fuzzing cancel, if is cancelled, ignore error
-            if not self.fuzzCancel is True:
-                ej = Utils.jsone(e)
-                self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
+            ej = Utils.jsone(e)
+            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
                 
-    
+            
     def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError=''):
         
         try:
@@ -450,7 +415,7 @@ class WebApiFuzzer:
             fr.querystring = qs
             fr.url = url
             fr.headers = Utils.jsone(headers)
-            fr.body = body
+            fr.body = Utils.b64e(body)
             fr.contentLength = contentLength
             fr.invalidRequestError = invalidRequestError
             
@@ -460,12 +425,14 @@ class WebApiFuzzer:
                 for x in headers.keys():
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
-            fr.requestMessage = f'{fr.verb} {fr.url}' \
+            rm = f'{fr.verb} {fr.url}' \
                                  '\n' \
                                  '\n' \
                                 f'{headerMultilineText}' \
                                  '\n' \
                                 f'{fr.body if fr.body != "{}" else ""}'
+                                
+            fr.requestMessage = Utils.b64e(rm)
             
             return fr
         
@@ -488,7 +455,7 @@ class WebApiFuzzer:
         
         fuzzResp.statusCode = resp.status_code
         fuzzResp.reasonPharse = resp.reason
-        fuzzResp.body = resp.text #.decode('utf-8')
+        fuzzResp.body = Utils.b64e(resp.text)
         
         headers = {}
         headersMultilineText = ''
@@ -502,7 +469,7 @@ class WebApiFuzzer:
         
         fuzzResp.contentLength = resp.headers['Content-Length']
         
-        fuzzResp.responseDisplayText = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
+        respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
                                        f'{headersMultilineText}' \
                                        '\n' \
                                        '\n' \
@@ -511,7 +478,9 @@ class WebApiFuzzer:
                                        f'Content-Length: {fuzzResp.contentLength}' \
                                        '\n' \
                                        '\n' \
-                                       f'{fuzzResp.body}'
+                                       f'{resp.text}'
+        
+        fuzzResp.responseDisplayText =  Utils.b64e(respDT)                   
         
         return fuzzResp
     
@@ -635,9 +604,18 @@ class WebApiFuzzer:
         
         return False
     
-    def estimate_request_content_length(self,verb, url, headers, data='', files={}):
-        prepReq = Request(verb, url, headers=headers, data=data, files=files).prepare()
-        cl = prepReq.headers['Content-Length']
-        return cl
+    # def get_request_Info(self,verb, url, headers, data='', files={}) -> tuple(int, dict, str):
+        
+    #     prepReq = None
+    #     if len(files) > 0:
+    #         prepReq = Request(verb, url, headers=headers, json=data, files=files).prepare()
+    #     else:
+    #         prepReq = Request(verb, url, headers=headers, json=data).prepare()
+        
+    #     body = prepReq.body.decode('utf-8')
+    #     contentLength =  prepReq.headers['Content-Length']
+    #     headers = prepReq.headers
+        
+    #     return contentLength, headers, body
     
     

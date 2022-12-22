@@ -45,9 +45,9 @@ export class ApiFuzzContext {
     public bearerToken ='';
     public apikeyHeader ='Authorization';
     public apikey ='';
-    public hostname ='httpbin.org';
+    public hostname ='https://httpbin.org';
     public port = 443;
-    public fuzzcaseToExec =100;
+    public fuzzcaseToExec =500;
 
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []
 }
