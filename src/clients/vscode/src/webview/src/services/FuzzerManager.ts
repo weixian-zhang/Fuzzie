@@ -70,10 +70,6 @@ export default class FuzzerManager
         }
     }
 
-    public async cancelFuzzing() {
-        this._wc.wsSend(JSON.stringify({'command': 'cancel_fuzzing'}));
-    }
-
     public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {
 
         const [ok, error, spec] = await this._wc.httpGetString(url)

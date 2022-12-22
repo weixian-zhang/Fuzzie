@@ -21,17 +21,6 @@ export default class FuzzerWebClient
         this.connectWSInternal();
     }
 
-    // private retryWSInternal() {
-
-
-
-    //     setInterval(() => {
-    //         if(!this.isWSConnected) {
-    //             this.connectWSInternal();
-    //         }
-            
-    //     }, 2000);
-    // }
 
     private connectWSInternal = () => {
         
@@ -243,7 +232,32 @@ export default class FuzzerWebClient
             return [false, '']
             
         } catch (error: any) {
+            this.$logger.error(error);
             return [false, error.message];
+        }
+    }
+
+    public async cancelFuzzing() {
+        const query = `
+        mutation cancelFuzz {
+            cancelFuzz{
+                    ok
+            }
+        }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.cancelFuzz.ok;
+                return ok;
+            }
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return false;
         }
     }
 

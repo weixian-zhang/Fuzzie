@@ -45,24 +45,9 @@ class WebSocketServer(WebSocketEndpoint):
     counter = 0
     encoding = "text"
 
+    #cancel-fuzzing is now done with graphql
     async def on_receive(self, websocket, data):
-        
-        try:
-            ok, dataCmd = Utils.jsondc(data)
-        
-            if not ok:
-                eventstore.emitErr('invaid json command from websocket client')
-                return
-            
-            cmd = dataCmd['command']
-            
-            if cmd == 'cancel_fuzzing':
-                pub.sendMessage(eventstore.CancelFuzzingEventTopic, command=eventstore.CancelFuzzingEventTopic)
-                eventstore.feedback_client('fuzz.cancel','Fuzzing was cancelled, finishing up some running test cases')
-                
-        except Exception as e:
-            eventstore.emitErr(e)
-        
+        pass
             
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
         eventstore.rm_websocket(websocket.client.port)

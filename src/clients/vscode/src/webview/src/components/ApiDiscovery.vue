@@ -935,15 +935,19 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
+
+    this.isFuzzingInProgress = true
+
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
     const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
     if(!ok) {
+      this.isFuzzingInProgress = false;
       this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
       return;
     }
 
-    this.isFuzzingInProgress = true
+    
     this.currentFuzzingContextId = fuzzcontextId;
 
     await Utils.delay(2000);
@@ -951,9 +955,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.getFuzzcontexts();
   }
 
-  onCancelFuzzIconClicked() {
-    this.fuzzermanager.cancelFuzzing();
+  async onCancelFuzzIconClicked() {
+    
     this.toastInfo('cancelling fuzzing');
+
+    const ok = await this.webclient.cancelFuzzing();
+
+    if(!ok) {
+      this.toastError('cancel fuzzing failed due to an internal error, please reopen webview');
+      return;
+    }
 
     this.isFuzzingInProgress = false
     this.currentFuzzingContextId = '';

@@ -238,12 +238,25 @@ class NewApiFuzzContext(graphene.Mutation):
         error = error
         
         return NewApiFuzzContext(ok=ok,error=error)
+
+class CancelFuzz(graphene.Mutation):
     
+    #define output
+    ok = graphene.Boolean()
+    
+    def mutate(self, info):
+        
+        ok = True
+        
+        sm = ServiceManager()
+        sm.cancel_fuzz()
+        
+        return CancelFuzz(ok)
+        
     
 class Fuzz(graphene.Mutation):
     class Arguments:
         fuzzcontextId = graphene.String()
-
 
     #define output
     ok = graphene.Boolean()
@@ -271,6 +284,8 @@ class Mutation(graphene.ObjectType):
     delete_api_fuzz_context = DeleteApiContext.Field()
     
     fuzz = Fuzz.Field()
+    
+    cancel_Fuzz = CancelFuzz.Field()
     
     
 schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)

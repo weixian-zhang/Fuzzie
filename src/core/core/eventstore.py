@@ -49,6 +49,7 @@ class EventStore:
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
     CancelFuzzingEventTopic = 'cancel_fuzzing'
+    CancelFuzzingConfirmEventTopic = 'cancel_fuzzing_confirm'
     FuzzingStartEventTopic = 'fuzzing_start'
     FuzzingCompleteEventTopic = 'fuzz.complete'
     InfoEventTopic = 'event.info'

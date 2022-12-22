@@ -23,7 +23,7 @@ from db import  (get_fuzzcontext,
                  get_fuzz_request_response)
 from sqlalchemy.sql import select, insert
 import base64
-
+from pubsub import pub
 import threading, time
 from datetime import datetime
 import queue
@@ -259,6 +259,16 @@ class ServiceManager:
         except Exception as e:
             return (False, Utils.errAsText(e), [])
     
+    def cancel_fuzz(self):
+        try:
+            pub.sendMessage(self.eventstore.CancelFuzzingEventTopic, command=self.eventstore.CancelFuzzingEventTopic)
+            return True
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            return False
+        
+    
+        
 
     def fuzz(self, fuzzcontextId):
         
