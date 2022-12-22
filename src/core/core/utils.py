@@ -5,10 +5,15 @@ import base64
 
 class Utils:
     def jsone(objDict):
+        if objDict is None:
+            return ''
         return jsonpickle.encode(objDict, unpicklable=False)
     
     def jsondc(strValue):
         try:
+            if strValue == '' or strValue is None:
+                return ''
+            
             obj = jsonpickle.decode(strValue)
             return True, obj
         except Exception as e:
@@ -37,7 +42,7 @@ class Utils:
     
     def b64e(data):
         if Utils.isNoneEmpty(data):
-            return
+            return ''
         
         b64B = base64.b64encode(bytes(data, "utf-8"))
         

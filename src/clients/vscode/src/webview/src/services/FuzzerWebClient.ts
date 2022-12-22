@@ -1,11 +1,12 @@
 import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import {inject} from 'vue';
+import Utils from "../Utils";
 
 export default class FuzzerWebClient
 {
-    private gqlUrl = 'https://localhost:50001/graphql';
-    private wsUrl = 'wss://localhost:50001';
+    private gqlUrl = 'http://localhost:50001/graphql';
+    private wsUrl = 'ws://localhost:50001';
     private _ws;
     private fuzzerEventSubscribers = {};  // dict with value as list  
     private axiosinstance;
@@ -47,16 +48,23 @@ export default class FuzzerWebClient
             
             //messages are all b64 encoded json
             this._ws.onmessage = (e)  => {
-              
+                
+                const msg = e.data;
+
                 try {
-                    const msg = e.data;
+                    
 
                     if (msg == '' || msg == undefined) {
                         this.$logger.errorMsg('received empty ws message from fuzzer')
                         return;
                     }
 
-                    const jmsg = JSON.parse(msg)
+                    if(!Utils.jsonTryParse(msg)) {
+                        this.$logger.errorMsg(`fuzzer sent a json malformed websocket message ${msg}`);
+                        return;
+                    }
+
+                    const jmsg = JSON.parse(msg);
 
                     const topic = jmsg.topic;
                     const data = jmsg.data;
@@ -67,7 +75,6 @@ export default class FuzzerWebClient
                             f(data);
                     })
                 } catch (err) {
-                    console.error(err);
                     this.$logger.error(err);
                 }
             };

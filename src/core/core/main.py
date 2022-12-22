@@ -109,9 +109,9 @@ def start_webserver():
             
             uvicorn.run(app, 
                         host="0.0.0.0", 
-                        port=webserverPort,
-                        ssl_keyfile=".\certs\localhost+2-key.pem",
-                        ssl_certfile=".\certs\localhost+2.pem"
+                        port=webserverPort
+                        # ssl_keyfile=".\certs\localhost+2-key.pem",
+                        # ssl_certfile=".\certs\localhost+2.pem"
                         )
             
             asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))

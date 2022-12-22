@@ -137,9 +137,6 @@ class EventStore:
             
             mj = m.json()
             
-            # reason for b64 encoding is message can contain binary data from file/pdf/image/ corpora
-            # b64mj = Utils.b64e(mj)
-            
             if len(self.websocketClients) > 0:
                 for portid in self.websocketClients:
                     

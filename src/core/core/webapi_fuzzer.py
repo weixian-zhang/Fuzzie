@@ -101,12 +101,8 @@ class WebApiFuzzer:
             self.totalFuzzRuns = 0
             self.currentFuzzRuns = 0
             
-            #self.eventstore.emitInfo('acquire dblock update_api_fuzzCaseSetRun_status')
-            #self.dbLock.acquire()
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
-            #self.dbLock.release()
-            #self.eventstore.emitInfo('dblock release update_api_fuzzCaseSetRun_status')
-            
+     
         except Exception as e:
             self.eventstore.emitErr(e)
         
@@ -117,8 +113,6 @@ class WebApiFuzzer:
             self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
             return
         
-        self.eventstore.emitInfo(f'start fuzzing {self.apifuzzcontext.name}')
-        
         self.begin_fuzzing()
         
     def begin_fuzzing(self):
@@ -127,14 +121,9 @@ class WebApiFuzzer:
             
             self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
-            # create a fuzzcaserun record
-            #self.eventstore.emitInfo('acquire dblock insert_api_fuzzCaseSetRuns')
-            #self.dbLock.acquire()
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
-            #self.dbLock.release()
-            #self.eventstore.emitInfo('dblock release insert_api_fuzzCaseSetRuns')
             
-            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
             
@@ -144,7 +133,7 @@ class WebApiFuzzer:
             
             self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
             
-            self.totalFuzzRuns = 1 # uncomment for testing only
+            #self.totalFuzzRuns = 1 # uncomment for testing only
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -192,8 +181,8 @@ class WebApiFuzzer:
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            if summaryViewModel is not None:
-                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            # if summaryViewModel is not None:
+            #     self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
@@ -207,7 +196,7 @@ class WebApiFuzzer:
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
         
         try:
-        
+            
             fuzzDataCase = self.create_fuzzdatacase(fuzzcaseSetId=fcs.Id,
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
@@ -353,13 +342,7 @@ class WebApiFuzzer:
             # check if last task, to end fuzzing
             if self.currentFuzzRuns  >= self.totalFuzzRuns:
                 
-                #self.eventstore.emitInfo('acquire dblock fuzzcaseset_done')
-                ##self.dbLock.acquire()
-                
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
-                
-                #self.dbLock.release()
-                #self.eventstore.emitInfo('dblock release fuzzcaseset_done')
                 
                 # notify fuzzing completed
                 self.eventstore.feedback_client(self.eventstore.FuzzingCompleteEventTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
@@ -371,8 +354,6 @@ class WebApiFuzzer:
     def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
-            #self.eventstore.emitInfo('acquire dblock save_fuzzDataCase')
-            #self.dbLock.acquire()
             
             insert_api_fuzzdatacase(self.fuzzCaseSetRunId, fdc)
             
@@ -387,9 +368,6 @@ class WebApiFuzzer:
                                       completedDataCaseRuns=1)
                 
                 return summaryViewModel
-            
-            #self.dbLock.release()
-            #self.eventstore.emitInfo('dblock release save_fuzzDataCase')
             
             return None
             

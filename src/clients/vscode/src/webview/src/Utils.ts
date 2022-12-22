@@ -137,4 +137,13 @@ export default class Utils
     public static async delay(sec) {
         await Utils.sleep(sec);
     }
+
+    public static jsonTryParse(jsonStr: string) {
+        try {
+           JSON.parse(jsonStr);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
 }
