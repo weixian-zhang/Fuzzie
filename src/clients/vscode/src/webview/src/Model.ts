@@ -69,6 +69,7 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public http4xx = 0;
     public http5xx = 0;
     public completedDataCaseRuns = 0; 
+    public totalDataCaseRunsToComplete = 0;
 }
 
 export class FuzzRequest {

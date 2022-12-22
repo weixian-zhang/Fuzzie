@@ -80,33 +80,34 @@ export default class FuzzerManager
     public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
         
         const query = `
-        query {
-            fuzzCaseSetWithRunSummary(
-                    fuzzcontextId: "${fuzzcontextId}",
-                    fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
-                ok,
-                error,
-                result {
-                    fuzzCaseSetId
-                    fuzzCaseSetRunId
-                    fuzzcontextId
-                    selected 
-                    verb
-                    path
-                    querystringNonTemplate
-                    bodyNonTemplate
-                    headerNonTemplate
-                    authnType
-                    runSummaryId
-                    http2xx
-                    http3xx
-                    http4xx
-                    http5xx
-                    completedDataCaseRuns
-                    file
+            query {
+                fuzzCaseSetWithRunSummary(
+                        fuzzcontextId: "${fuzzcontextId}",
+                        fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                    ok,
+                    error,
+                    result {
+                        fuzzCaseSetId
+                        fuzzCaseSetRunId
+                        fuzzcontextId
+                        selected 
+                        verb
+                        path
+                        querystringNonTemplate
+                        bodyNonTemplate
+                        headerNonTemplate
+                        authnType
+                        runSummaryId
+                        http2xx
+                        http3xx
+                        http4xx
+                        http5xx
+                        completedDataCaseRuns
+                        totalDataCaseRunsToComplete
+                        file
+                    }
                 }
             }
-        }
         `;
 
         const [ok, err, resp] = await this._wc.graphql(query)

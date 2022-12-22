@@ -82,12 +82,12 @@ class WebApiFuzzer:
         # self.usernameGenerator = HackedUsernameGenerator()
         # self.CharGenerator = ObedientCharGenerator()
         
-        pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzingEventTopic)
+        pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
 
 
     def pubsub_command_receiver(self, command):
         
-        if command == 'cancel_fuzzing':
+        if command == self.eventstore.CancelFuzzWSTopic:
             self.cancel_fuzzing()
             
     def cancel_fuzzing(self):
@@ -95,7 +95,7 @@ class WebApiFuzzer:
             
             self.multithreadEventSet.set()
             
-            self.eventstore.feedback_client('fuzz.cancel')
+            self.eventstore.feedback_client(self.eventstore.CancelFuzzWSTopic)
             
             self.executor.shutdown(wait=False, cancel_futures=True)
             self.totalFuzzRuns = 0
@@ -122,6 +122,9 @@ class WebApiFuzzer:
             self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
+            
+            self.eventstore.feedback_client(self.eventstore.FuzzStartWSTopic, 
+                                            {'fuzzContextId': self.apifuzzcontext.Id, 'fuzzCaseSetRunId': self.fuzzCaseSetRunId })
             
             #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
@@ -181,8 +184,8 @@ class WebApiFuzzer:
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
-            # if summaryViewModel is not None:
-            #     self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            if summaryViewModel is not None:
+                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
@@ -345,7 +348,7 @@ class WebApiFuzzer:
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
                 # notify fuzzing completed
-                self.eventstore.feedback_client(self.eventstore.FuzzingCompleteEventTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
+                self.eventstore.feedback_client(self.eventstore.FuzzCompleteWSTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')

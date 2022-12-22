@@ -900,6 +900,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId, Id, httpCode, comple
     existingHttp4xx = rowDict['http4xx']
     existingHttp5xx = rowDict['http5xx']
     existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
+    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
     
     if httpCode >= 200 and httpCode <= 299:
         existingHttp2xx = existingHttp2xx + 1
@@ -968,6 +969,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId, Id, httpCode, comple
     summary.http4xx = existingHttp4xx
     summary.http5xx = existingHttp5xx
     summary.completedDataCaseRuns = existingCompletedDataCaseRuns
+    summary.totalDataCaseRunsToComplete = totalDataCaseRunsToComplete
     return summary
         
                

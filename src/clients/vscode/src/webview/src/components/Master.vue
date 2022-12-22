@@ -161,12 +161,10 @@
     }
 
     private onUpdateCaseSetRunSummary(data) {
-      this.$logger.info(data);
       this.eventemitter.emit('fuzz.update.casesetrunsummary', data)
     }
 
     private onNewFuzzDataCase(data) {
-      this.$logger.info(data);
       this.eventemitter.emit('fuzz.update.fuzzdatacase', data)
     }
     

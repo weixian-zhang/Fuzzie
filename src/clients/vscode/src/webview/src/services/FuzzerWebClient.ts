@@ -142,6 +142,56 @@ export default class FuzzerWebClient
 
     }
 
+    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string) {
+        
+        const query = `
+            query {
+                fuzzCaseSetWithRunSummary(
+                        fuzzcontextId: "${fuzzcontextId}",
+                        fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                    ok,
+                    error,
+                    result {
+                        fuzzCaseSetId
+                        fuzzCaseSetRunId
+                        fuzzcontextId
+                        selected 
+                        verb
+                        path
+                        querystringNonTemplate
+                        bodyNonTemplate
+                        headerNonTemplate
+                        authnType
+                        runSummaryId
+                        http2xx
+                        http3xx
+                        http4xx
+                        http5xx
+                        completedDataCaseRuns
+                        totalDataCaseRunsToComplete
+                        file
+                    }
+                }
+            }
+        `;
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
+            const error = response.data.data.fuzzCaseSetWithRunSummary.error;
+            const result = response.data.data.fuzzCaseSetWithRunSummary.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+    }
     
     public async getFuzzContexts(): Promise<any> {
 

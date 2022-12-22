@@ -261,7 +261,7 @@ class ServiceManager:
     
     def cancel_fuzz(self):
         try:
-            pub.sendMessage(self.eventstore.CancelFuzzingEventTopic, command=self.eventstore.CancelFuzzingEventTopic)
+            pub.sendMessage(self.eventstore.CancelFuzzWSTopic, command=self.eventstore.CancelFuzzWSTopic)
             return True
         except Exception as e:
             self.eventstore.emitErr(e)

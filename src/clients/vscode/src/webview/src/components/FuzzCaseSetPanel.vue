@@ -136,7 +136,7 @@
               {{ item.http5xx == undefined ? 0 : item.http5xx }}
             </td>
             <td>
-              {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns }}
+              {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns  }} / {{ item.totalDataCaseRunsToComplete }}
             </td>
             
           </tr>
@@ -149,6 +149,7 @@
       
 
 <script lang="ts">
+
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
@@ -179,9 +180,11 @@ class Props {
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
 
-  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
+  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
 
-  dataCache = {};
+  //fuzzingfcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
+
+  //dataCache = {};
 
   selectedRow = '';
 
@@ -199,6 +202,10 @@ class Props {
 
   fuzzerConnected = false;
 
+  
+  currentFuzzContextId = ''
+  currentFuzzCaseSetRunId = ''
+
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
   }
@@ -213,12 +220,17 @@ class Props {
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
 
     // listen to ApiDiscovery Tree item select event
-    this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
-    this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
-    this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked)
+    this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected);
+    this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted);
+    this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked);
+    
+    //websocket events from fuzzer
+    this.eventemitter.on('fuzz.update.casesetrunsummary', this.onFuzzingUpdateRunSummary);
 
-    //websocket receive message from fuzzer
-    //this.webclient.subscribeWS('fuzz.update.casesetrunsummary', this.onWSFuzzerFuzzRunSummaryUpdate)
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+    // this.eventemitter.on('fuzz.start', this.onFuzzStart);
+    // this.eventemitter.on('fuzz.complete', this.onFuzzComplete);
+    // this.eventemitter.on('fuzz.cancel', this.onFuzzCancel);
 
   }
 
@@ -231,12 +243,48 @@ class Props {
   onFuzzerNotReady() {
     this.clearData()
     this.fuzzerConnected = false;
+
+    this.currentFuzzContextId = '';
+    this.currentFuzzCaseSetRunId = ''
   }
 
-  onWSFuzzerFuzzRunSummaryUpdate(runSummary: string) {
+  // onFuzzStart(data) {
 
-    const jRunSum = JSON.parse(runSummary);
+  //   const fuzzContextId = data.fuzzContextId;
+  //   const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
 
+  //   this.currentFuzzContextId = fuzzContextId;
+  //   this.currentFuzzCaseSetRunId = fuzzCaseSetRunId;
+
+  //   // fuzzing data bucket replaces db-get data bucket
+  //   //this.fcsRunSums = this.fuzzingfcsRunSums;
+  // }
+
+  // onFuzzComplete(){
+  //   this.currentFuzzContextId = '';
+  //   this.currentFuzzCaseSetRunId = ''
+  // }
+
+  // onFuzzCancel(){
+  //   this.currentFuzzContextId = '';
+  //   this.currentFuzzCaseSetRunId = ''
+  // }
+
+
+
+  onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
+
+    this.fcsRunSums.map(x => {
+      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId) {
+        x.http2xx = runSummary.http2xx;
+        x.http3xx = runSummary.http3xx;
+        x.http4xx = runSummary.http4xx;
+        x.http5xx = runSummary.http5xx;
+        x.completedDataCaseRuns = runSummary.completedDataCaseRuns;
+
+        return;
+      }
+    });
   }
 
 
@@ -273,52 +321,73 @@ class Props {
   }
 
   onFuzzContextDeleted(fuzzcontextId) {
-      if( fuzzcontextId in this.dataCache)
-      {
-        delete this.dataCache[fuzzcontextId];
 
-        if(this.fcsRunSums.length > 0)
-        {
-            if(this.fcsRunSums[0].fuzzcontextId == fuzzcontextId)
-            {
-              this.fcsRunSums = [];
-            }
-        }
-      }
+    this.clearData();
+
+    //TBD - use when data is cached
+      // if( fuzzcontextId in this.dataCache)
+      // {
+      //   delete this.dataCache[fuzzcontextId];
+
+      //   if(this.fcsRunSums.length > 0)
+      //   {
+      //       if(this.fcsRunSums[0].fuzzcontextId == fuzzcontextId)
+      //       {
+      //         this.fcsRunSums = [];
+      //       }
+      //   }
+      // }
   }
 
   onFuzzContextRefreshClicked() {
     this.clearData();
   }
 
-  async onFuzzContextSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  public async getFuzzCaseSet_And_RunSummaries(fuzzcontextId: string, fuzzCaseSetRunsId: string)
   {
-    if(fuzzCaseSetRunsId == undefined) {
-      fuzzCaseSetRunsId = ''
-    }
-    
-    const key = fuzzcontextId.concat(fuzzCaseSetRunsId);
+     const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
 
-    const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[key];
-
-    if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
+    if(!ok)
     {
-      this.fcsRunSums = this.dataCache[key];
+      this.toastError(error, 'Get Fuzz Cases');
     }
     else
     {
-      const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
-
-      if(!ok)
-      {
-        this.toastError(error, 'Get Fuzz Cases');
+      if(!Utils.isNothing(result)){
+        this.fcsRunSums = result;
       }
-      else
-      {
-        this.dataCache[key] = result;
-        this.fcsRunSums = this.dataCache[key];
-      }
+      
     }
+  }
+
+  async onFuzzContextSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  {
+     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+    
+    //caching increase complexity in capturing both fuzzing and retrieved data
+    //disabl for now
+    // const key = fuzzcontextId.concat(fuzzCaseSetRunsId);
+
+    // const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[key];
+
+    // if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
+    // {
+    //   this.fcsRunSums = this.dataCache[key];
+    // }
+    // else
+    // {
+    //   const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+
+    //   if(!ok)
+    //   {
+    //     this.toastError(error, 'Get Fuzz Cases');
+    //   }
+    //   else
+    //   {
+    //     this.dataCache[key] = result;
+    //     this.fcsRunSums = this.dataCache[key];
+    //   }
+    // }
   }
 
   onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
@@ -327,7 +396,7 @@ class Props {
   }
 
   selectAllChanged(event) {
-    this.fcsRunSums.forEach(fcs => {
+    this.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
       fcs.selected = this.selectAll;
     });
     this.isTableDirty = true;
@@ -340,7 +409,7 @@ class Props {
 
   clearData() {
       this.fcsRunSums = [];
-      this.dataCache = {};
+      //this.dataCache = {};
       this.selectedRow = ''
   }
 

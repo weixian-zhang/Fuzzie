@@ -48,11 +48,11 @@ class EventStore:
     wsMsgQueue = deque( maxlen=5000 )
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
-    CancelFuzzingEventTopic = 'cancel_fuzzing'
+    CancelFuzzWSTopic = 'fuzz.cancel'
     CancelFuzzingConfirmEventTopic = 'cancel_fuzzing_confirm'
-    FuzzingStartEventTopic = 'fuzzing_start'
-    FuzzingCompleteEventTopic = 'fuzz.complete'
-    InfoEventTopic = 'event.info'
+    FuzzStartWSTopic = 'fuzz.start'
+    FuzzCompleteWSTopic = 'fuzz.complete'
+    InfoWSTopic = 'event.info'
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -81,7 +81,7 @@ class EventStore:
         self.ee.emit(EventStore.AppEventTopic, m.json())
         
         if alsoToClient:        
-            self.feedback_client(self.InfoEventTopic, message)
+            self.feedback_client(self.InfoWSTopic, message)
 
     
     def emitErr(self, err , data = "") -> None:

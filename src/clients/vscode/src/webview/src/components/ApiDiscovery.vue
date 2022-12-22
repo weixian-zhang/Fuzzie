@@ -786,10 +786,26 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzStart(data) {
+
+    const fuzzContextId = data.fuzzContextId;
+    const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
+
+    this.getFuzzcontexts();
+
+    this.currentFuzzingContextId = fuzzContextId;
+    this.selectedContextNode = fuzzContextId;
+    this.selectedCaseSetRunNode =fuzzCaseSetRunId;
+
+    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
+
     this.toastInfo('fuzzing started');
   }
 
   onFuzzComplete(data) {
+
+    if(!this.isFuzzingInProgress)
+      return;
+
     this.isFuzzingInProgress = false;
     this.currentFuzzingContextId = '';
 
@@ -797,6 +813,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzCancel() {
+
+    if(!this.isFuzzingInProgress)
+      return;
+      
     this.isFuzzingInProgress = false;
     this.currentFuzzingContextId = '';
 
@@ -946,13 +966,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
       return;
     }
-
-    
-    this.currentFuzzingContextId = fuzzcontextId;
-
-    await Utils.delay(2000);
-
-    this.getFuzzcontexts();
   }
 
   async onCancelFuzzIconClicked() {

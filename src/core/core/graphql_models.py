@@ -149,6 +149,7 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     http4xx = graphene.Int(default_value=0)
     http5xx =  graphene.Int(default_value=0)
     completedDataCaseRuns = graphene.Int(default_value=0) 
+    totalDataCaseRunsToComplete = graphene.Int(default_value=0) 
     
 class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     fuzzCaseSetRunsId = graphene.String()
