@@ -140,23 +140,28 @@
     }
 
     private notifyFuzzerIsNotReady() {
-         this.eventemitter.emit('fuzzer.notready')
+        this.$logger.info('fuzzer is not ready, trying to reconnect. Fuzzer may take a while to load for the first time')
+        this.eventemitter.emit('fuzzer.notready')
     }
 
     private notifyFuzzerReady() {
-         this.eventemitter.emit('fuzzer.ready')
+        this.$logger.info('fuzzer is ready');
+        this.eventemitter.emit('fuzzer.ready')
     }
 
     // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
     private onFuzzStart(data) {
+      this.$logger.info('fuzzing started');
       this.eventemitter.emit('fuzz.start', data);
     }
 
     private onFuzzComplete(data) {
+      this.$logger.info('fuzzing is completed');
       this.eventemitter.emit('fuzz.complete')
     }
 
     private onFuzzCancel(data) {
+      this.$logger.info('fuzzing is cancelled');
       this.eventemitter.emit('fuzz.cancel')
     }
 

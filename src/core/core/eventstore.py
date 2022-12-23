@@ -60,19 +60,27 @@ class EventStore:
     
     def background_task_ws_message_sender():
         while True:
-            if len(EventStore.wsMsgQueue):
-                
-                for portid in EventStore.websocketClients:
+            try:
+                if len(EventStore.wsMsgQueue):
                     
-                    wsClient = EventStore.websocketClients[portid]
-                    
-                    if(wsClient.client_state == WebSocketState.CONNECTED):
-                    
-                        while len(EventStore.wsMsgQueue) > 0:
+                    for portid in EventStore.websocketClients:
+                        
+                        wsClient = EventStore.websocketClients[portid]
+                        
+                        if(wsClient.client_state == WebSocketState.CONNECTED):
+                        
+                            while len(EventStore.wsMsgQueue) > 0:
+                                
+                                msg = EventStore.wsMsgQueue.pop()
+                                
+                                asyncio.run(wsClient.send_text(msg))
                             
-                            msg = EventStore.wsMsgQueue.pop()
-                            
-                            asyncio.run(wsClient.send_text(msg))
+            except Exception as e:
+                msg: str = e.args[0]
+                if msg is not None and msg.endswith("attached to a different loop") == False:
+                    del EventStore.websocketClients[portid]     # "previous" websocket client already disconnected, remove the instance
+                else:
+                    pass
                 
             time.sleep(0.5)
     
@@ -91,9 +99,7 @@ class EventStore:
         self.fuzzProgress = []
         
         self.ee = EventEmitter()
-        self.ee.on(EventStore.AppEventTopic, self.handleGeneralLogs)
-        
-        
+        self.ee.on(EventStore.AppEventTopic, self.onAppLogReceived)
         
         
     def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
@@ -142,7 +148,8 @@ class EventStore:
         self.feedback_client('event.error', errMsg)
         
     
-    def handleGeneralLogs(self, msg: str):
+    def onAppLogReceived(self, msg: str):
+        # TODO: log to Application Insights
         print(msg)
     
     def add_websocket(self, portId, websocket):
