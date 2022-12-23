@@ -17,7 +17,6 @@ from eventstore import EventStore
 eventstore = EventStore()
 
 from corpora_loader import load_corpora_background
-
 from starlette_graphql import schema
 import asyncio
 import uvicorn
@@ -25,7 +24,7 @@ from uvicorn.main import Server
 import asyncio
 from utils import Utils
 from pubsub import pub
-# from fastapi import FastAPI, WebSocket
+from threading import Thread
 from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
@@ -38,7 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
     allow_methods=["*"],
 )
-
 
 @app.websocket_route("/")
 class WebSocketServer(WebSocketEndpoint):

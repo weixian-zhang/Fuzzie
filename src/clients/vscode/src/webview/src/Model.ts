@@ -72,21 +72,21 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public totalDataCaseRunsToComplete = 0;
 }
 
-export class FuzzRequest {
-    public Id = '';
-    public requestDateTime;
-    public hostname = '';
-    public port =  0;
-    public verb = '';
-    public url = '';
-    public path = '';
-    public querystring = '';
-    public headers = '';
-    public body = '';
-    public contentLength = 0;
-    public requestMessage = '';
-    public invalidRequestError = '';
-}
+// export class FuzzRequest {
+//     public Id = '';
+//     public requestDateTime;
+//     public hostname = '';
+//     public port =  0;
+//     public verb = '';
+//     public url = '';
+//     public path = '';
+//     public querystring = '';
+//     public headers = '';
+//     public body = '';
+//     public contentLength = 0;
+//     public requestMessage = '';
+//     public invalidRequestError = '';
+// }
 
 export class FuzzResponse {
     public Id = '';
@@ -116,3 +116,39 @@ export class FuzzerStatus {
     public message =''
 }
 
+
+export class FuzzRequest {
+    public Id = ''
+    public requestDateTime;
+    public hostname = '';
+    public port = 443
+    public verb = '';
+    public url = '';
+    public path = '';
+    public querystring = '';
+    public headers = '';
+    public body = '';
+    public contentLength = 0
+    public requestMessage = '';
+    public invalidRequestError = '';
+}
+
+export class FuzzResponse_ViewModel {
+    public Id = '';
+    public responseDateTime;
+    public statusCode = '';
+    public reasonPharse = '';
+    public headerJson = '';
+    public setcookieHeader = '';
+    public body = '';
+    public contentLength = 0;
+    public responseDisplayText = '';
+}
+    
+export class FuzzDataCase_ViewModel {
+    public fuzzDataCaseId = '';
+    public fuzzCaseSetId = '';
+    public request: FuzzRequest;
+    public response: FuzzResponse;
+
+}

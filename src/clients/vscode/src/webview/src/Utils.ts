@@ -146,4 +146,13 @@ export default class Utils
         }
         return true;
     }
+
+    public static b64d(data: string) {
+        if(Utils.isNothing(data)) {
+            return '';
+        }
+
+        const decoded = atob(data);
+        return decoded;
+    }
 }

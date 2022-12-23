@@ -150,6 +150,8 @@
 
 <script lang="ts">
 
+import { inject } from 'vue';
+import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
@@ -186,6 +188,8 @@ class Props {
 
   //dataCache = {};
 
+  $logger: Logger|any;
+
   selectedRow = '';
 
   selectAll = true;
@@ -202,9 +206,11 @@ class Props {
 
   fuzzerConnected = false;
 
-  
-  currentFuzzContextId = ''
-  currentFuzzCaseSetRunId = ''
+  currentFuzzContextId = '';
+
+  beforeMount() {
+      this.$logger = inject('$logger');   
+  }
 
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
@@ -245,30 +251,9 @@ class Props {
     this.fuzzerConnected = false;
 
     this.currentFuzzContextId = '';
-    this.currentFuzzCaseSetRunId = ''
   }
 
-  // onFuzzStart(data) {
-
-  //   const fuzzContextId = data.fuzzContextId;
-  //   const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
-
-  //   this.currentFuzzContextId = fuzzContextId;
-  //   this.currentFuzzCaseSetRunId = fuzzCaseSetRunId;
-
-  //   // fuzzing data bucket replaces db-get data bucket
-  //   //this.fcsRunSums = this.fuzzingfcsRunSums;
-  // }
-
-  // onFuzzComplete(){
-  //   this.currentFuzzContextId = '';
-  //   this.currentFuzzCaseSetRunId = ''
-  // }
-
-  // onFuzzCancel(){
-  //   this.currentFuzzContextId = '';
-  //   this.currentFuzzCaseSetRunId = ''
-  // }
+ 
 
 
 

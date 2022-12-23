@@ -10,6 +10,9 @@ import asyncio
 import nest_asyncio
 from pubsub import pub
 from collections import deque
+from threading import Thread
+import time
+from starlette_graphene3 import WebSocket, WebSocketState
 
 nest_asyncio.apply()
 
@@ -44,8 +47,8 @@ class Message(object):
  
 class EventStore:
     
-    websocketClients = {}
-    wsMsgQueue = deque( maxlen=5000 )
+    websocketClients: list[WebSocket] = {}
+    wsMsgQueue = deque(maxlen=10000)
     AppEventTopic = "AppEventTopic"
     CorporaEventTopic = "corpora_loading"
     CancelFuzzWSTopic = 'fuzz.cancel'
@@ -54,9 +57,31 @@ class EventStore:
     FuzzCompleteWSTopic = 'fuzz.complete'
     InfoWSTopic = 'event.info'
     
+    
+    def background_task_ws_message_sender():
+        while True:
+            if len(EventStore.wsMsgQueue):
+                
+                for portid in EventStore.websocketClients:
+                    
+                    wsClient = EventStore.websocketClients[portid]
+                    
+                    if(wsClient.client_state == WebSocketState.CONNECTED):
+                    
+                        while len(EventStore.wsMsgQueue) > 0:
+                            
+                            msg = EventStore.wsMsgQueue.pop()
+                            
+                            asyncio.run(wsClient.send_text(msg))
+                
+            time.sleep(0.5)
+    
+    
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(EventStore, cls).__new__(cls)
+            daemon = Thread(target=EventStore.background_task_ws_message_sender, daemon=True, name='background_task_ws_message_sender')
+            daemon.start()
         return cls.instance
     
     def __init__(self) -> None:
@@ -67,6 +92,8 @@ class EventStore:
         
         self.ee = EventEmitter()
         self.ee.on(EventStore.AppEventTopic, self.handleGeneralLogs)
+        
+        
         
         
     def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
@@ -138,20 +165,25 @@ class EventStore:
             
             mj = m.json()
             
-            if len(self.websocketClients) > 0:
-                for portid in self.websocketClients:
+            self.wsMsgQueue.append(mj)
+            
+            # if len(self.websocketClients) > 0:
+            #     for portid in self.websocketClients:
                     
-                    wsClient = self.websocketClients[portid]
+            #         wsClient = self.websocketClients[portid]
                     
-                    while len(self.wsMsgQueue) > 0:
+            #         while len(self.wsMsgQueue) > 0:
                         
-                        msg = self.wsMsgQueue.pop()
-                        await wsClient.send_text(msg)
+            #             msg = self.wsMsgQueue.pop()
+            #             await wsClient.send_text(msg)
                         
-                    await wsClient.send_text(mj)
-            else:
-                self.wsMsgQueue.append(mj)
+            #         await wsClient.send_text(mj)
+            # else:
+            #     self.wsMsgQueue.append(mj)
                 
         except Exception as e:
             self.emitErr(e)
             self.wsMsgQueue.append(mj)
+            
+            
+    

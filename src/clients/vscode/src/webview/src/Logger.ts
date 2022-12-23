@@ -11,15 +11,15 @@ export default class Logger {
         this._vscodeConsole = new VSCodeMessager();    
     }
 
-    public info(message: string) {
+    public info(message: string, source='') {
         console.log(message);
     }
 
-    public errorMsg(message: string) {
+    public errorMsg(message: string, source='') {
         console.log(message);
     }
 
-    public error(ex: any) {
+    public error(ex: any, source='') {
         if(!Utils.isNothing(ex) && !Utils.isNothing(ex.message) && !Utils.isNothing(ex.stack)) {
             console.log(`${ex.message}, ${ex.stack}`);
         }

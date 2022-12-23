@@ -411,7 +411,7 @@ class WebApiFuzzer:
                                  '\n' \
                                 f'{headerMultilineText}' \
                                  '\n' \
-                                f'{fr.body if fr.body != "{}" else ""}'
+                                f'{body if body != "{}" else ""}'
                                 
             fr.requestMessage = Utils.b64e(rm)
             
