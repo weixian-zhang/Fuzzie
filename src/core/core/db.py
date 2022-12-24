@@ -884,7 +884,7 @@ def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId
     Session.commit()
     Session.close()
     
-def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId, Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
+def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId,  Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
     
     Session = scoped_session(session_factory)
 
@@ -963,7 +963,9 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetId, Id, httpCode, comple
     summary = ApiFuzzCaseSets_With_RunSummary_ViewModel()
     summary.Id = Id
     summary.fuzzCaseSetId = fuzzCaseSetId
+    summary.fuzzCaseSetRunId = Id
     summary.fuzzcontextId = fuzzcontextId
+    summary.fuzzCaseSetRunId = Id
     summary.http2xx = existingHttp2xx
     summary.http3xx = existingHttp3xx
     summary.http4xx = existingHttp4xx

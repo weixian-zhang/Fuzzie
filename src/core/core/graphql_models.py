@@ -143,7 +143,7 @@ class ApiFuzzContextUpdate(graphene.InputObjectType):
     
 class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzCaseSetId = graphene.String()
-    fuzzCaseSetRunId = graphene.String('')
+    fuzzCaseSetRunId = graphene.String()
     fuzzcontextId = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 

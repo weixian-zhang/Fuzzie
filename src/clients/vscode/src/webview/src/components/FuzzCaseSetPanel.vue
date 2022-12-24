@@ -208,6 +208,9 @@ class Props {
 
   currentFuzzContextId = '';
 
+  fuzzContextId = '';
+  fuzzCaseSetRunsId = '';
+
   beforeMount() {
       this.$logger = inject('$logger');   
   }
@@ -227,6 +230,8 @@ class Props {
 
     // listen to ApiDiscovery Tree item select event
     this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected);
+    this.eventemitter.on("onFuzzCaseSetRunSelected", this.onFuzzCaseSetRunSelected);
+    
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted);
     this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked);
     
@@ -234,9 +239,6 @@ class Props {
     this.eventemitter.on('fuzz.update.casesetrunsummary', this.onFuzzingUpdateRunSummary);
 
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
-    // this.eventemitter.on('fuzz.start', this.onFuzzStart);
-    // this.eventemitter.on('fuzz.complete', this.onFuzzComplete);
-    // this.eventemitter.on('fuzz.cancel', this.onFuzzCancel);
 
   }
 
@@ -254,13 +256,10 @@ class Props {
   }
 
  
-
-
-
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
     this.fcsRunSums.map(x => {
-      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId) {
+      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && runSummary.fuzzCaseSetRunId == this.fuzzCaseSetRunsId) {
         x.http2xx = runSummary.http2xx;
         x.http3xx = runSummary.http3xx;
         x.http4xx = runSummary.http4xx;
@@ -308,20 +307,6 @@ class Props {
   onFuzzContextDeleted(fuzzcontextId) {
 
     this.clearData();
-
-    //TBD - use when data is cached
-      // if( fuzzcontextId in this.dataCache)
-      // {
-      //   delete this.dataCache[fuzzcontextId];
-
-      //   if(this.fcsRunSums.length > 0)
-      //   {
-      //       if(this.fcsRunSums[0].fuzzcontextId == fuzzcontextId)
-      //       {
-      //         this.fcsRunSums = [];
-      //       }
-      //   }
-      // }
   }
 
   onFuzzContextRefreshClicked() {
@@ -345,35 +330,19 @@ class Props {
     }
   }
 
-  async onFuzzContextSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  async onFuzzContextSelected(fuzzcontextId)
   {
-     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
-    
-    //caching increase complexity in capturing both fuzzing and retrieved data
-    //disabl for now
-    // const key = fuzzcontextId.concat(fuzzCaseSetRunsId);
-
-    // const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[key];
-
-    // if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
-    // {
-    //   this.fcsRunSums = this.dataCache[key];
-    // }
-    // else
-    // {
-    //   const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
-
-    //   if(!ok)
-    //   {
-    //     this.toastError(error, 'Get Fuzz Cases');
-    //   }
-    //   else
-    //   {
-    //     this.dataCache[key] = result;
-    //     this.fcsRunSums = this.dataCache[key];
-    //   }
-    // }
+     this.fuzzContextId = fuzzcontextId;
+     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
+
+  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  {
+    this.fuzzContextId = fuzzcontextId;
+    this.fuzzCaseSetRunsId = fuzzCaseSetRunsId;
+     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+  }
+  
 
   onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
     // send event to FuzzResult panel to display request and response

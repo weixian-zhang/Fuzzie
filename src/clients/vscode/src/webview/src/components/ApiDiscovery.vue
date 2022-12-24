@@ -593,18 +593,46 @@
         
         <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" class="border-0">
           <template #default="slotProps" >
-            <small 
+            <!--fuzz context-->
+            <!-- <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
               :class="( slotProps.node.isFuzzCaseRun == false? (slotProps.node.fuzzcontextId === selectedContextNode) :
                (slotProps.node.fuzzcontextId === selectedContextNode &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode)  &&
                (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 
                'p-1 border border-info border-2' : '' ">
               <b 
                 v-on:click="(
-                  (slotProps.node.key != '-1' && slotProps.node.key != '-2') ?
+                  (slotProps.node.key != '-1' && slotProps.node.key != '-2') && slot.node.isFuzzCaseRun == false ?
                       onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId) : '' ,
                   selectedContextNode = slotProps.node.fuzzcontextId,
                   selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId
                 )">
+                {{slotProps.node.label}}
+              </b>
+            </small> -->
+
+            <!--fuzz context-->
+            <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
+              :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&
+                slotProps.node.fuzzcontextId === selectedContextNode) ? 'p-1 border border-info border-2' : '')">
+              <b 
+                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId),
+                selectedContextNode = slotProps.node.fuzzcontextId)">
+                {{slotProps.node.label}}
+              </b>
+            </small>
+
+            <!--fuzz caseSetRun-->
+            <small v-show="slotProps.node.isFuzzCaseRun == true && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
+              :class="( (
+                  slotProps.node.isFuzzCaseRun == true && 
+                  slotProps.node.key != '-1' && 
+                  slotProps.node.key != '-2' &&
+                  slotProps.node.fuzzcontextId == selectedContextNode &&
+                  selectedCaseSetRunNode == slotProps.node.fuzzCaseSetRunsId) ? 'p-1 border border-info border-2' : '')">
+              <b 
+                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
+                    selectedContextNode = slotProps.node.fuzzcontextId,
+                    selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId)">
                 {{slotProps.node.label}}
               </b>
             </small>
@@ -813,6 +841,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.getFuzzcontexts();
 
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
     this.toastInfo('fuzzing started');
@@ -991,8 +1020,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
  }
 
-  onFuzzContextSelected(fuzzcontextId, fuzzCaseSetRunsId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, fuzzCaseSetRunsId);
+  onFuzzContextSelected(fuzzcontextId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
+  }
+
+  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
+    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId);
   }
 
   async onRequestTextFileChange(event) {

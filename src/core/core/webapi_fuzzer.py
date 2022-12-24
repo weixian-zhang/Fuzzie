@@ -510,7 +510,7 @@ class WebApiFuzzer:
                     ok, err, fileContent = self.corporaContext.resolve_file(fileType)
                     if ok:
                         filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
-                        files[filename] = fileContent   # list of tuple file names and binary content
+                        files[filename] = fileContent.decode('utf-8')   # list of tuple file names and binary content
             
             
             # header - reason for looping over each header data template and getting fuzz data is to 
