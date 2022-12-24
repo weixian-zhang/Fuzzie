@@ -666,16 +666,22 @@
 
               </span>
 
-<!-- slotProps.node.isFuzzCaseRun == false &&  -->
-
               <v-progress-linear
                 indeterminate
                 color="cyan"
                 v-show="(
-                  isFuzzingInProgress == true && 
-                  currentFuzzingContextId == slotProps.node.fuzzcontextId &&
-                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunId)"
+                  slotProps.node.isFuzzCaseRun == false &&
+                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId)"
                 style="width:100%" />
+              
+              <v-progress-linear
+                indeterminate
+                color="cyan"
+                v-show="(
+                  slotProps.node.isFuzzCaseRun == true &&
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId)"
+                style="width:100%" />
+
           </template>
       </Tree>
     </v-card>
@@ -798,13 +804,14 @@ export default class ApiDiscovery extends Vue.with(Props) {
       return;
     }
 
-    this.getFuzzcontexts();
-
+    this.isFuzzingInProgress = true;
     this.currentFuzzingContextId = fuzzContextId;
     this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
 
     this.selectedContextNode = fuzzContextId;
     this.selectedCaseSetRunNode =fuzzCaseSetRunId;
+
+    this.getFuzzcontexts();
 
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 

@@ -280,8 +280,7 @@ class ServiceManager:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
                 ServiceManager.webapiFuzzer.fuzz()
                 
-            elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Cancelled or 
-                ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Completed):
+            elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop):
                 
                 ServiceManager.webapiFuzzer = None
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
