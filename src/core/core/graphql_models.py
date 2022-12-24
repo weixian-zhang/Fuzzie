@@ -39,12 +39,23 @@ class SecuritySchemes(graphene.ObjectType):
     bearerToken = graphene.String()
     apikeyHeader = graphene.String()
     apikey = graphene.String()
+    
+class WebApiFuzzerInfo(graphene.ObjectType):
+    isFuzzing = graphene.Boolean(False)
+    fuzzContextId = graphene.String()
+    fuzzCaseSetRunId = graphene.String('')
+    
+    def __init__(self) -> None:
+        super().__init__()
+        
+        self.fuzzContextId = ''
+        self.fuzzCaseSetRunId = ''
 
 class FuzzerStatus(graphene.ObjectType):
     timestamp = graphene.String()
     alive = graphene.Boolean()
     isDataLoaded = graphene.Boolean()
-    isFuzzing = graphene.Boolean()
+    webapiFuzzerInfo = graphene.Field(WebApiFuzzerInfo)
     message = graphene.String()
 
 # class ApiFuzzRequest(graphene.ObjectType):

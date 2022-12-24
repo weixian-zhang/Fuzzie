@@ -28,8 +28,12 @@ from db import (insert_api_fuzzCaseSetRuns,
                 update_casesetrun_summary)
 
 from multiprocessing import Lock
+from enum import Enum 
+from corporafactory.corpora_context import CorporaContext
 
-from corporafactory.corpora_context import CorporaContext        
+class FuzzingStatus(Enum):
+    Fuzzing = 1
+    Stop = 2
 
 class WebApiFuzzer:
     
@@ -47,6 +51,8 @@ class WebApiFuzzer:
         # Set-Cookie: chocolate=chips; expires=Sun, 15-Nov-2009 18:47:08 GMT; path=/; domain=thaorius.net; secure; httponly
         # Set-Cookie: milk=shape
         self.cookiejar = {}
+        
+        self.fuzzingStatus : FuzzingStatus = FuzzingStatus.Fuzzing
         
         # security creds
         self.basicUsername = apifuzzcontext.basicUsername,
@@ -72,36 +78,27 @@ class WebApiFuzzer:
         
         self.corporaContext = CorporaContext()
         
-        # self.passwordGenerator = HackedPasswordGenerator()
-        # self.usernameGenerator = HackedUsernameGenerator()
-        # self.fileGenerator = NaughtyFileGenerator() 
-        # self.datetimeGenerator = NaughtyDateTimeGenerator() 
-        # self.digitGenerator = NaughtyDigitGenerator() 
-        # self.stringGenerator = NaughtyStringGenerator() 
-        # self.boolGenerator = NaughtyBoolGenerator() 
-        # self.usernameGenerator = HackedUsernameGenerator()
-        # self.CharGenerator = ObedientCharGenerator()
-        
-        pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
+        #subscribe cancel-fuzzing event
+        #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
 
-
-    def pubsub_command_receiver(self, command):
+    # def pubsub_command_receiver(self, command):
         
-        if command == self.eventstore.CancelFuzzWSTopic:
-            self.cancel_fuzzing()
+    #     if command == self.eventstore.CancelFuzzWSTopic:
+    #         self.cancel_fuzzing()
             
     def cancel_fuzzing(self):
         try:
             
             self.multithreadEventSet.set()
             
-            self.eventstore.feedback_client(self.eventstore.CancelFuzzWSTopic)
-            
             self.executor.shutdown(wait=False, cancel_futures=True)
             self.totalFuzzRuns = 0
             self.currentFuzzRuns = 0
             
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+            
+            self.fuzzingStatus = FuzzingStatus.Stop
+            #self.eventstore.feedback_client(self.eventstore.CancelFuzzWSTopic)
      
         except Exception as e:
             self.eventstore.emitErr(e)
@@ -123,10 +120,13 @@ class WebApiFuzzer:
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             
-            self.eventstore.feedback_client(self.eventstore.FuzzStartWSTopic, 
-                                            {'fuzzContextId': self.apifuzzcontext.Id, 'fuzzCaseSetRunId': self.fuzzCaseSetRunId })
+            #use graphql instead to get fuzz.start status, more "reliable"
+            # self.eventstore.feedback_client(self.eventstore.FuzzStartWSTopic, 
+            #                                 {'fuzzContextId': self.apifuzzcontext.Id, 'fuzzCaseSetRunId': self.fuzzCaseSetRunId })
             
             #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            
+            self.fuzzingStatus = FuzzingStatus.Fuzzing
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
             
@@ -347,8 +347,10 @@ class WebApiFuzzer:
                 
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
+                self.fuzzingStatus = FuzzingStatus.Stop
+                
                 # notify fuzzing completed
-                self.eventstore.feedback_client(self.eventstore.FuzzCompleteWSTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
+                #self.eventstore.feedback_client(self.eventstore.FuzzCompleteWSTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')

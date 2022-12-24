@@ -17,38 +17,7 @@ export default class FuzzerManager
         this._wc = wc;
     }
 
-    public async isFuzzerReady(): Promise<[boolean, string, FuzzerStatus]>
-    {
-        const query = `
-            query {
-                fuzzerStatus {
-                    timestamp,
-                    alive,
-                    isDataLoaded,
-                    isFuzzing,
-                    message
-                } 
-            }
-        `;
-
-        try {
-            const [ok, err, resp] = await this._wc.graphql(query)
-
-            if(!ok)
-            {
-                return [ok, err, new FuzzerStatus()];
-            }
-
-            const gqlOK = ok;
-            const error = err;
-            const result = resp?.data.data.fuzzerStatus;
-
-            return [gqlOK, error, result];
-            
-        } catch (error: any) {
-            return [false, error.message, new FuzzerStatus()];
-        }
-    }
+    
 
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
         const query = `

@@ -666,13 +666,15 @@
 
               </span>
 
+<!-- slotProps.node.isFuzzCaseRun == false &&  -->
+
               <v-progress-linear
                 indeterminate
                 color="cyan"
                 v-show="(
                   isFuzzingInProgress == true && 
-                  slotProps.node.isFuzzCaseRun == false && 
-                  currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                  currentFuzzingContextId == slotProps.node.fuzzcontextId &&
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunId)"
                 style="width:100%" />
           </template>
       </Tree>
@@ -735,6 +737,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   fuzzerConnected = false;
   isFuzzingInProgress = false;
   currentFuzzingContextId = '';
+  currentFuzzingCaseSetRunId = '';
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -758,8 +761,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
-    this.eventemitter.on('fuzz.complete', this.onFuzzComplete);
-    this.eventemitter.on('fuzz.cancel', this.onFuzzCancel);
+    this.eventemitter.on('fuzz.stop', this.onFuzzStop);
 
     this.getFuzzcontexts()
   }
@@ -783,16 +785,24 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.isFuzzingInProgress = false;
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
   }
 
+  //constantly receiving event
   onFuzzStart(data) {
 
     const fuzzContextId = data.fuzzContextId;
     const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
 
+    if(this.currentFuzzingContextId != '' && this.currentFuzzingCaseSetRunId != ''){
+      return;
+    }
+
     this.getFuzzcontexts();
 
     this.currentFuzzingContextId = fuzzContextId;
+    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
+
     this.selectedContextNode = fuzzContextId;
     this.selectedCaseSetRunNode =fuzzCaseSetRunId;
 
@@ -801,26 +811,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.toastInfo('fuzzing started');
   }
 
-  onFuzzComplete(data) {
+  onFuzzStop() {
 
     if(!this.isFuzzingInProgress)
       return;
 
     this.isFuzzingInProgress = false;
     this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
 
     this.toastSuccess('fuzzing is completed');
-  }
-
-  onFuzzCancel() {
-
-    if(!this.isFuzzingInProgress)
-      return;
-      
-    this.isFuzzingInProgress = false;
-    this.currentFuzzingContextId = '';
-
-    this.toastInfo('fuzzing is cancelled');
   }
 
   //#### websocket event ends ####
@@ -981,6 +981,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.isFuzzingInProgress = false
     this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
  }
 
   onFuzzContextSelected(fuzzcontextId, fuzzCaseSetRunsId) {

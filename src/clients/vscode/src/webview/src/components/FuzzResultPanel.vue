@@ -32,7 +32,7 @@
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
-      <v-icon color="cyan darken-3">mdi-content-save-settings-outline</v-icon>
+
     </v-toolbar>
 
     <Splitter  style="height: 100%" >
@@ -202,6 +202,9 @@ class Props {
       this.eventemitter.on("onFuzzContextRefreshClicked", this.clearData)
 
       //fuzzing data event stream
+      this.eventemitter.on('fuzz.start', this.onFuzzStart);
+      this.eventemitter.on('fuzz.complete', this.onFuzzComplete);
+      this.eventemitter.on('fuzz.cancel', this.onFuzzCancel);
       this.eventemitter.on('fuzz.update.fuzzdatacase', this.onFuzzDataCaseReceived);
     }
 
@@ -216,18 +219,20 @@ class Props {
 
       this.currentFuzzingFuzzContextId = fuzzContextId;
       this.currentFuzzingFuzzCaseSetRunId = fuzzCaseSetRunId;
+
+      this.switchOriginalToFuzzingDataBucket();
   }
 
     onFuzzComplete(){
       this.currentFuzzingFuzzContextId = '';
       this.currentFuzzingFuzzCaseSetRunId = ''
-      this.moveFuzzingDataBucketToOriginal();
+      this.switchFuzzingDataBucketToOriginal();
     }
 
     onFuzzCancel(){
       this.currentFuzzingFuzzContextId = '';
       this.currentFuzzingFuzzCaseSetRunId = ''
-      this.moveFuzzingDataBucketToOriginal();
+      this.switchFuzzingDataBucketToOriginal();
     }
 
     //to determine this usage
@@ -238,8 +243,13 @@ class Props {
       return false;
     }
 
+    switchOriginalToFuzzingDataBucket() {
+        this.fdcsDataOriginal = [];
+        this.fdcsDataFiltered = this.fdcsFuzzing;
+    }
+
     // after fuzzing, move the fuzzing data array back to fdcsDataOriginal
-    moveFuzzingDataBucketToOriginal() {
+    switchFuzzingDataBucketToOriginal() {
       this.fdcsDataOriginal = this.fdcsFuzzing;
       this.fdcsDataFiltered = [...this.fdcsDataOriginal]
       this.fdcsFuzzing = [];  //empty fuzzing data

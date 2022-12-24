@@ -8,8 +8,9 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             ApiFuzzCaseSets_With_RunSummary_ViewModel,
                             FuzzRequest_ViewModel,
                             FuzzResponse_ViewModel,
-                            FuzzDataCase_ViewModel)
-from webapi_fuzzer import WebApiFuzzer
+                            FuzzDataCase_ViewModel,
+                            WebApiFuzzerInfo)
+from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from automapper import mapper
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -28,12 +29,12 @@ import threading, time
 from datetime import datetime
 import queue
 
-        
-        
+         
 class ServiceManager:
     
     eventstore = EventStore()
     dataQueue = queue.Queue()
+    webapiFuzzer: webapiFuzzer = None
     
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -41,8 +42,6 @@ class ServiceManager:
             
         return cls.instance
     
-    def __init__(self) -> None:   
-        pass
     
     def delete_api_fuzz_context(self, fuzzcontextId):
         
@@ -261,34 +260,57 @@ class ServiceManager:
     
     def cancel_fuzz(self):
         try:
-            pub.sendMessage(self.eventstore.CancelFuzzWSTopic, command=self.eventstore.CancelFuzzWSTopic)
+            self.webapiFuzzer.cancel_fuzzing()
+            #pub.sendMessage(self.eventstore.CancelFuzzWSTopic, command=self.eventstore.CancelFuzzWSTopic)
             return True
         except Exception as e:
             self.eventstore.emitErr(e)
             return False
         
     
-        
-
     def fuzz(self, fuzzcontextId):
         
-        fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
+        try:
+            fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
         
-        if fuzzcontext is None:
-            return False, 'Context not found or no FuzzCaseSet is selected'
+            if fuzzcontext is None:
+                return False, 'Context not found or no FuzzCaseSet is selected'
+            
+            if ServiceManager.webapiFuzzer is None:
+                ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
+                ServiceManager.webapiFuzzer.fuzz()
+                
+            elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Cancelled or 
+                ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Completed):
+                
+                ServiceManager.webapiFuzzer = None
+                ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
+                ServiceManager.webapiFuzzer.fuzz()
+                
+            return True, ''
         
-        webapifuzzer = WebApiFuzzer(fuzzcontext)
-                                    # ServiceManager.dataQueue, 
-                                    # basicUsername = basicUsername, 
-                                    # basicPassword= basicPassword, 
-                                    # bearerTokenHeader= bearerTokenHeader,
-                                    # bearerToken= bearerToken, 
-                                    # apikeyHeader=  apikeyHeader, 
-                                    # apikey= apikey)
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            
+    
+    def get_webapi_fuzz_info(self) -> WebApiFuzzerInfo:
         
-        webapifuzzer.fuzz()
+        info = WebApiFuzzerInfo()
         
-        return True, ''
+        if ServiceManager.webapiFuzzer == None:
+            info.isFuzzing = False
+            
+        elif ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Fuzzing:
+            info.isFuzzing = True
+            info.fuzzContextId = ServiceManager.webapiFuzzer.apifuzzcontext.Id
+            info.fuzzCaseSetRunId = ServiceManager.webapiFuzzer.fuzzCaseSetRunId
+            
+        elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop): 
+            info.isFuzzing = False
+        
+        return info
+            
+        
         
     
     

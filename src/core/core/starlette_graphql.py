@@ -19,8 +19,8 @@ class Query(graphene.ObjectType):
     
     corporaLoaded = False
     corporaLoadMsg = ''
-    isFuzzing = False
     
+    #subscribe status event from corpora_loader runnning in background
     def on_event_received(command, msgData):
         match command:
             case 'corpora_loaded':
@@ -28,14 +28,8 @@ class Query(graphene.ObjectType):
             case 'corpora_load_error':
                 Query.corporaLoaded = False
                 Query.corporaLoadMsg = msgData
-            case 'fuzzing_start':
-                Query.isFuzzing = True
-                Query.corporaLoadMsg = msgData
-            case 'fuzzing_stop':
-                Query.isFuzzing = False
-                Query.corporaLoadMsg = msgData
+        
                 
-    
     pub.subscribe(on_event_received, es.CorporaEventTopic)
     
     
@@ -57,11 +51,13 @@ class Query(graphene.ObjectType):
         
         s = FuzzerStatus()
         
+        sm = ServiceManager()
+        
         s.timestamp = Utils.datetimeNowStr()
         s.alive = True
         s.isDataLoaded = Query.corporaLoaded
-        s.isFuzzing = Query.isFuzzing
         s.message = Query.corporaLoadMsg
+        s.webapiFuzzerInfo = sm.get_webapi_fuzz_info()
         
         return s
     

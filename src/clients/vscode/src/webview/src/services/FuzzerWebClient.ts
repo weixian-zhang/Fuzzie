@@ -1,4 +1,4 @@
-import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
+import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import {inject} from 'vue';
 import Utils from "../Utils";
@@ -140,6 +140,47 @@ export default class FuzzerWebClient
             return[false, this.errAsText(error as any[]), '']
         }
 
+    }
+
+    public async isFuzzerReady(): Promise<FuzzerStatus|undefined>
+    {
+        const query = `
+            query {
+                fuzzerStatus {
+                    timestamp,
+                    alive,
+                    isDataLoaded,
+                    message,
+                    webapiFuzzerInfo {
+                        isFuzzing
+                        fuzzContextId
+                        fuzzCaseSetRunId
+                    }
+                } 
+            }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const result = response.data.data.fuzzerStatus;
+                return result;
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                this.$logger.errorMsg(err);
+                return undefined;
+            }
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return undefined;
+        }
     }
 
     public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string) {

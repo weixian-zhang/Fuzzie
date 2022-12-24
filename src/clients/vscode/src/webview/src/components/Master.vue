@@ -55,7 +55,7 @@
   import { useToast } from "primevue/usetoast";
   import Splitter from 'primevue/splitter';
   import SplitterPanel from 'primevue/splitterpanel';
-  import {FuzzerStatus} from '../Model'; 
+  import {FuzzerStatus, WebApiFuzzerInfo} from '../Model'; 
   import FuzzerWebClient from "../services/FuzzerWebClient";
   import FuzzerManager from "../services/FuzzerManager";
   import Logger from "../Logger";
@@ -89,9 +89,9 @@
       this.wc.subscribeWS('event.info', this.onEventInfo);
       this.wc.subscribeWS('event.error', this.onEventError);
 
-      this.wc.subscribeWS('fuzz.start', this.onFuzzStart);
-      this.wc.subscribeWS('fuzz.complete', this.onFuzzComplete);
-      this.wc.subscribeWS('fuzz.cancel', this.onFuzzCancel);
+      // this.wc.subscribeWS('fuzz.start', this.onFuzzStart);
+      // this.wc.subscribeWS('fuzz.complete', this.onFuzzComplete);
+      // this.wc.subscribeWS('fuzz.cancel', this.onFuzzCancel);
 
       this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.onUpdateCaseSetRunSummary);
       this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.onNewFuzzDataCase);
@@ -103,14 +103,15 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 4000);
+      setInterval(this.checkFuzzerReady, 2000);
     }
 
     
     async checkFuzzerReady(): Promise<void> {
-      const [ok, err, result] = await this.fm.isFuzzerReady();
 
-         if(!ok) {
+      const status: FuzzerStatus|undefined = await this.wc.isFuzzerReady();
+
+         if(status == undefined) {
             //stop any fuzzing activity
             this.fuzzerConnected = false;
             this.notifyFuzzerIsNotReady();
@@ -118,7 +119,14 @@
             return;
          }
 
-         if (!result.isDataLoaded) {
+        if(status.webapiFuzzerInfo.isFuzzing) {
+          this.eventemitter.emit('fuzz.start', status.webapiFuzzerInfo);
+        }
+        else {
+            this.eventemitter.emit('fuzz.stop');
+        }
+
+         if (!status.isDataLoaded) {
             this.toastInfo('connected to fuzzer, loading corpora, this may take a moment')
             return;
          } else {
