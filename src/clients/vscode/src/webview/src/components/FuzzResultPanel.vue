@@ -227,12 +227,6 @@ class Props {
       this.switchFuzzingDataBucketToOriginal();
     }
 
-    onFuzzCancel(){
-      this.currentFuzzingFuzzContextId = '';
-      this.currentFuzzingFuzzCaseSetRunId = ''
-      this.switchFuzzingDataBucketToOriginal();
-    }
-
     switchOriginalToFuzzingDataBucket(fuzzCaseSetId) {
         const fuzzingData: FuzzDataCase[] = this.fdcsFuzzing[fuzzCaseSetId];
         this.fdcsDataFiltered = fuzzingData;
@@ -275,6 +269,8 @@ class Props {
           }
 
           this.isDataLoadingInProgress = true;
+
+          this.clearSelectedReqResp();
 
           const cacheKey = this.getCacheKey(fuzzCaseSetId, fuzzCaseSetRunId)
 
@@ -344,13 +340,17 @@ class Props {
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
        this.clearTableBindingData();
-        this.selectedRequest = '';
-        this.selectedResponse = '';
+       this.clearSelectedReqResp();
     }
 
     clearTableBindingData() {
       this.fdcsDataFiltered = [];
       this.fdcsDataOriginal = [];
+    }
+
+    clearSelectedReqResp() {
+      this.selectedRequest = '';
+      this.selectedResponse = '';
     }
 
     shortenStringForDisplay(str: string) {

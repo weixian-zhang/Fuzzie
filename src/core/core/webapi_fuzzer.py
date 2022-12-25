@@ -291,13 +291,17 @@ class WebApiFuzzer:
                                         contentLength=0,
                                         invalidRequestError=err)
                 return fuzzDataCase
+            
+            try:
+                fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
+            
+                fuzzDataCase.response = fuzzResp
                 
+                self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
+            except Exception as e:
+                pass
             
-            fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
-            
-            fuzzDataCase.response = fuzzResp
-            
-            self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
+           
             
             
         except HTTPError as e:
@@ -370,9 +374,14 @@ class WebApiFuzzer:
                 insert_api_fuzzresponse(fdc.response)
                 
                 # update run summary
-                summaryViewModel = update_casesetrun_summary(fdc.fuzzcontextId, fdc.fuzzCaseSetId, caseSetRunSummaryId,
-                                      int(fdc.response.statusCode),
-                                      completedDataCaseRuns=1)
+                summaryViewModel = update_casesetrun_summary(
+                                                             fuzzcontextId=fdc.fuzzcontextId, 
+                                                             fuzzCaseSetRunId=self.fuzzCaseSetRunId, 
+                                                             fuzzCaseSetId=fdc.fuzzCaseSetId, 
+                                                             Id=caseSetRunSummaryId,
+                                                            httpCode=int(fdc.response.statusCode),
+                                                            completedDataCaseRuns=1
+                                                            )
                 
                 return summaryViewModel
             
@@ -431,43 +440,48 @@ class WebApiFuzzer:
         if resp is None:
             return None
         
-        fuzzResp = ApiFuzzResponse()
+        try:
+            fuzzResp = ApiFuzzResponse()
         
-        fuzzResp.Id = shortuuid.uuid()
-        fuzzResp.datetime = datetime.now()
-        fuzzResp.fuzzDataCaseId = fuzzDataCaseId
-        fuzzResp.fuzzcontextId = fuzzcontextId 
-        
-        fuzzResp.statusCode = resp.status_code
-        fuzzResp.reasonPharse = resp.reason
-        fuzzResp.body = Utils.b64e(resp.text)
-        
-        headers = {}
-        headersMultilineText = ''
-        for k in resp.headers.keys():
-            headers[k] = resp.headers[k]
-            headersMultilineText = headersMultilineText + f'{k}: {resp.headers[k]}\n'
+            fuzzResp.Id = shortuuid.uuid()
+            fuzzResp.datetime = datetime.now()
+            fuzzResp.fuzzDataCaseId = fuzzDataCaseId
+            fuzzResp.fuzzcontextId = fuzzcontextId 
             
-        fuzzResp.headersJson = Utils.jsone(headers)
+            fuzzResp.statusCode = resp.status_code
+            fuzzResp.reasonPharse = resp.reason
+            fuzzResp.body = Utils.b64e(resp.text)
             
-        fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
+            headers = {}
+            headersMultilineText = ''
+            for k in resp.headers.keys():
+                headers[k] = resp.headers[k]
+                headersMultilineText = headersMultilineText + f'{k}: {resp.headers[k]}\n'
+                
+            fuzzResp.headersJson = Utils.jsone(headers)
+                
+            fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
+            
+            fuzzResp.contentLength = resp.headers['Content-Length']
+            
+            respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
+                                        f'{headersMultilineText}' \
+                                        '\n' \
+                                        '\n' \
+                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S.%f")}' \
+                                        '\n' \
+                                        f'Content-Length: {fuzzResp.contentLength}' \
+                                        '\n' \
+                                        '\n' \
+                                        f'{resp.text}'
+            
+            fuzzResp.responseDisplayText =  Utils.b64e(respDT)                   
+            
+            return fuzzResp
+        except Exception as e:
+            self.eventstore.emitErr(e)
         
-        fuzzResp.contentLength = resp.headers['Content-Length']
         
-        respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
-                                       f'{headersMultilineText}' \
-                                       '\n' \
-                                       '\n' \
-                                       f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S.%f")}' \
-                                       '\n' \
-                                       f'Content-Length: {fuzzResp.contentLength}' \
-                                       '\n' \
-                                       '\n' \
-                                       f'{resp.text}'
-        
-        fuzzResp.responseDisplayText =  Utils.b64e(respDT)                   
-        
-        return fuzzResp
     
     def try_get_setcookie_value(self, respHeadersDict: dict):
         result = ''
@@ -529,16 +543,16 @@ class WebApiFuzzer:
                         filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
                         
                         if fileType == 'file':
-                            files.append((filename, fileContent.decode('utf-8')))
+                            files.append(('file', fileContent.decode('latin1')))
                             
                         elif fileType == 'image':
-                            files.append((filename, fileContent.decode('latin1')))
+                            files.append(('file', fileContent.decode('latin1')))
                             
                         elif fileType == 'pdf':
-                            files.append((filename, fileContent.decode('latin1')))
+                            files.append(('file', fileContent.decode('latin1')))
                             
                         else:
-                            files.append((filename, fileContent.decode('utf-8')))
+                            files.append(('file', fileContent.decode('latin1')))
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             

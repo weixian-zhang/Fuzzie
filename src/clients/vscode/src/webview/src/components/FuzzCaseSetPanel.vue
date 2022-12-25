@@ -37,12 +37,6 @@
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
-                <!-- <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" 
-                @change="(
-                  selectAllChanged($event))">
-                <label class="form-check-label" for="flexCheckDefault">
-                  All
-                </label> -->
               </div>
             </th>
             <th class="text-left">
@@ -87,9 +81,6 @@
             <td>
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
-
-                <!-- <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 
-                @click="isTableDirty=true"> -->
               </div>
 
             </td>

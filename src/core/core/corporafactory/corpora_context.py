@@ -99,8 +99,7 @@ class CorporaContext:
             
             provider = self.context[expression]
             if provider != None:
-                data = self.cp.imageCorpora.next_corpora()
-                #data = provider.next_corpora()
+                data = provider.next_corpora()
                 return True, '', data
                 
             return False, f'Exression {expression} is not a file type', None
