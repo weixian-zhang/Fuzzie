@@ -26,7 +26,7 @@ from db import (insert_api_fuzzCaseSetRuns,
                 insert_api_fuzzresponse,
                 create_casesetrun_summary,
                 update_casesetrun_summary)
-
+import io
 from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
@@ -197,6 +197,8 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
+        
+        resp = None
         
         try:
             
@@ -491,7 +493,7 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            files = {} #single file only for openapi3
+            files = [] #single file only for openapi3
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -504,14 +506,6 @@ class WebApiFuzzer:
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
-            
-            if len(fcs.file) > 0:
-                for fileType in fcs.file:
-                    ok, err, fileContent = self.corporaContext.resolve_file(fileType)
-                    if ok:
-                        filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
-                        files[filename] = fileContent.decode('utf-8')   # list of tuple file names and binary content
-            
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
@@ -527,9 +521,24 @@ class WebApiFuzzer:
                 
                 headerDict[hk] = resolvedVal
                 
-            
-            # if len(files) > 0:
-            #     headerDict["Content-Type"] = "multipart/form-data"
+            # handle file upload with "proper" encoding, without encoding requests will throw error as requests uses utf-8 by default
+            if len(fcs.file) > 0:
+                for fileType in fcs.file:
+                    ok, err, fileContent = self.corporaContext.resolve_file(fileType)
+                    if ok:
+                        filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                        
+                        if fileType == 'file':
+                            files.append((filename, fileContent.decode('utf-8')))
+                            
+                        elif fileType == 'image':
+                            files.append((filename, fileContent.decode('latin1')))
+                            
+                        elif fileType == 'pdf':
+                            files.append((filename, fileContent.decode('latin1')))
+                            
+                        else:
+                            files.append((filename, fileContent.decode('utf-8')))
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             

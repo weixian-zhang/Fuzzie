@@ -99,7 +99,8 @@ class CorporaContext:
             
             provider = self.context[expression]
             if provider != None:
-                data = provider.next_corpora()
+                data = self.cp.imageCorpora.next_corpora()
+                #data = provider.next_corpora()
                 return True, '', data
                 
             return False, f'Exression {expression} is not a file type', None
@@ -167,18 +168,6 @@ class CorporaContext:
                 if not 'filename' in self.context:
                     self.context['filename'] = self.cp.fileNameCorpora
                     return originalExpression
-            # case 'image':
-            #     if not 'image' in self.context:
-            #         self.context['image'] = self.cp.imageCorpora
-            #         return originalExpression
-            # case 'pdf':
-            #     if not 'pdf' in self.context:
-            #         self.context['pdf'] = self.cp.pdfCorpora
-            #         return originalExpression
-            # case 'file':
-            #     if not 'file' in self.context:
-            #         self.context['file'] = self.cp.seclistPayloadCorpora
-            #         return originalExpression
             case 'datetime':
                 if not 'datetime' in self.context:
                     self.context['datetime'] = self.cp.datetimeCorpora
