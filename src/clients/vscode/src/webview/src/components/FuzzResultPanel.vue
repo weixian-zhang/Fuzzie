@@ -38,12 +38,12 @@
 
     <Splitter  style="height: 100%" >
       <SplitterPanel :size="50">
-        <table data-toggle="table" data-pagination="true">
+        <!-- <table data-toggle="table" data-pagination="true">
       <thead>
         <tr>
           <th>Item ID</th>
           <th data-sortable="true">Item Name</th>
-          <th>Item Price</th>
+          <th  data-sortable="true" data-filter-type="select" data-filter-data="var:itemPrices">Item Price</th>
         </tr>
       </thead>
       <tbody>
@@ -58,14 +58,19 @@
           <td>$2</td>
         </tr>
       </tbody>
-    </table>
-        <!-- <v-table density="compact" fixed-header height="430" hover="true" >          
+    </table> -->
+        <v-table density="compact" fixed-header height="430" hover="true" >          
         <thead>
           <tr>
             <th class="text-left">
-              <div >
-                Status Code
-              </div>
+                <div class="dropdown">
+                  <button class="btn-sm btn-info btn-sm dropdown-toggle">Status Code</button>
+                  <div class="dropdown-content">
+                    <a href="#" 
+                    v-for="item in unqStatusCodesFromFDCS"
+                    :key="item">{{ item }}</a>
+                  </div>
+                </div>
             </th>
             <th class="text-left">
               Path
@@ -128,7 +133,7 @@
             
           </tr>
         </tbody>
-      </v-table> -->
+      </v-table>
       </SplitterPanel>
 
       <SplitterPanel :size="50">
@@ -172,6 +177,7 @@ import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
 import { FuzzDataCase, FuzzRequest, FuzzResponse } from "../Model";
 
+import $ from "jquery";
 import 'bootstrap-table/dist/bootstrap-table.min.js';
 import 'bootstrap-table/dist/bootstrap-table.min.css';
 import 'bootstrap-table-filter/dist/bootstrap-table-filter.min.js';
@@ -196,6 +202,8 @@ class Props {
 
   }
 })
+
+
 
  export default class FuzzResultPanel extends Vue.with(Props) {
 
@@ -232,6 +240,8 @@ class Props {
       this.eventemitter.on('fuzz.start', this.onFuzzStart);
       this.eventemitter.on('fuzz.stop', this.onFuzzStop);
       this.eventemitter.on('fuzz.update.fuzzdatacase', this.onFuzzDataCaseReceived);
+
+      
     }
 
     onFuzzNotReady() {
@@ -463,6 +473,48 @@ table.dropdowns-opened tbody tr.non-dropdown th {
   /* Safari */
   animation: spin 2s linear infinite;
 }
+
+/* Dropdown Button */
+.dropbtn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd;}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {display: block;}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
 
  </style>
  
