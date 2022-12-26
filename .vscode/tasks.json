@@ -119,7 +119,7 @@
 			}
 		},		
 		{
-			"label": "npm build webview dist",
+			"label": "package webview dist",
 			"type": "shell",
 			"command": "copy-item",
 			"args": [
@@ -131,10 +131,10 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			},
-			"dependsOn": ["npm run build Vuejs internal"]
+			"dependsOn": ["npm run build Vuejs"]
 		},
 		{
-			"label": "npm run build Vuejs internal",
+			"label": "npm run build Vuejs",
 			"type": "shell",
 			"command": "npm run build",
 			"options": {

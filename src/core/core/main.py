@@ -25,12 +25,22 @@ import asyncio
 from utils import Utils
 from pubsub import pub
 from threading import Thread
-from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware 
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
+from starlette.responses import JSONResponse
 
-app = Starlette()
+async def server_error(request, exc):
+    return JSONResponse(content={"error": 500}, status_code=exc.status_code)
+
+exception_handlers = {
+    #404: not_found,
+    500: server_error
+}
+
+app = Starlette(exception_handlers=exception_handlers)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

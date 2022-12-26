@@ -679,10 +679,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="(
-                      isFuzzingInProgress == true && 
-                      slotProps.node.isFuzzCaseRun == false && 
-                      currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                  v-show="( currentFuzzingContextId != '' &&  currentFuzzingCaseSetRunId != '')"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -721,7 +718,6 @@ import { Options, Vue } from 'vue-class-component';
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
-import VSCodeMessager, {Message} from '../services/VSCodeMessager';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
@@ -733,7 +729,6 @@ class Props {
   toastError: any = {};
   toastSuccess: any = {};
   eventemitter: any = {};
-  vscodeMsger: VSCodeMessager;
   fuzzermanager: FuzzerManager;
   webclient : FuzzerWebClient;
 }
@@ -879,15 +874,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.showFuzzConfirmDialog = true
   }
 
-  readFileContentResult(message)
-  {
-    const msgObj: Message = JSON.parse(message);
-
-    if(msgObj.type == 'openapi')
-    {
-      console.log(msgObj.content);
-    }
-  }
   
   async getFuzzcontexts() {
 

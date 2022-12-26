@@ -13,15 +13,19 @@ export default class Logger {
 
     public info(message: string, source='') {
         console.log(message);
+        this._vscodeConsole.send(message);
     }
 
     public errorMsg(message: string, source='') {
         console.log(message);
+        this._vscodeConsole.send(message);
     }
 
     public error(ex: any, source='') {
         if(!Utils.isNothing(ex) && !Utils.isNothing(ex.message) && !Utils.isNothing(ex.stack)) {
-            console.log(`${ex.message}, ${ex.stack}`);
+            const errMsg = `${ex.message}, ${ex.stack}`;
+            console.log(errMsg);
+            this._vscodeConsole.send(errMsg);
         }
         
     }

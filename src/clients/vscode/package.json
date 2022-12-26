@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^16.18.8",
+    "@types/node": "^16.18.10",
     "@types/vscode": "^1.68.0",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
@@ -51,8 +51,11 @@
   },
   "dependencies": {
     "@types/axios": "^0.14.0",
+    "@types/bootstrap": "^5.2.6",
     "@types/ws": "^8.5.3",
+    "axios": "^1.2.1",
     "https": "^1.0.0",
+    "node-fetch": "^3.3.0",
     "ws": "^8.10.0"
   }
 }

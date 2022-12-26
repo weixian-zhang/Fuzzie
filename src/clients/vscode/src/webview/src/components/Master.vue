@@ -50,7 +50,6 @@
   import FuzzCaseSetPanel from './FuzzCaseSetPanel.vue';
   import FuzzResultPanel from './FuzzResultPanel.vue';
   import EventEmitter from 'eventemitter3'
-  import VSCodeMessager from '../services/VSCodeMessager';
   import Toast from 'primevue/toast';
   import { useToast } from "primevue/usetoast";
   import Splitter from 'primevue/splitter';
@@ -74,7 +73,6 @@
   export default class Master extends Vue {
 
     eventemitter = new EventEmitter();
-    vscodeMsger = new VSCodeMessager();
     wc = new FuzzerWebClient()
     fm = new FuzzerManager(this.wc);
     toast = useToast();
@@ -84,14 +82,13 @@
 
     public beforeMount() {
 
+
       this.$logger = inject('$logger'); 
+
+      this.$logger.info('Webview - initializing Master pane and sub-panes');
 
       this.wc.subscribeWS('event.info', this.onEventInfo);
       this.wc.subscribeWS('event.error', this.onEventError);
-
-      // this.wc.subscribeWS('fuzz.start', this.onFuzzStart);
-      // this.wc.subscribeWS('fuzz.complete', this.onFuzzComplete);
-      // this.wc.subscribeWS('fuzz.cancel', this.onFuzzCancel);
 
       this.wc.subscribeWS('fuzz.update.casesetrunsummary', this.onUpdateCaseSetRunSummary);
       this.wc.subscribeWS('fuzz.update.fuzzdatacase', this.onNewFuzzDataCase);

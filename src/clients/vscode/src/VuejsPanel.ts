@@ -48,8 +48,19 @@ export class VuejsPanel {
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder)),
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'assets')),
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'fonts')),
-						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'img'))
-					]
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'img')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/app.js')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/app.js.map')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/chunk-vendors.js')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/chunk-vendors.js.map')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/webfontloader.js')),
+						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/webfontloader.js.map'))
+					],
+					// This maps localhost:3000 in the webview to the express server port on the remote host.
+					// portMapping: [
+					// 	{ webviewPort: 50001, extensionHostPort: 50001}
+					// ]
 				}
 			);
 	
@@ -119,7 +130,7 @@ export class VuejsPanel {
 		const chunkVendorsWebviewUrl = this._vuejsPanel.webview.asWebviewUri(chunkVendorsPathOnDisk);
 		//const chunkVendorsUri = chunkVendorsPathOnDisk.with({ scheme: 'vscode-resource' });
 
-		const vendorWebFontLoaderPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'css/webfontloader.js'));
+		const vendorWebFontLoaderPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/webfontloader.js'));
 		const vendorWebFontLoaderWebviewUrl = this._vuejsPanel.webview.asWebviewUri(vendorWebFontLoaderPathOnDisk);
 		// const vendorWebFontLoaderUri = vendorWebFontLoaderPathOnDisk.with({ scheme: 'vscode-resource' });
 
@@ -147,6 +158,7 @@ export class VuejsPanel {
 				<script defer="defer" src="${vendorWebFontLoaderWebviewUrl}"></script>
 				<link href="${appCSSWebviewUrl}" rel="stylesheet">
 				<link href="${vendorCSSWebviewUrl}" rel="stylesheet">
+				<script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
 			</head>
 			<body>
 				<div id="app"></div>

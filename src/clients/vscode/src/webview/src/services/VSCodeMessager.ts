@@ -1,6 +1,5 @@
 import type { WebviewApi } from "vscode-webview";
 
-
 export class Message {
     public command = '';
     public type = '';
@@ -28,7 +27,9 @@ export default class VSCodeMessager
     constructor() {
 
         if (typeof acquireVsCodeApi === "function") {
-            this._vscode = acquireVsCodeApi();
+            if(this._vscode == undefined) {
+                this._vscode = acquireVsCodeApi();
+            }
           }
     }
 
@@ -37,6 +38,7 @@ export default class VSCodeMessager
         try {
 
             if(this._vscode == undefined) {
+                console.error('vscode API is undefined in webview');
                 return;
             }
 

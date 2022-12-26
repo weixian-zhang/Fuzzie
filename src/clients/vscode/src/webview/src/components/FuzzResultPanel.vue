@@ -18,7 +18,8 @@
         density="compact"
         label="search"
         height="20px"
-        solo>
+        solo
+        @input="onSearchValueChange">
         <template v-slot:prepend-inner>
         <v-icon
           color="cyan darken-3"
@@ -37,7 +38,28 @@
 
     <Splitter  style="height: 100%" >
       <SplitterPanel :size="50">
-        <v-table density="compact" fixed-header height="400px" hover="true" >          
+        <table data-toggle="table" data-pagination="true">
+      <thead>
+        <tr>
+          <th>Item ID</th>
+          <th data-sortable="true">Item Name</th>
+          <th>Item Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>Item 1</td>
+          <td>$1</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>Item 2</td>
+          <td>$2</td>
+        </tr>
+      </tbody>
+    </table>
+        <!-- <v-table density="compact" fixed-header height="430" hover="true" >          
         <thead>
           <tr>
             <th class="text-left">
@@ -106,7 +128,7 @@
             
           </tr>
         </tbody>
-      </v-table>
+      </v-table> -->
       </SplitterPanel>
 
       <SplitterPanel :size="50">
@@ -150,6 +172,10 @@ import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
 import { FuzzDataCase, FuzzRequest, FuzzResponse } from "../Model";
 
+import 'bootstrap-table/dist/bootstrap-table.min.js';
+import 'bootstrap-table/dist/bootstrap-table.min.css';
+import 'bootstrap-table-filter/dist/bootstrap-table-filter.min.js';
+import 'bootstrap-table-filter/src/bootstrap-table-filter.css';
 
 class Props {
   toastInfo: any = {};
@@ -304,6 +330,21 @@ class Props {
       finally {
         this.isDataLoadingInProgress = false;
       }
+    }
+
+    onSearchValueChange(input) {
+      const searchText = input.data;
+
+      if(this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length <= 2) {
+        return;
+      }
+
+      //this.fdcsDataFiltered = this.fdcsDataOriginal.map(fdc => {
+
+        //if (fdc.request.verb.indexOf(searchText) >= 0 || fdc.request.)
+        //return fdc;
+      //});
+
     }
 
     buildStatusCodesDropDown() {
