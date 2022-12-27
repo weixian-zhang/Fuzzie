@@ -1,13 +1,125 @@
-import { ApiFuzzContext, ApiFuzzContextUpdate } from "../Model";
-import axios, {  AxiosError, AxiosResponse } from "axios";
+import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus } from "../Model";
+import axios, {  AxiosError, AxiosResponse, } from "axios";
+import {inject} from 'vue';
+import Utils from "../Utils";
 
 export default class FuzzerWebClient
 {
     private gqlUrl = 'http://localhost:50001/graphql';
+    private wsUrl = 'ws://localhost:50001';
+    private _ws;
+    private fuzzerEventSubscribers = {};  // dict with value as list  
+    private axiosinstance;
+    isWSConnected = false;
+    $logger;
+
+    public constructor() {
+        this.$logger = inject('$logger'); 
+    }
+
+    connectWS() {
+        this.connectWSInternal();
+    }
 
 
+    private connectWSInternal = () => {
+        
+        try {
+
+            this._ws = new WebSocket(this.wsUrl);
+
+            this._ws.onopen = () => {
+
+                this.isWSConnected = true;
     
-    //const wsUrl: string = 'ws://localhost:50001/ws'
+                this.$logger.info('connected to fuzzer websocket server')
+            };
+            
+            //messages are all b64 encoded json
+            this._ws.onmessage = (e)  => {
+                
+                const msg = e.data;
+
+                try {
+                    
+
+                    if (msg == '' || msg == undefined) {
+                        this.$logger.errorMsg('received empty ws message from fuzzer')
+                        return;
+                    }
+
+                    if(!Utils.jsonTryParse(msg)) {
+                        this.$logger.errorMsg(`fuzzer sent a json malformed websocket message ${msg}`);
+                        return;
+                    }
+
+                    const jmsg = JSON.parse(msg);
+
+                    const topic = jmsg.topic;
+                    const data = jmsg.data;
+
+                    const funcs = this.fuzzerEventSubscribers[topic];
+
+                    funcs.forEach(f => {
+                            f(data);
+                    })
+                } catch (err) {
+                    this.$logger.error(err);
+                }
+            };
+          
+            this._ws.onclose = (e) => {
+
+                //TODO: log
+                
+                this.isWSConnected = false;
+    
+                this.$logger.info('cannot connect to fuzzer websocket server, retrying', e.reason);
+                
+                this._ws = null;
+                setTimeout( () => {
+                    this.connectWSInternal();
+                }, 1500);
+            };
+          
+            this._ws.onerror = (err) => {
+              
+              //TODO: log
+              this.$logger.errorMsg('cannot connect to fuzzer websocket server, retrying');
+
+              this._ws = null;
+
+              if(this._ws != undefined){
+                this._ws.close();
+              }
+            };
+        } catch (error) {
+            this.$logger.info(error);
+        }
+        
+    }
+
+    public subscribeWS(topic: string, func: any) {
+
+        if(this.fuzzerEventSubscribers[topic] == undefined) {
+            this.fuzzerEventSubscribers[topic] = []
+        }
+        
+        const funcList = this.fuzzerEventSubscribers[topic];
+        funcList.push(func);
+    }
+    
+    public wsSend(data: string) {
+        try {
+
+            if(this._ws.connected) {
+                this._ws.send(data);
+            }
+            
+        } catch (error) {
+            this.$logger.error(error);
+        }
+    }
 
     public async httpGetString(url: string): Promise<[boolean, string, string]> {
 
@@ -23,14 +135,104 @@ export default class FuzzerWebClient
 
             return [false, '', ''];
             
-        } catch (err) {
-            //TODO: log error
-
-            return[false, this.errAsText(err as any[]), '']
+        } catch (error) {
+            this.$logger.error(error);
+            return[false, this.errAsText(error as any[]), '']
         }
 
     }
 
+    public async isFuzzerReady(): Promise<FuzzerStatus|undefined>
+    {
+        const query = `
+            query {
+                fuzzerStatus {
+                    timestamp,
+                    alive,
+                    isDataLoaded,
+                    message,
+                    webapiFuzzerInfo {
+                        isFuzzing
+                        fuzzContextId
+                        fuzzCaseSetRunId
+                    }
+                } 
+            }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const result = response.data.data.fuzzerStatus;
+                return result;
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                this.$logger.errorMsg(err);
+                return undefined;
+            }
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return undefined;
+        }
+    }
+
+    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string) {
+        
+        const query = `
+            query {
+                fuzzCaseSetWithRunSummary(
+                        fuzzcontextId: "${fuzzcontextId}",
+                        fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                    ok,
+                    error,
+                    result {
+                        fuzzCaseSetId
+                        fuzzCaseSetRunId
+                        fuzzcontextId
+                        selected 
+                        verb
+                        path
+                        querystringNonTemplate
+                        bodyNonTemplate
+                        headerNonTemplate
+                        authnType
+                        runSummaryId
+                        http2xx
+                        http3xx
+                        http4xx
+                        http5xx
+                        completedDataCaseRuns
+                        totalDataCaseRunsToComplete
+                        file
+                    }
+                }
+            }
+        `;
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
+            const error = response.data.data.fuzzCaseSetWithRunSummary.error;
+            const result = response.data.data.fuzzCaseSetWithRunSummary.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+    }
     
     public async getFuzzContexts(): Promise<any> {
 
@@ -92,11 +294,62 @@ export default class FuzzerWebClient
 
         } catch (err) {
 
-            //TODO: Handle Error Here
-            console.log(err);
+            this.$logger.error(err);
 
             return [false, this.errAsText(err as any[]), []];
         }        
+    }
+
+    public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
+        const query = `
+        mutation fuzz {
+            fuzz(fuzzcontextId:"${fuzzContextId}") {
+                  ok,
+                  msg
+            }
+          }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.fuzz.ok;
+                const error = response.data.data.fuzz.msg;
+                return [ok, error];
+            }
+
+            return [false, '']
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return [false, error.message];
+        }
+    }
+
+    public async cancelFuzzing() {
+        const query = `
+        mutation cancelFuzz {
+            cancelFuzz{
+                    ok
+            }
+        }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.cancelFuzz.ok;
+                return ok;
+            }
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return false;
+        }
     }
 
     public async graphql(query): Promise<[boolean, string, AxiosResponse|null]> {
@@ -123,8 +376,7 @@ export default class FuzzerWebClient
             return [false, '', null];
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return [false, this.errAsText(err as any), null];
         }  
     }
@@ -179,8 +431,7 @@ export default class FuzzerWebClient
             
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return [false, this.errAsText(err as any)];
         }  
     }
@@ -252,8 +503,7 @@ export default class FuzzerWebClient
             
 
         } catch (err) {
-            //TODO: Handle Error Here
-            console.error(err);
+            this.$logger.error(err);
             return {
                 ok: false,
                 error: err,

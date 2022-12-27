@@ -20,8 +20,6 @@ class TestServiceManager(unittest.TestCase):
         fcs = sm.get_fuzzcontexts()
         
         self.assertTrue(fcs is not None)
-        
-        #self.assertTrue(len(fcs) > 0)
     
     def test_get_fuzzcontext_by_Id(self):
         
@@ -34,7 +32,6 @@ class TestServiceManager(unittest.TestCase):
         self.assertTrue(fc is not None)
         
     
-        
     def test_fuzz(self):
         
         Id = 'BhJZtrRM6HiXtfPtsvdYD2'

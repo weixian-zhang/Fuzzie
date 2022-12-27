@@ -39,12 +39,23 @@ class SecuritySchemes(graphene.ObjectType):
     bearerToken = graphene.String()
     apikeyHeader = graphene.String()
     apikey = graphene.String()
+    
+class WebApiFuzzerInfo(graphene.ObjectType):
+    isFuzzing = graphene.Boolean(False)
+    fuzzContextId = graphene.String()
+    fuzzCaseSetRunId = graphene.String('')
+    
+    def __init__(self) -> None:
+        super().__init__()
+        
+        self.fuzzContextId = ''
+        self.fuzzCaseSetRunId = ''
 
 class FuzzerStatus(graphene.ObjectType):
     timestamp = graphene.String()
     alive = graphene.Boolean()
     isDataLoaded = graphene.Boolean()
-    isFuzzing = graphene.Boolean()
+    webapiFuzzerInfo = graphene.Field(WebApiFuzzerInfo)
     message = graphene.String()
 
 # class ApiFuzzRequest(graphene.ObjectType):
@@ -143,12 +154,13 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     authnType = graphene.Field(SupportedAuthnType)
     file = graphene.String()
     
-    runSummaryId = graphene.String()
-    http2xx = graphene.Int()
-    http3xx = graphene.Int()
-    http4xx = graphene.Int()
-    http5xx =  graphene.Int()
-    completedDataCaseRuns = graphene.Int() 
+    runSummaryId = graphene.String(default_value='')
+    http2xx = graphene.Int(default_value=0)
+    http3xx = graphene.Int(default_value=0)
+    http4xx = graphene.Int(default_value=0)
+    http5xx =  graphene.Int(default_value=0)
+    completedDataCaseRuns = graphene.Int(default_value=0) 
+    totalDataCaseRunsToComplete = graphene.Int(default_value=0) 
     
 class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     fuzzCaseSetRunsId = graphene.String()
@@ -191,10 +203,42 @@ class FuzzCaseSetRunSummaryQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
-    
-    def __init__(self, ok, error, result) -> None:
-        super().__init__()
         
-        ok = ok
-        error = error
-        result = result
+    
+class FuzzRequest_ViewModel(graphene.ObjectType):
+    Id = graphene.String()
+    requestDateTime = graphene.DateTime()
+    hostname = graphene.String()
+    port =  graphene.Int()
+    verb = graphene.String()
+    url = graphene.String()
+    path = graphene.String()
+    querystring = graphene.String()
+    headers = graphene.String()
+    body = graphene.String()
+    contentLength = graphene.Int()
+    requestMessage = graphene.String()
+    invalidRequestError = graphene.String()
+
+class FuzzResponse_ViewModel(graphene.ObjectType): 
+    Id = graphene.String()
+    responseDateTime = graphene.DateTime()
+    statusCode = graphene.String()
+    reasonPharse = graphene.String()
+    headerJson = graphene.String()
+    setcookieHeader = graphene.String()
+    body = graphene.String()
+    contentLength = graphene.Int()
+    responseDisplayText = graphene.String()
+    
+class FuzzDataCase_ViewModel(graphene.ObjectType):
+    fuzzDataCaseId = graphene.String()
+    fuzzCaseSetId = graphene.String()
+    request = graphene.Field(FuzzRequest_ViewModel)
+    response = graphene.Field(FuzzResponse_ViewModel)
+    
+
+class FuzzRequestResponseQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(FuzzDataCase_ViewModel)

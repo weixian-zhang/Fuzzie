@@ -38,18 +38,7 @@ class PDFCorpora():
         
         self.faker = Faker()
         
-    def load_corpora(self):
-        try:
-            loop = asyncio.get_event_loop()
-            tasks = [
-                loop.create_task(self.load_corpora_async())
-            ]
-            loop.run_until_complete(asyncio.wait(tasks))
-        except Exception as e:
-            self.es.emitErr(e)
-        
-    def load_corpora_async(self, size=500):
-        
+    def load_corpora(self, size=500):
         if len(self.data) > 0:
             return
         
@@ -57,6 +46,7 @@ class PDFCorpora():
             
             pdf = self.create_pdf()
             self.data.append(pdf)
+        
         
     def next_corpora(self) -> bytearray:
         

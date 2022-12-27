@@ -1,6 +1,5 @@
 import type { WebviewApi } from "vscode-webview";
 
-
 export class Message {
     public command = '';
     public type = '';
@@ -28,53 +27,25 @@ export default class VSCodeMessager
     constructor() {
 
         if (typeof acquireVsCodeApi === "function") {
-            this._vscode = acquireVsCodeApi();
+            if(this._vscode == undefined) {
+                this._vscode = acquireVsCodeApi();
+            }
           }
-
-        this.startListening();
     }
 
     public send(message: unknown)
     {
         try {
 
-            if(this._vscode == undefined)
-            {
-                //TODO: log error
-                console.log('VSCode API is undefine in webview');
+            if(this._vscode == undefined) {
+                console.error('vscode API is undefined in webview');
                 return;
             }
 
             this._vscode.postMessage(message);
 
         } catch (error) {
-            //TODO: log error
-            console.log(error);
+            console.error(error);
         }
-        
-    }
-
-    public subscribe(command: string, msgHandlerFunc: any) {
-
-        this.msgHandlers[command] = msgHandlerFunc;
-    }
-
-    private startListening() {
-        
-        window.addEventListener('message', event => {
-            
-            try {
-                const message = event.data; // The JSON data our extension sent
-                const command = message.command;
-                const content = message.content;
-
-                const msgHandle = this.msgHandlers[command];
-
-                msgHandle(content);
-            } catch (error) {
-                //TODO: log error
-                console.log(error);
-            }
-        });
     }
 }

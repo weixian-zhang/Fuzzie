@@ -2,23 +2,20 @@
 <!-- https://primefaces.org/primevue/treetable/responsive -->
 
 <template>
-  
-  <!--v-card height affects Splitter in Master height="455px" -->
   <v-card
-  color="white"
-  outlined>
+    color="white"
+    outlined
+    style="display: flex; flex-flow: column; height: 100%;">
   
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
-    <code >
-      <v-textarea auto-grow
+    <v-textarea auto-grow
           outlined
           rows="1"
           readonly
           v-model="tableValViewInSizeBar" />
-    </code>
   </Sidebar>
 
-    <v-toolbar card color="cyan" flat dense height="50px">
+    <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
       <v-toolbar-title>Fuzz Cases</v-toolbar-title>
       
       
@@ -28,25 +25,18 @@
             saveFuzzCaseSets
             )">
           <v-badge  color="pink" dot v-model="isTableDirty">
-            <v-icon>mdi-content-save-settings-outline</v-icon>
+            <v-icon color="cyan darken-3">mdi-content-save-settings-outline</v-icon>
           </v-badge>
         </v-btn>
-      <v-btn v-tooltip.left="'start fuzzing'" icon  variant="plain" height="30px" plain >
-        <v-icon>mdi-lightning-bolt</v-icon>
-      </v-btn>
     </v-toolbar>
-      <!--table height affects Splitter in Master height="455px" -->
-      <v-table density="compact" fixed-header>
+      
+      <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
             <th class="text-left">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="selectAll" 
-                @change="(
-                  selectAllChanged($event))">
-                <label class="form-check-label" for="flexCheckDefault">
-                  All
-                </label>
+                <v-checkbox color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
+                  selectAllChanged($event))"  hide-details />
               </div>
             </th>
             <th class="text-left">
@@ -85,11 +75,12 @@
           <tr
             v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
-            @click="onRowClick(item)">
+            @click="onRowClick(item), selectedRow= item.fuzzCaseSetId"
+            :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
+
             <td>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" v-model="item.selected" 
-                @click="isTableDirty=true">
+                <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
               </div>
 
             </td>
@@ -100,7 +91,7 @@
                 onTableValueNonJsonSeeInFullClicked(item.path),
                 showFullValueSideBar = true
               )">
-                {{ item.path }}
+                {{ shortenJsonValueInTable(item.path) }}
               </span>
             </td>
             
@@ -124,45 +115,51 @@
               {{ item.file }}
             </td>
             <td>
-              {{ item.http2xx }}
+              {{ item.http2xx == undefined ? 0 : item.http2xx }}
             </td>
             <td>
-              {{ item.http3xx }}
+              {{ item.http3xx == undefined ? 0 : item.http3xx }}
             </td>
             <td>
-              {{ item.http4xx }}
+              {{ item.http4xx == undefined ? 0 : item.http4xx }}
             </td>
             <td>
-              {{ item.http5xx }}
+              {{ item.http5xx == undefined ? 0 : item.http5xx }}
             </td>
             <td>
-              {{ item.completedDataCaseRuns }}
+              {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns  }} / {{ item.totalDataCaseRunsToComplete }}
             </td>
             
           </tr>
         </tbody>
       </v-table>
-  
+
   </v-card>
-  
+
 </template>
       
 
 <script lang="ts">
+
+import { inject } from 'vue';
+import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
 import DataTable from 'primevue/datatable';
-import FuzzerManager from '../services/FuzzerManager';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
 import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
-import { useToast } from "primevue/usetoast";
+import FuzzerWebClient from "../services/FuzzerWebClient";
+import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
-  // optional prop
+  toastInfo: any = {};
+  toastError: any = {};
+  toastSuccess: any = {};
   eventemitter: any = {}
+  fuzzermanager: FuzzerManager
+  webclient : FuzzerWebClient
 }
-
 
 @Options({
   components: {
@@ -175,13 +172,16 @@ class Props {
 })
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
-  
 
-  fm = new FuzzerManager();
+  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
 
-  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
+  //fuzzingfcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
-  dataCache = {};
+  //dataCache = {};
+
+  $logger: Logger|any;
+
+  selectedRow = '';
 
   selectAll = true;
 
@@ -195,13 +195,16 @@ class Props {
 
   tableValViewInSizeBar = '';
 
-  toast = useToast();
+  fuzzerConnected = false;
 
-  // @Watch('fcsRunSums', { immediate: true, deep: true })
-  // onCaseSetSelectionChanged(val: ApiFuzzCaseSetsWithRunSummaries, oldVal: ApiFuzzCaseSetsWithRunSummaries) {
-  //   console.log(val);
-  //   return;
-  // }
+  currentFuzzContextId = '';
+
+  fuzzContextId = '';
+  fuzzCaseSetRunsId = '';
+
+  beforeMount() {
+      this.$logger = inject('$logger');   
+  }
 
   onTableValueSeeInFullClicked(jsonValue) {
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
@@ -211,17 +214,59 @@ class Props {
     this.tableValViewInSizeBar = val
   }
 
-  
   mounted(){
+    //event from master
+    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+
     // listen to ApiDiscovery Tree item select event
-    this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected)
-    this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted)
+    this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected);
+    this.eventemitter.on("onFuzzCaseSetRunSelected", this.onFuzzCaseSetRunSelected);
+    
+    this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted);
+    this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked);
+    
+    //websocket events from fuzzer
+    this.eventemitter.on('fuzz.update.casesetrunsummary', this.onFuzzingUpdateRunSummary);
+
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+
   }
+
+  // #### websocket events ####
+
+  onFuzzStartReady() {
+    this.fuzzerConnected = true;
+  }
+
+  onFuzzerNotReady() {
+    this.clearData()
+    this.fuzzerConnected = false;
+
+    this.currentFuzzContextId = '';
+  }
+
+ 
+  onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
+
+    this.fcsRunSums.map(x => {
+      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && runSummary.fuzzCaseSetRunId == this.fuzzCaseSetRunsId) {
+        x.http2xx = runSummary.http2xx;
+        x.http3xx = runSummary.http3xx;
+        x.http4xx = runSummary.http4xx;
+        x.http5xx = runSummary.http5xx;
+        x.completedDataCaseRuns = runSummary.completedDataCaseRuns;
+
+        return;
+      }
+    });
+  }
+
 
   async saveFuzzCaseSets() {
 
     if(!this.isTableDirty) {
-      this.toast.add({severity:'info', summary: '', detail:'no changes to save', life: 5000});
+      this.toastInfo('no changes to save');
       return;
     }
     
@@ -235,82 +280,82 @@ class Props {
       }
     });
 
-    const [ok, error] = await this.fm.saveFuzzCaseSetSelected(newFCS);
+    const [ok, error] = await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
     if(!ok)
       {
-        this.toast.add({severity:'error', summary: 'Update Fuzz Cases', detail:error, life: 5000});
+        this.toastError(error, 'Update Fuzz Cases');
       }
       else
       {
         this.isTableDirty = false;
-        this.toast.add({severity:'success', summary: 'Update Fuzz Cases', detail:'Fuzz Cases are updated successfully', life: 5000});
+        this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
       }
 
     this.saveBtnDisabled = false;
   }
 
   onFuzzContextDeleted(fuzzcontextId) {
-      if( fuzzcontextId in this.dataCache)
-      {
-        delete this.dataCache[fuzzcontextId];
 
-        if(this.fcsRunSums.length > 0)
-        {
-            if(this.fcsRunSums[0].fuzzcontextId == fuzzcontextId)
-            {
-              this.fcsRunSums = [];
-            }
-        }
+    this.clearData();
+  }
+
+  onFuzzContextRefreshClicked() {
+    this.clearData();
+  }
+
+  public async getFuzzCaseSet_And_RunSummaries(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  {
+     const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+
+    if(!ok)
+    {
+      this.toastError(error, 'Get Fuzz Cases');
+    }
+    else
+    {
+      if(!Utils.isNothing(result)){
+        this.fcsRunSums = result;
       }
+      
+    }
   }
 
   async onFuzzContextSelected(fuzzcontextId)
   {
-    const fcsList: Array<ApiFuzzCaseSetsWithRunSummaries> = this.dataCache[fuzzcontextId];
-
-    if(fcsList != undefined && Array.isArray(fcsList) == true && fcsList.length > 0)
-    {
-      this.fcsRunSums = this.dataCache[fuzzcontextId];
-    }
-    else
-    {
-      const [ok, error, result] = await this.fm.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId);
-
-      if(!ok)
-      {
-        this.toast.add({severity:'error', summary: 'Get Fuzz Cases', detail:error, life: 5000});
-      }
-      else
-      {
-        this.dataCache[fuzzcontextId] = result;
-        this.fcsRunSums = this.dataCache[fuzzcontextId];
-      }
-    }
+     this.fuzzContextId = fuzzcontextId;
+     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
 
-  onRowClick(fcsrs) {
-    return;
+  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  {
+    this.fuzzContextId = fuzzcontextId;
+    this.fuzzCaseSetRunsId = fuzzCaseSetRunsId;
+     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+  }
+  
+
+  onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+    // send event to FuzzResult panel to display request and response
+    this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
   }
 
   selectAllChanged(event) {
-    this.fcsRunSums.forEach(fcs => {
+    this.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
       fcs.selected = this.selectAll;
     });
     this.isTableDirty = true;
   }
 
-  shortenJsonValueInTable(bodyJson, length=100)
+  shortenJsonValueInTable(bodyJson, length=40)
   {
-    const pj = Utils.prettifyJson(bodyJson);
-    if(pj != undefined && pj.length > length)
-    {
-      return pj.substring(0, length) + "...";
-    }
-    else
-    {
-      return pj;
-    }
+    return Utils.shortenStr(bodyJson, length);
+  }
+
+  clearData() {
+      this.fcsRunSums = [];
+      //this.dataCache = {};
+      this.selectedRow = ''
   }
 
  }
@@ -319,6 +364,10 @@ class Props {
  
  <!-- Add "scoped" attribute to limit CSS to this component only -->
  <style scoped>
+
+.custom-highlight-row{
+   background-color: pink
+}
 
 .v-card {
   display: flex !important;

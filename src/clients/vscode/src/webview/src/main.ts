@@ -11,12 +11,18 @@ import 'primeicons/primeicons.css'                         //icons
 import ToastService from "primevue/toastservice";
 import Tooltip from 'primevue/tooltip';
 
+import 'jquery/dist/jquery.min.js';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
+import Logger from './Logger';
+
+const logger = new Logger();
 
 loadFonts()
 
 const app = createApp(App);
+app.provide("$logger", logger); // gloval singleton instance of logger
 app.use(vuetify)
 app.use(PrimeVue)
 app.use(ToastService);

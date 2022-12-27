@@ -25,26 +25,19 @@ class UsernameCorpora:
 
     def load_corpora(self):
         try:
-            loop = asyncio.get_event_loop()
-            tasks = [
-                loop.create_task(self.load_corpora_async())
-            ]
-            loop.run_until_complete(asyncio.wait(tasks))
+            if len(self.data) > 0:
+                return
+        
+            Session = scoped_session(session_factory)
+            
+            rows = Session.query(SeclistUsernameTable.c.RowNumber, SeclistUsernameTable.c.Content).all()
+            
+            self.data = rows
+            
+            Session.close()
         except Exception as e:
             self.es.emitErr(e)
-    
-    def load_corpora_async(self):
-        
-        if len(self.data) > 0:
-            return
-        
-        Session = scoped_session(session_factory)
-        
-        rows = Session.query(SeclistUsernameTable.c.RowNumber, SeclistUsernameTable.c.Content).all()
-        
-        self.data = rows
-        
-        Session.close()
+
     
     def next_corpora(self):
             

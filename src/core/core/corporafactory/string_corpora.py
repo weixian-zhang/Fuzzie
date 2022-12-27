@@ -39,19 +39,14 @@ class StringCorpora:
             return
         
         try:
-            loop = asyncio.get_event_loop()
-            tasks = [
-                loop.create_task(self.load_blns()),
-                loop.create_task(self.load_sqli()),
-                loop.create_task(self.load_xss()),
-            ]
-            
-            loop.run_until_complete(asyncio.wait(tasks))
+            self.load_blns()
+            self.load_sqli()
+            self.load_xss()
         except Exception as e:
             self.es.emitErr(e)
         
         
-    async def load_xss(self):
+    def load_xss(self):
         
         if len(self.xss) > 0:
             return
@@ -74,7 +69,7 @@ class StringCorpora:
         
         self.lock.release()
     
-    async def load_sqli(self):
+    def load_sqli(self):
         
         if len(self.sqli) > 0:
             return
@@ -97,7 +92,7 @@ class StringCorpora:
         
         self.lock.release()
         
-    async def load_blns(self):
+    def load_blns(self):
         
         if len(self.blns) > 0:
             return

@@ -17,7 +17,6 @@ from eventstore import EventStore
 eventstore = EventStore()
 
 from corpora_loader import load_corpora_background
-
 from starlette_graphql import schema
 import asyncio
 import uvicorn
@@ -25,13 +24,23 @@ from uvicorn.main import Server
 import asyncio
 from utils import Utils
 from pubsub import pub
-# from fastapi import FastAPI, WebSocket
-from starlette.middleware.cors import CORSMiddleware
+from threading import Thread
+from starlette.middleware.cors import CORSMiddleware 
 from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
+from starlette.responses import JSONResponse
 
-app = Starlette()
+async def server_error(request, exc):
+    return JSONResponse(content={"error": 500}, status_code=exc.status_code)
+
+exception_handlers = {
+    #404: not_found,
+    500: server_error
+}
+
+app = Starlette(exception_handlers=exception_handlers)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,38 +48,31 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
-websocket: WebSocket = None
-
-@app.websocket_route("/ws")
+@app.websocket_route("/")
 class WebSocketServer(WebSocketEndpoint):
     counter = 0
     encoding = "text"
 
+    #cancel-fuzzing is now done with graphql
     async def on_receive(self, websocket, data):
-        
-        ok, dataCmd = Utils.jsondc(data)
-        
-        if not ok:
-            eventstore.emitErr('invaid json command from websocket client')
-            return
-         
-        cmd = dataCmd['command']
-        
-        if cmd == 'cancel_fuzzing':
-            pub.sendMessage('command_relay', command=eventstore.CancelFuzzingEventTopic)
-            eventstore.feedback_client('Fuzzer/main: Fuzzing was cancelled, finishing up some running test cases')
-            
+        pass
             
     async def on_disconnect(self, websocket: WebSocket, close_code: int) -> None:
-        print(f'Fuzzer/main: client disconnected from websocket server, close_code {close_code}')
+        eventstore.rm_websocket(websocket.client.port)
+        eventstore.emitInfo(f'client disconnected from websocket server, close_code {close_code}', 'main.WebSocketServer')
         
     async def on_connect(self, websocket):
-        await websocket.accept()
         
-        websocket = websocket
+        try:
+            await websocket.accept()
         
-        eventstore.set_websocket(websocket)
-        eventstore.feedback_client('Fuzzer/main: client connected to websocket server ')
+            websocket = websocket
+            
+            eventstore.add_websocket(websocket.client.port, websocket)
+            
+        except Exception as e:
+            eventstore.emitErr(e)
+        
 
 
 # init graphql server
@@ -91,17 +93,27 @@ atexit.register(on_exit)
 #main entry point and startup
 def start_webserver():
     
-    args = docopt(__doc__)
+    try:
+        args = docopt(__doc__)
     
-    global eventstore
-    
-    if args['webserver']:
-         
-        uvicorn.run(app, host="0.0.0.0", port=webserverPort)
+        global eventstore
         
-        asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
-    else:
-         asyncio.run(eventstore.emitInfo('fuzzer started'))
+        if args['webserver']:
+            
+            uvicorn.run(app, 
+                        host="0.0.0.0", 
+                        port=webserverPort
+                        # ssl_keyfile=".\certs\localhost+2-key.pem",
+                        # ssl_certfile=".\certs\localhost+2.pem"
+                        )
+            
+            asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
+        else:
+            asyncio.run(eventstore.emitInfo('fuzzer started'))
+            
+    except Exception as e:
+        asyncio.run(eventstore.emitErr(e))
+    
     
 
     

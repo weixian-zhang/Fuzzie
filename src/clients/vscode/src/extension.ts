@@ -7,15 +7,44 @@ import * as path from 'path';
 import { VuejsPanel } from './VuejsPanel';
 import EventLogger from './Logger';
 import StateManager from './StateManager';
-import WebSocket from 'ws';
+import axios from "axios";
+import { FuzzerStatus } from './Model';
+import fetch from "node-fetch";
+
+var gqlUrl = 'http://localhost:50001/graphql';
+
+enum FuzzerStartState {
+	NotStarted = 1,
+	Starting = 2,
+	Started = 3
+}
 
 var appcontext : AppContext;
 
 var eventlogger = new EventLogger();
+
 var stateManager:  StateManager;
+
+var fuzzerStartState = FuzzerStartState.NotStarted;
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
+
+var gqlFuzzStatusQuery = `
+            {
+                fuzzerStatus {
+                    timestamp,
+                    alive,
+                    isDataLoaded,
+                    message,
+                    webapiFuzzerInfo {
+                        isFuzzing
+                        fuzzContextId
+                        fuzzCaseSetRunId
+                    }
+                } 
+            }
+        `;
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -30,28 +59,51 @@ export async function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	stateManager = new StateManager(context);
+	// stateManager = new StateManager(context);
 	
-	eventlogger.log('Fuzzie is initializing');
+	// eventlogger.log('Fuzzie is initializing');
 
-	appcontext = new AppContext();
+	// appcontext = new AppContext();
 
-	initFuzzerPYZPath(context, appcontext);
+	// initFuzzerPYZPath(context, appcontext);
 
-	eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+	// eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
+	// eventlogger.log('checking if fuzzer running');
+
+	try {
+
+
+		// const a = fetch(gqlUrl, { 
+		// 	method: 'POST',
+		// 	Header: {
+		// 	   'Content-Type': 'application/graphql'
+		// 	},
+		// 	body: gqlUrl
+		//   })
+		//   .then(response => response.json())
+		//   .then(data => {
+		// 	console.log('Here is the data: ', data);
+		
+		//   });
+
+		//const todos = await axios.get('https://jsonplaceholder.typicode.com/todos');
+
+		//const resp = await axios.post(gqlUrl, {gqlFuzzStatusQuery});
 	
-	
+	} catch (error) {
+		console.error(error.response.data);     // NOTE - use "error.response.data` (not "error")
+	}
 
-	eventlogger.log('checking if fuzzer running');
 
-	const isFuzzerWSRunning = await isFuzzerRunning()
 
-	if(!isFuzzerWSRunning)
-	{
-		eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
-		//startFuzzer(appcontext);
-	};
+	//setInterval(monitorFuzzerReadiness, 1500);
+
+	// if(!isFuzzerWSRunning)
+	// {
+	// 	eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
+	// 	//startFuzzer(appcontext);
+	// };
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {
@@ -60,38 +112,39 @@ export async function deactivate(context: vscode.ExtensionContext) {
 		// get process pid from statemanager to and kill process
 }
 
-async function isFuzzerRunning(): Promise<boolean> {
+async function monitorFuzzerReadiness() {
 
-	const wsAddress: string = "ws://localhost:50001/ws";
+	try {
+		const response = await axios.post(gqlUrl, {gqlFuzzStatusQuery});
 
-	var timesRun = 0;
+		if(this.responseHasData(response))
+		{
+			const result: FuzzerStatus = response.data.data.fuzzerStatus;
+			if (result.alive) {
+				fuzzerStartState = FuzzerStartState.Started;
+				return;
+			}
+		}
 
-        return new Promise((resolve) => {
-            var interval = setInterval(() => {
+		const [hasErr, err] = this.hasGraphqlErr(response);
 
-                timesRun += 1;
-
-                if(timesRun == 2)
-                    clearInterval(interval);
-                
-                const ws = new WebSocket(wsAddress);
-
-                ws.on("error", (err) => {
-                });
-
-                ws.on('open', () => {
-                    eventlogger.log('Fuzzer is running')
-                    resolve(true);
-					ws.close();
-                });
-
-                ws.on('close', () => {
-                    eventlogger.log(`fuzzer is not running`)
-                    resolve(false);
-                });
-    
-            }, 800);
-        });
+		if(hasErr)
+		{
+			this.$logger.errorMsg(err);
+			return ;
+		}
+		
+	} catch (error: any) {
+		if(fuzzerStartState == FuzzerStartState.NotStarted || fuzzerStartState == FuzzerStartState.Started) {
+			fuzzerStartState = FuzzerStartState.Starting;
+			startFuzzer(appcontext);
+		}
+		
+		eventlogger.log('fuzzer is either not started yet or was shut down, starting fuzzer now. \n This may take a while if you are using Fuzzie the first time.');
+		
+		return;
+	}
+        
 }
 
 async function startFuzzer(appcontext: AppContext) {
@@ -108,6 +161,7 @@ async function startFuzzer(appcontext: AppContext) {
 				_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
 
 				const pid = _pythonProcess.pid
+				eventlogger.log(`Fuzzer process spanwed with process id ${pid.toString()}`);
 				if(pid != undefined)
 					await stateManager.set('fuzzer/processid', pid.toString());
 			}

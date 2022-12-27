@@ -21,7 +21,8 @@
     "types": [
       "webpack-env",
       "vuetify",
-      "bootstrap"
+      "bootstrap",
+      "nodes"
     ],
     "paths": {
       "@/*": [
@@ -33,6 +34,7 @@
       "dom",
       "dom.iterable",
       "scripthost",
+      "ES2021.String"
     ]
   },
   "include": [
@@ -40,8 +42,7 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "../WebClient.ts"  
+    "tests/**/*.tsx"
   ],
   "exclude": [
     "node_modules"

@@ -45,9 +45,9 @@ export class ApiFuzzContext {
     public bearerToken ='';
     public apikeyHeader ='Authorization';
     public apikey ='';
-    public hostname ='httpbin.org';
+    public hostname ='https://httpbin.org';
     public port = 443;
-    public fuzzcaseToExec =100;
+    public fuzzcaseToExec =500;
 
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []
 }
@@ -69,5 +69,92 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public http4xx = 0;
     public http5xx = 0;
     public completedDataCaseRuns = 0; 
+    public totalDataCaseRunsToComplete = 0;
 }
 
+// export class FuzzRequest {
+//     public Id = '';
+//     public requestDateTime;
+//     public hostname = '';
+//     public port =  0;
+//     public verb = '';
+//     public url = '';
+//     public path = '';
+//     public querystring = '';
+//     public headers = '';
+//     public body = '';
+//     public contentLength = 0;
+//     public requestMessage = '';
+//     public invalidRequestError = '';
+// }
+
+export class FuzzResponse {
+    public Id = '';
+    public responseDateTime;
+    public statusCode = '';
+    public reasonPharse = '';
+    public headerJson = '';
+    public setcookieHeader = '';
+    public body = '';
+    public contentLength = 0;
+    public responseDisplayText = ''
+}
+
+
+export class FuzzDataCase {
+    public fuzzDataCaseId = '';
+    public fuzzCaseSetId = '';
+    public request: FuzzRequest;
+    public response: FuzzResponse;
+}
+
+export class WebApiFuzzerInfo {
+    public isFuzzing = false;
+    public fuzzContextId = '';
+    public fuzzCaseSetRunId = '';
+}
+
+export class FuzzerStatus {
+    public timestamp;
+    public alive = false
+    public isDataLoaded = false
+    public message =''
+    public webapiFuzzerInfo: WebApiFuzzerInfo;
+}
+
+
+export class FuzzRequest {
+    public Id = ''
+    public requestDateTime;
+    public hostname = '';
+    public port = 443
+    public verb = '';
+    public url = '';
+    public path = '';
+    public querystring = '';
+    public headers = '';
+    public body = '';
+    public contentLength = 0
+    public requestMessage = '';
+    public invalidRequestError = '';
+}
+
+export class FuzzResponse_ViewModel {
+    public Id = '';
+    public responseDateTime;
+    public statusCode = '';
+    public reasonPharse = '';
+    public headerJson = '';
+    public setcookieHeader = '';
+    public body = '';
+    public contentLength = 0;
+    public responseDisplayText = '';
+}
+    
+export class FuzzDataCase_ViewModel {
+    public fuzzDataCaseId = '';
+    public fuzzCaseSetId = '';
+    public request: FuzzRequest;
+    public response: FuzzResponse;
+
+}

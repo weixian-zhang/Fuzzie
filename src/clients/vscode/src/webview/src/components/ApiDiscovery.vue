@@ -5,7 +5,8 @@
     <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
     color="white"
-    outlined>
+    outlined
+    style="display: flex; flex-flow: column; height: 100%;">
 
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
@@ -130,7 +131,7 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
-                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
+                  <label class="btn btn-outline-info small" for="authn-noauthn" @click="(
                     newApiContext.authnType='Anonymous',
                     securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
@@ -256,8 +257,8 @@
                 <v-slider
                   v-model="newApiContext.fuzzcaseToExec"
                   label=''
-                  track-color="blue"
-                  thumb-color="red"
+                  track-color="cyan"
+                  thumb-color="cyan"
                   thumb-label="always"
                   min=100
                   max=50000
@@ -269,8 +270,8 @@
               <v-divider />
 
               <div style="text-align:right">
-                <button class="btn btn-warning mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn btn-primary" @click="createNewApiContext">Create</button>
+                <button class="btn  btn-outline-info mr-3" @click="clearContextForm">Reset</button>
+                <button class="btn  btn-outline-info" @click="createNewApiContext">Create</button>
               </div>
             <!-- col end-->
             </div>
@@ -283,7 +284,7 @@
      <Sidebar v-model:visible="updateContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
+        <div class="row mb-3"><h5>Update Fuzz Context</h5></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -306,7 +307,7 @@
 
               <div class="form-group mb-3" >
                 <v-text-field
-                    v-model="newApiContext.hostname"
+                    v-model="apiContextEdit.hostname"
                     variant="underlined"
                     :rules="[() => !!apiContextEdit.hostname || 'This field is required']"
                     density="compact"
@@ -380,8 +381,8 @@
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-noauthn" :checked="securityBtnVisibility.anonymous == true">
-                  <label class="btn btn-outline-warning small" for="authn-noauthn" @click="(
-                    newApiContext.authnType='Anonymous',
+                  <label class="btn btn-outline-info small" for="authn-noauthn" @click="(
+                    apiContextEdit.authnType='Anonymous',
                     securityBtnVisibility.anonymous = true,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
@@ -390,7 +391,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-basic" :checked="securityBtnVisibility.basic == true">
                   <label class="btn btn-outline-success small" for="authn-basic" @click="(
-                    newApiContext.authnType='Basic',
+                    apiContextEdit.authnType='Basic',
                     securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=true,
                     securityBtnVisibility.bearer=false,
@@ -399,7 +400,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-bearer" :checked="securityBtnVisibility.bearer == true">
                   <label class="btn btn-outline-success small" for="authn-bearer" @click="(
-                    newApiContext.authnType='Bearer',
+                    apiContextEdit.authnType='Bearer',
                     securityBtnVisibility.anonymous =false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=true,
@@ -408,7 +409,7 @@
 
                   <input type="radio" class="btn-check" name="btnradio" id="authn-apikey" :checked="securityBtnVisibility.apikey == true">
                   <label class="btn btn-outline-success small" for="authn-apikey" @click="(
-                    newApiContext.authnType='ApiKey',
+                    apiContextEdit.authnType='ApiKey',
                     securityBtnVisibility.anonymous=false,
                     securityBtnVisibility.basic=false,
                     securityBtnVisibility.bearer=false,
@@ -506,8 +507,8 @@
                 <v-slider
                   v-model="apiContextEdit.fuzzcaseToExec"
                   label=''
-                  track-color="blue"
-                  thumb-color="red"
+                  track-color="cyan"
+                  thumb-color="cyan"
                   thumb-label="always"
                   min=100
                   max=50000
@@ -519,7 +520,7 @@
               <v-divider />
 
               <div style="text-align:right">
-                <button class="btn btn-primary" @click="updateApiContext">Update</button>
+                <button class="btn btn-outline-info" @click="updateApiContext">Update</button>
               </div>
             <!-- col end-->
             </div>
@@ -545,97 +546,191 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <button class="btn btn-primary mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
-          <button class="btn btn-danger" @click="deleteApiFuzzContext">Delete</button>
+          <button class="btn btn-outline-info mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
+          <button class="btn btn-outline-danger" @click="deleteApiFuzzContext">Delete</button>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-toolbar card color="cyan" flat dense height="50px">
+    <!-- fuzz confirmation -->
+    <v-dialog
+      v-model="showFuzzConfirmDialog"
+      width="400"
+    >
+      <v-card>
+        <v-card-title class="text-h5 grey lighten-2">
+          Start Fuzzing
+        </v-card-title>
 
-      <v-toolbar-title>Fuzz Contexts</v-toolbar-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <button class="btn btn-outline-info mr-3" @click="showFuzzConfirmDialog = false">Cancel</button>
+          <button class="btn btn-outline-info" @click="fuzz">Fuzz</button>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
+
+      <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
       <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-        <v-icon>mdi-message-plus-outline</v-icon>
+        <v-icon color="cyan darken-3">mdi-message-plus-outline</v-icon>
       </v-btn>
 
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
-            <v-icon>mdi-refresh</v-icon>
+            <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain  @click="newContextSideBarVisible = true">
-        <v-icon>mdi-api</v-icon>
+      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain 
+         @click="(newContextSideBarVisible = true )">
+        <v-icon color="cyan darken-3">mdi-api</v-icon>
       </v-btn>
 
     </v-toolbar>
-
-    <Tree :value="nodes" selectionMode="single" :expandedKeys="{'-1':true, '-2':true}" v-show="showTree" width="100%" scrollHeight="455px" class="pa-1">
-          <template #default="slotProps">
-            <small><b v-on:click="onFuzzContextSelected(slotProps.node.key)">{{slotProps.node.label}}</b></small>
-                <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2'">
-                    <v-spaces />
-                    [<v-icon
-                      variant="flat"
-                      icon="mdi-pencil"
-                      color="primary"
-                      size="x-small"
-                      @click="(
-                        onEditFuzzContextClicked(slotProps.node.data)
-                      )"
-                      ></v-icon>]
-                      [<v-icon
-                      variant="flat"
-                      icon="mdi-delete"
-                      color="primary"
-                      size="x-small"
-                      @click="(
-                        onDeleteFuzzContextClicked(slotProps.node.data)
-                      )"
-                      ></v-icon>]
-                  </span>
-          </template>
-
-          <!-- fuzz run -->
-          <template #url="slotProps">
-              <span>
+        
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" class="border-0">
+          <template #default="slotProps" >
+            <!--fuzz context-->
+            <!-- <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
+              :class="( slotProps.node.isFuzzCaseRun == false? (slotProps.node.fuzzcontextId === selectedContextNode) :
+               (slotProps.node.fuzzcontextId === selectedContextNode &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode)  &&
+               (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 
+               'p-1 border border-info border-2' : '' ">
+              <b 
+                v-on:click="(
+                  (slotProps.node.key != '-1' && slotProps.node.key != '-2') && slot.node.isFuzzCaseRun == false ?
+                      onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId) : '' ,
+                  selectedContextNode = slotProps.node.fuzzcontextId,
+                  selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId
+                )">
                 {{slotProps.node.label}}
-                <div v-show="slotProps.node.isFuzzing">
-                  <b class="text-info">fuzzing</b>
-                  <v-progress-linear
-                      indeterminate
-                      color="teal">
-                  </v-progress-linear>
-                </div>
+              </b>
+            </small> -->
+
+            <!--fuzz context-->
+            <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
+              :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&
+                slotProps.node.fuzzcontextId === selectedContextNode) ? 'p-1 border border-info border-2' : '')">
+              <b 
+                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId),
+                selectedContextNode = slotProps.node.fuzzcontextId)">
+                {{slotProps.node.label}}
+              </b>
+            </small>
+
+            <!--fuzz caseSetRun-->
+            <small v-show="slotProps.node.isFuzzCaseRun == true && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
+              :class="( (
+                  slotProps.node.isFuzzCaseRun == true && 
+                  slotProps.node.key != '-1' && 
+                  slotProps.node.key != '-2' &&
+                  slotProps.node.fuzzcontextId == selectedContextNode &&
+                  selectedCaseSetRunNode == slotProps.node.fuzzCaseSetRunsId) ? 'p-1 border border-info border-2' : '')">
+              <b 
+                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
+                    selectedContextNode = slotProps.node.fuzzcontextId,
+                    selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId)">
+                {{slotProps.node.label}}
+              </b>
+            </small>
+
+            <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == false">
+                &nbsp;
+                <v-icon
+                  variant="flat"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onEditFuzzContextClicked(slotProps.node.data)
+                  )"
+                  >
+
+                  </v-icon>
+                  &nbsp;
+                  <v-icon
+                  variant="flat"
+                  icon="mdi-delete"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
+                  )"/>
+
+                  &nbsp;
+
+                  <v-icon
+                  v-tooltip="'start fuzzing'"
+                  v-show="(
+                      isFuzzingInProgress == false && 
+                      slotProps.node.isFuzzCaseRun == false)"
+                  variant="flat"
+                  icon="mdi-lightning-bolt"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onFuzzIconClicked(
+                      slotProps.node.fuzzcontextId,
+                      slotProps.node.name)
+                  )" />
+
+                  <v-icon
+                  v-tooltip="'cancel fuzzing'"
+                  v-show="( currentFuzzingContextId != '' &&  currentFuzzingCaseSetRunId != '')"
+                  variant="flat"
+                  icon="mdi-cancel"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    onCancelFuzzIconClicked()
+                  )" />
+                  
+
               </span>
-            
+
+              <v-progress-linear
+                indeterminate
+                color="cyan"
+                v-show="(
+                  slotProps.node.isFuzzCaseRun == false &&
+                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                style="width:100%" />
+              
+              <v-progress-linear
+                indeterminate
+                color="cyan"
+                v-show="(
+                  slotProps.node.isFuzzCaseRun == true &&
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId)"
+                style="width:100%" />
+
           </template>
-
       </Tree>
-
-    
-      
     </v-card>
 </template>
 
 <script lang="ts">
 
 import { Options, Vue } from 'vue-class-component';
-import FuzzerManager from '../services/FuzzerManager';
-
-import { useToast } from "primevue/usetoast";
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
-import VSCodeMessager, {Message} from '../services/VSCodeMessager';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
+import FuzzerWebClient from "../services/FuzzerWebClient";
+import FuzzerManager from "../services/FuzzerManager";
 
 class Props {
   // optional prop
-  eventemitter: any = {}
-  vscodeMsger: VSCodeMessager;
+  toastInfo: any = {};
+  toastError: any = {};
+  toastSuccess: any = {};
+  eventemitter: any = {};
+  fuzzermanager: FuzzerManager;
+  webclient : FuzzerWebClient;
 }
 
 @Options({
@@ -648,24 +743,34 @@ class Props {
 
 export default class ApiDiscovery extends Vue.with(Props) {
   
-  //properties
-
-  fm = new FuzzerManager();
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
   nodes: TreeNode[] = [];
+  expandedNodeKeys = {};
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
+  showFuzzConfirmDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
   apiContextToDelete: any = {};
-  toast = useToast();
-
+  apiContextIdToFuzz = '';
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];
+
+  selectedContextNode = ''
+  selectedCaseSetRunNode = ''
+  
+  fuzzerConnected = false;
+  isFuzzingInProgress = false;
+  currentFuzzingContextId = '';
+  currentFuzzingCaseSetRunId = '';
+
+  showFuzzIcon = true;
+  showCancelFuzzIcon = false;
+  showFuzzProgressBar = false;
 
   securityBtnVisibility = {
     anonymous: true,
@@ -680,51 +785,121 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   //methods
   
-  mounted() {
+  async mounted() {
+
+    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+    this.eventemitter.on('fuzz.start', this.onFuzzStart);
+    this.eventemitter.on('fuzz.stop', this.onFuzzStop);
+
     this.getFuzzcontexts()
   }
+
+  // #### websocket events ####
+
+  onFuzzStartReady() {
+
+    //if fuzzer is just ready, there would not be fuzzing.
+    //this is to cancel fuzzing in case fuzzer process is kill manually by user or crashed
+    if(this.isFuzzingInProgress) {
+      this.isFuzzingInProgress = false
+    }
+      
+    this.fuzzerConnected = true;
+    this.getFuzzcontexts();
+  }
+
+  onFuzzerNotReady() {
+    this.clearData()
+    this.isFuzzingInProgress = false;
+    this.fuzzerConnected = false;
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
+  }
+
+  //constantly receiving event
+  onFuzzStart(data) {
+
+    const fuzzContextId = data.fuzzContextId;
+    const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
+
+    if(this.currentFuzzingContextId != '' && this.currentFuzzingCaseSetRunId != ''){
+      return;
+    }
+
+    this.isFuzzingInProgress = true;
+    this.currentFuzzingContextId = fuzzContextId;
+    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
+
+    this.selectedContextNode = fuzzContextId;
+    this.selectedCaseSetRunNode =fuzzCaseSetRunId;
+
+    this.getFuzzcontexts();
+
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
+
+    this.toastInfo('fuzzing started');
+  }
+
+  onFuzzStop() {
+
+    if(!this.isFuzzingInProgress)
+      return;
+
+    this.isFuzzingInProgress = false;
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
+
+    this.toastSuccess('fuzzing is completed');
+  }
+
+  //#### websocket event ends ####
 
   onEditFuzzContextClicked(data) {
     this.apiContextEdit = data;
     this.updateContextSideBarVisible = true;
   }
 
-  onDeleteFuzzContextClicked(data) {
+  onDeleteFuzzContextClicked(fuzzcontextId, name) {
     this.apiContextToDelete = {
-                          Id: data.Id,
-                          name: data.name,
+                          Id: fuzzcontextId,
+                          name: name,
                         },
     this.showDeleteConfirmDialog = true
   }
 
-  readFileContentResult(message)
-  {
-    const msgObj: Message = JSON.parse(message);
-
-    if(msgObj.type == 'openapi')
-    {
-      console.log(msgObj.content);
-    }
+  onFuzzFuzzContextClicked(fuzzcontextId: string) {
+    this.apiContextIdToFuzz = fuzzcontextId;
+    this.showFuzzConfirmDialog = true
   }
+
   
   async getFuzzcontexts() {
 
     try {
 
-      this.isGetFuzzContextFinish = false;
-      const [OK, err, fcs] = await this.fm.getFuzzcontexts()    
+        if(!this.fuzzerConnected){
+          return;
+        }
 
-      if (OK)
-      {
-        this.nodes = [];
-        this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
-      }
-      else
-      {
-        this.toast.add({severity:'error', summary: '', detail:err, life: 5000});
-      }
+        this.isGetFuzzContextFinish = false;
+        const [OK, err, fcs] = await this.fuzzermanager.getFuzzcontexts()    
 
-      this.isGetFuzzContextFinish = true;
+        if (OK)
+        {
+          this.nodes = [];
+          this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
+
+          this.eventemitter.emit('onFuzzContextRefreshClicked');
+          
+        }
+        else
+        {
+          this.toastError(err, 'Get Fuzz Context');
+        }
+
+        this.isGetFuzzContextFinish = true;
 
     } catch (error) {
         //TODO: log
@@ -733,6 +908,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   createTreeNodesFromFuzzcontexts(fcs: ApiFuzzContext[]): TreeNode[] {
+
+    this.expandedNodeKeys = {};
+    this.expandedNodeKeys['-1'] = true;
+    this.expandedNodeKeys['-2'] = true;
 
     const nodes: TreeNode[] = [];
 
@@ -754,21 +933,31 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
         if(fc instanceof ApiFuzzContext)
         {
+            // fuzz-context
             const fcNode: any = {
               key: fc.Id,
+              fuzzcontextId: fc.Id,
               label: fc.name,
-              data: fc
+              name: fc.name,
+              data: fc,
+              isFuzzCaseRun: false
             };
+
+            this.expandedNodeKeys[fc.Id] = true;
 
             apiNode.children.push(fcNode);
 
             fc.fuzzCaseSetRuns.forEach(fcsr => {
-
+            
+            // fuzz-case-set-run
             const casesetNode = {
               key: fcsr.fuzzCaseSetRunsId,
+              fuzzcontextId: fcsr.fuzzcontextId,
+              fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
-              label: dateformat(fcsr.startTime, "ddd, mmm dS, yyyy, h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
-              data: fcsr
+              label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              data: fcsr,
+              isFuzzCaseRun: true
             };
           
             if(fcNode.children == undefined)
@@ -779,7 +968,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
             fcNode.children.push(casesetNode);
 
           });
-
         }
     });
 
@@ -787,8 +975,43 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  onFuzzContextSelected(fuzzContextId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId);
+
+  async onFuzzIconClicked (fuzzcontextId, name)  {
+
+    this.isFuzzingInProgress = true
+
+    this.toastInfo(`initiatiated fuzzing on ${name}`);
+
+    const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
+    if(!ok) {
+      this.isFuzzingInProgress = false;
+      this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
+      return;
+    }
+  }
+
+  async onCancelFuzzIconClicked() {
+    
+    this.toastInfo('cancelling fuzzing');
+
+    const ok = await this.webclient.cancelFuzzing();
+
+    if(!ok) {
+      this.toastError('cancel fuzzing failed due to an internal error, please reopen webview');
+      return;
+    }
+
+    this.isFuzzingInProgress = false
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
+ }
+
+  onFuzzContextSelected(fuzzcontextId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
+  }
+
+  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
+    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId);
   }
 
   async onRequestTextFileChange(event) {
@@ -812,7 +1035,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     else
     {
       this.requestTextFileInputFileVModel = [];
-      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'Request Text file has ext of .http, .text or .fuzzie', life: 5000});
+      this.toastError('Request Text file has ext of .http, .text or .fuzzie', 'Invalid File Type');
     }
   }
 
@@ -837,23 +1060,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
     else
     {
       this.openapi3FileInputFileVModel = [];
-      this.toast.add({severity:'error', summary: 'Invalid File Type', detail:'OpenAPI3 spec files are yaml or json', life: 5000});
+      this.toastError('OpenAPI3 spec files are yaml or json', 'Invalid File Type');
     }
   }
 
+
   async deleteApiFuzzContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
+
       const id = this.apiContextToDelete.Id;
-      const [ok, error] = await this.fm.deleteApiFuzzContext(id);
+      const [ok, error] = await this.fuzzermanager.deleteApiFuzzContext(id);
 
     if(!ok)
     {
-      this.toast.add({severity:'error', summary: 'Delete API FuzzContext', detail:error, life: 5000});
+      this.toastError(error, 'Delete API FuzzContext');
     }
     else
     {
       this.eventemitter.emit("onFuzzContextDelete", id);
       this.getFuzzcontexts();
-      this.toast.add({severity:'success', summary: 'Delete API FuzzContext', detail:`${this.apiContextToDelete.name} updated successfully`, life: 5000});
+
+      this.toastSuccess(`${this.apiContextToDelete.name} updated successfully`, 'Delete API FuzzContext');
     }
 
     this.showDeleteConfirmDialog = false;
@@ -861,28 +1091,38 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async updateApiContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
+
     const apiFCUpdate = new ApiFuzzContextUpdate();
     
     apiFCUpdate.fuzzcontextId = this.apiContextEdit.Id;
 
     Utils.mapProp(this.apiContextEdit, apiFCUpdate);
 
-    const [ok, error] = await this.fm.updateApiFuzzContext(apiFCUpdate);
+    const [ok, error] = await this.fuzzermanager.updateApiFuzzContext(apiFCUpdate);
 
     if(!ok)
     {
-      this.toast.add({severity:'error', summary: 'Update API FuzzContext', detail:error, life: 5000});
+      this.toastError(error, 'Update API FuzzContext');
     }
     else
     {
       this.apiContextEdit = new ApiFuzzContext();
-      this.toast.add({severity:'success', summary: 'Update API FuzzContext', detail:`${apiFCUpdate.name} updated successfully`, life: 5000});
+
+      this.toastSuccess(`${apiFCUpdate.name} updated successfully`, 'Update API FuzzContext');
     }
 
     this.updateContextSideBarVisible = false;
   }
 
   async createNewApiContext() {
+
+    if(!this.fuzzerConnected){
+          return;
+    }
     
     this.newApiContext.authnType = this.determineAuthnType();
 
@@ -890,16 +1130,17 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
     {
-      this.toast.add({severity:'error', summary: 'Missing Info', detail:'Name, hostname, port are required', life: 5000});
+      this.toastError('Name, hostname, port are required', 'New API Context - Missing Info');
       return;
     }
 
     if(this.newApiContext.openapi3Url != '') {
-      const [ok, error, data] = await this.fm.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+      const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
 
       if(!ok)
       {
-        this.toast.add({severity:'error', summary: 'Trying to get OpenApi3 spec by Url', detail:error, life: 5000});
+        this.toastError(error, 'Trying to get OpenApi3 spec by Url');
+
         return;
       }
 
@@ -909,29 +1150,29 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
     {
-      this.toast.add({severity:'error', summary: 'API Discovery', detail:'need either OpenAPI 3 spec or Request Text to create context', life: 5000});
+      this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
       return;
     }
-
    
     const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
     apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
     apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
 
-    const result =  await this.fm.newFuzzContext(apifc);
+    const result =  await this.fuzzermanager.newFuzzContext(apifc);
     const ok = result['ok'];
     const error =result['error'];
 
     if(!ok && error != '')
     {
-      this.toast.add({severity:'error', summary: 'Create new API context', detail:error, life: 5000});
+      this.toastError(error, 'Create new API context');
       return;
     }
     else
     {
       this.newContextSideBarVisible = false;
       this.getFuzzcontexts();
-      this.toast.add({severity:'success', summary: 'API Fuzz Context created', detail:error, life: 3000});
+
+      this.toastSuccess(error, 'API Fuzz Context created');
 
       //reset form
       this.openapi3FileInputFileVModel = [];
@@ -972,6 +1213,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
         return 'request-text';
     }
     return 'openapi3';
+  }
+
+  clearData() {
+    this.nodes = [];
+    this.selectedContextNode = '';
+    this.selectedCaseSetRunNode = '';
+    this.clearContextForm();
   }
 
   clearContextForm() {

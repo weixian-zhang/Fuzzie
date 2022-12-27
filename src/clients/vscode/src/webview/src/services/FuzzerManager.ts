@@ -1,6 +1,10 @@
 
 import FuzzerWebClient from "./FuzzerWebClient";
-import { ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, ApiFuzzCaseSetsWithRunSummaries } from "../Model";
+import { 
+    ApiFuzzContext, ApiFuzzcontextRuns, ApiFuzzContextUpdate, 
+    ApiFuzzCaseSetsWithRunSummaries, FuzzDataCase, FuzzerStatus
+}
+from "../Model";
 
 export default class FuzzerManager
 {
@@ -8,19 +12,31 @@ export default class FuzzerManager
     private isFuzzerWSConnected = false;
     private isFuzzerGraphQLRunning = true;
     
-    public constructor()
+    public constructor(wc: FuzzerWebClient)
     {
-        this._wc = new FuzzerWebClient()
+        this._wc = wc;
     }
 
-    public async isFuzzerReady(): Promise<boolean>
-    {
-        //this.isFuzzerWSConnected = await this.webclient.connectToFuzzerWSServer();
+    
 
-        return true;
-        //is websocket connected
+    public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
+        const query = `
+        mutation fuzz {
+            fuzz(fuzzcontextId:"${fuzzContextId}") {
+                  ok,
+                  msg
+            }
+          }
+        `;
 
-        //
+        try {
+            const [ok, msg] = await this._wc.graphql(query)
+
+            return [ok, msg];
+            
+        } catch (error: any) {
+            return [false, error.message];
+        }
     }
 
     public async httpGetOpenApi3FromUrl(url: string): Promise<[boolean, string, string]> {
@@ -30,34 +46,37 @@ export default class FuzzerManager
         return [ok, error, spec];
     }
 
-    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
+    public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, [ApiFuzzCaseSetsWithRunSummaries|null]]> {
         
         const query = `
-        query {
-            fuzzCaseSetWithRunSummary(fuzzcontextId: "${fuzzcontextId}") {
-                ok,
-                error,
-                result {
-                    fuzzCaseSetId
-                    fuzzCaseSetRunId
-                    fuzzcontextId
-                    selected 
-                    verb
-                    path
-                    querystringNonTemplate
-                    bodyNonTemplate
-                    headerNonTemplate
-                    authnType
-                    runSummaryId
-                    file
-                    http2xx
-                    http3xx
-                    http4xx
-                    http5xx
-                    completedDataCaseRuns
+            query {
+                fuzzCaseSetWithRunSummary(
+                        fuzzcontextId: "${fuzzcontextId}",
+                        fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                    ok,
+                    error,
+                    result {
+                        fuzzCaseSetId
+                        fuzzCaseSetRunId
+                        fuzzcontextId
+                        selected 
+                        verb
+                        path
+                        querystringNonTemplate
+                        bodyNonTemplate
+                        headerNonTemplate
+                        authnType
+                        runSummaryId
+                        http2xx
+                        http3xx
+                        http4xx
+                        http5xx
+                        completedDataCaseRuns
+                        totalDataCaseRunsToComplete
+                        file
+                    }
                 }
             }
-        }
         `;
 
         const [ok, err, resp] = await this._wc.graphql(query)
@@ -67,8 +86,8 @@ export default class FuzzerManager
             return [ok, err, [null]];
         }
 
-        const gqlOK = resp?.data.data.fuzzCaseSetWithRunSummary.ok;
-        const error = resp?.data.data.fuzzCaseSetWithRunSummary.error;
+        const gqlOK = ok;
+        const error = err;
         const result = resp?.data.data.fuzzCaseSetWithRunSummary.result;
 
         return [gqlOK, error, result];
@@ -175,6 +194,62 @@ export default class FuzzerManager
         });
 
         return [true, '', fcs];
+    }
+
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+        const query = `
+        query {
+            fuzzRequestResponse(
+                fuzzCaseSetId: "${fuzzCaseSetId}",
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                ok,
+                error,
+                result {
+                    fuzzDataCaseId
+                    fuzzCaseSetId
+                    request {
+                        Id
+                        requestDateTime
+                        hostname
+                        port
+                        verb
+                        path
+                        querystring
+                        url
+                        headers
+                        body
+                        contentLength
+                        requestMessage
+                        invalidRequestError
+                    }
+                    response {
+                        Id
+                        responseDateTime
+                        statusCode
+                        reasonPharse
+                        setcookieHeader
+                        headerJson
+                        body
+                        contentLength
+                        responseDisplayText
+                    }
+                }
+            }
+        }
+    `
+
+        const [ok, err, resp] = await this._wc.graphql(query)
+
+        if(!ok)
+        {
+            return [ok, err, []];
+        }
+
+        const gqlOK = resp?.data.data.fuzzRequestResponse.ok;
+        //const err = resp?.data.data.fuzzRequestResponse.error;
+        const result = resp?.data.data.fuzzRequestResponse.result;
+
+        return [gqlOK, '', result];
     }
 
     private propMap(obj: any, mappedObject: any ) {

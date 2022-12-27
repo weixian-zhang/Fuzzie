@@ -34,6 +34,8 @@ class ApiFuzzRequest:
         self.datetime: datetime 
         self.fuzzDataCaseId: str = ''
         self.fuzzcontextId = ''
+        self.hostname = ''
+        self.port = 443
         self.hostnamePort = ''
         self.verb = ''
         self.path: str = ''
@@ -41,6 +43,7 @@ class ApiFuzzRequest:
         self.url: str = ''
         self.headers = {}    # json 
         self.body = {}       # json 
+        self.invalidRequestError = ''
         self.requestMessage = ''
         self.contentLength = 0
 

@@ -1,5 +1,3 @@
-
-
 export default class Utils
 {
     public static copy(obj: any) {
@@ -90,5 +88,71 @@ export default class Utils
 
     public static prettifyJson(json: string) {
         return JSON.stringify(JSON.parse(json),null,'\t')
+    }
+
+    public static isNothing(obj) {
+        if(obj == null || obj == '') {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public static isLenZero(arr: Array<any>) {
+
+        if(Utils.isNothing(arr)) {
+            return true;
+        }
+
+        if (!Array.isArray(arr)) {
+            return true;
+        }
+
+        if(arr.length > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public static shortenStr(str: string, length=10) {
+
+        if(!Utils.isNothing(str))
+        {
+            if(str == "{}") {
+                return "";
+            }
+            
+            return str.substring(0, length) + "...";
+        }
+        else
+        {
+            return str;
+        }
+    }
+
+    private static sleep = m => new Promise(r => setTimeout(r, m))
+
+    public static async delay(sec) {
+        await Utils.sleep(sec);
+    }
+
+    public static jsonTryParse(jsonStr: string) {
+        try {
+           JSON.parse(jsonStr);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    public static b64d(data: string) {
+        if(Utils.isNothing(data)) {
+            return '';
+        }
+
+        const decoded = atob(data);
+        return decoded;
     }
 }
