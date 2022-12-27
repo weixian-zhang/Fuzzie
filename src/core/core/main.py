@@ -96,7 +96,7 @@ def is_port_in_use(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
-        s.bind(("127.0.0.1", port))
+        s.bind(("0.0.0.0", port))
         return False
     except socket.error as e:
         if e.errno == errno.EADDRINUSE:
@@ -106,6 +106,7 @@ def is_port_in_use(port):
             print(e)
     finally:
         s.close()
+        
 
 #main entry point and startup
 def start_webserver():
@@ -137,11 +138,13 @@ def start_webserver():
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
         # check if there is existing fuzzer process already running
-        if not is_port_in_use(50001):
+        if not is_port_in_use(webserverPort):
             
             load_corpora_background()
             
             start_webserver()
+        else:
+            asyncio.run(eventstore.emitInfo('detected new fuzzer process while existing is running, shutting down new fuzzer'))
         
     except Exception as e:
         asyncio.run(eventstore.emitErr(e))
