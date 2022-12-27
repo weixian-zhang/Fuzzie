@@ -269,7 +269,8 @@ class WebApiFuzzer:
                         verb=fcs.verb,
                         headers=reqHeaders,
                         body=reqBody,
-                        contentLength=reqContentLength)
+                        contentLength=reqContentLength,
+                        files=files)
                 
                 httpSession = Session()
                 resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
@@ -392,7 +393,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.save_fuzzDataCase')
                 
             
-    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError=''):
+    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError='', files=[]):
         
         try:
             fr = ApiFuzzRequest()
@@ -543,16 +544,16 @@ class WebApiFuzzer:
                         filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
                         
                         if fileType == 'file':
-                            files.append(('file', fileContent.decode('latin1')))
+                            files.append((filename, fileContent.decode('latin1')))
                             
                         elif fileType == 'image':
-                            files.append(('file', fileContent.decode('latin1')))
+                            files.append((filename, fileContent.decode('latin1')))
                             
                         elif fileType == 'pdf':
-                            files.append(('file', fileContent.decode('latin1')))
+                            files.append((filename, fileContent.decode('latin1')))
                             
                         else:
-                            files.append(('file', fileContent.decode('latin1')))
+                            files.append((filename, fileContent.decode('latin1')))
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
