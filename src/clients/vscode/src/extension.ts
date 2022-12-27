@@ -29,9 +29,52 @@ var fuzzerStartState = FuzzerStartState.NotStarted;
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
+// this method is called when your extension is activated
+// your extension is activated the very first time the command is executed
+export async function activate(context: vscode.ExtensionContext) {
 
-var gqlFuzzStatusQuery = `
-            {
+	context.subscriptions.push(   
+		vscode.commands.registerCommand(
+			'fuzzie.openwebview', () => 
+				{
+					VuejsPanel.createOrShow(context, eventlogger, context.extensionUri.path);
+				}
+		)
+	);
+
+	context.subscriptions.push(   
+		vscode.commands.registerCommand(
+			'fuzzie.fuzzer.reset', () => 
+				{
+					killFuzzerProcess();
+				}
+		)
+	);
+
+	stateManager = new StateManager(context);
+	
+	eventlogger.log('Fuzzie is initializing');
+
+	appcontext = new AppContext();
+
+	initFuzzerPYZPath(context);
+
+	eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+
+	eventlogger.log('checking if fuzzer running');
+
+	setInterval(monitorFuzzerReadiness, 2000);
+}
+
+export async function deactivate(context: vscode.ExtensionContext) {
+	eventlogger.log('Fuzzie is deactivated, fuzzer is still running as background process');
+}
+
+async function monitorFuzzerReadiness() {
+
+	try {
+		var query = `
+            query {
                 fuzzerStatus {
                     timestamp,
                     alive,
@@ -46,114 +89,31 @@ var gqlFuzzStatusQuery = `
             }
         `;
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export async function activate(context: vscode.ExtensionContext) {
+		const response = await axios.post(gqlUrl, {query});
 
-	context.subscriptions.push(   
-		vscode.commands.registerCommand(
-			'fuzzie.openwebview', () => 
-				{
-					VuejsPanel.createOrShow(context, eventlogger, context.extensionUri.path);
-				}
-		)
-	);
-
-	// stateManager = new StateManager(context);
-	
-	// eventlogger.log('Fuzzie is initializing');
-
-	// appcontext = new AppContext();
-
-	// initFuzzerPYZPath(context, appcontext);
-
-	// eventlogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
-
-	// eventlogger.log('checking if fuzzer running');
-
-	try {
-
-
-		// const a = fetch(gqlUrl, { 
-		// 	method: 'POST',
-		// 	Header: {
-		// 	   'Content-Type': 'application/graphql'
-		// 	},
-		// 	body: gqlUrl
-		//   })
-		//   .then(response => response.json())
-		//   .then(data => {
-		// 	console.log('Here is the data: ', data);
-		
-		//   });
-
-		//const todos = await axios.get('https://jsonplaceholder.typicode.com/todos');
-
-		//const resp = await axios.post(gqlUrl, {gqlFuzzStatusQuery});
-	
-	} catch (error) {
-		console.error(error.response.data);     // NOTE - use "error.response.data` (not "error")
-	}
-
-
-
-	//setInterval(monitorFuzzerReadiness, 1500);
-
-	// if(!isFuzzerWSRunning)
-	// {
-	// 	eventlogger.log('fuzzer is not running, started fuzzer. This may take a few minutes the first time');
-	// 	//startFuzzer(appcontext);
-	// };
-}
-
-export async function deactivate(context: vscode.ExtensionContext) {
-	eventlogger.log('Fuzzie is deactivated, fuzzer is still running as background process');
-	//TODO and access:
-		// get process pid from statemanager to and kill process
-}
-
-async function monitorFuzzerReadiness() {
-
-	try {
-		const response = await axios.post(gqlUrl, {gqlFuzzStatusQuery});
-
-		if(this.responseHasData(response))
+		if(gqlResponseHasData(response))
 		{
-			const result: FuzzerStatus = response.data.data.fuzzerStatus;
-			if (result.alive) {
-				fuzzerStartState = FuzzerStartState.Started;
-				return;
-			}
-		}
-
-		const [hasErr, err] = this.hasGraphqlErr(response);
-
-		if(hasErr)
-		{
-			this.$logger.errorMsg(err);
-			return ;
+			//const alive = response.data.data.fuzzerStatus.alive;
+			fuzzerStartState = FuzzerStartState.Started
+			return;
 		}
 		
 	} catch (error: any) {
 		if(fuzzerStartState == FuzzerStartState.NotStarted || fuzzerStartState == FuzzerStartState.Started) {
 			fuzzerStartState = FuzzerStartState.Starting;
-			startFuzzer(appcontext);
+			startFuzzer();
 		}
 		
 		eventlogger.log('fuzzer is either not started yet or was shut down, starting fuzzer now. \n This may take a while if you are using Fuzzie the first time.');
-		
 		return;
 	}
-        
 }
+        
 
-async function startFuzzer(appcontext: AppContext) {
-
-	//TODO check if process is running
-		//if running skip below
+async function startFuzzer() {
 
 		try {
-
+			
 			let spawnOptions = { cwd: appcontext.fuzzerPYZFolderPath};
 
 			if(_pythonProcess == undefined)
@@ -161,25 +121,22 @@ async function startFuzzer(appcontext: AppContext) {
 				_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
 
 				const pid = _pythonProcess.pid
+
+				stateManager.set('python-process-id', pid.toString());
+
 				eventlogger.log(`Fuzzer process spanwed with process id ${pid.toString()}`);
-				if(pid != undefined)
-					await stateManager.set('fuzzer/processid', pid.toString());
 			}
 				
 				
 			if(_pythonProcess != undefined) {
 				_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
-					eventlogger.log(`Fuzzer: ${data}`);
+					eventlogger.log(`Fuzzer: ${data}`, 'VSC');
 				});
 				_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
-					eventlogger.log(`Fuzzer: ${data}`);
+					eventlogger.log(`Fuzzer: ${data}`, 'VSC');
 				});
-				_pythonProcess.on('SIGINT',function(code){
-					eventlogger.log(`Fuzzer: exiting ${code}`);
-				});
-				_pythonProcess.on('close', function(code){
-					eventlogger.log(`Fuzzer: exiting ${code}`);
-				});
+				_pythonProcess.on('SIGINT', onFuzzerExit);
+				_pythonProcess.on('close', onFuzzerExit);
 			}
 		} catch (error) {
 			
@@ -190,7 +147,26 @@ async function startFuzzer(appcontext: AppContext) {
 	
 }
 
-function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: AppContext) {
+async function onFuzzerExit() {
+	eventlogger.log('fuzzer exiting', 'VSC');
+	stateManager.set('fuzzer.processid', undefined);
+}
+
+async function hardResetFuzzerIfExists() {
+	killFuzzerProcess();
+	startFuzzer();
+}
+
+async function killFuzzerProcess() {
+	const pid = stateManager.get('fuzzer.processid');
+	if(pid != undefined) {
+		cp.spawn("taskkill", ["/pid", pid.toString(), '/f', '/t']);		 //on Windows
+		process.kill(+pid);  											// on linux platform
+		stateManager.set('fuzzer.processid', undefined);
+	}
+}
+
+function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext) {
 	var distFuzzerFolder: string = "dist/fuzzer";
 	var fuzzerPYZFileName : string = "fuzzie-fuzzer.pyz";
 	var cmdWorkingDir = path.join(vscodeContext.extensionPath, distFuzzerFolder )
@@ -200,7 +176,10 @@ function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext, appcontext: A
 	appcontext.fuzzerPYZFolderPath = cmdWorkingDir;
 }
 
-
-
-
-
+function gqlResponseHasData(resp) {
+	if(resp != undefined && resp.data != undefined && resp.data.data != undefined)
+	{
+		return true;
+	}
+	return false;
+}

@@ -30,6 +30,8 @@ from starlette.applications import Starlette
 from starlette_graphene3 import GraphQLApp, make_graphiql_handler, WebSocket
 from starlette.endpoints import WebSocketEndpoint
 from starlette.responses import JSONResponse
+import socket, errno
+
 
 async def server_error(request, exc):
     return JSONResponse(content={"error": 500}, status_code=exc.status_code)
@@ -90,6 +92,21 @@ def on_exit():
 atexit.register(on_exit)
 
 
+def is_port_in_use(port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        s.bind(("127.0.0.1", port))
+        return False
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+           return True
+        else:
+            # something else raised the socket.error exception
+            print(e)
+    finally:
+        s.close()
+
 #main entry point and startup
 def start_webserver():
     
@@ -119,10 +136,12 @@ def start_webserver():
     
 if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
-        
-        load_corpora_background()
-        
-        start_webserver()
+        # check if there is existing fuzzer process already running
+        if not is_port_in_use(50001):
+            
+            load_corpora_background()
+            
+            start_webserver()
         
     except Exception as e:
         asyncio.run(eventstore.emitErr(e))

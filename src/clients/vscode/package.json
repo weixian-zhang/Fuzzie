@@ -11,13 +11,18 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCommand:fuzzie.openwebview"
+    "onCommand:fuzzie.openwebview",
+    "onCommand:fuzzie.fuzzer.reset"
   ],
   "contributes": {
     "commands": [
       {
         "command": "fuzzie.openwebview",
         "title": "Fuzzie: Open"
+      },
+      {
+        "command": "fuzzie.fuzzer.reset",
+        "title": "Fuzzie: Reset fuzzer engine"
       }
     ]
   },
