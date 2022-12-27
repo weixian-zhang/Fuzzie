@@ -79,13 +79,32 @@
               Reason
             </th>
             <th class="text-left">
-              Request Content Length
-            </th>
-            <th class="text-left">
-              Response Content Length
+              
+              <div class="dropdown">
+                  <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
+                  <div class="dropdown-content">
+                    <v-radio-group inline >
+                      <v-radio
+                        color="cyan"
+                        label=">="
+                        @change="(tableFilterSmallerLarger = '>=')"
+                      ></v-radio>
+                      <v-radio
+                        color="cyan"
+                        label="<="
+                        @change="(tableFilterSmallerLarger = '<=')"
+                      ></v-radio>
+                    </v-radio-group>
+                    <input type="number" id="typeNumber" class="form-control" />
+                
+                  </div>                 
+                </div>
             </th>
             <th class="text-left">
               Duration(secs)
+            </th>
+            <th class="text-left">
+              File
             </th>
           </tr>
           <tr v-show="isDataLoadingInProgress">
@@ -94,7 +113,6 @@
                   indeterminate
                   rounded
                   color="cyan">
-                  
                 </v-progress-linear>
             </th>
           </tr>
@@ -120,10 +138,6 @@
             </td>
 
             <td>
-              {{ item.request.contentLength }}
-            </td>
-
-            <td>
               {{ item.response.contentLength }}
             </td>
 
@@ -131,6 +145,10 @@
               {{ timeDiff(item.request.requestDateTime, item.response.responseDateTime) }}
             </td>
             
+            <td>
+              <!-- {{ item.request.file }} -->
+            </td>
+
           </tr>
         </tbody>
       </v-table>
@@ -220,6 +238,8 @@ class Props {
     fdcsDataFiltered: Array<FuzzDataCase> = [];
     fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
+
+    tableFilterSmallerLarger = '<=';
     
     currentFuzzingFuzzContextId = ''
     currentFuzzingFuzzCaseSetRunId = ''
