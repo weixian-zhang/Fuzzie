@@ -124,7 +124,7 @@ async function startFuzzer() {
 
 				stateManager.set('python-process-id', pid.toString());
 
-				eventlogger.log(`Fuzzer process spanwed with process id ${pid.toString()}`);
+				eventlogger.log(`Fuzzer process spawned with process id ${pid.toString()}`);
 			}
 				
 				
