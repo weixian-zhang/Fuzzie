@@ -57,10 +57,9 @@ export class VuejsPanel {
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/webfontloader.js')),
 						vscode.Uri.file(path.join(this._extensionPath, this.vuejsDistFolder, 'js/webfontloader.js.map'))
 					],
-					// This maps localhost:3000 in the webview to the express server port on the remote host.
-					// portMapping: [
-					// 	{ webviewPort: 50001, extensionHostPort: 50001}
-					// ]
+					portMapping: [
+						{ webviewPort: 50001, extensionHostPort: 50001}
+					]
 				}
 			);
 	
