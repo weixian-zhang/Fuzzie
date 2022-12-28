@@ -17,7 +17,10 @@
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
-      <v-text-field
+      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search any"
+       v-model="fullTextSearchValue"
+        @input="onfullTextSearchValueChange" />
+      <!-- <v-text-field
         class="form-control-sm"
         color="cyan darken-3"
         hide-details
@@ -27,14 +30,15 @@
         label="search"
         height="20px"
         solo
-        @input="onSearchValueChange">
+        v-model="fullTextSearchValue"
+        @input="onfullTextSearchValueChange">
         <template v-slot:prepend-inner>
         <v-icon
           color="cyan darken-3"
           icon="mdi-magnify"
         /> 
       </template>
-      </v-text-field>
+      </v-text-field> -->
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
@@ -91,19 +95,19 @@
               <div class="dropdown">
                   <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
                   <div class="dropdown-content">
-                    <v-radio-group inline >
+                    <v-radio-group inline v-model="tableFilterSmallerLarger" >
                       <v-radio
                         color="cyan"
                         label=">="
-                        @change="(tableFilterSmallerLarger = '>=')"
+                        value=">="
                       ></v-radio>
                       <v-radio
                         color="cyan"
                         label="<="
-                        @change="(tableFilterSmallerLarger = '<=')"
+                        value="<="
                       ></v-radio>
                     </v-radio-group>
-                    <input type="number" id="typeNumber" class="form-control" />
+                    <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange" v-model="contentLengthInputValue" />
                 
                   </div>                 
                 </div>
@@ -225,13 +229,8 @@ import Dropdown from 'primevue/dropdown';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
-import { FuzzDataCase, FuzzRequest, FuzzResponse } from "../Model";
-
-import $ from "jquery";
-import 'bootstrap-table/dist/bootstrap-table.min.js';
-import 'bootstrap-table/dist/bootstrap-table.min.css';
-import 'bootstrap-table-filter/dist/bootstrap-table-filter.min.js';
-import 'bootstrap-table-filter/src/bootstrap-table-filter.css';
+import { FuzzDataCase } from "../Model";
+import Sidebar from 'primevue/sidebar';
 
 class Props {
   toastInfo: any = {};
@@ -246,7 +245,8 @@ class Props {
   components: {
     Splitter,
     SplitterPanel,
-    Dropdown
+    Dropdown,
+    Sidebar
   },
   watch: {
 
@@ -274,7 +274,10 @@ class Props {
     showFullValueSideBar = false;
     tableValViewInSizeBar = '';
 
-    tableFilterSmallerLarger = '<=';
+    fullTextSearchValue = '';
+
+    contentLengthInputValue = 100;
+    tableFilterSmallerLarger = '>=';
     
     currentFuzzingFuzzContextId = ''
     currentFuzzingFuzzCaseSetRunId = ''
@@ -397,7 +400,7 @@ class Props {
       }
     }
 
-    onSearchValueChange(input) {
+    onfullTextSearchValueChange(input) {
       const searchText = input.data;
 
       if(this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length <= 2) {
@@ -410,6 +413,10 @@ class Props {
         //return fdc;
       //});
 
+    }
+
+    oncontentLengthInputChange(input) {
+      const searchText = input.data;
     }
 
     buildStatusCodesDropDown() {
