@@ -11,7 +11,6 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzDataCase_ViewModel,
                             WebApiFuzzerInfo)
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
-from automapper import mapper
 from eventstore import EventStore, MsgType
 from utils import Utils
 from db import  (get_fuzzcontext,

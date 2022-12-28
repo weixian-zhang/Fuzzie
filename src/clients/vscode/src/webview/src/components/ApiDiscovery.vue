@@ -665,7 +665,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
-                      isFuzzingInProgress == false && 
+                      isFuzzingInProgress() == false && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
@@ -679,7 +679,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="( currentFuzzingContextId != '' &&  currentFuzzingCaseSetRunId != '')"
+                  v-show="( isFuzzingInProgress() == true)"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -764,7 +764,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   selectedCaseSetRunNode = ''
   
   fuzzerConnected = false;
-  isFuzzingInProgress = false;
   currentFuzzingContextId = '';
   currentFuzzingCaseSetRunId = '';
 
@@ -798,12 +797,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   // #### websocket events ####
 
   onFuzzStartReady() {
-
-    //if fuzzer is just ready, there would not be fuzzing.
-    //this is to cancel fuzzing in case fuzzer process is kill manually by user or crashed
-    if(this.isFuzzingInProgress) {
-      this.isFuzzingInProgress = false
-    }
       
     this.fuzzerConnected = true;
     this.getFuzzcontexts();
@@ -811,7 +804,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   onFuzzerNotReady() {
     this.clearData()
-    this.isFuzzingInProgress = false;
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -827,7 +819,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
       return;
     }
 
-    this.isFuzzingInProgress = true;
     this.currentFuzzingContextId = fuzzContextId;
     this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
 
@@ -844,14 +835,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   onFuzzStop() {
 
-    if(!this.isFuzzingInProgress)
-      return;
-
-    this.isFuzzingInProgress = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
-
-    this.toastSuccess('fuzzing is completed');
   }
 
   //#### websocket event ends ####
@@ -978,16 +963,20 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
 
-    this.isFuzzingInProgress = true
-
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
     const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
     if(!ok) {
-      this.isFuzzingInProgress = false;
       this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
       return;
     }
+  }
+
+  isFuzzingInProgress() {
+    if(this.currentFuzzingContextId != '' &&  this.currentFuzzingCaseSetRunId != '') {
+      return true;
+    }
+    return false;
   }
 
   async onCancelFuzzIconClicked() {
@@ -1001,7 +990,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
       return;
     }
 
-    this.isFuzzingInProgress = false
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
  }

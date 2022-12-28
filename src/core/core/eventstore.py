@@ -57,38 +57,9 @@ class EventStore:
     InfoWSTopic = 'event.info'
     
     
-    def background_task_ws_message_sender():
-        while True:
-            try:
-                if len(EventStore.wsMsgQueue):
-                    
-                    for portid in EventStore.websocketClients:
-                        
-                        wsClient = EventStore.websocketClients[portid]
-                        
-                        if(wsClient.client_state == WebSocketState.CONNECTED):
-                        
-                            while len(EventStore.wsMsgQueue) > 0:
-                                
-                                msg = EventStore.wsMsgQueue.pop()
-                                
-                                asyncio.run(wsClient.send_text(msg))
-                            
-            except Exception as e:
-                msg: str = e.args[0]
-                if msg is not None and msg.endswith("attached to a different loop") == False:
-                    del EventStore.websocketClients[portid]     # "previous" websocket client already disconnected, remove the instance
-                else:
-                    pass
-                
-            time.sleep(0.5)
-    
-    
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(EventStore, cls).__new__(cls)
-            daemon = Thread(target=EventStore.background_task_ws_message_sender, daemon=True, name='background_task_ws_message_sender')
-            daemon.start()
         return cls.instance
     
     def __init__(self) -> None:
@@ -110,8 +81,8 @@ class EventStore:
         # TODO: log to Application Insights
         print(m.json())
         
-        if alsoToClient:        
-            self.feedback_client(self.InfoWSTopic, message)
+        # if alsoToClient:        
+        #     self.feedback_client(self.InfoWSTopic, message)
 
     
     def emitErr(self, err , data = "") -> None:
@@ -143,7 +114,9 @@ class EventStore:
         # TODO: log to Application Insights
         print(m.json())
         
-        self.feedback_client('event.error', errMsg)
+        # may not need to send events over websocket as fuzzer run as child_process,
+        # all stdout/stderr will be received by nodejs process module
+        #self.feedback_client('event.error', errMsg)
         
     
     def add_websocket(self, portId, websocket):

@@ -11,7 +11,7 @@ sqlitedb = os.getcwd() + "\core\corporafactory\data\\fuzzie.sqlite"
 import os
 
 required_modules = []
-modules_to_exclude = ['pyinstaller==5.1', 'pyinstaller-hooks-contrib']
+modules_to_exclude = ['pyinstaller==5.1', 'pyinstaller-hooks-contrib', 'pylint']
 with open('core/requirements.txt', 'rb') as f:
     decode = f.read().decode("utf-16")
     

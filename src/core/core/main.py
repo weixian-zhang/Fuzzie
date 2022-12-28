@@ -14,9 +14,8 @@ from time import sleep
 from docopt import docopt
 
 from eventstore import EventStore
-eventstore = EventStore()
-
-from corpora_loader import load_corpora_background
+from backgroundtask_corpora_loader import load_corpora_background
+from backgroundtask_event_sender import BackgroundTask_WS_EventSender
 from starlette_graphql import schema
 import asyncio
 import uvicorn
@@ -32,6 +31,10 @@ from starlette.endpoints import WebSocketEndpoint
 from starlette.responses import JSONResponse
 import socket, errno
 
+eventstore = EventStore()
+
+t = BackgroundTask_WS_EventSender()
+t.start()
 
 async def server_error(request, exc):
     return JSONResponse(content={"error": 500}, status_code=exc.status_code)

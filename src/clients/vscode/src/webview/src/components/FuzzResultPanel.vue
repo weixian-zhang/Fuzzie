@@ -329,7 +329,7 @@ class Props {
 
     // after fuzzing, move the fuzzing data array back to fdcsDataOriginal
     switchFuzzingDataBucketToOriginal() {
-      this.fdcsDataFiltered = [...this.fdcsDataOriginal]
+      this.fdcsDataOriginal = [...this.fdcsDataFiltered]
       this.fdcsFuzzing = {};  //empty fuzzing data
     }
 
