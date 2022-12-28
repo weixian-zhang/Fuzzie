@@ -1,12 +1,28 @@
 import * as vscode from 'vscode';
 
-export default class EventLogger
+export class VSCEventLogger
 {
     private _outputWindow: vscode.OutputChannel;
 
     public constructor()
     {
         this._outputWindow = vscode.window.createOutputChannel("Fuzzie");
+		    
+    }
+
+    public log(message: string, source: string = "")
+    {
+        this._outputWindow.appendLine(`\n${JSON.stringify(new EventLog(message, source))}`);
+    }
+}
+
+export class FuzzerEventLogger
+{
+    private _outputWindow: vscode.OutputChannel;
+
+    public constructor()
+    {
+        this._outputWindow = vscode.window.createOutputChannel("Fuzzie-Fuzzer");
 		    
     }
 

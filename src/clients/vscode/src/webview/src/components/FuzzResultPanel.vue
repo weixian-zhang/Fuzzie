@@ -6,6 +6,14 @@
       style="display: flex; flex-flow: column; height: 100%;"
       class="mt-2 border-1">
      
+     <!--view text in full Side Bar-->
+     <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
+      <v-textarea auto-grow
+            outlined
+            rows="1"
+            readonly
+            v-model="tableValViewInSizeBar" />
+    </Sidebar>
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
@@ -130,7 +138,12 @@
             <td>{{ item.response.statusCode }}</td>
             
             <td>
-              {{ shortenValueInTable(item.request.path, 15) }}
+              <span style="cursor: pointer" @click="(
+                tableValViewInSizeBar=item.request.path,
+                showFullValueSideBar = true
+              )">
+                {{ shortenValueInTable(item.request.path, 15) }}
+              </span>
             </td>
             
             <td>
@@ -158,13 +171,32 @@
         <Splitter gutterSize="0" layout="vertical">
           <SplitterPanel>
             <Splitter layout="vertical">
-
                 <SplitterPanel :size="50">
+                  <v-btn
+                    width="100%"
+                    size="x-small"
+                    color="cyan"
+                    @click="(
+                    tableValViewInSizeBar=selectedRequest,
+                    showFullValueSideBar = true
+                  )">
+                  view
+                  </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedRequest" />
                 </SplitterPanel>
 
                 <SplitterPanel :size="50">
+                  <v-btn
+                    width="100%"
+                    size="x-small"
+                    color="cyan"
+                    @click="(
+                    tableValViewInSizeBar=selectedResponse,
+                    showFullValueSideBar = true
+                  )">
+                  view
+                  </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedResponse" />
                 </SplitterPanel>
@@ -238,6 +270,9 @@ class Props {
     fdcsDataFiltered: Array<FuzzDataCase> = [];
     fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
+    
+    showFullValueSideBar = false;
+    tableValViewInSizeBar = '';
 
     tableFilterSmallerLarger = '<=';
     

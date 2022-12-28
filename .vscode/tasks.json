@@ -166,7 +166,7 @@
 			},
 			"dependsOn":[
 				"package fuzzie-fuzzer.pyz",
-				"npm package webview dist"
+				"package webview dist"
 			]
 		}
 		

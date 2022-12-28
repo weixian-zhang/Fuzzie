@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from 'fs';
 import * as path from 'path';
-import EventLogger from './Logger';
+import {VSCEventLogger} from './Logger';
 import { timingSafeEqual } from "crypto";
 
 export class VuejsPanel {
@@ -12,9 +12,9 @@ export class VuejsPanel {
     private _extensionPath: string
     private _disposables: vscode.Disposable[] = [];
 	private static _context: vscode.ExtensionContext;
-	private static _eventlogger : EventLogger;
+	private static _eventlogger : VSCEventLogger;
 
-    public static createOrShow(context: vscode.ExtensionContext, eventlogger: EventLogger, extensionPath: string) {
+    public static createOrShow(context: vscode.ExtensionContext, eventlogger: VSCEventLogger, extensionPath: string) {
 		const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
 		this._context = context;

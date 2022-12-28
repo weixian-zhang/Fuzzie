@@ -2,6 +2,8 @@
   "name": "wxz-fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie",
+  "publisher": "Weixian Zhang",
+  "author": "Weixian Zhang",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.68.0"
@@ -23,6 +25,10 @@
       {
         "command": "fuzzie.fuzzer.reset",
         "title": "Fuzzie: Reset fuzzer engine"
+      },
+      {
+        "command": "fuzzie.fuzzer.kill",
+        "title": "Fuzzie: Kill fuzzer engine"
       }
     ]
   },

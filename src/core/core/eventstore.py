@@ -3,7 +3,6 @@
 from enum import Enum
 from multiprocessing import Event
 import jsonpickle
-from pymitter import EventEmitter
 from  datetime import datetime
 from utils import Utils
 import asyncio
@@ -96,10 +95,7 @@ class EventStore:
         
         self.pub = pub
         self.genlogs = []
-        self.fuzzProgress = []
-        
-        self.ee = EventEmitter()
-        self.ee.on(EventStore.AppEventTopic, self.onAppLogReceived)
+        self.fuzzProgress = []       
         
         
     def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
@@ -111,7 +107,8 @@ class EventStore:
             data
             )
         
-        self.ee.emit(EventStore.AppEventTopic, m.json())
+        # TODO: log to Application Insights
+        print(m.json())
         
         if alsoToClient:        
             self.feedback_client(self.InfoWSTopic, message)
@@ -143,14 +140,11 @@ class EventStore:
         else:
             return
         
-        self.ee.emit(EventStore.AppEventTopic, m.json())
+        # TODO: log to Application Insights
+        print(m.json())
         
         self.feedback_client('event.error', errMsg)
         
-    
-    def onAppLogReceived(self, msg: str):
-        # TODO: log to Application Insights
-        print(msg)
     
     def add_websocket(self, portId, websocket):
         self.websocketClients[portId] = websocket
