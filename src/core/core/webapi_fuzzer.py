@@ -25,7 +25,8 @@ from db import (insert_api_fuzzCaseSetRuns,
                 insert_api_fuzzrequest, 
                 insert_api_fuzzresponse,
                 create_casesetrun_summary,
-                update_casesetrun_summary)
+                update_casesetrun_summary,
+                insert_api_fuzzrequest_fileupload)
 import io
 from multiprocessing import Lock
 from enum import Enum 
@@ -175,10 +176,12 @@ class WebApiFuzzer:
             if multithreadEventSet.is_set():
                 return
             
-            fuzzDataCase = self.http_call_api(fcs)
+            fuzzDataCase, files = self.http_call_api(fcs)
             
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
+            self.save_uploaded_files(files=files,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
+                
             if summaryViewModel is not None:
                 self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
@@ -195,7 +198,7 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             
-    def http_call_api(self, fcs: ApiFuzzCaseSet) -> ApiFuzzDataCase:
+    def http_call_api(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
         
         resp = None
         
@@ -290,7 +293,8 @@ class WebApiFuzzer:
                                         body=body,
                                         contentLength=0,
                                         invalidRequestError=err)
-                return fuzzDataCase
+                
+                return fuzzDataCase, {}
             
             try:
                 fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
@@ -336,7 +340,7 @@ class WebApiFuzzer:
             
             fuzzDataCase.response = fr
             
-        return fuzzDataCase
+        return fuzzDataCase, files
 
             
                 
@@ -355,8 +359,25 @@ class WebApiFuzzer:
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
+    
+    def save_uploaded_files(self, files, fuzzDataCaseId, fuzzRequestId):
         
+        try:
+            if len(files) > 0:
+                for ftuple in files:
+                    fileName, content = ftuple
+                    insert_api_fuzzrequest_fileupload(
+                        Id=shortuuid.uuid(),
+                        fileName=fileName,
+                        fileContent= content,
+                        fuzzcontextId= self.apifuzzcontext.Id,
+                        fuzzDataCaseId=fuzzDataCaseId,
+                        fuzzRequestId=fuzzRequestId
+                    )
 
+        except Exception as e:
+            self.eventstore.emitErr(e)
+        
     def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
@@ -415,6 +436,8 @@ class WebApiFuzzer:
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
             rm = f'{fr.verb} {fr.url}' \
+                                '\n' \
+                                 f'Date: {fr.datetime.strftime("%d/%m/%y %H:%M:%S")}' \
                                  '\n' \
                                  '\n' \
                                 f'{headerMultilineText}' \
@@ -439,7 +462,7 @@ class WebApiFuzzer:
             fuzzResp = ApiFuzzResponse()
         
             fuzzResp.Id = shortuuid.uuid()
-            fuzzResp.datetime = datetime.utcnow()
+            fuzzResp.datetime = datetime.now()
             fuzzResp.fuzzDataCaseId = fuzzDataCaseId
             fuzzResp.fuzzcontextId = fuzzcontextId 
             
@@ -460,8 +483,6 @@ class WebApiFuzzer:
             fuzzResp.contentLength = resp.headers['Content-Length']
             
             respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse} ' \
-                                        '\n' \
-                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S")}' \
                                         '\n' \
                                         f'{headersMultilineText}' \
                                         '\n' \
@@ -604,19 +625,5 @@ class WebApiFuzzer:
             return True
         
         return False
-    
-    # def get_request_Info(self,verb, url, headers, data='', files={}) -> tuple(int, dict, str):
-        
-    #     prepReq = None
-    #     if len(files) > 0:
-    #         prepReq = Request(verb, url, headers=headers, json=data, files=files).prepare()
-    #     else:
-    #         prepReq = Request(verb, url, headers=headers, json=data).prepare()
-        
-    #     body = prepReq.body.decode('utf-8')
-    #     contentLength =  prepReq.headers['Content-Length']
-    #     headers = prepReq.headers
-        
-    #     return contentLength, headers, body
     
     

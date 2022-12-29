@@ -122,7 +122,9 @@ class FileNameCorpora:
     def load_corpora(self):
         pass
         
-    def next_corpora(self):
+    def next_corpora(self, fileType='file'):
+        
+        ext = 'pdf' #set a default, no particular reason for pdf
         
         basename = str(uuid.uuid4())[:random.randint(4, 12)]
         
@@ -135,10 +137,13 @@ class FileNameCorpora:
         
         suffix = datetime.datetime(randY, randMth, randDay, randHr, randMin, randSec).strftime("%y%m%d_%H%M%S")
         
-        extIndex =  random.randint(0, len(self.extensions) - 1)
-        ext = self.extensions[extIndex]
+        if fileType == 'file':
+            extIndex =  random.randint(0, len(self.extensions) - 1)
+            ext = self.extensions[extIndex]
+        elif fileType == 'image':
+            ext = 'png'
             
-        fn = f'{basename}_{suffix}.ext'
+        fn = f'{basename}_{suffix}.{ext}'
         
         return fn
         

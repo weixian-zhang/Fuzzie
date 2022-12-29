@@ -89,11 +89,7 @@ export default class FuzzerWebClient
               //TODO: log
               this.$logger.errorMsg('cannot connect to fuzzer websocket server, retrying');
 
-              this._ws = null;
-
-              if(this._ws != undefined){
-                this._ws.close();
-              }
+              this._ws.close();
             };
         } catch (error) {
             this.$logger.info(error);
@@ -249,7 +245,7 @@ export default class FuzzerWebClient
                     fuzzCaseSetId
                     request {
                         Id
-                        requestDateTime
+                        datetime
                         hostname
                         port
                         verb
@@ -259,10 +255,11 @@ export default class FuzzerWebClient
                         headers
                         contentLength
                         invalidRequestError
+                        uploadFileName
                     }
                     response {
                         Id
-                        responseDateTime
+                        datetime
                         statusCode
                         reasonPharse
                         setcookieHeader

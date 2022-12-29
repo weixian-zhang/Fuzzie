@@ -78,7 +78,7 @@
               Duration(secs)
             </th>
             <th class="text-left">
-              File
+              Uploaded File
             </th>
           </tr>
           <tr v-show="isDataLoadingInProgress">
@@ -121,11 +121,13 @@
             </td>
 
             <td>
-              {{ timeDiff(item.request.requestDateTime, item.response.responseDateTime) }}
+              {{ getTimeDiff(item.request.datetime, item.response.datetime) }}
             </td>
             
             <td>
-              <!-- {{ item.request.file }} -->
+              <span v-show="item.request.uploadFileName != ''">
+                <a href="#" @click="dowloadUploadedFuzzFile"> {{ item.request.uploadFileName }} </a>
+              </span>
             </td>
 
           </tr>
@@ -420,18 +422,6 @@ class Props {
       if(!Utils.isNothing(result.responseMessage)) {
         this.selectedResponse = Utils.b64d(result.responseMessage);
       }
-      
-    //         } else {
-    //    this.selectedRequest = Utils.b64d(fcs.request.requestMessage);
-    //  }
-      
-    //  if(!Utils.isNothing(fcs.response) && !Utils.isNothing(fcs.response.responseDisplayText)) {
-    //    this.selectedResponse = Utils.b64d(fcs.response.responseDisplayText);
-    //  }
-     // else {
-    //    this.selectedResponse = '';
-    //  } 
-
     }
 
     
@@ -460,16 +450,16 @@ class Props {
         this.showDropDownStatusCodeFilter = true;
     }
 
-    timeDiff(a: string, b: string) {
+    getTimeDiff(a: string, b: string) {
 
       if(b == null) {
         return 0;
       }
 
-       const aDate: Date = new Date(a);
-       const bDate: Date = new Date(b);
-
-       var seconds = (bDate.getTime() - aDate.getTime()) / 1000;
+       var startDate = new Date(a);
+      // Do your operations
+      var endDate   = new Date(b);
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
 
        return parseFloat(seconds.toFixed(2));
     }

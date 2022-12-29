@@ -100,7 +100,7 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 2000);
+      setInterval(this.checkFuzzerReady, 2500);
     }
 
     

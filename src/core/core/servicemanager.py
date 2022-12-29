@@ -220,7 +220,7 @@ class ServiceManager:
                 
                 fdc.request = FuzzRequest_ViewModel()
                 fdc.request.Id = row['fuzzRequestId']
-                fdc.request.requestDateTime = row['requestDateTime']
+                fdc.request.datetime = row['requestDateTime']
                 fdc.request.hostname
                 fdc.request.port = rowDict['port']
                 fdc.request.verb = rowDict['verb']
@@ -231,10 +231,11 @@ class ServiceManager:
                 #fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
                 fdc.request.invalidRequestError = rowDict['invalidRequestError']
+                fdc.request.uploadFileName = rowDict['fileName']
                 
                 fdc.response = FuzzResponse_ViewModel()
                 fdc.response.Id = rowDict['fuzzResponseId']
-                fdc.response.responseDateTime = row['responseDateTime']
+                fdc.response.datetime = row['responseDateTime']
                 fdc.response.statusCode = rowDict['statusCode']
                 fdc.response.reasonPharse = rowDict['reasonPharse']
                 fdc.response.setcookieHeader = rowDict['setcookieHeader']
