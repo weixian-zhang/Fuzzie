@@ -139,7 +139,7 @@ class EventStore:
             
             mj = m.json()
             
-            self.wsMsgQueue.append(mj)
+            self.wsMsgQueue.appendleft(mj)
             
             # if len(self.websocketClients) > 0:
             #     for portid in self.websocketClients:

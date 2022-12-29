@@ -574,9 +574,9 @@
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
-      <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
+      <!-- <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
         <v-icon color="cyan darken-3">mdi-message-plus-outline</v-icon>
-      </v-btn>
+      </v-btn> -->
 
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
