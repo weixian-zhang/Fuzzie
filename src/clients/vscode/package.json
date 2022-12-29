@@ -2,6 +2,10 @@
   "name": "wxz-fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie",
+  "publisher": "WeixianZhang",
+  "author": "WeixianZhang",
+  "repository": "https://github.com/weixian-zhang/Fuzzie",
+  "license": "MIT",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.68.0"
@@ -11,13 +15,22 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCommand:fuzzie.openwebview"
+    "onCommand:fuzzie.openwebview",
+    "onCommand:fuzzie.fuzzer.reset"
   ],
   "contributes": {
     "commands": [
       {
         "command": "fuzzie.openwebview",
         "title": "Fuzzie: Open"
+      },
+      {
+        "command": "fuzzie.fuzzer.reset",
+        "title": "Fuzzie: Reset fuzzer engine"
+      },
+      {
+        "command": "fuzzie.fuzzer.kill",
+        "title": "Fuzzie: Kill fuzzer engine"
       }
     ]
   },

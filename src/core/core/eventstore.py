@@ -3,7 +3,6 @@
 from enum import Enum
 from multiprocessing import Event
 import jsonpickle
-from pymitter import EventEmitter
 from  datetime import datetime
 from utils import Utils
 import asyncio
@@ -58,48 +57,16 @@ class EventStore:
     InfoWSTopic = 'event.info'
     
     
-    def background_task_ws_message_sender():
-        while True:
-            try:
-                if len(EventStore.wsMsgQueue):
-                    
-                    for portid in EventStore.websocketClients:
-                        
-                        wsClient = EventStore.websocketClients[portid]
-                        
-                        if(wsClient.client_state == WebSocketState.CONNECTED):
-                        
-                            while len(EventStore.wsMsgQueue) > 0:
-                                
-                                msg = EventStore.wsMsgQueue.pop()
-                                
-                                asyncio.run(wsClient.send_text(msg))
-                            
-            except Exception as e:
-                msg: str = e.args[0]
-                if msg is not None and msg.endswith("attached to a different loop") == False:
-                    del EventStore.websocketClients[portid]     # "previous" websocket client already disconnected, remove the instance
-                else:
-                    pass
-                
-            time.sleep(0.5)
-    
-    
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(EventStore, cls).__new__(cls)
-            daemon = Thread(target=EventStore.background_task_ws_message_sender, daemon=True, name='background_task_ws_message_sender')
-            daemon.start()
         return cls.instance
     
     def __init__(self) -> None:
         
         self.pub = pub
         self.genlogs = []
-        self.fuzzProgress = []
-        
-        self.ee = EventEmitter()
-        self.ee.on(EventStore.AppEventTopic, self.onAppLogReceived)
+        self.fuzzProgress = []       
         
         
     def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
@@ -111,10 +78,11 @@ class EventStore:
             data
             )
         
-        self.ee.emit(EventStore.AppEventTopic, m.json())
+        # TODO: log to Application Insights
+        print(m.json())
         
-        if alsoToClient:        
-            self.feedback_client(self.InfoWSTopic, message)
+        # if alsoToClient:        
+        #     self.feedback_client(self.InfoWSTopic, message)
 
     
     def emitErr(self, err , data = "") -> None:
@@ -143,14 +111,13 @@ class EventStore:
         else:
             return
         
-        self.ee.emit(EventStore.AppEventTopic, m.json())
-        
-        self.feedback_client('event.error', errMsg)
-        
-    
-    def onAppLogReceived(self, msg: str):
         # TODO: log to Application Insights
-        print(msg)
+        print(m.json())
+        
+        # may not need to send events over websocket as fuzzer run as child_process,
+        # all stdout/stderr will be received by nodejs process module
+        #self.feedback_client('event.error', errMsg)
+        
     
     def add_websocket(self, portId, websocket):
         self.websocketClients[portId] = websocket
@@ -172,7 +139,7 @@ class EventStore:
             
             mj = m.json()
             
-            self.wsMsgQueue.append(mj)
+            self.wsMsgQueue.appendleft(mj)
             
             # if len(self.websocketClients) > 0:
             #     for portid in self.websocketClients:

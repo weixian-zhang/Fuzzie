@@ -22,7 +22,7 @@ from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 from eventstore import EventStore
 
-from corpora_loader import corporaProvider
+from backgroundtask_corpora_loader import corporaProvider
 
 class CorporaContext:
     

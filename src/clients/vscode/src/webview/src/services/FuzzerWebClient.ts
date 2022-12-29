@@ -55,6 +55,8 @@ export default class FuzzerWebClient
 
                     const jmsg = JSON.parse(msg);
 
+                    this.$logger.info(`websocket receive data: ${jmsg}`);
+
                     const topic = jmsg.topic;
                     const data = jmsg.data;
 

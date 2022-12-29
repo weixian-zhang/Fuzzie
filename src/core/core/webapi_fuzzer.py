@@ -465,7 +465,7 @@ class WebApiFuzzer:
             
             fuzzResp.contentLength = resp.headers['Content-Length']
             
-            respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse}' \
+            respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse} ' \
                                         f'{headersMultilineText}' \
                                         '\n' \
                                         '\n' \

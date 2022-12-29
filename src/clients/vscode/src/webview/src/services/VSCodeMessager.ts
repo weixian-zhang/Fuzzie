@@ -27,7 +27,7 @@ export default class VSCodeMessager
     constructor() {
 
         if (typeof acquireVsCodeApi === "function") {
-            if(this._vscode == undefined) {
+            if(this._vscode != undefined) {
                 this._vscode = acquireVsCodeApi();
             }
           }

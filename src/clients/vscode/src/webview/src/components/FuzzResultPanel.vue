@@ -6,10 +6,21 @@
       style="display: flex; flex-flow: column; height: 100%;"
       class="mt-2 border-1">
      
+     <!--view text in full Side Bar-->
+     <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
+      <v-textarea auto-grow
+            outlined
+            rows="1"
+            readonly
+            v-model="tableValViewInSizeBar" />
+    </Sidebar>
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
-      <v-text-field
+      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search any"
+       v-model="fullTextSearchValue"
+        @input="onfullTextSearchValueChange" />
+      <!-- <v-text-field
         class="form-control-sm"
         color="cyan darken-3"
         hide-details
@@ -19,14 +30,15 @@
         label="search"
         height="20px"
         solo
-        @input="onSearchValueChange">
+        v-model="fullTextSearchValue"
+        @input="onfullTextSearchValueChange">
         <template v-slot:prepend-inner>
         <v-icon
           color="cyan darken-3"
           icon="mdi-magnify"
         /> 
       </template>
-      </v-text-field>
+      </v-text-field> -->
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
@@ -79,13 +91,32 @@
               Reason
             </th>
             <th class="text-left">
-              Request Content Length
-            </th>
-            <th class="text-left">
-              Response Content Length
+              
+              <div class="dropdown">
+                  <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
+                  <div class="dropdown-content">
+                    <v-radio-group inline v-model="tableFilterSmallerLarger" >
+                      <v-radio
+                        color="cyan"
+                        label=">="
+                        value=">="
+                      ></v-radio>
+                      <v-radio
+                        color="cyan"
+                        label="<="
+                        value="<="
+                      ></v-radio>
+                    </v-radio-group>
+                    <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange" v-model="contentLengthInputValue" />
+                
+                  </div>                 
+                </div>
             </th>
             <th class="text-left">
               Duration(secs)
+            </th>
+            <th class="text-left">
+              File
             </th>
           </tr>
           <tr v-show="isDataLoadingInProgress">
@@ -94,7 +125,6 @@
                   indeterminate
                   rounded
                   color="cyan">
-                  
                 </v-progress-linear>
             </th>
           </tr>
@@ -112,15 +142,16 @@
             <td>{{ item.response.statusCode }}</td>
             
             <td>
-              {{ shortenValueInTable(item.request.path, 15) }}
+              <span style="cursor: pointer" @click="(
+                tableValViewInSizeBar=item.request.path,
+                showFullValueSideBar = true
+              )">
+                {{ shortenValueInTable(item.request.path, 15) }}
+              </span>
             </td>
             
             <td>
               {{shortenValueInTable(item.response.reasonPharse, 15) }}
-            </td>
-
-            <td>
-              {{ item.request.contentLength }}
             </td>
 
             <td>
@@ -131,6 +162,10 @@
               {{ timeDiff(item.request.requestDateTime, item.response.responseDateTime) }}
             </td>
             
+            <td>
+              <!-- {{ item.request.file }} -->
+            </td>
+
           </tr>
         </tbody>
       </v-table>
@@ -140,13 +175,32 @@
         <Splitter gutterSize="0" layout="vertical">
           <SplitterPanel>
             <Splitter layout="vertical">
-
                 <SplitterPanel :size="50">
+                  <v-btn
+                    width="100%"
+                    size="x-small"
+                    color="cyan"
+                    @click="(
+                    tableValViewInSizeBar=selectedRequest,
+                    showFullValueSideBar = true
+                  )">
+                  view
+                  </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedRequest" />
                 </SplitterPanel>
 
                 <SplitterPanel :size="50">
+                  <v-btn
+                    width="100%"
+                    size="x-small"
+                    color="cyan"
+                    @click="(
+                    tableValViewInSizeBar=selectedResponse,
+                    showFullValueSideBar = true
+                  )">
+                  view
+                  </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedResponse" />
                 </SplitterPanel>
@@ -175,13 +229,8 @@ import Dropdown from 'primevue/dropdown';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
-import { FuzzDataCase, FuzzRequest, FuzzResponse } from "../Model";
-
-import $ from "jquery";
-import 'bootstrap-table/dist/bootstrap-table.min.js';
-import 'bootstrap-table/dist/bootstrap-table.min.css';
-import 'bootstrap-table-filter/dist/bootstrap-table-filter.min.js';
-import 'bootstrap-table-filter/src/bootstrap-table-filter.css';
+import { FuzzDataCase } from "../Model";
+import Sidebar from 'primevue/sidebar';
 
 class Props {
   toastInfo: any = {};
@@ -196,7 +245,8 @@ class Props {
   components: {
     Splitter,
     SplitterPanel,
-    Dropdown
+    Dropdown,
+    Sidebar
   },
   watch: {
 
@@ -220,6 +270,14 @@ class Props {
     fdcsDataFiltered: Array<FuzzDataCase> = [];
     fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
+    
+    showFullValueSideBar = false;
+    tableValViewInSizeBar = '';
+
+    fullTextSearchValue = '';
+
+    contentLengthInputValue = 100;
+    tableFilterSmallerLarger = '>=';
     
     currentFuzzingFuzzContextId = ''
     currentFuzzingFuzzCaseSetRunId = ''
@@ -271,7 +329,7 @@ class Props {
 
     // after fuzzing, move the fuzzing data array back to fdcsDataOriginal
     switchFuzzingDataBucketToOriginal() {
-      this.fdcsDataFiltered = [...this.fdcsDataOriginal]
+      this.fdcsDataOriginal = [...this.fdcsDataFiltered]
       this.fdcsFuzzing = {};  //empty fuzzing data
     }
 
@@ -342,7 +400,7 @@ class Props {
       }
     }
 
-    onSearchValueChange(input) {
+    onfullTextSearchValueChange(input) {
       const searchText = input.data;
 
       if(this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length <= 2) {
@@ -355,6 +413,10 @@ class Props {
         //return fdc;
       //});
 
+    }
+
+    oncontentLengthInputChange(input) {
+      const searchText = input.data;
     }
 
     buildStatusCodesDropDown() {

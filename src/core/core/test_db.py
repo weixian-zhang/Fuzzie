@@ -1,4 +1,5 @@
 import unittest
+import json
 
 import os, sys
 from pathlib import Path
@@ -14,7 +15,7 @@ from db import (ApiFuzzContextTable, ApiFuzzCaseSetTable,  metadata, session_fac
                 get_fuzzContextSetRuns)
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.sql import select, insert
-import json
+
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
