@@ -1,4 +1,4 @@
-import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus } from "../Model";
+import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus, FuzzDataCase } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import {inject} from 'vue';
 import Utils from "../Utils";
@@ -234,6 +234,64 @@ export default class FuzzerWebClient
         {
             return [!hasErr, err, []];
         }
+    }
+
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+        const query = `
+        query {
+            fuzzRequestResponse(
+                fuzzCaseSetId: "${fuzzCaseSetId}",
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                ok,
+                error,
+                result {
+                    fuzzDataCaseId
+                    fuzzCaseSetId
+                    request {
+                        Id
+                        requestDateTime
+                        hostname
+                        port
+                        verb
+                        path
+                        querystring
+                        url
+                        headers
+                        contentLength
+                        invalidRequestError
+                    }
+                    response {
+                        Id
+                        responseDateTime
+                        statusCode
+                        reasonPharse
+                        setcookieHeader
+                        headerJson
+                        contentLength
+                    }
+                }
+            }
+        }
+    `
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.fuzzRequestResponse.ok;
+            const error = response.data.data.fuzzRequestResponse.error;
+            const result = response.data.data.fuzzRequestResponse.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+
+        return [false, '', []];
     }
     
     public async getFuzzContexts(): Promise<any> {

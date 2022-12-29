@@ -20,25 +20,7 @@
       <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search any"
        v-model="fullTextSearchValue"
         @input="onfullTextSearchValueChange" />
-      <!-- <v-text-field
-        class="form-control-sm"
-        color="cyan darken-3"
-        hide-details
-        clearable
-        dense 
-        density="compact"
-        label="search"
-        height="20px"
-        solo
-        v-model="fullTextSearchValue"
-        @input="onfullTextSearchValueChange">
-        <template v-slot:prepend-inner>
-        <v-icon
-          color="cyan darken-3"
-          icon="mdi-magnify"
-        /> 
-      </template>
-      </v-text-field> -->
+
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
@@ -50,27 +32,7 @@
 
     <Splitter  style="height: 100%" >
       <SplitterPanel :size="50">
-        <!-- <table data-toggle="table" data-pagination="true">
-      <thead>
-        <tr>
-          <th>Item ID</th>
-          <th data-sortable="true">Item Name</th>
-          <th  data-sortable="true" data-filter-type="select" data-filter-data="var:itemPrices">Item Price</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1</td>
-          <td>Item 1</td>
-          <td>$1</td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td>Item 2</td>
-          <td>$2</td>
-        </tr>
-      </tbody>
-    </table> -->
+
         <v-table density="compact" fixed-header height="430" hover="true" >          
         <thead>
           <tr>
@@ -181,8 +143,9 @@
                     size="x-small"
                     color="cyan"
                     @click="(
+                      selectedRequest != '' ? (
                     tableValViewInSizeBar=selectedRequest,
-                    showFullValueSideBar = true
+                    showFullValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -196,8 +159,9 @@
                     size="x-small"
                     color="cyan"
                     @click="(
-                    tableValViewInSizeBar=selectedResponse,
-                    showFullValueSideBar = true
+                      selectedResponse != '' ?
+                    (tableValViewInSizeBar=selectedResponse,
+                    showFullValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -375,7 +339,7 @@ class Props {
             return;
           }
 
-          const [ok, error, result] = await this.fuzzermanager.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
+          const [ok, error, result] = await this.webclient.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
 
           if(!ok) {
             this.toastError(error, 'Fuzz Result Panel');
@@ -435,20 +399,27 @@ class Props {
     }
 
     onRowClick(fcs: FuzzDataCase) {
+
+      
       
       if (fcs.request.invalidRequestError != '') {
         this.selectedRequest = fcs.request.invalidRequestError;
-      } else {
-        this.selectedRequest = Utils.b64d(fcs.request.requestMessage);
       }
+
+    //         } else {
+    //    this.selectedRequest = Utils.b64d(fcs.request.requestMessage);
+    //  }
       
-      if(!Utils.isNothing(fcs.response) && !Utils.isNothing(fcs.response.responseDisplayText)) {
-        this.selectedResponse = Utils.b64d(fcs.response.responseDisplayText);
-      }
-      else {
-        this.selectedResponse = '';
-      }
+    //  if(!Utils.isNothing(fcs.response) && !Utils.isNothing(fcs.response.responseDisplayText)) {
+    //    this.selectedResponse = Utils.b64d(fcs.response.responseDisplayText);
+    //  }
+     // else {
+    //    this.selectedResponse = '';
+    //  } 
+
     }
+
+    
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {

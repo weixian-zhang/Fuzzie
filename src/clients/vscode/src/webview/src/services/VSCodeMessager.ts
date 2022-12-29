@@ -36,14 +36,11 @@ export default class VSCodeMessager
     public send(message: unknown)
     {
         try {
-
-            if(this._vscode == undefined) {
-                console.error('vscode API is undefined in webview');
-                return;
+            
+            if(this._vscode != undefined){
+                this._vscode.postMessage(message);
             }
-
-            this._vscode.postMessage(message);
-
+        
         } catch (error) {
             console.error(error);
         }

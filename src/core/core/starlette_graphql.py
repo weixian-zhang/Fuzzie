@@ -9,7 +9,9 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             FuzzRequestResponseQueryResult, 
                             ApiFuzzContextUpdate,
                             FuzzCaseSetRunSummaryQueryResult,
-                            FuzzerStatus)
+                            FuzzerStatus,
+                            FuzzRequestResponseMessage,
+                            FuzzReqRespMessageQueryResult)
 from utils import Utils 
 
 es = EventStore()
@@ -32,7 +34,6 @@ class Query(graphene.ObjectType):
                 
     pub.subscribe(on_event_received, es.CorporaEventTopic)
     
-    
     fuzzerStatus = graphene.Field(FuzzerStatus)
     
     fuzzContexts = graphene.Field(FuzzContextRunQueryResult)
@@ -46,6 +47,10 @@ class Query(graphene.ObjectType):
                                          fuzzCaseSetId = graphene.Argument(graphene.String),
                                          fuzzCaseSetRunId = graphene.Argument(graphene.String))
     
+    
+    fuzzRequestResponseMessage = graphene.Field(FuzzReqRespMessageQueryResult,
+                                                reqId = graphene.Argument(graphene.String),
+                                                respId = graphene.Argument(graphene.String))
     
     def resolve_fuzzerStatus(self, info):
         
@@ -96,6 +101,20 @@ class Query(graphene.ObjectType):
         r.result = result
           
         return r
+    
+    def resolve_fuzzRequestResponseMessage(self, info, reqId, respId):
+        
+        sm = ServiceManager()
+        
+        ok, error, result = sm.get_fuzz_request_response_messages(reqId, respId)
+        
+        r = FuzzReqRespMessageQueryResult()
+        r.ok = ok
+        r.error = error
+        r.result = result
+        
+        return r
+        
         
 
 class SaveEditedFuzzCaseSets(graphene.Mutation):

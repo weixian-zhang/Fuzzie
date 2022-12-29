@@ -9,7 +9,8 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzRequest_ViewModel,
                             FuzzResponse_ViewModel,
                             FuzzDataCase_ViewModel,
-                            WebApiFuzzerInfo)
+                            WebApiFuzzerInfo,
+                            FuzzRequestResponseMessage)
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -20,7 +21,8 @@ from db import  (get_fuzzcontext,
                  delete_api_fuzz_context,
                  get_fuzzContexts_and_runs,
                  save_caseset_selected,
-                 get_fuzz_request_response)
+                 get_fuzz_request_response,
+                 get_fuzz_request_response_messages)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -226,9 +228,8 @@ class ServiceManager:
                 fdc.request.querystring = rowDict['querystring']
                 fdc.request.url = rowDict['url']
                 fdc.request.headers = rowDict['headers']
-                fdc.request.body = rowDict['body']
+                #fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
-                fdc.request.requestMessage = rowDict['requestMessage']
                 fdc.request.invalidRequestError = rowDict['invalidRequestError']
                 
                 fdc.response = FuzzResponse_ViewModel()
@@ -238,9 +239,8 @@ class ServiceManager:
                 fdc.response.reasonPharse = rowDict['reasonPharse']
                 fdc.response.setcookieHeader = rowDict['setcookieHeader']
                 fdc.response.headerJson = rowDict['headerJson']
-                fdc.response.body = rowDict['body']
+                #fdc.response.body = rowDict['body']
                 fdc.response.contentLength = rowDict['contentLength']
-                fdc.response.responseDisplayText = rowDict['responseDisplayText']
                 
                 result.append(fdc)
 
@@ -248,6 +248,23 @@ class ServiceManager:
             
         except Exception as e:
             return (False, Utils.errAsText(e), [])
+    
+    def get_fuzz_request_response_messages(self, reqId, respId):
+        
+        if reqId == '' or respId == '':
+            return False, 'request id and response id cannot be empty', {}
+        
+        rrMsg = FuzzRequestResponseMessage()
+        
+        reqMsg, respMsg = get_fuzz_request_response_messages(reqId, respId)
+        
+        if reqMsg == '' or respMsg == '':
+            return False, f'request and response message cannot be retrieved with IDs {reqId} and {respId}', {}
+        
+        rrMsg.requestMessage = reqMsg
+        rrMsg.responseMessage = respMsg
+        
+        return True, '', rrMsg
         
         
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:

@@ -7,6 +7,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+from db import engine
 from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
@@ -51,7 +52,12 @@ class CorporaProvider:
         self._filenameCorpora = FileNameCorpora()
         
     def load_all(self):
-        try:            
+        try:
+            
+            self.es.emitInfo('vacuuming sqlite')
+            engine.execute("VACUUM")
+            self.es.emitInfo('sqlite vacuumed')
+
             self.es.emitInfo('CorporaProvider: start loading corpora')
 
             self.es.emitInfo('CorporaProvider: loading boolean corpora')
