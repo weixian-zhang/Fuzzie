@@ -215,9 +215,7 @@ class FuzzRequest_ViewModel(graphene.ObjectType):
     path = graphene.String()
     querystring = graphene.String()
     headers = graphene.String()
-    body = graphene.String()
     contentLength = graphene.Int()
-    requestMessage = graphene.String()
     invalidRequestError = graphene.String()
 
 class FuzzResponse_ViewModel(graphene.ObjectType): 
@@ -227,9 +225,12 @@ class FuzzResponse_ViewModel(graphene.ObjectType):
     reasonPharse = graphene.String()
     headerJson = graphene.String()
     setcookieHeader = graphene.String()
-    body = graphene.String()
     contentLength = graphene.Int()
-    responseDisplayText = graphene.String()
+    
+class FuzzRequestResponseMessage(graphene.ObjectType):
+    requestMessage = graphene.String()
+    responseMessage = graphene.String()
+    responseBody = graphene.String()
     
 class FuzzDataCase_ViewModel(graphene.ObjectType):
     fuzzDataCaseId = graphene.String()
@@ -242,3 +243,8 @@ class FuzzRequestResponseQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.List(FuzzDataCase_ViewModel)
+    
+class FuzzReqRespMessageQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.Field(FuzzRequestResponseMessage)

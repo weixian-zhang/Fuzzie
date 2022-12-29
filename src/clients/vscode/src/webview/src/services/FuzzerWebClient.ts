@@ -1,4 +1,4 @@
-import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus } from "../Model";
+import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus, FuzzDataCase, FuzzRequestResponseMessage } from "../Model";
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import {inject} from 'vue';
 import Utils from "../Utils";
@@ -81,7 +81,7 @@ export default class FuzzerWebClient
                 this._ws = null;
                 setTimeout( () => {
                     this.connectWSInternal();
-                }, 1500);
+                }, 1000);
             };
           
             this._ws.onerror = (err) => {
@@ -235,6 +235,64 @@ export default class FuzzerWebClient
             return [!hasErr, err, []];
         }
     }
+
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+        const query = `
+        query {
+            fuzzRequestResponse(
+                fuzzCaseSetId: "${fuzzCaseSetId}",
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                ok,
+                error,
+                result {
+                    fuzzDataCaseId
+                    fuzzCaseSetId
+                    request {
+                        Id
+                        requestDateTime
+                        hostname
+                        port
+                        verb
+                        path
+                        querystring
+                        url
+                        headers
+                        contentLength
+                        invalidRequestError
+                    }
+                    response {
+                        Id
+                        responseDateTime
+                        statusCode
+                        reasonPharse
+                        setcookieHeader
+                        headerJson
+                        contentLength
+                    }
+                }
+            }
+        }
+    `
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.fuzzRequestResponse.ok;
+            const error = response.data.data.fuzzRequestResponse.error;
+            const result = response.data.data.fuzzRequestResponse.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+
+        return [false, '', []];
+    }
     
     public async getFuzzContexts(): Promise<any> {
 
@@ -299,6 +357,50 @@ export default class FuzzerWebClient
             this.$logger.error(err);
 
             return [false, this.errAsText(err as any[]), []];
+        }        
+    }
+
+    public async get_request_response_messages(reqId: string, respId: string): Promise<[boolean, string, FuzzRequestResponseMessage]> {
+
+        const query = `
+            query {
+                fuzzRequestResponseMessage(reqId: "${reqId}", respId: "${respId}") {
+                    ok,
+                    error,
+                    result {
+                        requestMessage
+                        responseMessage
+                    }
+                } 
+            }
+        `
+        
+        try {
+
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.fuzzRequestResponseMessage.ok;
+                const error = response.data.data.fuzzRequestResponseMessage.error;
+                const result = response.data.data.fuzzRequestResponseMessage.result;
+                return [ok, error, result];
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                return [!hasErr, err, new FuzzRequestResponseMessage()];
+            }
+
+            return [false, '', new FuzzRequestResponseMessage()];
+
+        } catch (err) {
+
+            this.$logger.error(err);
+
+            return [false, this.errAsText(err as any[]), new FuzzRequestResponseMessage()];
         }        
     }
 

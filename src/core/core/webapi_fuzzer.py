@@ -98,7 +98,6 @@ class WebApiFuzzer:
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
             
             self.fuzzingStatus = FuzzingStatus.Stop
-            #self.eventstore.feedback_client(self.eventstore.CancelFuzzWSTopic)
      
         except Exception as e:
             self.eventstore.emitErr(e)
@@ -119,10 +118,6 @@ class WebApiFuzzer:
             self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
-            
-            #use graphql instead to get fuzz.start status, more "reliable"
-            # self.eventstore.feedback_client(self.eventstore.FuzzStartWSTopic, 
-            #                                 {'fuzzContextId': self.apifuzzcontext.Id, 'fuzzCaseSetRunId': self.fuzzCaseSetRunId })
             
             #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
@@ -187,6 +182,10 @@ class WebApiFuzzer:
             if summaryViewModel is not None:
                 self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
+            #reduce payload size, the following properties will be retrieved separately by webview "onClick"
+            fuzzDataCase.request.body = ''
+            fuzzDataCase.request.requestMessage = ''
+            fuzzDataCase.response.responseDisplayText = ''
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
             # update run status
@@ -346,8 +345,6 @@ class WebApiFuzzer:
         try:
             
             self.currentFuzzRuns = self.currentFuzzRuns + 1
-            
-            # self.eventstore.emitInfo(f'fuzzing test cases: {self.currentFuzzRuns}/{self.totalFuzzRuns} ')
     
             # check if last task, to end fuzzing
             if self.currentFuzzRuns  >= self.totalFuzzRuns:
@@ -355,9 +352,6 @@ class WebApiFuzzer:
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
                 self.fuzzingStatus = FuzzingStatus.Stop
-                
-                # notify fuzzing completed
-                #self.eventstore.feedback_client(self.eventstore.FuzzCompleteWSTopic, {'fuzzContextId' : fuzzContextId, 'caseSetRunId': caseSetRunId })
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
@@ -445,7 +439,7 @@ class WebApiFuzzer:
             fuzzResp = ApiFuzzResponse()
         
             fuzzResp.Id = shortuuid.uuid()
-            fuzzResp.datetime = datetime.now()
+            fuzzResp.datetime = datetime.utcnow()
             fuzzResp.fuzzDataCaseId = fuzzDataCaseId
             fuzzResp.fuzzcontextId = fuzzcontextId 
             
@@ -466,10 +460,10 @@ class WebApiFuzzer:
             fuzzResp.contentLength = resp.headers['Content-Length']
             
             respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse} ' \
+                                        '\n' \
+                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S")}' \
+                                        '\n' \
                                         f'{headersMultilineText}' \
-                                        '\n' \
-                                        '\n' \
-                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S.%f")}' \
                                         '\n' \
                                         f'Content-Length: {fuzzResp.contentLength}' \
                                         '\n' \

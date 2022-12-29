@@ -17,7 +17,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
 from utils import Utils
 from eventstore import EventStore
 
-evts = EventStore()
+eventstore = EventStore()
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data/fuzzie.sqlite')
 connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
@@ -351,7 +351,7 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
         return True, '', fcList
         
     except Exception as e:
-       evts.emitErr(e)
+       eventstore.emitErr(e)
        return False, Utils.errAsText(e), []
     finally:
         Session.close()
@@ -407,29 +407,6 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                         .all()
                      )
         
-        # joinQuery = fuzzcasesetsQuery.join(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == fuzzcasesetsQuery.c.fuzzCaseSetId, isouter=True)
-
-        # result = joinQuery.all()
-        
-        # fcsSumRows = (
-        #                 Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-        #                             ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.completedDataCaseRuns, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.totalDataCaseRunsToComplete, 0),
-        #                             coalesce(ApiFuzzRunSummaryPerCaseSetTable.columns.Id.label("runSummaryId"), ''),
-        #                             ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetRunId
-        #                             )
-        #                 .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-        #                 .join(ApiFuzzRunSummaryPerCaseSetTable, ApiFuzzRunSummaryPerCaseSetTable.columns.fuzzCaseSetId == ApiFuzzCaseSetTable.columns.Id, isouter=True)
-        #                 .distinct().all()
-        #             )
-    
-    
-        
     Session.close()
     
     return result
@@ -449,9 +426,8 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzRequestTable.columns.querystring,
                                 ApiFuzzRequestTable.columns.url,
                                 ApiFuzzRequestTable.columns.headers,
-                                ApiFuzzRequestTable.columns.body,
+                                #ApiFuzzRequestTable.columns.body,
                                 ApiFuzzRequestTable.columns.contentLength,
-                                ApiFuzzRequestTable.columns.requestMessage,
                                 ApiFuzzRequestTable.columns.invalidRequestError,
                                 ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
                                 ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
@@ -459,9 +435,8 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzResponseTable.columns.reasonPharse,
                                 ApiFuzzResponseTable.columns.setcookieHeader,
                                 ApiFuzzResponseTable.columns.headerJson,
-                                ApiFuzzResponseTable.columns.body,
+                                #ApiFuzzResponseTable.columns.body,
                                 ApiFuzzResponseTable.columns.contentLength,
-                                ApiFuzzResponseTable.columns.responseDisplayText
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
@@ -474,7 +449,47 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
     
     return rows
 
-
+def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
+    
+    try:
+        Session = scoped_session(session_factory)
+    
+        reqRow = (
+                Session.query(ApiFuzzRequestTable.columns.requestMessage)
+                .filter(ApiFuzzRequestTable.c.Id == reqId)
+                .first()
+                )
+        
+        respRow = (
+                Session.query(ApiFuzzResponseTable.columns.responseDisplayText,
+                              ApiFuzzResponseTable.columns.body.label('responseBody'))
+                .filter(ApiFuzzResponseTable.c.Id == respId)
+                .first()
+                )
+            
+        Session.close()
+        
+        if reqRow is None or respRow is None:
+            return '', '', ''
+        
+        
+        reqRowDict = reqRow._asdict()
+        respRowDict = respRow._asdict()
+        
+        reqMsg = reqRowDict['requestMessage']
+        respMsg = respRowDict['responseDisplayText']
+        responseBody = respRowDict['responseBody']
+        
+        return (reqMsg, respMsg, responseBody)
+    
+    except Exception as e:
+        eventstore.emitErr(e)
+        
+    
+    
+    return '', ''
+#ApiFuzzRequestTable.columns.,
+#ApiFuzzResponseTable.columns.
 
 def get_naughtypassword_by_id(id):
     
@@ -500,7 +515,6 @@ def get_naughtypassword_row_count():
 
 def get_naughtyusername_by_id(id) -> str:
     
-        
     Session = scoped_session(session_factory)
     
     row = Session.query(SeclistUsernameTable.columns.Content).filter(SeclistUsernameTable.c.id == id).one()
@@ -512,6 +526,7 @@ def get_naughtyusername_by_id(id) -> str:
     return rowDict['Content']
 
 def get_naughtyusername_row_count():
+    
     Session = scoped_session(session_factory)
     
     count = Session.query(SeclistUsernameTable.c.id).count()
@@ -776,7 +791,7 @@ def insert_api_fuzzrequest(fr: ApiFuzzRequest) -> None:
         Session.close()
         
     except Exception as e:
-        evts.emitErr(e)
+        eventstore.emitErr(e)
     
     
     

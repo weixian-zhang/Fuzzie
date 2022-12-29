@@ -158,3 +158,16 @@ export class FuzzDataCase_ViewModel {
     public response: FuzzResponse;
 
 }
+
+export class FuzzRequestResponseMessage {
+    requestMessage =''
+    responseMessage = ''
+    responseBody = ''
+}
+
+export class FuzzReqRespMessageQueryResult {
+    ok = '';
+    error = '';
+    result: FuzzRequestResponseMessage;
+}
+    
