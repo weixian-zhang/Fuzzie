@@ -230,6 +230,7 @@ class FuzzResponse_ViewModel(graphene.ObjectType):
 class FuzzRequestResponseMessage(graphene.ObjectType):
     requestMessage = graphene.String()
     responseMessage = graphene.String()
+    responseBody = graphene.String()
     
 class FuzzDataCase_ViewModel(graphene.ObjectType):
     fuzzDataCaseId = graphene.String()
@@ -246,4 +247,4 @@ class FuzzRequestResponseQueryResult(graphene.ObjectType):
 class FuzzReqRespMessageQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
-    result = graphene.List(FuzzRequestResponseMessage)
+    result = graphene.Field(FuzzRequestResponseMessage)

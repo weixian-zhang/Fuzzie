@@ -445,7 +445,7 @@ class WebApiFuzzer:
             fuzzResp = ApiFuzzResponse()
         
             fuzzResp.Id = shortuuid.uuid()
-            fuzzResp.datetime = datetime.now()
+            fuzzResp.datetime = datetime.utcnow()
             fuzzResp.fuzzDataCaseId = fuzzDataCaseId
             fuzzResp.fuzzcontextId = fuzzcontextId 
             
@@ -469,7 +469,7 @@ class WebApiFuzzer:
                                         f'{headersMultilineText}' \
                                         '\n' \
                                         '\n' \
-                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S.%f")}' \
+                                        f'Date: {fuzzResp.datetime.strftime("%d/%m/%y %H:%M:%S")}' \
                                         '\n' \
                                         f'Content-Length: {fuzzResp.contentLength}' \
                                         '\n' \

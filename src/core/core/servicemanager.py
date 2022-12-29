@@ -256,13 +256,14 @@ class ServiceManager:
         
         rrMsg = FuzzRequestResponseMessage()
         
-        reqMsg, respMsg = get_fuzz_request_response_messages(reqId, respId)
+        reqMsg, respMsg, respBody = get_fuzz_request_response_messages(reqId, respId)
         
         if reqMsg == '' or respMsg == '':
-            return False, f'request and response message cannot be retrieved with IDs {reqId} and {respId}', {}
+            return True, '', {}
         
         rrMsg.requestMessage = reqMsg
         rrMsg.responseMessage = respMsg
+        rrMsg.responseBody = respBody
         
         return True, '', rrMsg
         

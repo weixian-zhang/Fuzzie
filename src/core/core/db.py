@@ -449,7 +449,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
     
     return rows
 
-def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str]:
+def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
     
     try:
         Session = scoped_session(session_factory)
@@ -457,24 +457,20 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str]:
         reqRow = (
                 Session.query(ApiFuzzRequestTable.columns.requestMessage)
                 .filter(ApiFuzzRequestTable.c.Id == reqId)
-                .one()
+                .first()
                 )
         
         respRow = (
-                Session.query(ApiFuzzResponseTable.columns.responseDisplayText)
+                Session.query(ApiFuzzResponseTable.columns.responseDisplayText,
+                              ApiFuzzResponseTable.columns.body.label('responseBody'))
                 .filter(ApiFuzzResponseTable.c.Id == respId)
-                .one()
+                .first()
                 )
             
         Session.close()
         
-        if reqRow is None:
-            eventstore.emitErr(Exception(f'cannot get request message with id {reqId}'))
-            return '', ''
-        
-        if respRow is None:
-            eventstore.emitErr(Exception(f'cannot get response message with id {respId}'))
-            return '', ''
+        if reqRow is None or respRow is None:
+            return '', '', ''
         
         
         reqRowDict = reqRow._asdict()
@@ -482,8 +478,9 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str]:
         
         reqMsg = reqRowDict['requestMessage']
         respMsg = respRowDict['responseDisplayText']
+        responseBody = respRowDict['responseBody']
         
-        return (reqMsg, respMsg)
+        return (reqMsg, respMsg, responseBody)
     
     except Exception as e:
         eventstore.emitErr(e)

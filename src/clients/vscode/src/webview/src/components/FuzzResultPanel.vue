@@ -193,7 +193,7 @@ import Dropdown from 'primevue/dropdown';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
-import { FuzzDataCase } from "../Model";
+import { FuzzDataCase, FuzzRequestResponseMessage } from "../Model";
 import Sidebar from 'primevue/sidebar';
 
 class Props {
@@ -398,14 +398,29 @@ class Props {
       this.unqStatusCodesFromFDCS = unqSC;
     }
 
-    onRowClick(fcs: FuzzDataCase) {
+    async onRowClick(fcs: FuzzDataCase) {
 
-      
-      
       if (fcs.request.invalidRequestError != '') {
         this.selectedRequest = fcs.request.invalidRequestError;
+        return;
       }
 
+      const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
+
+      if(!ok) {
+        this.selectedRequest = '';
+        this.selectedResponse = '';
+        return;
+      }
+
+      if(!Utils.isNothing(result.requestMessage)) {
+        this.selectedRequest = Utils.b64d(result.requestMessage);
+      }
+
+      if(!Utils.isNothing(result.responseMessage)) {
+        this.selectedResponse = Utils.b64d(result.responseMessage);
+      }
+      
     //         } else {
     //    this.selectedRequest = Utils.b64d(fcs.request.requestMessage);
     //  }
