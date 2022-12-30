@@ -137,6 +137,7 @@ export class FuzzRequest {
     public contentLength = 0
     public requestMessage = '';
     public invalidRequestError = '';
+    public uploadFileName = ''
 }
 
 export class FuzzResponse_ViewModel {
@@ -160,14 +161,25 @@ export class FuzzDataCase_ViewModel {
 }
 
 export class FuzzRequestResponseMessage {
-    requestMessage =''
-    responseMessage = ''
-    responseBody = ''
+    public requestMessage =''
+    public responseMessage = ''
+    public responseBody = ''
 }
 
 export class FuzzReqRespMessageQueryResult {
-    ok = '';
-    error = '';
-    result: FuzzRequestResponseMessage;
+    public ok = '';
+    public error = '';
+    public result: FuzzRequestResponseMessage;
+}
+
+
+export class FuzzRequestFileUpload_ViewModel {
+    public Id = '';
+    public fileName = '';
 }
     
+export class FuzzRequestFileUploadQueryResult {
+    public ok = '';
+    public error = '';
+    public result: Array<FuzzRequestFileUpload_ViewModel|any>;
+}

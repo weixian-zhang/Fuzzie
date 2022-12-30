@@ -10,7 +10,10 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzResponse_ViewModel,
                             FuzzDataCase_ViewModel,
                             WebApiFuzzerInfo,
-                            FuzzRequestResponseMessage)
+                            FuzzRequestResponseMessage,
+                            FuzzRequestFileUpload_ViewModel,
+                            FuzzRequestFileUploadQueryResult,
+                            FuzzRequestFileDownloadContentQueryResult)
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -22,7 +25,9 @@ from db import  (get_fuzzcontext,
                  get_fuzzContexts_and_runs,
                  save_caseset_selected,
                  get_fuzz_request_response,
-                 get_fuzz_request_response_messages)
+                 get_fuzz_request_response_messages,
+                 get_uploaded_files,
+                 get_uploaded_file_content)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -220,7 +225,7 @@ class ServiceManager:
                 
                 fdc.request = FuzzRequest_ViewModel()
                 fdc.request.Id = row['fuzzRequestId']
-                fdc.request.requestDateTime = row['requestDateTime']
+                fdc.request.datetime = row['requestDateTime']
                 fdc.request.hostname
                 fdc.request.port = rowDict['port']
                 fdc.request.verb = rowDict['verb']
@@ -234,7 +239,7 @@ class ServiceManager:
                 
                 fdc.response = FuzzResponse_ViewModel()
                 fdc.response.Id = rowDict['fuzzResponseId']
-                fdc.response.responseDateTime = row['responseDateTime']
+                fdc.response.datetime = row['responseDateTime']
                 fdc.response.statusCode = rowDict['statusCode']
                 fdc.response.reasonPharse = rowDict['reasonPharse']
                 fdc.response.setcookieHeader = rowDict['setcookieHeader']
@@ -325,9 +330,76 @@ class ServiceManager:
             info.isFuzzing = False
         
         return info
+    
+    
+    def get_uploaded_files(self, requestId):
+        
+        try:
+            rows = get_uploaded_files(requestId)
             
+            if(len(rows) == 0):
+                qr = FuzzRequestFileUploadQueryResult()
+                qr.ok = True
+                qr.error = ''
+                qr.result = []
+                return qr
         
+            rfuList = []
+            
+            for r in rows:
+                
+                rDict = r._asdict()
+                
+                fu =  FuzzRequestFileUpload_ViewModel()
+                fu.Id = rDict['Id']
+                fu.fileName = rDict['fileName']
+                
+                rfuList.append(fu)
+                
+            qr = FuzzRequestFileUploadQueryResult()
+            qr.ok = True
+            qr.error = ''
+            qr.result = rfuList
+            return qr
         
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            qr = FuzzRequestFileUploadQueryResult()
+            qr.ok = False
+            qr.error = Utils.errAsText(e)
+            qr.result = []
+            return qr
+        
+    
+    def get_uploaded_file_content(self, fileUploadId):
+        
+        try:
+            row = get_uploaded_file_content(fileUploadId)
+        
+            if row is None:
+                r = FuzzRequestFileDownloadContentQueryResult()
+                r.ok = True
+                r.error = ''
+                r.result = ''
+                return r
+            
+            rDict = row._asdict()
+            
+            r = FuzzRequestFileDownloadContentQueryResult()
+            r.ok = True
+            r.error = ''
+            r.result = rDict['fileContent']
+            
+            return r
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            r = FuzzRequestFileDownloadContentQueryResult()
+            r.ok = False
+            r.error = Utils.errAsText(e)
+            r.result = ''
+            return r
+        
+
     
     
     

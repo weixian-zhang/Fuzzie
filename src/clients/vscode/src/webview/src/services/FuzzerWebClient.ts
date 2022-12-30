@@ -1,4 +1,10 @@
-import { ApiFuzzContext, ApiFuzzContextUpdate, FuzzerStatus, FuzzDataCase, FuzzRequestResponseMessage } from "../Model";
+import { ApiFuzzContext, 
+    ApiFuzzContextUpdate, 
+    FuzzerStatus, 
+    FuzzDataCase, 
+    FuzzRequestResponseMessage,
+    FuzzRequestFileUpload_ViewModel } from "../Model";
+
 import axios, {  AxiosError, AxiosResponse, } from "axios";
 import {inject} from 'vue';
 import Utils from "../Utils";
@@ -89,11 +95,7 @@ export default class FuzzerWebClient
               //TODO: log
               this.$logger.errorMsg('cannot connect to fuzzer websocket server, retrying');
 
-              this._ws = null;
-
-              if(this._ws != undefined){
-                this._ws.close();
-              }
+              this._ws.close();
             };
         } catch (error) {
             this.$logger.info(error);
@@ -249,7 +251,7 @@ export default class FuzzerWebClient
                     fuzzCaseSetId
                     request {
                         Id
-                        requestDateTime
+                        datetime
                         hostname
                         port
                         verb
@@ -262,7 +264,7 @@ export default class FuzzerWebClient
                     }
                     response {
                         Id
-                        responseDateTime
+                        datetime
                         statusCode
                         reasonPharse
                         setcookieHeader
@@ -402,6 +404,87 @@ export default class FuzzerWebClient
 
             return [false, this.errAsText(err as any[]), new FuzzRequestResponseMessage()];
         }        
+    }
+
+    public async getFuzzingUploadedFiles(reqId: string): Promise<[boolean, string, Array<FuzzRequestFileUpload_ViewModel>]> {
+
+        const query = `
+            query {
+                getUploadedFiles(requestId: "${reqId}") {
+                    ok,
+                    error,
+                    result {
+                        Id,
+                        fileName
+                    }
+                } 
+            }
+        `
+        
+        try {
+
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.getUploadedFiles.ok;
+                const error = response.data.data.getUploadedFiles.error;
+                const result = response.data.data.getUploadedFiles.result;
+                return [ok, error, result];
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                return [!hasErr, err, []];
+            }
+
+            return [false, '', []];
+
+        } catch (err) {
+
+            this.$logger.error(err);
+
+            return [false, this.errAsText(err as any[]), []];
+        }        
+    }
+
+    public async getFuzzFileContent(fuzzFileUploadId): Promise<string>
+    {
+        const query = `
+            query {
+                downloadFuzzFile(fuzzFileUploadId: "${fuzzFileUploadId}") {
+                    ok,
+                    error,
+                    result
+                } 
+            }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const result = response.data.data.downloadFuzzFile.result;
+                return result;
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                this.$logger.errorMsg(err);
+                return '';
+            }
+
+            return '';
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return '';
+        }
     }
 
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {

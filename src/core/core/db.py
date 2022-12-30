@@ -32,6 +32,7 @@ apifuzzCaseSetRuns_TableName = 'ApiFuzzCaseSetRuns'
 apifuzzDataCase_TableName = 'ApiFuzzDataCase'
 apifuzzRequest_TableName = 'ApiFuzzRequest'
 apifuzzResponse_TableName = 'ApiFuzzResponse'
+apifuzzRequestFileUpload_TableName = 'ApiFuzzRequestFileUpload'
 apifuzzRunSummaryPerCaseSet_TableName = 'ApiFuzzRunSummaryPerCaseSetTable'
 
 ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
@@ -143,6 +144,16 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
                             )
 
+# RowNumber for pagination
+ApiFuzzRequestFileUploadTable = Table(apifuzzRequestFileUpload_TableName, metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Id', String),
+                            Column('datetime', DateTime),
+                            Column('fileName', String),
+                            Column('fileContent', String),
+                            Column('fuzzRequestId', String, ForeignKey(f'{ApiFuzzRequestTable}.Id')),
+                            Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')))
 
 
 RandomImageTable = Table('RandomImage', metadata,
@@ -426,16 +437,15 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzRequestTable.columns.querystring,
                                 ApiFuzzRequestTable.columns.url,
                                 ApiFuzzRequestTable.columns.headers,
-                                #ApiFuzzRequestTable.columns.body,
                                 ApiFuzzRequestTable.columns.contentLength,
                                 ApiFuzzRequestTable.columns.invalidRequestError,
+                                
                                 ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
                                 ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
                                 ApiFuzzResponseTable.columns.statusCode,
                                 ApiFuzzResponseTable.columns.reasonPharse,
                                 ApiFuzzResponseTable.columns.setcookieHeader,
                                 ApiFuzzResponseTable.columns.headerJson,
-                                #ApiFuzzResponseTable.columns.body,
                                 ApiFuzzResponseTable.columns.contentLength,
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
@@ -444,10 +454,34 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .all()
                 )
-        
+    
     Session.close()
     
     return rows
+
+def get_uploaded_files(requestId):
+    
+    Session = scoped_session(session_factory)
+    
+    rows = (Session
+            .query(ApiFuzzRequestFileUploadTable.columns.Id,
+                   ApiFuzzRequestFileUploadTable.columns.fileName)
+            .filter(ApiFuzzRequestFileUploadTable.c.fuzzRequestId == requestId)
+            .all())
+    
+    return rows
+
+def get_uploaded_file_content(fuzzRequestFileUploadId):
+    Session = scoped_session(session_factory)
+    
+    row = (Session
+            .query(ApiFuzzRequestFileUploadTable.columns.fileContent)
+            .filter(ApiFuzzRequestFileUploadTable.c.Id == fuzzRequestFileUploadId)
+            .first())
+    
+    return row
+    
+    
 
 def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
     
@@ -709,6 +743,28 @@ def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
                     Id = Id,
                     startTime = datetime.now(),
                     status = 'fuzzing',
+                    fuzzcontextId = fuzzcontextId
+                   )
+         )
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(stmt)
+    
+    Session.commit()
+    Session.close()
+    
+
+def insert_api_fuzzrequest_fileupload(Id, fileName,fileContent, fuzzRequestId, fuzzDataCaseId, fuzzcontextId) -> None:
+    stmt = (
+            insert(ApiFuzzRequestFileUploadTable).
+            values(
+                    Id=Id,
+                    datetime = datetime.now(),
+                    fileName = fileName,
+                    fileContent = fileContent,
+                    fuzzRequestId = fuzzRequestId,
+                    fuzzDataCaseId = fuzzDataCaseId,
                     fuzzcontextId = fuzzcontextId
                    )
          )

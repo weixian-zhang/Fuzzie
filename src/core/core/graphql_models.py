@@ -207,7 +207,7 @@ class FuzzCaseSetRunSummaryQueryResult(graphene.ObjectType):
     
 class FuzzRequest_ViewModel(graphene.ObjectType):
     Id = graphene.String()
-    requestDateTime = graphene.DateTime()
+    datetime = graphene.DateTime()
     hostname = graphene.String()
     port =  graphene.Int()
     verb = graphene.String()
@@ -220,7 +220,7 @@ class FuzzRequest_ViewModel(graphene.ObjectType):
 
 class FuzzResponse_ViewModel(graphene.ObjectType): 
     Id = graphene.String()
-    responseDateTime = graphene.DateTime()
+    datetime = graphene.DateTime()
     statusCode = graphene.String()
     reasonPharse = graphene.String()
     headerJson = graphene.String()
@@ -248,3 +248,18 @@ class FuzzReqRespMessageQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.Field(FuzzRequestResponseMessage)
+
+
+class FuzzRequestFileUpload_ViewModel(graphene.ObjectType):
+    Id = graphene.String()
+    fileName = graphene.String()
+    
+class FuzzRequestFileUploadQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(FuzzRequestFileUpload_ViewModel)
+    
+class FuzzRequestFileDownloadContentQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.String()

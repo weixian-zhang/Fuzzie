@@ -7,17 +7,51 @@
       class="mt-2 border-1">
      
      <!--view text in full Side Bar-->
-     <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
-      <v-textarea auto-grow
-            outlined
-            rows="1"
-            readonly
-            v-model="tableValViewInSizeBar" />
+     <Sidebar v-model:visible="showRequestValueSideBar" position="right" style="width:700px;">
+      <TabView>
+        <TabPanel header="Request Message">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableRequestValueSizeBar" />
+        </TabPanel>
+        <TabPanel header="Fuzzing Files">
+          <v-table  density="compact" fixed-header height="430" hover="true" >          
+            <tbody>
+              <tr v-for="item in fuzzingUploadedFiles"
+              :key="item.Id">
+                <td>{{ item.fileName }}</td>
+                <td><a href="#" @click="downloadFuzzFile(item.Id, item.fileName)">download </a></td>
+              </tr>
+            </tbody>
+          </v-table>
+              
+        </TabPanel>
+      </TabView>      
+    </Sidebar>
+
+    <Sidebar v-model:visible="showResponseValueSideBar" position="right" style="width:700px;">
+      <TabView>
+        <TabPanel header="Response Message">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableResponseValueSizeBar" />
+        </TabPanel>
+        <TabPanel header="JSON">            
+            coming soon  
+        </TabPanel>
+        <TabPanel header="HTML">            
+            coming soon  
+        </TabPanel>
+      </TabView>      
     </Sidebar>
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
-      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search any"
+      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search"
        v-model="fullTextSearchValue"
         @input="onfullTextSearchValueChange" />
 
@@ -34,102 +68,95 @@
       <SplitterPanel :size="50">
 
         <v-table density="compact" fixed-header height="430" hover="true" >          
-        <thead>
-          <tr>
-            <th class="text-left">
-                <div class="dropdown">
-                  <button class="btn-sm btn-info btn-sm dropdown-toggle">Status Code</button>
-                  <div class="dropdown-content">
-                    <a href="#" 
-                    v-for="item in unqStatusCodesFromFDCS"
-                    :key="item">{{ item }}</a>
+          <thead>
+            <tr>
+              <th class="text-left">
+                  <div class="dropdown">
+                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Status Code</button>
+                    <div class="dropdown-content">
+                      <a href="#" 
+                      v-for="item in unqStatusCodesFromFDCS"
+                      :key="item">{{ item }}</a>
+                    </div>
                   </div>
-                </div>
-            </th>
-            <th class="text-left">
-              Path
-            </th>
-            <th class="text-left">
-              Reason
-            </th>
-            <th class="text-left">
-              
-              <div class="dropdown">
-                  <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
-                  <div class="dropdown-content">
-                    <v-radio-group inline v-model="tableFilterSmallerLarger" >
-                      <v-radio
-                        color="cyan"
-                        label=">="
-                        value=">="
-                      ></v-radio>
-                      <v-radio
-                        color="cyan"
-                        label="<="
-                        value="<="
-                      ></v-radio>
-                    </v-radio-group>
-                    <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange" v-model="contentLengthInputValue" />
+              </th>
+              <th class="text-left">
+                Path
+              </th>
+              <th class="text-left">
+                Reason
+              </th>
+              <th class="text-left">
                 
-                  </div>                 
-                </div>
-            </th>
-            <th class="text-left">
-              Duration(secs)
-            </th>
-            <th class="text-left">
-              File
-            </th>
-          </tr>
-          <tr v-show="isDataLoadingInProgress">
-            <th colspan="6">
-            <v-progress-linear
-                  indeterminate
-                  rounded
-                  color="cyan">
-                </v-progress-linear>
-            </th>
-          </tr>
+                <div class="dropdown">
+                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
+                    <div class="dropdown-content">
+                      <v-radio-group inline v-model="tableFilterSmallerLarger" >
+                        <v-radio
+                          color="cyan"
+                          label=">="
+                          value=">="
+                        ></v-radio>
+                        <v-radio
+                          color="cyan"
+                          label="<="
+                          value="<="
+                        ></v-radio>
+                      </v-radio-group>
+                      <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange" v-model="contentLengthInputValue" />
+                  
+                    </div>                 
+                  </div>
+              </th>
+              <th class="text-left">
+                Duration(secs)
+              </th>
+            </tr>
+            <tr v-show="isDataLoadingInProgress">
+              <th colspan="6">
+              <v-progress-linear
+                    indeterminate
+                    rounded
+                    color="cyan">
+                  </v-progress-linear>
+              </th>
+            </tr>
+            
+          </thead>
+          <tbody>
           
-        </thead>
-        <tbody>
-         
-          <tr
-            v-for="item in fdcsDataFiltered"
-            :key="item.response.Id"
-            @click="(onRowClick(item), selectedRow= item.request.Id)"
-            :style="item.request.Id === selectedRow ? 'background-color:lightgrey;' : ''">
+            <tr
+              v-for="item in fdcsDataFiltered"
+              :key="item.response.Id"
+              @click="(onRowClick(item), selectedRow= item.request.Id)"
+              :style="item.request.Id === selectedRow ? 'background-color:lightgrey;' : ''">
 
 
-            <td>{{ item.response.statusCode }}</td>
-            
-            <td>
-              <span style="cursor: pointer" @click="(
-                tableValViewInSizeBar=item.request.path,
-                showFullValueSideBar = true
-              )">
-                {{ shortenValueInTable(item.request.path, 15) }}
-              </span>
-            </td>
-            
-            <td>
-              {{shortenValueInTable(item.response.reasonPharse, 15) }}
-            </td>
+              <td>{{ item.response.statusCode }}</td>
+              
+              <td>
+                <span style="cursor: pointer" @click="(
+                  tableRequestValueSizeBar=item.request.path,
+                  showRequestValueSideBar = true
+                )">
+                  {{ shortenValueInTable(item.request.path, 15) }}
+                </span>
+              </td>
+              
+              <td>
+                {{shortenValueInTable(item.response.reasonPharse, 15) }}
+              </td>
 
-            <td>
-              {{ item.response.contentLength }}
-            </td>
+              <td>
+                {{ item.response.contentLength }}
+              </td>
 
-            <td>
-              {{ timeDiff(item.request.requestDateTime, item.response.responseDateTime) }}
-            </td>
-            
-            <td>
-              <!-- {{ item.request.file }} -->
-            </td>
+              <td>
+                {{ getTimeDiff(item.request.datetime, item.response.datetime) }}
+              </td>
 
-          </tr>
-        </tbody>
+            </tr>
+          </tbody>
       </v-table>
       </SplitterPanel>
 
@@ -144,8 +171,8 @@
                     color="cyan"
                     @click="(
                       selectedRequest != '' ? (
-                    tableValViewInSizeBar=selectedRequest,
-                    showFullValueSideBar = true) : ''
+                    tableRequestValueSizeBar=selectedRequest,
+                    showRequestValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -160,8 +187,8 @@
                     color="cyan"
                     @click="(
                       selectedResponse != '' ?
-                    (tableValViewInSizeBar=selectedResponse,
-                    showFullValueSideBar = true) : ''
+                    (tableResponseValueSizeBar=selectedResponse,
+                    showResponseValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -193,8 +220,10 @@ import Dropdown from 'primevue/dropdown';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
-import { FuzzDataCase, FuzzRequestResponseMessage } from "../Model";
+import { FuzzDataCase, FuzzRequestFileUpload_ViewModel } from "../Model";
 import Sidebar from 'primevue/sidebar';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
 
 class Props {
   toastInfo: any = {};
@@ -210,7 +239,9 @@ class Props {
     Splitter,
     SplitterPanel,
     Dropdown,
-    Sidebar
+    Sidebar,
+    TabView,
+    TabPanel
   },
   watch: {
 
@@ -234,9 +265,12 @@ class Props {
     fdcsDataFiltered: Array<FuzzDataCase> = [];
     fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
+    fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
     
-    showFullValueSideBar = false;
-    tableValViewInSizeBar = '';
+    showRequestValueSideBar = false;
+    tableRequestValueSizeBar = '';
+    showResponseValueSideBar = false;
+    tableResponseValueSizeBar = ''
 
     fullTextSearchValue = '';
 
@@ -405,6 +439,7 @@ class Props {
         return;
       }
 
+      //get request and response messages
       const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
 
       if(!ok) {
@@ -420,21 +455,34 @@ class Props {
       if(!Utils.isNothing(result.responseMessage)) {
         this.selectedResponse = Utils.b64d(result.responseMessage);
       }
-      
-    //         } else {
-    //    this.selectedRequest = Utils.b64d(fcs.request.requestMessage);
-    //  }
-      
-    //  if(!Utils.isNothing(fcs.response) && !Utils.isNothing(fcs.response.responseDisplayText)) {
-    //    this.selectedResponse = Utils.b64d(fcs.response.responseDisplayText);
-    //  }
-     // else {
-    //    this.selectedResponse = '';
-    //  } 
 
+      //get uploaded files
+      const [fok, ferror, fresult] = await this.webclient.getFuzzingUploadedFiles(fcs.request.Id);
+
+      if(!fok) {
+        this.$logger.errorMsg(ferror);
+        return;
+      }
+
+      this.fuzzingUploadedFiles = fresult;
     }
 
-    
+    async downloadFuzzFile(fuzzFileUploadId, fileName) {
+
+      const content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+
+      if(content == '') {
+        this.toastInfo('file content is empty');
+      }
+
+      const url = window.URL.createObjectURL(new Blob([content]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = "fileDownloader"; //arbitrary name of iframe
+      link.setAttribute('download', `${fileName}`);
+      document.body.appendChild(link);
+      link.click(); 
+    }
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
@@ -460,16 +508,16 @@ class Props {
         this.showDropDownStatusCodeFilter = true;
     }
 
-    timeDiff(a: string, b: string) {
+    getTimeDiff(a: string, b: string) {
 
       if(b == null) {
         return 0;
       }
 
-       const aDate: Date = new Date(a);
-       const bDate: Date = new Date(b);
-
-       var seconds = (bDate.getTime() - aDate.getTime()) / 1000;
+       var startDate = new Date(a);
+      // Do your operations
+      var endDate   = new Date(b);
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
 
        return parseFloat(seconds.toFixed(2));
     }
