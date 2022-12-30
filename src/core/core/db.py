@@ -439,7 +439,6 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzRequestTable.columns.headers,
                                 ApiFuzzRequestTable.columns.contentLength,
                                 ApiFuzzRequestTable.columns.invalidRequestError,
-                                #ApiFuzzRequestFileUploadTable.columns.fileName,
                                 
                                 ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
                                 ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
@@ -453,30 +452,29 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
-                    #.join(ApiFuzzRequestFileUploadTable, ApiFuzzRequestFileUploadTable.columns.fuzzRequestId == ApiFuzzRequestTable.columns.Id, isouter=True)
                     .all()
                 )
-    fnList = []
     
-    for r in rows:
-        rDict = r._asdict()
-        requestId = rDict['fuzzRequestId']
-        fnRows = (Session
-            .query(ApiFuzzRequestFileUploadTable.columns.fileName)
-            .filter(ApiFuzzRequestFileUploadTable.c.fuzzRequestId == requestId)
-            .all())
-        
-        if len(fnRows) > 0:
-            for fnr in fnRows:
-                fnrDict = fnr._asdict()
-                fileName = fnrDict['fileName']
-                fnList.append(fileName)
-            
-        
-        
     Session.close()
     
     return rows
+
+def get_uploaded_files(requestId):
+    
+    Session = scoped_session(session_factory)
+    
+    rows = (Session
+            .query(ApiFuzzRequestFileUploadTable.columns.Id,
+                   ApiFuzzRequestFileUploadTable.columns.fileName)
+            .filter(ApiFuzzRequestFileUploadTable.c.fuzzRequestId == requestId)
+            .all())
+    
+    return rows
+
+def get_uploaded_file_content(fuzzRequestFileUploadId):
+    pass
+    
+    
 
 def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
     

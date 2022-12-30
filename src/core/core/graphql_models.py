@@ -217,7 +217,6 @@ class FuzzRequest_ViewModel(graphene.ObjectType):
     headers = graphene.String()
     contentLength = graphene.Int()
     invalidRequestError = graphene.String()
-    uploadFileName = graphene.String()
 
 class FuzzResponse_ViewModel(graphene.ObjectType): 
     Id = graphene.String()
@@ -249,3 +248,13 @@ class FuzzReqRespMessageQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.Field(FuzzRequestResponseMessage)
+
+
+class FuzzRequestFileUpload_ViewModel(graphene.ObjectType):
+    Id = graphene.String()
+    fileName = graphene.String()
+    
+class FuzzRequestFileUploadQueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.List(FuzzRequestFileUpload_ViewModel)

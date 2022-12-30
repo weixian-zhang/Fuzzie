@@ -192,7 +192,7 @@ class WebApiFuzzer:
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
             # update run status
-            self.fuzzcaseset_done(caseSetRunSummaryId, self.apifuzzcontext.Id)
+            self.fuzzcaseset_done()
                 
             
         except Exception as e:
@@ -344,7 +344,7 @@ class WebApiFuzzer:
 
             
                 
-    def fuzzcaseset_done(self, caseSetRunId, fuzzContextId):
+    def fuzzcaseset_done(self):
         
         try:
             
@@ -436,8 +436,6 @@ class WebApiFuzzer:
                     headerMultilineText = headerMultilineText + f'{x}:{headers[x]}\n'
                 
             rm = f'{fr.verb} {fr.url}' \
-                                '\n' \
-                                 f'Date: {fr.datetime.strftime("%d/%m/%y %H:%M:%S")}' \
                                  '\n' \
                                  '\n' \
                                 f'{headerMultilineText}' \

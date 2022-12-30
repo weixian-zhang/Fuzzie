@@ -171,4 +171,15 @@ export class FuzzReqRespMessageQueryResult {
     public error = '';
     public result: FuzzRequestResponseMessage;
 }
+
+
+export class FuzzRequestFileUpload_ViewModel {
+    public Id = '';
+    public fileName = '';
+}
     
+export class FuzzRequestFileUploadQueryResult {
+    public ok = '';
+    public error = '';
+    public result: Array<FuzzRequestFileUpload_ViewModel|any>;
+}

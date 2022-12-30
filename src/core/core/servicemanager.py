@@ -10,7 +10,9 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzResponse_ViewModel,
                             FuzzDataCase_ViewModel,
                             WebApiFuzzerInfo,
-                            FuzzRequestResponseMessage)
+                            FuzzRequestResponseMessage,
+                            FuzzRequestFileUpload_ViewModel,
+                            FuzzRequestFileUploadQueryResult)
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -22,7 +24,9 @@ from db import  (get_fuzzcontext,
                  get_fuzzContexts_and_runs,
                  save_caseset_selected,
                  get_fuzz_request_response,
-                 get_fuzz_request_response_messages)
+                 get_fuzz_request_response_messages,
+                 get_uploaded_files,
+                 get_uploaded_file_content)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -231,7 +235,6 @@ class ServiceManager:
                 #fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
                 fdc.request.invalidRequestError = rowDict['invalidRequestError']
-                fdc.request.uploadFileName = rowDict['fileName']
                 
                 fdc.response = FuzzResponse_ViewModel()
                 fdc.response.Id = rowDict['fuzzResponseId']
@@ -326,8 +329,64 @@ class ServiceManager:
             info.isFuzzing = False
         
         return info
+    
+    
+    def get_uploaded_files(self, requestId):
+        
+        try:
+            rows = get_uploaded_files(requestId)
+            
+            if(len(rows) == 0):
+                qr = FuzzRequestFileUploadQueryResult()
+                qr.ok = True
+                qr.error = ''
+                qr.result = []
+                return qr
+        
+            rfuList = []
+            
+            for r in rows:
+                
+                rDict = r._asdict()
+                
+                fu =  FuzzRequestFileUpload_ViewModel()
+                fu.Id = rDict['Id']
+                fu.fileName = rDict['fileName']
+                
+                rfuList.append(fu)
+                
+            qr = FuzzRequestFileUploadQueryResult()
+            qr.ok = True
+            qr.error = ''
+            qr.result = rfuList
+            return qr
+        
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            qr = FuzzRequestFileUploadQueryResult()
+            qr.ok = False
+            qr.error = Utils.errAsText(e)
+            qr.result = []
+            return qr
+        
+        
+        
+        
+        
+        
+            
             
         
+        
+
+
+            
+    
+    
+    
+    def get_uploaded_file_content(self, Id):
+        pass
+    #get_uploaded_file_content
         
     
     
