@@ -7,14 +7,14 @@
       class="mt-2 border-1">
      
      <!--view text in full Side Bar-->
-     <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:700px;">
+     <Sidebar v-model:visible="showRequestValueSideBar" position="right" style="width:700px;">
       <TabView>
         <TabPanel header="Request Message">
           <v-textarea auto-grow
                   outlined
                   rows="1"
                   readonly
-                  v-model="tableValViewInSizeBar" />
+                  v-model="tableRequestValueSizeBar" />
         </TabPanel>
         <TabPanel header="Fuzzing Files">
           <v-table  density="compact" fixed-header height="430" hover="true" >          
@@ -27,6 +27,24 @@
             </tbody>
           </v-table>
               
+        </TabPanel>
+      </TabView>      
+    </Sidebar>
+
+    <Sidebar v-model:visible="showResponseValueSideBar" position="right" style="width:700px;">
+      <TabView>
+        <TabPanel header="Response Message">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableResponseValueSizeBar" />
+        </TabPanel>
+        <TabPanel header="JSON">            
+            coming soon  
+        </TabPanel>
+        <TabPanel header="HTML">            
+            coming soon  
         </TabPanel>
       </TabView>      
     </Sidebar>
@@ -118,8 +136,8 @@
               
               <td>
                 <span style="cursor: pointer" @click="(
-                  tableValViewInSizeBar=item.request.path,
-                  showFullValueSideBar = true
+                  tableRequestValueSizeBar=item.request.path,
+                  showRequestValueSideBar = true
                 )">
                   {{ shortenValueInTable(item.request.path, 15) }}
                 </span>
@@ -153,8 +171,8 @@
                     color="cyan"
                     @click="(
                       selectedRequest != '' ? (
-                    tableValViewInSizeBar=selectedRequest,
-                    showFullValueSideBar = true) : ''
+                    tableRequestValueSizeBar=selectedRequest,
+                    showRequestValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -169,8 +187,8 @@
                     color="cyan"
                     @click="(
                       selectedResponse != '' ?
-                    (tableValViewInSizeBar=selectedResponse,
-                    showFullValueSideBar = true) : ''
+                    (tableResponseValueSizeBar=selectedResponse,
+                    showResponseValueSideBar = true) : ''
                   )">
                   view
                   </v-btn>
@@ -249,8 +267,10 @@ class Props {
     unqStatusCodesFromFDCS: Array<string> = []
     fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
     
-    showFullValueSideBar = false;
-    tableValViewInSizeBar = '';
+    showRequestValueSideBar = false;
+    tableRequestValueSizeBar = '';
+    showResponseValueSideBar = false;
+    tableResponseValueSizeBar = ''
 
     fullTextSearchValue = '';
 
