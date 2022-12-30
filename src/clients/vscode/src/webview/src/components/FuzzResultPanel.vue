@@ -22,7 +22,7 @@
               <tr v-for="item in fuzzingUploadedFiles"
               :key="item.Id">
                 <td>{{ item.fileName }}</td>
-                <td><a href="#">download </a></td>
+                <td><a href="#" @click="downloadFuzzFile(item.Id, item.fileName)">download </a></td>
               </tr>
             </tbody>
           </v-table>
@@ -51,7 +51,7 @@
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
-      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search any"
+      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search"
        v-model="fullTextSearchValue"
         @input="onfullTextSearchValueChange" />
 
@@ -467,7 +467,22 @@ class Props {
       this.fuzzingUploadedFiles = fresult;
     }
 
-    
+    async downloadFuzzFile(fuzzFileUploadId, fileName) {
+
+      const content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+
+      if(content == '') {
+        this.toastInfo('file content is empty');
+      }
+
+      const url = window.URL.createObjectURL(new Blob([content]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = "fileDownloader"; //arbitrary name of iframe
+      link.setAttribute('download', `${fileName}`);
+      document.body.appendChild(link);
+      link.click(); 
+    }
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {

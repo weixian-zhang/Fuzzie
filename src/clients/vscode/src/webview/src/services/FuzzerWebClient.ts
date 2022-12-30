@@ -450,6 +450,43 @@ export default class FuzzerWebClient
         }        
     }
 
+    public async getFuzzFileContent(fuzzFileUploadId): Promise<string>
+    {
+        const query = `
+            query {
+                downloadFuzzFile(fuzzFileUploadId: "${fuzzFileUploadId}") {
+                    ok,
+                    error,
+                    result
+                } 
+            }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const result = response.data.data.downloadFuzzFile.result;
+                return result;
+            }
+
+            const [hasErr, err] = this.hasGraphqlErr(response);
+
+            if(hasErr)
+            {
+                this.$logger.errorMsg(err);
+                return '';
+            }
+
+            return '';
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return '';
+        }
+    }
+
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
         const query = `
         mutation fuzz {

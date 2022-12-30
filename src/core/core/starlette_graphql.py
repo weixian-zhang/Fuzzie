@@ -13,6 +13,7 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             FuzzRequestResponseMessage,
                             FuzzReqRespMessageQueryResult,
                             FuzzRequestFileUploadQueryResult,
+                            FuzzRequestFileDownloadContentQueryResult
                             )
 from utils import Utils 
 
@@ -56,6 +57,8 @@ class Query(graphene.ObjectType):
     
     
     getUploadedFiles = graphene.Field(FuzzRequestFileUploadQueryResult, requestId = graphene.Argument(graphene.String))
+    
+    downloadFuzzFile = graphene.Field(FuzzRequestFileDownloadContentQueryResult, fuzzFileUploadId = graphene.Argument(graphene.String))
     
     def resolve_fuzzerStatus(self, info):
         
@@ -125,6 +128,14 @@ class Query(graphene.ObjectType):
         sm = ServiceManager()
         
         result = sm.get_uploaded_files(requestId)
+        
+        return result
+    
+    def resolve_downloadFuzzFile(self, info, fuzzFileUploadId):
+        
+        sm = ServiceManager()
+        
+        result = sm.get_uploaded_file_content(fuzzFileUploadId)
         
         return result
         

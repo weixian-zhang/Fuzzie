@@ -472,7 +472,14 @@ def get_uploaded_files(requestId):
     return rows
 
 def get_uploaded_file_content(fuzzRequestFileUploadId):
-    pass
+    Session = scoped_session(session_factory)
+    
+    row = (Session
+            .query(ApiFuzzRequestFileUploadTable.columns.fileContent)
+            .filter(ApiFuzzRequestFileUploadTable.c.Id == fuzzRequestFileUploadId)
+            .first())
+    
+    return row
     
     
 

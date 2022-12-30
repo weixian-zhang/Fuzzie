@@ -12,7 +12,8 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             WebApiFuzzerInfo,
                             FuzzRequestResponseMessage,
                             FuzzRequestFileUpload_ViewModel,
-                            FuzzRequestFileUploadQueryResult)
+                            FuzzRequestFileUploadQueryResult,
+                            FuzzRequestFileDownloadContentQueryResult)
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -369,25 +370,36 @@ class ServiceManager:
             qr.result = []
             return qr
         
+    
+    def get_uploaded_file_content(self, fileUploadId):
         
+        try:
+            row = get_uploaded_file_content(fileUploadId)
         
-        
-        
-        
+            if row is None:
+                r = FuzzRequestFileDownloadContentQueryResult()
+                r.ok = True
+                r.error = ''
+                r.result = ''
+                return r
             
+            rDict = row._asdict()
             
-        
+            r = FuzzRequestFileDownloadContentQueryResult()
+            r.ok = True
+            r.error = ''
+            r.result = rDict['fileContent']
+            
+            return r
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            r = FuzzRequestFileDownloadContentQueryResult()
+            r.ok = False
+            r.error = Utils.errAsText(e)
+            r.result = ''
+            return r
         
 
-
-            
-    
-    
-    
-    def get_uploaded_file_content(self, Id):
-        pass
-    #get_uploaded_file_content
-        
     
     
     
