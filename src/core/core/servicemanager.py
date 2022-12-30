@@ -2,6 +2,7 @@
 
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
+from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
 from graphql_models import (ApiFuzzContext_Runs_ViewModel, 
                             ApiFuzzContextUpdate, 
@@ -91,55 +92,67 @@ class ServiceManager:
                                 fuzzcaseToExec,
                                 authnType):
         
-        openapi3Dis = OpenApi3ApiDiscover()
+        
         isApiDisOK = True
         error = ''
         apicontext= None
         
-        rtStr=  base64.b64decode(requestTextContent).decode('UTF-8')
-        openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
+        try:
+            
+            if apiDiscoveryMethod == 'openapi3':
+                
+                if openapi3Content == '':
+                    return False, 'OpenApi3 spec content is empty'
+                
+                openapi3Dis = OpenApi3ApiDiscover()
+                
+                openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
+                
+                isApiDisOK, error, apicontext = openapi3Dis.create_apicontext(openapi3Str)
+                
+                if not isApiDisOK:
+                    return False, error
+                
+                fcc = OpenApi3FuzzContextCreator()
+                
+                fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
+                                                    apicontext=apicontext,
+                                                    name=name,
+                                                    hostname=hostname,
+                                                    port=port,
+                                                    requestTextContent = requestTextContent,
+                                                    requestTextFilePath = requestTextFilePath,
+                                                    openapi3FilePath = openapi3FilePath,
+                                                    openapi3Url = openapi3Url,
+                                                    openapi3Content = openapi3Content,
+                                                    fuzzcaseToExec=fuzzcaseToExec,
+                                                    authnType=authnType,
+                                                    basicUsername=basicUsername,
+                                                    basicPassword=basicPassword,
+                                                    bearerTokenHeader=bearerTokenHeader,
+                                                    bearerToken=bearerToken,
+                                                    apikeyHeader=apikeyHeader,
+                                                    apikey=apikey)
+                
+                insert_db_fuzzcontext(fuzzcontext)
+                
+            elif apiDiscoveryMethod == 'request_message':
+                
+                if requestTextContent == '':
+                    return False, 'Request text content is empty'
+                
+                rmStr=  base64.b64decode(requestTextContent).decode('UTF-8')
+                
+                rmFuzzContextCreator = RequestMessageFuzzContextCreator()
+            
+            
+            return True, ''
+            
+        except Exception as e:
+            self.eventstore.emitErr(e, 'servicemanager.new_api_fuzzcontext')
+            return (False, Utils.errAsText(e))
         
-        if apiDiscoveryMethod == 'openapi3':
-            
-            if openapi3Str == '':
-                return False, 'OpenApi3 spec content is empty'
-            
-            isApiDisOK, error, apicontext = openapi3Dis.create_apicontext_from_openapi3(openapi3Str)
-            
-        elif apiDiscoveryMethod == 'request-text':
-            
-            if rtStr == '':
-                return False, 'Request text content is empty'
-            
-            pass
         
-        if not isApiDisOK:
-            return False, error
-            
-        fcc = OpenApi3FuzzContextCreator()
-        
-        fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
-                                            apicontext=apicontext,
-                                            name=name,
-                                            hostname=hostname,
-                                            port=port,
-                                            requestTextContent = requestTextContent,
-                                            requestTextFilePath = requestTextFilePath,
-                                            openapi3FilePath = openapi3FilePath,
-                                            openapi3Url = openapi3Url,
-                                            openapi3Content = openapi3Content,
-                                            fuzzcaseToExec=fuzzcaseToExec,
-                                            authnType=authnType,
-                                            basicUsername=basicUsername,
-                                            basicPassword=basicPassword,
-                                            bearerTokenHeader=bearerTokenHeader,
-                                            bearerToken=bearerToken,
-                                            apikeyHeader=apikeyHeader,
-                                            apikey=apikey)
-        
-        insert_db_fuzzcontext(fuzzcontext)
-        
-        return True, ''
     
     def save_caseset_selected(self, caseSetSelected):
         
