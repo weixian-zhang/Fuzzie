@@ -7,6 +7,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+import string
 import random
 import uuid
 import datetime
@@ -19,7 +20,24 @@ class FileNameCorpora:
         return cls.instance
     
     def __init__(self) -> None:
-
+        
+        self.imageExtensions = [
+            '.jpg',
+            '.png',
+            '.gif',
+            '.webp',
+            '.tiff',
+            '.psd',
+            '.raw',
+            '.bmp',
+            '.heif',
+            '.indd',
+            '.jpeg',
+            '.svg',
+            '.ai',
+            '.eps',
+        ]
+        
         self.extensions = ['7z',
                             'asmx',
                             'asp',
@@ -117,6 +135,12 @@ class FileNameCorpora:
         self.data = {}
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
+        
+        # lowerLetter = string.ascii_lowercase
+        # upperLetters = string.ascii_uppercase
+        # hexs = string.hexdigits
+        # punctuations = string.punctuation
+        # letters = string.ascii_lowercase
 
     
     def load_corpora(self):
@@ -126,7 +150,7 @@ class FileNameCorpora:
         
         ext = 'pdf' #set a default, no particular reason for pdf
         
-        basename = str(uuid.uuid4())[:random.randint(4, 12)]
+        basename = str(uuid.uuid4())[:random.randint(0, 256)]    # more than 255 chars
         
         randY = random.randint(1970, 2022)
         randMth = random.randint(1, 12)
@@ -141,7 +165,8 @@ class FileNameCorpora:
             extIndex =  random.randint(0, len(self.extensions) - 1)
             ext = self.extensions[extIndex]
         elif fileType == 'image':
-            ext = 'png'
+            extIndex =  random.randint(0, len(self.imageExtensions) - 1)
+            ext = self.imageExtensions[extIndex]
             
         fn = f'{basename}_{suffix}.{ext}'
         
