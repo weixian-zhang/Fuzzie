@@ -4,6 +4,7 @@ import shortuuid
 from datetime import datetime
 import base64
 from urllib.parse import urlparse
+import json
 
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
@@ -121,12 +122,24 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.path = path
             fuzzcaseSet.pathDataTemplate = path
             
-            #querystring
-            qs = self.get_querystring(multilineBlock)
+            # get querystring
+            # lineIndex is the index of the multiline list when querystring ends at
+            # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
+            lineIndex, qs = self.get_querystring(multilineBlock)
             fuzzcaseSet.querystringNonTemplate = qs
             fuzzcaseSet.querystringDataTemplate = qs
             
+            #remove requestline lines including multi-line querystring
+            self.popItemsInList(lineIndex, multilineBlock)
+            # for idx in range(0, lineIndex):
+            #     del multilineBlock[idx]
+                
             # get headers
+            lineIndex, headers = self.get_headers(multilineBlock)
+            fuzzcaseSet.headerNonTemplate = json.dumps(headers)
+            fuzzcaseSet.headerDataTemplate = headers
+            
+            self.popItemsInList(lineIndex, multilineBlock)
             
             # get body
                 
@@ -203,7 +216,7 @@ class RequestMessageFuzzContextCreator:
         # ?page=2
         # &pageSize=10
         
-    def get_querystring(self, multilineBlock) -> str:
+    def get_querystring(self, multilineBlock) -> tuple([int, str]):
         
         qsChars = ['?', '&']
         qsTokens = []
@@ -227,23 +240,23 @@ class RequestMessageFuzzContextCreator:
             pass
            
 
-        currentIndex = 0
-        while self.is_next_line_querystring(multilineBlock, currentIndex, qsChars, qsTokens):
-            currentIndex = currentIndex + 1
+        lineIndex = 0
+        while self.is_next_line_querystring(multilineBlock, lineIndex, qsChars, qsTokens):
+            lineIndex = lineIndex + 1
             
         mergedQSTokens = "".join(qsTokens)
         querystring = querystring + mergedQSTokens
         
-        return querystring
+        return lineIndex, querystring
     
-    def is_next_line_querystring(self, lines, currentIndex, qsChars, qsTokens: list[str]):
+    def is_next_line_querystring(self, lines, lineIndex, qsChars, qsTokens: list[str]):
         
         linesLen = len(lines) - 1
-        nextIdx = currentIndex + 1
+        nextLineIdx = lineIndex + 1
         
-        if(nextIdx <= linesLen):
+        if(nextLineIdx <= linesLen):
             
-            qsline = lines[nextIdx].strip()
+            qsline = lines[nextLineIdx].strip()
             
             if(Utils.isCharsInString(qsChars, qsline)):
                 qsTokens.append(qsline)
@@ -257,7 +270,6 @@ class RequestMessageFuzzContextCreator:
         
         verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         verb = 'GET'
-        
         
         if len(multilineBlock) >= 1:
             requestline = multilineBlock[0]
@@ -275,6 +287,54 @@ class RequestMessageFuzzContextCreator:
         
         return verb
     
+    
+    # parse the follow example
+    # User-Agent: rest-client
+    # Accept-Language: en-GB,en-US;q=0.8,en;q=0.6,zh-CN;q=0.4
+    # Content-Type: application/json
+    def get_headers(self, multilineBlock: list[str]) -> tuple([int, dict]):
+        
+        lineIndex = 0
+        headers = {}
+        
+        for line in multilineBlock:
+            line = line.strip()
+            if Utils.isInString(':', line):
+                
+                sh = line.split(':')
+                
+                if len(sh) != 2:
+                    continue
+                
+                headerKey = sh[0]
+                headerVal = sh[1]
+                
+                headers[headerKey] = headerVal
+                
+            lineIndex = lineIndex + 1
+        
+        # minus 1 to cater for zero-index in list
+        if lineIndex > 0:
+            lineIndex = lineIndex - 1
+            
+        return lineIndex, headers
+    
+    
+    def popItemsInList(self, toIndex, list):
+        
+        if toIndex == 0:
+            del list[0]
+            return
+        
+        idx = 0
+         
+        while idx <= toIndex and idx <= len(list):
+            del list[0]
+            idx = idx + 1
+                
+        
+            
+            
         
         
         
