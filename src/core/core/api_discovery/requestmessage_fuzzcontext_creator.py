@@ -5,6 +5,7 @@ from datetime import datetime
 import base64
 from urllib.parse import urlparse
 import json
+import re
 
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
@@ -130,59 +131,25 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.querystringDataTemplate = qs
             
             #remove requestline lines including multi-line querystring
-            self.popItemsInList(lineIndex, multilineBlock)
+            self.removeProcessedLines(lineIndex, multilineBlock)
             # for idx in range(0, lineIndex):
             #     del multilineBlock[idx]
                 
             # get headers
             lineIndex, headers = self.get_headers(multilineBlock)
-            fuzzcaseSet.headerNonTemplate = json.dumps(headers)
-            fuzzcaseSet.headerDataTemplate = headers
+            fuzzcaseSet.headerNonTemplate = '' if len(headers) == 0 else json.dumps(headers)
+            fuzzcaseSet.headerDataTemplate = '' if len(headers) == 0 else json.dumps(headers)
             
-            self.popItemsInList(lineIndex, multilineBlock)
+            self.removeProcessedLines(lineIndex, multilineBlock)
             
             # get body
-                
+            body = self.get_body(multilineBlock)
+            fuzzcaseSet.bodyNonTemplate = body
+            fuzzcaseSet.bodyDataTemplate = body
                 
             fcSets.append(fuzzcaseSet)
             
-        return True, '', fcSets
-        
-        # fuzzcaseSet.Id = shortuuid.uuid()
-        #     fuzzcaseSet.verb = api.verb.name
-            
-        #     fuzzcaseSet.path = api.path
-            
-        #     fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
-            
-        #     querystring = self.create_querystring_data_template(api)
-        #     fuzzcaseSet.querystringDataTemplate = querystring
-        #     fuzzcaseSet.querystringNonTemplate = self.remove_micro_template_for_gui_display(querystring)
-            
-        #     body = self.create_body_data_template(api)
-        #     fuzzcaseSet.bodyDataTemplate = body
-        #     fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
-            
-        #     header = self.create_header_data_template(api)
-        #     fuzzcaseSet.headerDataTemplate = header
-        #     fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
-    
-    # def process_request_line(self, requestline: str, fuzzcaseSet: ApiFuzzCaseSet) -> tuple([bool, str]):
-        
-    #     multilineBlock = requestline.strip().splitlines()
-        
-    #     # verb
-    #     fuzzcaseSet.verb = self.get_verb(multilineBlock)
-        
-    #     #path
-    #     path = self.get_path(multilineBlock)
-    #     fuzzcaseSet.path = path
-    #     fuzzcaseSet.pathDataTemplate = path
-        
-    #     #querystring
-        
-        
-                
+        return True, '', fcSets                
                 
     def get_path(self, multilineBlock) -> tuple([bool, str, str]):
         
@@ -215,7 +182,6 @@ class RequestMessageFuzzContextCreator:
      # GET https://example.com/comments
         # ?page=2
         # &pageSize=10
-        
     def get_querystring(self, multilineBlock) -> tuple([int, str]):
         
         qsChars = ['?', '&']
@@ -298,7 +264,19 @@ class RequestMessageFuzzContextCreator:
         headers = {}
         
         for line in multilineBlock:
+            
             line = line.strip()
+            
+            # brealine that divides header and body
+            if line == '':
+                return lineIndex, headers
+            
+            if not self.is_header(line):
+                lineIndex = lineIndex + 1
+                continue
+            
+            lineIndex = lineIndex + 1
+            
             if Utils.isInString(':', line):
                 
                 sh = line.split(':')
@@ -309,18 +287,66 @@ class RequestMessageFuzzContextCreator:
                 headerKey = sh[0]
                 headerVal = sh[1]
                 
+                if headerKey == '' or headerVal == '':
+                    continue
+                
                 headers[headerKey] = headerVal
                 
-            lineIndex = lineIndex + 1
-        
+
         # minus 1 to cater for zero-index in list
         if lineIndex > 0:
             lineIndex = lineIndex - 1
             
         return lineIndex, headers
     
+    def is_header(self, line: str) -> bool:
+        
+        if line.strip() == '':
+            return False
+        
+        if Utils.isInString(':', line):
+            
+            splitted = line.split(':')
+            
+            if len(splitted) != 2:
+                return False
+            
+            key = splitted[0]
+            val = splitted[1]
+            
+            if key == '' or val == '':
+                return False
+            
+            return True
+            
+        return False
     
-    def popItemsInList(self, toIndex, list):
+    #example:
+    # POST https://api.example.com/login HTTP/1.1
+    # Content-Type: application/x-www-form-urlencoded
+
+    # name=foo
+    # &password=bar
+    
+    def get_body(self, multilineBlock: list[str]) -> str:
+        
+        body = []
+        
+        for line in multilineBlock:
+            
+            line = line.strip()
+            
+            # breakline marker for multipart/form-data
+            if line == '':
+                return ''.join(body)
+            
+            body.append(line)
+            
+        
+        return ''.join(body)
+            
+    
+    def removeProcessedLines(self, toIndex, list):
         
         if toIndex == 0:
             del list[0]

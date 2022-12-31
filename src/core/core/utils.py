@@ -3,8 +3,10 @@ import shortuuid
 from datetime import datetime
 import base64
 import re
+import xml.etree.ElementTree as elementTree
 
 class Utils:
+    
     def jsone(objDict):
         if objDict is None:
             return ''
@@ -83,3 +85,27 @@ class Utils:
                     continue
         except ValueError as e:
             return False
+        
+    def isXml(value):
+        try:
+            elementTree.fromstring(value)
+        except elementTree.ParseError:
+            return False
+        return True
+    
+    # expression example: {{pdf}} {{file}} {{image}}
+    # this utility gets pdf, file or image from double curly braces
+    def getFileTypeFromExpression(expr: str) -> str:
+        
+        exprGroups = re.search('{{(([^}][^}]?|[^}]}?)*)}}', expr)
+        
+        # tuple length must be 3.
+        if len(exprGroups) != 3:
+            return ''
+        
+        fileType = exprGroups[1]
+        
+        fileType = fileType.strip()
+        
+        return fileType
+        
