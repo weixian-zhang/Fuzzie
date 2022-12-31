@@ -328,7 +328,7 @@ class RequestMessageFuzzContextCreator:
         
         idx = 0
          
-        while idx <= toIndex and idx <= len(list):
+        while idx <= toIndex :
             del list[0]
             idx = idx + 1
                 
