@@ -95,17 +95,28 @@ class Utils:
     
     # expression example: {{pdf}} {{file}} {{image}}
     # this utility gets pdf, file or image from double curly braces
-    def getFileTypeFromExpression(expr: str) -> str:
+    def is_filetype_expression(expr: str) -> tuple([bool, str]):
+        try:
+            exprGroups = re.search('{{(([^}][^}]?|[^}]}?)*)}}', expr)
         
-        exprGroups = re.search('{{(([^}][^}]?|[^}]}?)*)}}', expr)
+            # tuple length must be 3.
+            if exprGroups == None or len(exprGroups.regs) != 3:
+                return False, expr
+            
+            exprType = exprGroups[1].strip()
+            
+            # fileTypeStrIndexRange = fileType.strip()
+            # startIdx = fileTypeStrIndexRange[0]
+            # endIdx = fileTypeStrIndexRange[1]
+            
+            # expressionType = expr[startIdx:endIdx]
+            
+            for f in  ['file', 'pdf', 'image']:
+                if f == exprType:
+                    return True, f
+            
+            return False, exprType
+        except Exception as e:
+            return False, expr
         
-        # tuple length must be 3.
-        if len(exprGroups) != 3:
-            return ''
-        
-        fileType = exprGroups[1]
-        
-        fileType = fileType.strip()
-        
-        return fileType
         

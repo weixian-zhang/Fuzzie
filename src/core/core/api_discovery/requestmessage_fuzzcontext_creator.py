@@ -108,7 +108,6 @@ class RequestMessageFuzzContextCreator:
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
-    
             # verb
             fuzzcaseSet.verb = self.get_verb(multilineBlock)
             
@@ -130,10 +129,8 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.querystringNonTemplate = qs
             fuzzcaseSet.querystringDataTemplate = qs
             
-            #remove requestline lines including multi-line querystring
+            #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
-            # for idx in range(0, lineIndex):
-            #     del multilineBlock[idx]
                 
             # get headers
             if len(multilineBlock) > 0:
@@ -145,9 +142,10 @@ class RequestMessageFuzzContextCreator:
             
             # get body
             if len(multilineBlock) > 0:
-                body = self.get_body(multilineBlock)
+                body, files = self.get_body_and_files(multilineBlock)
                 fuzzcaseSet.bodyNonTemplate = body
                 fuzzcaseSet.bodyDataTemplate = body
+                fuzzcaseSet.file = files
                 
             fcSets.append(fuzzcaseSet)
             
@@ -212,6 +210,10 @@ class RequestMessageFuzzContextCreator:
         while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
             lineIndex = lineIndex + 1
             
+        # claim empty breaklines in case there are between requestline and headers/body
+        # while self.is_next_line_breakline(multilineBlock, lineIndex):
+        #     lineIndex = lineIndex + 1
+            
         mergedQSTokens = "".join(qsTokens)
         querystring = querystring + mergedQSTokens
         
@@ -233,6 +235,20 @@ class RequestMessageFuzzContextCreator:
                 return False
         
         return False
+    
+    # def is_next_line_breakline(self, lines, lineIndex) -> int:
+    #     linesLen = len(lines) - 1
+    #     nextLineIdx = lineIndex + 1
+        
+    #     if(nextLineIdx <= linesLen):
+            
+    #         qsline = lines[nextLineIdx].strip()
+            
+    #         #detected breakline
+    #         if qsline == '':
+    #             return True
+            
+    #     return False
     
     def get_verb(self, multilineBlock: list[str]) -> tuple([bool, str, str]):
         
@@ -273,9 +289,10 @@ class RequestMessageFuzzContextCreator:
             if line == '':
                 return lineIndex, headers
             
+            #ignore invalid header format
             if not self.is_header(line):
                 lineIndex = lineIndex + 1
-                continue
+                continue                
             
             lineIndex = lineIndex + 1
             
@@ -286,8 +303,8 @@ class RequestMessageFuzzContextCreator:
                 if len(sh) != 2:
                     continue
                 
-                headerKey = sh[0]
-                headerVal = sh[1]
+                headerKey = sh[0].strip()
+                headerVal = sh[1].strip()
                 
                 if headerKey == '' or headerVal == '':
                     continue
@@ -330,9 +347,10 @@ class RequestMessageFuzzContextCreator:
     # name=foo
     # &password=bar
     
-    def get_body(self, multilineBlock: list[str]) -> str:
+    def get_body_and_files(self, multilineBlock: list[str]) -> str:
         
         body = []
+        files = []
         
         for line in multilineBlock:
             
@@ -340,12 +358,18 @@ class RequestMessageFuzzContextCreator:
             
             # breakline marker for multipart/form-data
             if line == '':
-                return ''.join(body)
+                continue
             
+            yes, exprType = Utils.is_filetype_expression(line)
+            
+            if yes:
+                files.append(exprType)
+                continue
+        
             body.append(line)
             
         
-        return ''.join(body)
+        return ''.join(body), files
             
     
     def removeProcessedLines(self, toIndex, list):

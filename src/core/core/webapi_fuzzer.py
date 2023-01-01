@@ -215,6 +215,8 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
                 return
             
+            
+            
             try:
                 req = None
             
