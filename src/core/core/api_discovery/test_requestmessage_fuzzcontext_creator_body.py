@@ -131,7 +131,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
     #     self.assertTrue(apicontext.fuzzcaseSets[0].bodyDataTemplate == 'name={{username}}&password={{password}}')
         
     
-    def test_reqmsg_parser_body_without_breakline_marker(self):
+    def test_reqmsg_parser_body_json(self):
         
         import re
         

@@ -136,16 +136,18 @@ class RequestMessageFuzzContextCreator:
             #     del multilineBlock[idx]
                 
             # get headers
-            lineIndex, headers = self.get_headers(multilineBlock)
-            fuzzcaseSet.headerNonTemplate = '' if len(headers) == 0 else json.dumps(headers)
-            fuzzcaseSet.headerDataTemplate = '' if len(headers) == 0 else json.dumps(headers)
+            if len(multilineBlock) > 0:
+                lineIndex, headers = self.get_headers(multilineBlock)
+                fuzzcaseSet.headerNonTemplate = '' if len(headers) == 0 else json.dumps(headers)
+                fuzzcaseSet.headerDataTemplate = '' if len(headers) == 0 else json.dumps(headers)
             
-            self.removeProcessedLines(lineIndex, multilineBlock)
+                self.removeProcessedLines(lineIndex, multilineBlock)
             
             # get body
-            body = self.get_body(multilineBlock)
-            fuzzcaseSet.bodyNonTemplate = body
-            fuzzcaseSet.bodyDataTemplate = body
+            if len(multilineBlock) > 0:
+                body = self.get_body(multilineBlock)
+                fuzzcaseSet.bodyNonTemplate = body
+                fuzzcaseSet.bodyDataTemplate = body
                 
             fcSets.append(fuzzcaseSet)
             
@@ -207,7 +209,7 @@ class RequestMessageFuzzContextCreator:
            
 
         lineIndex = 0
-        while self.is_next_line_querystring(multilineBlock, lineIndex, qsChars, qsTokens):
+        while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
             lineIndex = lineIndex + 1
             
         mergedQSTokens = "".join(qsTokens)
@@ -215,7 +217,7 @@ class RequestMessageFuzzContextCreator:
         
         return lineIndex, querystring
     
-    def is_next_line_querystring(self, lines, lineIndex, qsChars, qsTokens: list[str]):
+    def is_next_line_querystring(self, lines, lineIndex, qsTokens: list[str]):
         
         linesLen = len(lines) - 1
         nextLineIdx = lineIndex + 1
@@ -224,7 +226,7 @@ class RequestMessageFuzzContextCreator:
             
             qsline = lines[nextLineIdx].strip()
             
-            if(Utils.isCharsInString(qsChars, qsline)):
+            if(Utils.isCharsInString(['?', '&'], qsline)):
                 qsTokens.append(qsline)
                 return True
             else:
@@ -267,7 +269,7 @@ class RequestMessageFuzzContextCreator:
             
             line = line.strip()
             
-            # brealine that divides header and body
+            # breakline marker that divides header and body
             if line == '':
                 return lineIndex, headers
             
