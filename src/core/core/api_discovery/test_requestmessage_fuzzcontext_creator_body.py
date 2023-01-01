@@ -740,8 +740,6 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
             
             
             
-            
-            
             {{ file   }}
                 
                 {{ pdf   }}

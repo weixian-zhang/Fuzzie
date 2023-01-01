@@ -97,12 +97,21 @@ class RequestMessageFuzzContextCreator:
         # each block is a fuzzcaseset
         for eachReqBlock in multiReqMsgBlocks:
             
+            if eachReqBlock == '':
+                continue
+            
             # in 1 req message block, split it multi-line
             multilineBlock: list[str] = eachReqBlock.strip().splitlines()
             
             if len(multilineBlock) == 0:
-                return 
+                return
             
+            #remove all comments before any parsing
+            multilineBlock = [x for x in multilineBlock if not self.is_line_comment(x)]
+            
+            multilineBlock = self.remove_breaklines_until_char_detected(multilineBlock)
+            
+            # start request-message parsing
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
             
@@ -383,6 +392,36 @@ class RequestMessageFuzzContextCreator:
         while idx <= toIndex :
             del list[0]
             idx = idx + 1
+            
+    # a comment is consider # or //  
+    # a request-block delimiter is '###', so a special check is needed to avoid conflict with comment (#)  
+    def is_line_comment(self, line: str):
+        
+        # checks if its a delimiter for a request-block
+        # blockdelimiter = re.match('\B###', line)
+        # if blockdelimiter is not None and len(blockdelimiter.regs) > 0:
+        #     return False
+        
+        line = line.strip()
+        if line.startswith('#') or  line.startswith('//'):
+            return True
+        
+        return False
+    
+    
+    def remove_breaklines_until_char_detected(self, lines: list[str]) -> list[str]:
+        for l in lines:
+            
+            ls = l.strip()
+            
+            if ls != '':
+                return lines
+            
+            if ls == '':
+                lines.remove(l)
+                
+        return lines
+        
                 
         
             
