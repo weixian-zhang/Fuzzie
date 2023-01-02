@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.1",
     "@mdi/font": "^5.9.55",
     "@types/axios": "^0.14.0",
     "@types/dateformat": "^5.0.0",
@@ -17,6 +18,7 @@
     "bootstrap": "^5.2.2",
     "bootstrap-vue": "^2.23.1",
     "bootstrap-vue-3": "^0.3.12",
+    "codemirror": "^6.0.1",
     "core-js": "^3.8.3",
     "dateformat": "^5.0.3",
     "eventemitter3": "^4.0.7",
@@ -29,6 +31,7 @@
     "styled-components": "^5.3.6",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
+    "vue-codemirror": "^6.1.1",
     "vue-property-decorator": "^9.1.2",
     "vuetify": "^3.0.0-beta.0",
     "webfontloader": "^1.0.0",

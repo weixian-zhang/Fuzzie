@@ -31,6 +31,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -39,7 +41,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -68,6 +70,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -76,7 +80,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -106,6 +110,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -114,7 +120,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -154,6 +160,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -162,7 +170,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -220,6 +228,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -228,7 +238,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -299,6 +309,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -307,7 +319,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -351,6 +363,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
+        rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+        
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
                             name= "request-message-test",
@@ -359,7 +373,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rqMsg
                             )
         
         self.assertTrue(ok)
@@ -435,6 +449,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
             
             rqMsgFCCreator = RequestMessageFuzzContextCreator()
             
+            rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+            
             ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                                 apiDiscoveryMethod= "request_message",
                                 name= "request-message-test",
@@ -443,7 +459,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                                 authnType=SupportedAuthnType.Anonymous.name,
                                 fuzzcaseToExec=500,
                                 openapi3FilePath='',
-                                requestTextContent= rqB64
+                                requestTextContent= rqMsg
                                 )
             
             self.assertTrue(ok)
@@ -518,6 +534,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
             
             rqMsgFCCreator = RequestMessageFuzzContextCreator()
             
+            rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+            
             ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                                 apiDiscoveryMethod= "request_message",
                                 name= "request-message-test",
@@ -526,7 +544,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                                 authnType=SupportedAuthnType.Anonymous.name,
                                 fuzzcaseToExec=500,
                                 openapi3FilePath='',
-                                requestTextContent= rqB64
+                                requestTextContent= rqMsg
                                 )
             
             self.assertTrue(ok)
@@ -695,6 +713,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
             
             rqMsgFCCreator = RequestMessageFuzzContextCreator()
             
+            rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+            
             ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                                 apiDiscoveryMethod= "request_message",
                                 name= "request-message-test",
@@ -703,7 +723,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                                 authnType=SupportedAuthnType.Anonymous.name,
                                 fuzzcaseToExec=500,
                                 openapi3FilePath='',
-                                requestTextContent= rqB64
+                                requestTextContent= rqMsg
                                 )
             
             self.assertTrue(ok)
@@ -876,6 +896,8 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
             
             rqMsgFCCreator = RequestMessageFuzzContextCreator()
             
+            rqMsg = base64.b64decode(rqB64).decode('UTF-8')
+            
             ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                                 apiDiscoveryMethod= "request_message",
                                 name= "request-message-test",
@@ -884,7 +906,7 @@ class TestRequestMessageFuzzContextCreator_By_Body(unittest.TestCase):
                                 authnType=SupportedAuthnType.Anonymous.name,
                                 fuzzcaseToExec=500,
                                 openapi3FilePath='',
-                                requestTextContent= rqB64
+                                requestTextContent= rqMsg
                                 )
             
             self.assertTrue(ok)

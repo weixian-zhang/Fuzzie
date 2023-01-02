@@ -231,6 +231,7 @@ def get_fuzzcontexts() -> list[ApiFuzzContext]:
     
     return fuzzcontexts
 
+# gets the fuzz-context for fuzzing with option to select only FuzzCaseSet marked with 'selected'
 def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:       
         
         Session = scoped_session(session_factory)

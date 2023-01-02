@@ -144,6 +144,28 @@ class ServiceManager:
                 rmStr=  base64.b64decode(requestTextContent).decode('UTF-8')
                 
                 rmFuzzContextCreator = RequestMessageFuzzContextCreator()
+                
+                ok, error, fuzzcontext = rmFuzzContextCreator.new_fuzzcontext(apiDiscoveryMethod=apiDiscoveryMethod,
+                                                    name=name,
+                                                    hostname=hostname,
+                                                    port=port,
+                                                    requestTextContent = rmStr,
+                                                    requestTextFilePath = requestTextFilePath,
+                                                    openapi3FilePath = openapi3FilePath,
+                                                    openapi3Url = openapi3Url,
+                                                    openapi3Content = openapi3Content,
+                                                    fuzzcaseToExec=fuzzcaseToExec,
+                                                    authnType=authnType,
+                                                    basicUsername=basicUsername,
+                                                    basicPassword=basicPassword,
+                                                    bearerTokenHeader=bearerTokenHeader,
+                                                    bearerToken=bearerToken,
+                                                    apikeyHeader=apikeyHeader,
+                                                    apikey=apikey)
+                if not ok:
+                    return False, error
+                
+                insert_db_fuzzcontext(fuzzcontext)
             
             
             return True, ''

@@ -46,7 +46,7 @@ class RequestMessageFuzzContextCreator:
             ok, error, fcSets = self.parse_req_msg_into_fuzzcasesets(requestTextContent)
         
             if not ok or len(fcSets) == 0:
-                return False, 'request message is empty, no context is created', ApiFuzzContext()
+                return False, error, ApiFuzzContext()
             
             fuzzcontext = ApiFuzzContext()
             fuzzcontext.Id = shortuuid.uuid()
@@ -57,7 +57,7 @@ class RequestMessageFuzzContextCreator:
                 
             fuzzcontext.datetime = datetime.now()
             fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
-            fuzzcontext.requestMessageText = requestTextContent
+            fuzzcontext.requestTextContent = requestTextContent
             fuzzcontext.requestMessageFilePath = requestTextFilePath
             fuzzcontext.openapi3FilePath = openapi3FilePath
             fuzzcontext.openapi3Content = openapi3Content
@@ -81,9 +81,8 @@ class RequestMessageFuzzContextCreator:
             self.eventstore.emitErr(e)
         
         
-    def parse_req_msg_into_fuzzcasesets(self, rqMsgBase64: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
+    def parse_req_msg_into_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
-        rqMsg = base64.b64decode(rqMsgBase64).decode('UTF-8')
 
         if rqMsg == '' or rqMsg.strip() == '':
             return []
