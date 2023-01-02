@@ -120,7 +120,7 @@ class WebApiFuzzer:
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
             
-            #self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
+            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
             
             self.fuzzingStatus = FuzzingStatus.Fuzzing
             
@@ -131,8 +131,6 @@ class WebApiFuzzer:
                 return
             
             self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
-            
-            #self.totalFuzzRuns = 1 # uncomment for testing only
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -223,7 +221,7 @@ class WebApiFuzzer:
                 match fcs.verb:
                     case 'GET':
                         
-                        req = Request(fcs.verb, url, headers=headers, timeout=self.httpTimeoutInSec)
+                        req = Request(fcs.verb, url, headers=headers)
                         
                     case 'POST':
                         
@@ -330,6 +328,7 @@ class WebApiFuzzer:
             fr.datetime = datetime.now()
             fr.fuzzcontextId = self.apifuzzcontext.Id
             fr.fuzzDataCaseId = fuzzDataCase.Id
+            fr.responseDisplayText = ''
                 
             if resp != None:
                 fr.statusCode = resp.status_code

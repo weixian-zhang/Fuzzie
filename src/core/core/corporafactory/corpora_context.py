@@ -55,13 +55,13 @@ class CorporaContext:
             
     
     
-    def build(self, template) -> tuple[bool, str]:
+    def build(self, expression) -> tuple[bool, str]:
         
-        if template == '' or template == '{}':
+        if expression == '' or expression == '{}':
             return True, ''
         
         try:
-            
+                        
             if isinstance(template, str):
                 template = jinja2.Template(template)
                 template.render({ 'eval': self.eval_expression_by_build })
@@ -108,13 +108,20 @@ class CorporaContext:
             self.es.emitErr(e, 'CorporaContext.resolve_expr')
             return False, e, ''
         
-        
+    
+    # def build_digit_expression(self):
+    #     self.context['digit'] = self.cp.digitCorpora
+    #     return '{{ digit }}'
+    
+    # def build_string_expression(self):
+    #     self.context['string'] = self.cp.digitCorpora
+    #     return '{{ string }}'
         
     def eval_expression_by_build(self, expr: str):
         
         expression = expr
         
-        originalExpression = f'{{ eval(\'{expr}\') }}'
+        originalExpression = f'{{ eval(\'{expr.strip()}\') }}'
         
         if expr is None or expression is None or expression == '':
             raise(Exception('Expression is invalid, detected empty string'))

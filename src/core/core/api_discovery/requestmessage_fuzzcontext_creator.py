@@ -2,10 +2,10 @@ import os,sys
 from pathlib import Path
 import shortuuid
 from datetime import datetime
-import base64
+import re
 from urllib.parse import urlparse
 import json
-import re
+from urllib.parse import urlparse
 
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
@@ -21,6 +21,7 @@ class RequestMessageFuzzContextCreator:
         self.apicontext = None
         self.fuzzcontext = ApiFuzzContext()
         self.eventstore = EventStore()
+        self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         
 
     def new_fuzzcontext(self,
@@ -91,7 +92,10 @@ class RequestMessageFuzzContextCreator:
         
         fcSets = []
         
-        multiReqMsgBlocks = rqMsg.strip().split('###')
+        rqMsgWithoutComments = self.remove_all_comments(rqMsg)
+        
+        # split request-blocks by delimiter ###
+        multiReqMsgBlocks = rqMsgWithoutComments.strip().split('###')
         
         # each block is a fuzzcaseset
         for eachReqBlock in multiReqMsgBlocks:
@@ -104,11 +108,12 @@ class RequestMessageFuzzContextCreator:
             
             if len(multilineBlock) == 0:
                 return
-            
-            #remove all comments before any parsing
-            multilineBlock = [x for x in multilineBlock if not self.is_line_comment(x)]
-            
+
+            # remove all breaklines until first char is found
             multilineBlock = self.remove_breaklines_until_char_detected(multilineBlock)
+            
+            if len(multilineBlock) == 0:
+                return False, 'Request Message contains no fuzz case sets', []
             
             # start request-message parsing
             fuzzcaseSet = ApiFuzzCaseSet()
@@ -128,7 +133,12 @@ class RequestMessageFuzzContextCreator:
                 continue
             
             fuzzcaseSet.path = path
-            fuzzcaseSet.pathDataTemplate = path
+            ok, error, dataPath = self.inject_eval_into_wordlist_expression(path)
+            
+            if not ok:
+                return ok, error, []
+            
+            fuzzcaseSet.pathDataTemplate = dataPath
             
             # get querystring
             # lineIndex is the index of the multiline list when querystring ends at
@@ -158,30 +168,53 @@ class RequestMessageFuzzContextCreator:
             fcSets.append(fuzzcaseSet)
             
         return True, '', fcSets                
-                
+    
+    
+    
     def get_path(self, multilineBlock) -> tuple([bool, str, str]):
         
+        def remove_verb_if_exist(requestline: str):
+            if requestline == '':
+                return requestLine
+            for v in self.verbs:
+                if requestline.upper().startswith(v):
+                    requestline = requestline.removeprefix(v)
+            return requestline
+            
         path = ''
         
         if len(multilineBlock) >= 1:
             
-            requestLine = multilineBlock[0]
+            requestLine: str = multilineBlock[0]
             
-            tokens = requestLine.split(' ')
+            # remove verb
+            requestLine = remove_verb_if_exist(requestLine)
+            # remove HTTP/1.1 if any
+            requestLine = requestLine.removesuffix('HTTP/1.1')
             
-            for idx, t in enumerate(tokens):
+            urlonly = requestLine.strip()
+            
+            
+            parseOutput = urlparse(urlonly)
+            
+            # if Utils.validUrl(urlonly) == False:
+            #     return False, f'Url {urlonly} is invalid', requestLine
                 
-                if Utils.validUrl(t) == False:
-                    continue
+            path = parseOutput.path
+            
+            if path == '':
+                return False, f'invalid Url provided {requestLine}', ''
+            
+            return True, '', path
                 
-                path = urlparse(t).path
-                return True, '', path
+                
         
         if path == '':
             return False, 'request line contains invalid URL', path
                 
         return True, '', path
-        
+    
+    
     
      # examples
      # GET https://example.com/comments?page=2
@@ -243,24 +276,11 @@ class RequestMessageFuzzContextCreator:
                 return False
         
         return False
-    
-    # def is_next_line_breakline(self, lines, lineIndex) -> int:
-    #     linesLen = len(lines) - 1
-    #     nextLineIdx = lineIndex + 1
-        
-    #     if(nextLineIdx <= linesLen):
-            
-    #         qsline = lines[nextLineIdx].strip()
-            
-    #         #detected breakline
-    #         if qsline == '':
-    #             return True
-            
-    #     return False
+
     
     def get_verb(self, multilineBlock: list[str]) -> tuple([bool, str, str]):
         
-        verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
+        
         verb = 'GET'
         
         if len(multilineBlock) >= 1:
@@ -272,7 +292,7 @@ class RequestMessageFuzzContextCreator:
                 
                 t = tokens[0]
                 
-                for v in verbs:
+                for v in self.verbs:
                     if v == t:
                         verb = v
                         return verb
@@ -402,7 +422,15 @@ class RequestMessageFuzzContextCreator:
         #     return False
         
         line = line.strip()
-        if line.startswith('#') or  line.startswith('//'):
+        
+        if line.startswith('//'):
+            return True
+        
+        if '###' in line:
+            return False
+        
+        line = line.strip()
+        if line.startswith('#'):
             return True
         
         return False
@@ -420,6 +448,60 @@ class RequestMessageFuzzContextCreator:
                 lines.remove(l)
                 
         return lines
+    
+    
+    def remove_all_comments(self, rqMsg: str) -> str: 
+        
+        lines = rqMsg.splitlines()
+        lines = [x for x in lines if not self.is_line_comment(x)]
+        return ''.join(lines)
+    
+    
+    def inject_eval_into_wordlist_expression(self, expr) -> tuple([bool, str, str]):
+        
+        try:
+            rx_sequence = re.compile('{{(([^}][^}]?|[^}]}?)*)}}')
+        
+            for match in rx_sequence.finditer(expr):
+                
+                wholeExprIndex = match.regs[0]
+
+                wholeOriginalExpr = expr[wholeExprIndex[0]:wholeExprIndex[1]]
+
+                for wt in Utils.wordlist_types():
+                    if wt in wholeOriginalExpr:
+                        evalInjected = wholeOriginalExpr.replace(wt, f'eval({wt})')
+                        expr = expr.replace(wholeOriginalExpr, evalInjected )
+                        break
+                    
+                    
+            return True, '', expr
+        except Exception as e:
+            self.eventstore.emitErr(e)
+        
+            # wordlistType = wordlistType.strip()
+            # rightDblCurly = rightDblCurly.strip()
+            
+            # if wholeExpr != '{{' or wordlistType == '' or leftDblCurly != '}}':
+            #     return False, 'invalid wordlist type or expression', expr
+            
+            # originalExpr = f'{leftDblCurly}{wordlistType}{rightDblCurly}'
+            # evalInjected = f'{leftDblCurly} eval({wordlistType}) {rightDblCurly}'
+            
+            # expr = expr.replace(originalExpr,evalInjecte )
+            
+        # tpl = jinja2.Template(expr)
+        # output = tpl.render(
+        #         digit='{{ eval(digit) }}',
+        #         string='{{ eval(string) }}',
+        #         image='{{ eval(image) }}',
+        #         pdf='{{ eval(pdf) }}',
+        #         file='{{ eval(file) }}',
+        #                )
+
+        
+        
+            
         
                 
         

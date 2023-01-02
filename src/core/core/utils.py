@@ -7,6 +7,9 @@ import xml.etree.ElementTree as elementTree
 
 class Utils:
     
+    def wordlist_types():
+        return ['digit', 'string', 'bool']
+    
     def jsone(objDict):
         if objDict is None:
             return ''

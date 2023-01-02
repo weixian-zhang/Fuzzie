@@ -1329,5 +1329,4 @@ input[type=text]{
    margin-top:2px; /* Reduced from whatever it currently is */
 }
 
-
 </style>
