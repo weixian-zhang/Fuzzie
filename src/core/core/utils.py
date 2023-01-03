@@ -8,8 +8,8 @@ import xml.etree.ElementTree as elementTree
 class Utils:
     
     def wordlist_types():
-        return ['digit', 'string', 'bool']
-    
+        return ['my', 'string', 'bool', 'digit', 'integer', 'char', 'filename', 'datetime','date', 'time', 'username', 'password']
+   
     def jsone(objDict):
         if objDict is None:
             return ''

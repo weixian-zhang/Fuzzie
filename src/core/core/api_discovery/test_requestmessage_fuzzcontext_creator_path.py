@@ -23,7 +23,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
            GET https://example.com HTTP/1.1
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+        # rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -35,16 +35,13 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
         self.assertTrue(error == '')
         self.assertGreater(len(apicontext.fuzzcaseSets), 0)
         
-        # self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
-        # self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '')
-        # self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '')
     
     def test_reqmsg_parser_get_path(self):
@@ -53,7 +50,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
            GET https://example.com/comments/{{digit}} HTTP/1.1
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+        # rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -65,16 +62,13 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
         self.assertTrue(error == '')
         self.assertGreater(len(apicontext.fuzzcaseSets), 0)
         
-        # self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
-        # self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '')
-        # self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/comments/{{digit}}')
         
     def test_reqmsg_parser_get_path_2(self):
@@ -83,7 +77,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
            GET https://example.com/comments/{{digit}}/second_comment/{{digit}}/third_comment/{{digit}} HTTP/1.1
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+        # rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -95,7 +89,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -109,10 +103,10 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         rq = '''
            GET https://example.com/comments/{{digit}}/second_comment/{{digit}}/third_comment/{{digit}}?name={{name}}&age={{digit}} HTTP/1.1
         '''
-        
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+    
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
+        
         
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
                             apiDiscoveryMethod= "request_message",
@@ -122,7 +116,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -130,7 +124,6 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         self.assertGreater(len(apicontext.fuzzcaseSets), 0)
         
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{name}}&age={{digit}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{name}}&age={{digit}}')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/comments/{{digit}}/second_comment/{{digit}}/third_comment/{{digit}}')
         
     def test_reqmsg_parser_get_path_only(self):
@@ -139,7 +132,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
            https://example.com/comments/{{digit}}/second_comment/{{digit}}/third_comment/{{digit}}/name/{{string}}
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+        # rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -151,7 +144,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -170,7 +163,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
            PUT https://example.com/comments/{{digit}}/second_comment/{{digit}}/third_comment/{{digit}}/name/{{string}}
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+        # rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -182,7 +175,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)

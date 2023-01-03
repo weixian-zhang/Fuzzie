@@ -109,13 +109,6 @@ class CorporaContext:
             return False, e, ''
         
     
-    # def build_digit_expression(self):
-    #     self.context['digit'] = self.cp.digitCorpora
-    #     return '{{ digit }}'
-    
-    # def build_string_expression(self):
-    #     self.context['string'] = self.cp.digitCorpora
-    #     return '{{ string }}'
         
     def eval_expression_by_build(self, expr: str):
         
@@ -131,23 +124,20 @@ class CorporaContext:
             self.context[expr] = userSuppliedOrStringCorpora
             return originalExpression
         
-        if expression.startswith('sha256'):
-            return originalExpression
+        # if expression.startswith('sha256'):
+        #     return originalExpression
         
-        if expression.startswith('base64e'):
-            return originalExpression
+        # if expression.startswith('base64e'):
+        #     return originalExpression
         
-        if expression.startswith('sha256'):
-            return originalExpression
-        
-        if expression.startswith('autonum'):
-            return originalExpression
+        # if expression.startswith('autonum'):
+        #     return originalExpression
             
-        if expression.startswith('uuid'):
-            return originalExpression
+        # if expression.startswith('uuid'):
+        #     return originalExpression
         
-        if expression.startswith('ip'):
-            return originalExpression
+        # if expression.startswith('ip'):
+        #     return originalExpression
             
         match expression:
             case 'string':

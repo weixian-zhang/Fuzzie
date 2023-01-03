@@ -126,26 +126,30 @@ class RequestMessageFuzzContextCreator:
             
             # path
             ok, error, path = self.get_path(multilineBlock)
-            
             if not ok:
                 # cannot find path, skip to next block
                 self.eventstore.emitErr(error)
                 continue
             
             fuzzcaseSet.path = path
-            ok, error, dataPath = self.inject_eval_into_wordlist_expression(path)
+            pathOK, pathErr, evalPath = self.inject_eval_into_wordlist_expression(path)
             
-            if not ok:
-                return ok, error, []
+            if not pathOK:
+                return pathOK, pathErr, []
             
-            fuzzcaseSet.pathDataTemplate = dataPath
+            fuzzcaseSet.pathDataTemplate = evalPath
             
             # get querystring
             # lineIndex is the index of the multiline list when querystring ends at
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
             fuzzcaseSet.querystringNonTemplate = qs
-            fuzzcaseSet.querystringDataTemplate = qs
+            
+            qsOK, qsErr, evalQS = self.inject_eval_into_wordlist_expression(qs)
+            if not qsOK:
+                return qsOK, qsErr, []
+            
+            fuzzcaseSet.querystringDataTemplate = evalQS
             
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
@@ -153,16 +157,32 @@ class RequestMessageFuzzContextCreator:
             # get headers
             if len(multilineBlock) > 0:
                 lineIndex, headers = self.get_headers(multilineBlock)
-                fuzzcaseSet.headerNonTemplate = '' if len(headers) == 0 else json.dumps(headers)
-                fuzzcaseSet.headerDataTemplate = '' if len(headers) == 0 else json.dumps(headers)
+                
+                headerJson = '' if len(headers) == 0 else json.dumps(headers)
+                
+                fuzzcaseSet.headerNonTemplate = headerJson
+                
+                hOK, hErr, evalHeader = self.inject_eval_into_wordlist_expression(headerJson)
+                if not hOK:
+                    return hOK, hErr, []
+            
+                fuzzcaseSet.headerDataTemplate = evalHeader
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
             # get body
             if len(multilineBlock) > 0:
+                
                 body, files = self.get_body_and_files(multilineBlock)
+                
                 fuzzcaseSet.bodyNonTemplate = body
-                fuzzcaseSet.bodyDataTemplate = body
+                
+                bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
+                if not bOK:
+                    return bOK, bErr, []
+                
+                fuzzcaseSet.bodyDataTemplate = evalBody
+                
                 fuzzcaseSet.file = files
                 
             fcSets.append(fuzzcaseSet)
@@ -200,17 +220,18 @@ class RequestMessageFuzzContextCreator:
             # if Utils.validUrl(urlonly) == False:
             #     return False, f'Url {urlonly} is invalid', requestLine
                 
-            path = parseOutput.path
+            path = parseOutput.path.strip()
             
-            if path == '':
-                return False, f'invalid Url provided {requestLine}', ''
+            # no path doesn't mean invalid, TBD
+            # if path == '':
+            #     return False, f'invalid Url provided {requestLine}', ''
             
             return True, '', path
                 
                 
         
-        if path == '':
-            return False, 'request line contains invalid URL', path
+        # if path == '':
+        #     return False, 'request line contains invalid URL', path
                 
         return True, '', path
     
@@ -456,10 +477,12 @@ class RequestMessageFuzzContextCreator:
         lines = [x for x in lines if not self.is_line_comment(x)]
         return ''.join(lines)
     
-    
+    # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
+    # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
     def inject_eval_into_wordlist_expression(self, expr) -> tuple([bool, str, str]):
         
         try:
+            # match anything between {{ anything }}
             rx_sequence = re.compile('{{(([^}][^}]?|[^}]}?)*)}}')
         
             for match in rx_sequence.finditer(expr):
@@ -470,34 +493,16 @@ class RequestMessageFuzzContextCreator:
 
                 for wt in Utils.wordlist_types():
                     if wt in wholeOriginalExpr:
+                        
                         evalInjected = wholeOriginalExpr.replace(wt, f'eval({wt})')
-                        expr = expr.replace(wholeOriginalExpr, evalInjected )
+                        
+                        expr = expr.replace( wholeOriginalExpr, evalInjected )
                         break
                     
                     
             return True, '', expr
         except Exception as e:
             self.eventstore.emitErr(e)
-        
-            # wordlistType = wordlistType.strip()
-            # rightDblCurly = rightDblCurly.strip()
-            
-            # if wholeExpr != '{{' or wordlistType == '' or leftDblCurly != '}}':
-            #     return False, 'invalid wordlist type or expression', expr
-            
-            # originalExpr = f'{leftDblCurly}{wordlistType}{rightDblCurly}'
-            # evalInjected = f'{leftDblCurly} eval({wordlistType}) {rightDblCurly}'
-            
-            # expr = expr.replace(originalExpr,evalInjecte )
-            
-        # tpl = jinja2.Template(expr)
-        # output = tpl.render(
-        #         digit='{{ eval(digit) }}',
-        #         string='{{ eval(string) }}',
-        #         image='{{ eval(image) }}',
-        #         pdf='{{ eval(pdf) }}',
-        #         file='{{ eval(file) }}',
-        #                )
 
         
         
