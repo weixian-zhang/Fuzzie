@@ -132,10 +132,10 @@ class RequestMessageFuzzContextCreator:
                 continue
             
             fuzzcaseSet.path = path
-            pathOK, pathErr, evalPath = self.inject_eval_into_wordlist_expression(path)
+            pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
-                return pathOK, pathErr, []
+                return pathOK, Utils.errAsText(pathErr), []
             
             fuzzcaseSet.pathDataTemplate = evalPath
             
@@ -145,9 +145,9 @@ class RequestMessageFuzzContextCreator:
             lineIndex, qs = self.get_querystring(multilineBlock)
             fuzzcaseSet.querystringNonTemplate = qs
             
-            qsOK, qsErr, evalQS = self.inject_eval_into_wordlist_expression(qs)
+            qsOK, qsErr, evalQS = Utils.inject_eval_into_wordlist_expression(qs)
             if not qsOK:
-                return qsOK, qsErr, []
+                return qsOK, Utils.errAsText(qsErr), []
             
             fuzzcaseSet.querystringDataTemplate = evalQS
             
@@ -162,9 +162,9 @@ class RequestMessageFuzzContextCreator:
                 
                 fuzzcaseSet.headerNonTemplate = headerJson
                 
-                hOK, hErr, evalHeader = self.inject_eval_into_wordlist_expression(headerJson)
+                hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(headerJson)
                 if not hOK:
-                    return hOK, hErr, []
+                    return hOK, Utils.errAsText(hErr), []
             
                 fuzzcaseSet.headerDataTemplate = evalHeader
             
@@ -177,9 +177,9 @@ class RequestMessageFuzzContextCreator:
                 
                 fuzzcaseSet.bodyNonTemplate = body
                 
-                bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
+                bOK, bErr, evalBody = Utils.inject_eval_into_wordlist_expression(body)
                 if not bOK:
-                    return bOK, bErr, []
+                    return bOK, Utils.errAsText(bErr), []
                 
                 fuzzcaseSet.bodyDataTemplate = evalBody
                 
@@ -477,32 +477,7 @@ class RequestMessageFuzzContextCreator:
         lines = [x for x in lines if not self.is_line_comment(x)]
         return ''.join(lines)
     
-    # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
-    # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
-    def inject_eval_into_wordlist_expression(self, expr) -> tuple([bool, str, str]):
-        
-        try:
-            # match anything between {{ anything }}
-            rx_sequence = re.compile('{{(([^}][^}]?|[^}]}?)*)}}')
-        
-            for match in rx_sequence.finditer(expr):
-                
-                wholeExprIndex = match.regs[0]
-
-                wholeOriginalExpr = expr[wholeExprIndex[0]:wholeExprIndex[1]]
-
-                for wt in Utils.wordlist_types():
-                    if wt in wholeOriginalExpr:
-                        
-                        evalInjected = wholeOriginalExpr.replace(wt, f'eval({wt})')
-                        
-                        expr = expr.replace( wholeOriginalExpr, evalInjected )
-                        break
-                    
-                    
-            return True, '', expr
-        except Exception as e:
-            self.eventstore.emitErr(e)
+    
 
         
         

@@ -4,12 +4,11 @@ from datetime import datetime
 import base64
 import re
 import xml.etree.ElementTree as elementTree
+import jinja2
+from jinja2 import environment
 
 class Utils:
     
-    def wordlist_types():
-        return ['my', 'string', 'bool', 'digit', 'integer', 'char', 'filename', 'datetime','date', 'time', 'username', 'password']
-   
     def jsone(objDict):
         if objDict is None:
             return ''
@@ -121,5 +120,43 @@ class Utils:
             return False, exprType
         except Exception as e:
             return False, expr
+    
+    # integer type is to support OpenApi3, but is same as digit
+    def wordlist_types():
+        return ['string', 'bool', 'digit', 'integer', 'char', 'filename', 'datetime','date', 'time', 'username', 'password']
+        
+    # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
+    # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
+    def inject_eval_into_wordlist_expression(expr) -> tuple([bool, str, str]):
+        
+        try:
+            
+            # insert my wordlist type
+            def myWordlist(value):
+                return f'{{{{ eval(\'my:{value}\') }}}}'
+            
+            # env = jinja2.Environment()
+            environment.DEFAULT_FILTERS['my'] = myWordlist
+
+            tpl = jinja2.Template(expr)
+            
+            output = tpl.render(
+                string='{{ eval(\'string\') }}',
+                bool='{{ eval(\'bool\') }}',
+                digit='{{ eval(\'digit\') }}',
+                integer='{{ eval(\'integer\') }}',
+                char='{{ eval(\'char\') }}',
+                filename='{{ eval(\'filename\') }}',
+                datetime='{{ eval(\'datetime\') }}',
+                date='{{ eval(\'date\') }}',
+                time='{{ eval(\'time\') }}',
+                username='{{ eval(\'username\') }}',
+                password='{{ eval(\'password\') }}'
+            )                    
+                    
+            return True, '', output
+        
+        except Exception as e:
+            return False, e,  expr
         
         

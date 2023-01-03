@@ -4,7 +4,6 @@ from enum import Enum
 from multiprocessing import Event
 import jsonpickle
 from  datetime import datetime
-from utils import Utils
 import asyncio
 import nest_asyncio
 from pubsub import pub
