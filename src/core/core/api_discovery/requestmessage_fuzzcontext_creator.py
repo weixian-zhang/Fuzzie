@@ -162,11 +162,17 @@ class RequestMessageFuzzContextCreator:
                 
                 fuzzcaseSet.headerNonTemplate = headerJson
                 
-                hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(headerJson)
-                if not hOK:
-                    return hOK, Utils.errAsText(hErr), []
-            
-                fuzzcaseSet.headerDataTemplate = evalHeader
+                if len(headers) > 0:
+                    evalHeaderDict = {}
+                    for key in headers.keys():
+                        hVal = headers[key]
+                        hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(hVal)
+                        if not hOK:
+                            return hOK, Utils.errAsText(hErr), []
+                        
+                        evalHeaderDict[key] = evalHeader
+                
+                    fuzzcaseSet.headerDataTemplate = json.dumps(evalHeaderDict)
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
