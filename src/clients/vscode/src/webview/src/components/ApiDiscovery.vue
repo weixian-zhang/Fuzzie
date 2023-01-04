@@ -29,7 +29,6 @@
                   ></v-text-field>
                 </div>
 
-              <v-divider />
               <b>Test Properties</b>
               <v-divider />
 
@@ -56,20 +55,21 @@
                     label="Port number" />
                 </div>
 
-              <v-divider />
               <b>API Discovery</b>
               <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
 
-                <div class="mb-2">
+                <div class="mb-2" style="display:inline">
                   <v-textarea 
-                    label="Request Text" 
-                    variant="underlined" 
+                    label="Request Message" 
+                    shaped
+                    variant="outlined"
+                    density="compact"
+                    readonly
+                    no-resize
                     v-model="newApiContext.requestTextContent"
-                     density="compact"
-                     clearable
-                     @click:clear="(newApiContext.requestTextContent='')"
-                  ></v-textarea>
+                     @click="(showReqMsgEditDialog = true)"
+                  />
                 </div>
 
                 <div class="mb-2">
@@ -301,7 +301,6 @@
                   ></v-text-field>
                 </div>
 
-              <v-divider />
               <b>Test Properties</b>
               <v-divider />
 
@@ -328,18 +327,20 @@
                     label="Port number" />
                 </div>
 
-              <v-divider />
               <b>API Discovery (Read-Only)</b>
               <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
 
                 <div class="mb-2">
                   <v-textarea 
-                    label="Request Text" 
-                    variant="underlined" 
+                    label="Request Message" 
+                    shaped
+                    variant="outlined"
+                    density="compact"
+                    readonly
+                    no-resize
                     v-model="apiContextEdit.requestTextContent"
-                     density="compact"
-                     readonly
+                    @click="(showReqMsgReadOnlyDialog = true)"
                   ></v-textarea>
                 </div>
 
@@ -528,6 +529,94 @@
       </div>
     </Sidebar>
 
+    <!--request message dialog-->
+    <Dialog v-model:visible="showReqMsgEditDialog" 
+      header="Request Message" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true">
+      <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
+
+      <div class="display:inline-block fill-height">
+        <v-btn
+          size="x-small"
+          color="cyan"
+          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">
+          GET example
+        </v-btn>
+        <v-btn
+          size="x-small"
+          color="cyan"
+          class="ml-5"
+          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
+          POST example
+        </v-btn>
+      </div>
+
+      <div style="height: 10px;"></div>
+      <codemirror
+          v-model="newApiContext.requestTextContent"
+          placeholder="request message goes here..."
+          :style="{ height: '600px' }"
+          :autofocus="true"
+          :indent-with-tab="true"
+          :tab-size="2"
+          :extensions="extensions"
+          @ready="onCMReady" 
+        />
+              <!-- <v-textarea 
+                    label="" 
+                    shaped
+                    variant="outlined"
+                    auto-grow
+                    no-resize
+                    v-model="newApiContext.requestTextContent"
+                     density="compact" 
+                     rows="40"/>
+              <template #footer>
+                  <Button label="No" icon="pi pi-times" @click="closeBasic2" class="p-button-text" />
+                  <Button label="Yes" icon="pi pi-check" @click="closeBasic2" autofocus />
+              </template> -->
+    </Dialog>
+
+    <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
+      header="Request Message" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true">
+
+<!-- codemirror vuejs example
+  https://codemirror.net/examples/autocompletion/
+  https://codemirror.net/docs/guide/
+  https://github.com/surmon-china/vue-codemirror/issues/66-->
+
+          <codemirror
+          v-model="apiContextEdit.requestTextContent"
+          placeholder="request message goes here..."
+          :style="{ height: '80vw' }"
+          :autofocus="true"
+          :indent-with-tab="true"
+          :tab-size="2"
+          :extensions="extensions"
+          :options="cmOption"
+        />
+
+              <!-- <v-textarea 
+                    label="" 
+                    shaped
+                    variant="outlined"
+                    auto-grow
+                    readonly
+                    no-resize
+                    v-model="apiContextEdit.requestTextContent"
+                     density="compact" 
+                     rows="40"/>
+              <template #footer>
+                  <Button label="No" icon="pi pi-times" @click="closeBasic2" class="p-button-text" />
+                  <Button label="Yes" icon="pi pi-check" @click="closeBasic2" autofocus />
+              </template> -->
+    </Dialog>
+
+    
+
     <!-- delete confirmation -->
     <v-dialog
       v-model="showDeleteConfirmDialog"
@@ -593,29 +682,13 @@
         
         <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" class="border-0">
           <template #default="slotProps" >
-            <!--fuzz context-->
-            <!-- <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
-              :class="( slotProps.node.isFuzzCaseRun == false? (slotProps.node.fuzzcontextId === selectedContextNode) :
-               (slotProps.node.fuzzcontextId === selectedContextNode &&  slotProps.node.fuzzCaseSetRunsId == selectedCaseSetRunNode)  &&
-               (slotProps.node.key != '-1' && slotProps.node.key != '-2') ) ? 
-               'p-1 border border-info border-2' : '' ">
-              <b 
-                v-on:click="(
-                  (slotProps.node.key != '-1' && slotProps.node.key != '-2') && slot.node.isFuzzCaseRun == false ?
-                      onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId) : '' ,
-                  selectedContextNode = slotProps.node.fuzzcontextId,
-                  selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId
-                )">
-                {{slotProps.node.label}}
-              </b>
-            </small> -->
 
             <!--fuzz context-->
             <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
               :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&
                 slotProps.node.fuzzcontextId === selectedContextNode) ? 'p-1 border border-info border-2' : '')">
               <b 
-                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId),
+                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.hostname, slotProps.node.port),
                 selectedContextNode = slotProps.node.fuzzcontextId)">
                 {{slotProps.node.label}}
               </b>
@@ -718,6 +791,10 @@ import { Options, Vue } from 'vue-class-component';
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
+import Dialog from 'primevue/dialog';
+import Message from 'primevue/message';
+
+import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
@@ -736,7 +813,9 @@ class Props {
 @Options({
   components: {
     Tree,
-    Sidebar
+    Sidebar,
+    Dialog,
+    Message
   },
 })
 
@@ -751,6 +830,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
   showFuzzConfirmDialog = false;
+  showReqMsgEditDialog = false;
+  showReqMsgReadOnlyDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
@@ -782,6 +863,23 @@ export default class ApiDiscovery extends Vue.with(Props) {
   newApiContext= new ApiFuzzContext();
   apiContextEdit = new ApiFuzzContext();
 
+  cmOption = {
+        tabSize: 4,
+        styleActiveLine: true,
+        autofocus: true,
+        lineNumbers: true,
+        line: true,
+        foldGutter: true,
+        styleSelectedText: true,
+        mode: "text/x-mysql",
+        keyMap: "sublime",
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
+        extraKeys: { Ctrl: "autocomplete" }
+    };
+
+  reqMsgExampleLoader = new RequestMessageExamples()
+
   //methods
   
   async mounted() {
@@ -792,6 +890,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
 
     this.getFuzzcontexts()
+
+    // const jsDocCompletions = jsonLanguage.data.of({
+    //   autocomplete: this.completeJSDoc
+    // })
   }
 
   // #### websocket events ####
@@ -803,7 +905,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzerNotReady() {
-    this.clearData()
+    //this.clearData()
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -925,7 +1027,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
               label: fc.name,
               name: fc.name,
               data: fc,
-              isFuzzCaseRun: false
+              isFuzzCaseRun: false,
+              hostname: fc.hostname,
+              port: fc.port
             };
 
             this.expandedNodeKeys[fc.Id] = true;
@@ -994,8 +1098,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
  }
 
-  onFuzzContextSelected(fuzzcontextId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
+  onFuzzContextSelected(fuzzcontextId, hostname, port) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, hostname, port);
   }
 
   onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
@@ -1169,6 +1273,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
   }
 
+
   // Anonymous
   // Basic
   // Bearer,
@@ -1198,7 +1303,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   determineApiDiscoveryMethod(){
     if(this.newApiContext.requestTextContent != '')
     {
-        return 'request-text';
+        return 'request_message';
     }
     return 'openapi3';
   }
@@ -1225,6 +1330,5 @@ input[type=text]{
    margin-bottom:2px; /* Reduced from whatever it currently is */
    margin-top:2px; /* Reduced from whatever it currently is */
 }
-
 
 </style>

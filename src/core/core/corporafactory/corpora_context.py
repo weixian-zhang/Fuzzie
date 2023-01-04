@@ -55,13 +55,13 @@ class CorporaContext:
             
     
     
-    def build(self, template) -> tuple[bool, str]:
+    def build(self, expression) -> tuple[bool, str]:
         
-        if template == '' or template == '{}':
+        if expression == '' or expression == '{}':
             return True, ''
         
         try:
-            
+                        
             if isinstance(template, str):
                 template = jinja2.Template(template)
                 template.render({ 'eval': self.eval_expression_by_build })
@@ -108,13 +108,13 @@ class CorporaContext:
             self.es.emitErr(e, 'CorporaContext.resolve_expr')
             return False, e, ''
         
-        
+    
         
     def eval_expression_by_build(self, expr: str):
         
         expression = expr
         
-        originalExpression = f'{{ eval(\'{expr}\') }}'
+        originalExpression = f'{{ eval(\'{expr.strip()}\') }}'
         
         if expr is None or expression is None or expression == '':
             raise(Exception('Expression is invalid, detected empty string'))
@@ -124,23 +124,20 @@ class CorporaContext:
             self.context[expr] = userSuppliedOrStringCorpora
             return originalExpression
         
-        if expression.startswith('sha256'):
-            return originalExpression
+        # if expression.startswith('sha256'):
+        #     return originalExpression
         
-        if expression.startswith('base64e'):
-            return originalExpression
+        # if expression.startswith('base64e'):
+        #     return originalExpression
         
-        if expression.startswith('sha256'):
-            return originalExpression
-        
-        if expression.startswith('autonum'):
-            return originalExpression
+        # if expression.startswith('autonum'):
+        #     return originalExpression
             
-        if expression.startswith('uuid'):
-            return originalExpression
+        # if expression.startswith('uuid'):
+        #     return originalExpression
         
-        if expression.startswith('ip'):
-            return originalExpression
+        # if expression.startswith('ip'):
+        #     return originalExpression
             
         match expression:
             case 'string':

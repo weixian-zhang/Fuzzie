@@ -26,7 +26,7 @@ class OpenApi3ApiDiscover:
             with open(file_path, 'r', encoding='utf-8') as f:
                 spec = yaml.safe_load(f)
                 
-            apiContext = self.create_apicontext_from_openapi3(spec)
+            apiContext = self.create_apicontext(spec)
             
             return apiContext
                              
@@ -43,11 +43,11 @@ class OpenApi3ApiDiscover:
         specStr = resp.text
         spec = yaml.safe_load(specStr)
                 
-        apiContext = self.create_apicontext_from_openapi3(spec)
+        apiContext = self.create_apicontext(spec)
         
         return apiContext
             
-    def create_apicontext_from_openapi3(self, openapiSpecString) -> ApiContext:
+    def create_apicontext(self, openapiSpecString) -> ApiContext:
         
         try:
             
@@ -82,7 +82,7 @@ class OpenApi3ApiDiscover:
             return True, '', apicontext
         
         except Exception as e:
-            self.eventstore.emitErr(e, 'OpenApi3ApiDiscover.create_apicontext_from_openapi3')
+            self.eventstore.emitErr(e, 'OpenApi3ApiDiscover.create_apicontext')
             return False, e.message, ApiContext
         
         
