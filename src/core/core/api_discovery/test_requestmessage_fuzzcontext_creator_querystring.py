@@ -22,8 +22,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         rq = '''
            https://example.com?name={{username}}&address={{string}}
         '''
-        
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+    
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -35,7 +34,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -44,7 +43,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         
         self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{username}}&address={{string}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{username}}&address={{string}}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'username\') }}&address={{ eval(\'string\') }}')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '')
         
         
@@ -56,8 +55,6 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
            &address={{string}}
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
-        
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
@@ -68,7 +65,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -77,7 +74,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         
         self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{username}}&address={{string}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{username}}&address={{string}}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'username\') }}&address={{ eval(\'string\') }}')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/user')
         
         
@@ -87,8 +84,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
            https://example.com/user?name={{username}}
             &address={{string}}
         '''
-        
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
+    
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -100,7 +96,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -109,7 +105,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         
         self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{username}}&address={{string}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{username}}&address={{string}}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'username\') }}&address={{ eval(\'string\') }}')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/user')
         
         
@@ -120,8 +116,6 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
             ?name={{username}}&address={{string}}
         '''
         
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
-        
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
@@ -132,7 +126,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -141,21 +135,22 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         
         self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{username}}&address={{string}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{username}}&address={{string}}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == "?name={{ eval('username') }}&address={{ eval('string') }}")
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/user')
         
         
     def test_reqmsg_parser_qs_with_newline_4(self):
         
         rq = '''
-           https://example.com/user
+           
+           https://example.com/user HTTP/1.1
             ?name={{username}}
             &address={{string}}
             &order=5
             &mode={{string}}
+           a: "b"
+            
         '''
-        
-        rqB64 = base64.b64encode(bytes(rq, encoding='utf-8'))
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
@@ -167,7 +162,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
                             authnType=SupportedAuthnType.Anonymous.name,
                             fuzzcaseToExec=500,
                             openapi3FilePath='',
-                            requestTextContent= rqB64
+                            requestTextContent= rq
                             )
         
         self.assertTrue(ok)
@@ -176,7 +171,7 @@ class TestRequestMessageFuzzContextCreator_By_QueryString(unittest.TestCase):
         
         self.assertTrue(apicontext.fuzzcaseSets[0].verb == 'GET')
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{username}}&address={{string}}&order=5&mode={{string}}')
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{username}}&address={{string}}&order=5&mode={{string}}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'username\') }}&address={{ eval(\'string\') }}&order=5&mode={{ eval(\'string\') }}')
         self.assertTrue(apicontext.fuzzcaseSets[0].path == '/user')
         
         

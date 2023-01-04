@@ -193,13 +193,7 @@ class RequestMessageFuzzContextCreator:
     
     def get_path(self, multilineBlock) -> tuple([bool, str, str]):
         
-        def remove_verb_if_exist(requestline: str):
-            if requestline == '':
-                return requestLine
-            for v in self.verbs:
-                if requestline.upper().startswith(v):
-                    requestline = requestline.removeprefix(v)
-            return requestline
+        
             
         path = ''
         
@@ -208,9 +202,10 @@ class RequestMessageFuzzContextCreator:
             requestLine: str = multilineBlock[0]
             
             # remove verb
-            requestLine = remove_verb_if_exist(requestLine)
+            requestLine = self.remove_verb_if_exist(requestLine)
+            
             # remove HTTP/1.1 if any
-            requestLine = requestLine.removesuffix('HTTP/1.1')
+            requestLine = requestLine.replace('HTTP/1.1', '')
             
             urlonly = requestLine.strip()
             
@@ -254,30 +249,50 @@ class RequestMessageFuzzContextCreator:
         
         requestline = multilineBlock[0]
         
-        tokens = requestline.split(' ')
+        requestline = self.remove_verb_if_exist(requestline)
         
-        try:
-            for t in tokens:
-                t = t.strip()
-                if Utils.isInString('?', t):
-                    querystring = urlparse(t).query
-                    querystring = '?' + querystring
-                    break
-        except ValueError as e:
-            #substring not found exception
-            pass
-           
+        # remove HTTP/1.1 if any
+        requestline = requestline.replace('HTTP/1.1', '')
+        
+        requestline = requestline.strip()
+        
+        
+        
+        # tokens = requestline.split(' ')
+        
+        # try:
+        #     for t in tokens:
+        #         t = t.strip()
+        #         if Utils.isInString('?', t):
+        #             querystring = urlparse(t).query
+        #             querystring = '?' + querystring
+        #             break
+        # except ValueError as e:
+        #     #substring not found exception
+        #     pass
+        
+        querystring = urlparse(requestline).query
+        
+        qsParts = querystring.split('&')
+        
+        qsParts = [x.strip() for x in qsParts]   # remove all prefix/suffix spaces if any
+        
+        querystring = '&'.join(qsParts)
 
         lineIndex = 0
         while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
             lineIndex = lineIndex + 1
-            
-        # claim empty breaklines in case there are between requestline and headers/body
+        
+        lineIndex = 0
+        # # claim empty breaklines in case there are between requestline and headers/body
         # while self.is_next_line_breakline(multilineBlock, lineIndex):
         #     lineIndex = lineIndex + 1
             
         mergedQSTokens = "".join(qsTokens)
         querystring = querystring + mergedQSTokens
+        
+        if not querystring.startswith('?'):
+            querystring = '?' + querystring
         
         return lineIndex, querystring
     
@@ -389,6 +404,14 @@ class RequestMessageFuzzContextCreator:
             
         return False
     
+    def remove_verb_if_exist(self, requestline: str):
+            if requestline == '':
+                return requestline
+            for v in self.verbs:
+                if requestline.upper().startswith(v):
+                    requestline = requestline.removeprefix(v)
+            return requestline
+    
     #example:
     # POST https://api.example.com/login HTTP/1.1
     # Content-Type: application/x-www-form-urlencoded
@@ -475,7 +498,7 @@ class RequestMessageFuzzContextCreator:
         
         lines = rqMsg.splitlines()
         lines = [x for x in lines if not self.is_line_comment(x)]
-        return ''.join(lines)
+        return '\n'.join(lines)
     
     
 
