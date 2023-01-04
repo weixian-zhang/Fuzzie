@@ -556,7 +556,7 @@
       <codemirror
           v-model="newApiContext.requestTextContent"
           placeholder="request message goes here..."
-          :style="{ height: '80vw' }"
+          :style="{ height: '600px' }"
           :autofocus="true"
           :indent-with-tab="true"
           :tab-size="2"
@@ -688,7 +688,7 @@
               :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&
                 slotProps.node.fuzzcontextId === selectedContextNode) ? 'p-1 border border-info border-2' : '')">
               <b 
-                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId),
+                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.hostname, slotProps.node.port),
                 selectedContextNode = slotProps.node.fuzzcontextId)">
                 {{slotProps.node.label}}
               </b>
@@ -1027,7 +1027,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
               label: fc.name,
               name: fc.name,
               data: fc,
-              isFuzzCaseRun: false
+              isFuzzCaseRun: false,
+              hostname: fc.hostname,
+              port: fc.port
             };
 
             this.expandedNodeKeys[fc.Id] = true;
@@ -1096,8 +1098,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
  }
 
-  onFuzzContextSelected(fuzzcontextId) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
+  onFuzzContextSelected(fuzzcontextId, hostname, port) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, hostname, port);
   }
 
   onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {

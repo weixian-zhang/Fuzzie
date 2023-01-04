@@ -16,9 +16,8 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title>Fuzz Cases</v-toolbar-title>
-      
-      
+      <v-toolbar-title>API Operations {{ this.getHostnameDisplay() }}</v-toolbar-title>
+  
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
           @click="(
@@ -202,16 +201,34 @@ class Props {
   fuzzContextId = '';
   fuzzCaseSetRunsId = '';
 
+  hostname = '';
+  port = undefined;
+
   beforeMount() {
       this.$logger = inject('$logger');   
   }
 
   onTableValueSeeInFullClicked(jsonValue) {
+    try {
+      // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
       this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
+    } catch (error) {
+        this.tableValViewInSizeBar = jsonValue;
+    }
+      
   }
 
   onTableValueNonJsonSeeInFullClicked(val) {
     this.tableValViewInSizeBar = val
+  }
+
+  getHostnameDisplay() {
+
+    if (this.hostname != '' && this.port != undefined) {
+      return ` - ${this.hostname}:${this.port}`;
+    }
+
+    return '';
   }
 
   mounted(){
@@ -321,9 +338,12 @@ class Props {
     }
   }
 
-  async onFuzzContextSelected(fuzzcontextId)
+  async onFuzzContextSelected(fuzzcontextId, hostname, port)
   {
      this.fuzzContextId = fuzzcontextId;
+     this.hostname = hostname;
+     this.port = port;
+
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
 
