@@ -108,8 +108,8 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         
         rq = '''https://example.com/user
         ?name={{ string }}
-        &gender={{ bool) }}
-        &age={{ digit) }}
+        &gender={{ bool }}
+        &age={{ digit }}
         &age={{ integer }}
         &a={{ char }}
         &a={{ filename }}
@@ -118,7 +118,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         &a={{ time }}
         &a={{ username }}
         &a={{ password }}
-        &a={{ this is a test to prove that I have a very long custom input and Fuzzie accepts it | my }}
+        &a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
         &b={{ string }}
         &b={{ bool }}
         &b={{ digit }}
@@ -130,7 +130,7 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         &b={{ time }}
         &b={{ username }}
         &b={{ password }}
-        &b={{ this is a test to prove that I have a very long custom input and Fuzzie accepts it | my }}
+        &b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
         '''
         
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
@@ -150,32 +150,9 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         self.assertTrue(error == '')
         self.assertGreater(len(apicontext.fuzzcaseSets), 0)
         
-        self.assertTrue(apicontext.fuzzcaseSets[0].pathDataTemplate == '''https://example.com/user
-        ?name={{ eval(\'string\') }}
-        &gender={{ eval(\'bool\') }}
-        &age={{ eval(\'digit\') }}
-        &age={{ eval(\'integer\') }}
-        &a={{ eval(\'char\') }}
-        &a={{ eval(\'filename\') }}
-        &a={{ eval(\'datetime\') }}
-        &a={{ eval(\'date\') }}
-        &a={{ eval(\'time\') }}
-        &a={{ eval(\'username\') }}
-        &a={{ eval(\'password\') }}
-        &a={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}
-        &b={{ eval(\'string\') }}
-        &b={{ eval(\'bool\') }}
-        &b={{ eval(\'digit\') }}
-        &b={{ eval(\'integer\') }}
-        &b={{ eval(\'char\') }}
-        &b={{ eval(\'filename\') }}
-        &b={{ eval(\'datetime\') }}
-        &b={{ eval(\'date\') }}
-        &b={{ eval(\'time\') }}
-        &b={{ eval(\'username\') }}
-        &b={{ eval(\'password\') }}
-        &b={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}
-        ''')
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{ string }}&gender={{ bool }}&age={{ digit }}&age={{ integer }}&a={{ char }}&a={{ filename }}&a={{ datetime }}&a={{ date }}&a={{ time }}&a={{ username }}&a={{ password }}&a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}&b={{ string }}&b={{ bool }}&b={{ digit }}&b={{ integer }}&b={{ char }}&b={{ filename }}&b={{ datetime }}&b={{ date }}&b={{ time }}&b={{ username }}&b={{ password }}&b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}')
+        
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'string\') }}&gender={{ eval(\'bool\') }}&age={{ eval(\'digit\') }}&age={{ eval(\'integer\') }}&a={{ eval(\'char\') }}&a={{ eval(\'filename\') }}&a={{ eval(\'datetime\') }}&a={{ eval(\'date\') }}&a={{ eval(\'time\') }}&a={{ eval(\'username\') }}&a={{ eval(\'password\') }}&a={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}&b={{ eval(\'string\') }}&b={{ eval(\'bool\') }}&b={{ eval(\'digit\') }}&b={{ eval(\'integer\') }}&b={{ eval(\'char\') }}&b={{ eval(\'filename\') }}&b={{ eval(\'datetime\') }}&b={{ eval(\'date\') }}&b={{ eval(\'time\') }}&b={{ eval(\'username\') }}&b={{ eval(\'password\') }}&b={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}')
         
         
 if __name__ == '__main__':

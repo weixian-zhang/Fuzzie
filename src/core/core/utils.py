@@ -127,7 +127,7 @@ class Utils:
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
     # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
-    def inject_eval_into_wordlist_expression(expr) -> tuple([bool, str, str]):
+    def inject_eval_into_wordlist_expression(expr: str) -> tuple([bool, str, str]):
         
         try:
             
