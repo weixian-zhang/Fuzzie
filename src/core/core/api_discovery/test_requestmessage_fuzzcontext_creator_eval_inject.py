@@ -104,10 +104,71 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
     #     self.assertTrue(apicontext.fuzzcaseSets[0].pathDataTemplate == '/{{ eval(\'string\') }}/{{ eval(\'bool\') }}/{{ eval(\'digit\') }}/{{ eval(\'integer\') }}/{{ eval(\'char\') }}/{{ eval(\'filename\') }}/{{ eval(\'datetime\') }}/{{ eval(\'date\') }}/{{ eval(\'time\') }}/{{ eval(\'username\') }}/{{ eval(\'password\') }}/{{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}/{{ eval(\'string\') }}/{{ eval(\'bool\') }}/{{ eval(\'digit\') }}/{{ eval(\'integer\') }}/{{ eval(\'char\') }}/{{ eval(\'filename\') }}/{{ eval(\'datetime\') }}/{{ eval(\'date\') }}/{{ eval(\'time\') }}/{{ eval(\'username\') }}/{{ eval(\'password\') }}/{{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}')
         
     
-    def test_querystring_eval_inject_all_wordlist(self):
+    # def test_querystring_eval_inject_all_wordlist(self):
         
-        rq = '''https://example.com/user
-        ?name={{ string }}
+    #     rq = '''https://example.com/user
+    #     ?name={{ string }}
+    #     &gender={{ bool }}
+    #     &age={{ digit }}
+    #     &age={{ integer }}
+    #     &a={{ char }}
+    #     &a={{ filename }}
+    #     &a={{ datetime }}
+    #     &a={{ date }}
+    #     &a={{ time }}
+    #     &a={{ username }}
+    #     &a={{ password }}
+    #     &a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
+    #     &b={{ string }}
+    #     &b={{ bool }}
+    #     &b={{ digit }}
+    #     &b={{ integer }}
+    #     &b={{ char }}
+    #     &b={{ filename }}
+    #     &b={{ datetime }}
+    #     &b={{ date }}
+    #     &b={{ time }}
+    #     &b={{ username }}
+    #     &b={{ password }}
+    #     &b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
+    #     '''
+        
+    #     rqMsgFCCreator = RequestMessageFuzzContextCreator()
+        
+    #     ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
+    #                         apiDiscoveryMethod= "request_message",
+    #                         name= "request-message-test",
+    #                         hostname='https://example.com',
+    #                         port='443',
+    #                         authnType=SupportedAuthnType.Anonymous.name,
+    #                         fuzzcaseToExec=500,
+    #                         openapi3FilePath='',
+    #                         requestTextContent= rq
+    #                         )
+        
+    #     self.assertTrue(ok)
+    #     self.assertTrue(error == '')
+    #     self.assertGreater(len(apicontext.fuzzcaseSets), 0)
+        
+    #     self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{ string }}&gender={{ bool }}&age={{ digit }}&age={{ integer }}&a={{ char }}&a={{ filename }}&a={{ datetime }}&a={{ date }}&a={{ time }}&a={{ username }}&a={{ password }}&a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}&b={{ string }}&b={{ bool }}&b={{ digit }}&b={{ integer }}&b={{ char }}&b={{ filename }}&b={{ datetime }}&b={{ date }}&b={{ time }}&b={{ username }}&b={{ password }}&b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}')
+        
+    #     self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'string\') }}&gender={{ eval(\'bool\') }}&age={{ eval(\'digit\') }}&age={{ eval(\'integer\') }}&a={{ eval(\'char\') }}&a={{ eval(\'filename\') }}&a={{ eval(\'datetime\') }}&a={{ eval(\'date\') }}&a={{ eval(\'time\') }}&a={{ eval(\'username\') }}&a={{ eval(\'password\') }}&a={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}&b={{ eval(\'string\') }}&b={{ eval(\'bool\') }}&b={{ eval(\'digit\') }}&b={{ eval(\'integer\') }}&b={{ eval(\'char\') }}&b={{ eval(\'filename\') }}&b={{ eval(\'datetime\') }}&b={{ eval(\'date\') }}&b={{ eval(\'time\') }}&b={{ eval(\'username\') }}&b={{ eval(\'password\') }}&b={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}')
+        
+    
+    
+    def test_path_and_querystring_eval_inject_all_wordlist(self):
+        
+        pathAllWT = 'GET https://example.com/user'
+        
+        for x in Utils.wordlist_types():
+            if x == 'my':
+                continue
+            
+            pathAllWT = pathAllWT + f'/{{{{ {x} }}}}'
+            
+        pathAllWT = pathAllWT + f'/{{{{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}}}'
+        
+        qs = '''?name={{ string }}
         &gender={{ bool }}
         &age={{ digit }}
         &age={{ integer }}
@@ -133,6 +194,8 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         &b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
         '''
         
+        rq = pathAllWT + qs
+        
         rqMsgFCCreator = RequestMessageFuzzContextCreator()
         
         ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
@@ -150,10 +213,10 @@ class TestRequestMessageFuzzContextCreator_By_Path(unittest.TestCase):
         self.assertTrue(error == '')
         self.assertGreater(len(apicontext.fuzzcaseSets), 0)
         
+        self.assertTrue(apicontext.fuzzcaseSets[0].path == '/user/{{ string }}/{{ bool }}/{{ digit }}/{{ integer }}/{{ char }}/{{ filename }}/{{ datetime }}/{{ date }}/{{ time }}/{{ username }}/{{ password }}/{{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}')
+        self.assertTrue(apicontext.fuzzcaseSets[0].pathDataTemplate == "/user/{{ eval('string') }}/{{ eval('bool') }}/{{ eval('digit') }}/{{ eval('integer') }}/{{ eval('char') }}/{{ eval('filename') }}/{{ eval('datetime') }}/{{ eval('date') }}/{{ eval('time') }}/{{ eval('username') }}/{{ eval('password') }}/{{ eval('my:this is a test to prove that I have a very long custom input and Fuzzie accepts it') }}")
         self.assertTrue(apicontext.fuzzcaseSets[0].querystringNonTemplate == '?name={{ string }}&gender={{ bool }}&age={{ digit }}&age={{ integer }}&a={{ char }}&a={{ filename }}&a={{ datetime }}&a={{ date }}&a={{ time }}&a={{ username }}&a={{ password }}&a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}&b={{ string }}&b={{ bool }}&b={{ digit }}&b={{ integer }}&b={{ char }}&b={{ filename }}&b={{ datetime }}&b={{ date }}&b={{ time }}&b={{ username }}&b={{ password }}&b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}')
-        
-        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == '?name={{ eval(\'string\') }}&gender={{ eval(\'bool\') }}&age={{ eval(\'digit\') }}&age={{ eval(\'integer\') }}&a={{ eval(\'char\') }}&a={{ eval(\'filename\') }}&a={{ eval(\'datetime\') }}&a={{ eval(\'date\') }}&a={{ eval(\'time\') }}&a={{ eval(\'username\') }}&a={{ eval(\'password\') }}&a={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}&b={{ eval(\'string\') }}&b={{ eval(\'bool\') }}&b={{ eval(\'digit\') }}&b={{ eval(\'integer\') }}&b={{ eval(\'char\') }}&b={{ eval(\'filename\') }}&b={{ eval(\'datetime\') }}&b={{ eval(\'date\') }}&b={{ eval(\'time\') }}&b={{ eval(\'username\') }}&b={{ eval(\'password\') }}&b={{ eval(\'my:this is a test to prove that I have a very long custom input and Fuzzie accepts it\') }}')
-        
+        self.assertTrue(apicontext.fuzzcaseSets[0].querystringDataTemplate == "?name={{ eval('string') }}&gender={{ eval('bool') }}&age={{ eval('digit') }}&age={{ eval('integer') }}&a={{ eval('char') }}&a={{ eval('filename') }}&a={{ eval('datetime') }}&a={{ eval('date') }}&a={{ eval('time') }}&a={{ eval('username') }}&a={{ eval('password') }}&a={{ eval('my:this is a test to prove that I have a very long custom input and Fuzzie accepts it') }}&b={{ eval('string') }}&b={{ eval('bool') }}&b={{ eval('digit') }}&b={{ eval('integer') }}&b={{ eval('char') }}&b={{ eval('filename') }}&b={{ eval('datetime') }}&b={{ eval('date') }}&b={{ eval('time') }}&b={{ eval('username') }}&b={{ eval('password') }}&b={{ eval('my:this is a test to prove that I have a very long custom input and Fuzzie accepts it') }}")       
         
 if __name__ == '__main__':
     unittest.main()
