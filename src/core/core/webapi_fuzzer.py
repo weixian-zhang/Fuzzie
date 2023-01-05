@@ -265,7 +265,7 @@ class WebApiFuzzer:
                 
                 reqBody = ''
                 if hasattr(prepReq, 'body'):
-                    reqBody = prepReq.body.decode('utf-8')
+                    reqBody = self.try_decode_body(prepReq.body)
                 
                 reqHeaders = prepReq.headers
                 reqContentLength =  prepReq.headers['Content-Length']
@@ -307,17 +307,16 @@ class WebApiFuzzer:
                 
                 return fuzzDataCase, {}
             
+            
             try:
                 fuzzResp = self.create_fuzz_response(self.apifuzzcontext.Id, fuzzDataCase.Id, resp)
             
                 fuzzDataCase.response = fuzzResp
                 
                 self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
+                
             except Exception as e:
-                pass
-            
-           
-            
+                self.eventstore.emitErr(e)
             
         except HTTPError as e:
             
@@ -509,9 +508,9 @@ class WebApiFuzzer:
         
         
     def determine_and_set_content_type(self, headers: dict):
-        contentType = 'application/json'
+        contentType = ''
         if headers is None or 'Content-Type' not in headers:
-            headers['Content-Type'] = contentType
+            return contentType
         else:
             contentType = headers['Content-Type']
         
@@ -557,9 +556,11 @@ class WebApiFuzzer:
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
+            
+            #if headerDT != '' or
             headerDict = {}
             headerDTObj = jsonpickle.decode(headerDT, safe=False, keys=False)
-            if isinstance(headerDT, str):
+            if isinstance(headerDTObj, dict) == False:
                 #double decode due to first decode removes '\\' escape characters from request-message headers
                 headerDTObj = jsonpickle.decode(jsonpickle.decode(headerDT, safe=False, keys=False), safe=False, keys=False)
             #headerDTObj = json.loads(json.loads(headerDT))#jsonpickle.decode(headerDT, safe=False, keys=False)
@@ -606,10 +607,7 @@ class WebApiFuzzer:
         except Exception as e:
             errText =  Utils.errAsText(e)
             self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
-            return False, errText
-    
-    def create_http_headers(self):
-        pass
+            return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
     
     # returns dict representing header
     def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:
@@ -635,7 +633,13 @@ class WebApiFuzzer:
                    }
             
         return {}
-        
+    
+    def try_decode_body(self, body):
+        try:
+            dbody = body.decode('utf-8')
+            return dbody
+        except Exception as e:
+            return body
 
     def create_fuzzdatacase(self, fuzzcaseSetId, fuzzcontextId):
         

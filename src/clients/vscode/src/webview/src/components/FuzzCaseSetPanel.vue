@@ -7,7 +7,7 @@
     outlined
     style="display: flex; flex-flow: column; height: 100%;">
   
-  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
+  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;" :modal="true" :dismissable="true">
     <v-textarea auto-grow
           outlined
           rows="1"
@@ -69,6 +69,15 @@
               Total Runs
             </th>
           </tr>
+          <tr v-show="isDataLoadingInProgress">
+              <th colspan="10">
+              <v-progress-linear
+                    indeterminate
+                    rounded
+                    color="cyan">
+                  </v-progress-linear>
+              </th>
+            </tr>
         </thead>
         <tbody>
           <tr
@@ -95,7 +104,9 @@
             </td>
             
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer"
+               v-tooltip.bottom="formatLongValueForTooltip(item.headerNonTemplate)"
+                @click="(
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
                 showFullValueSideBar = true
               )">
@@ -204,6 +215,8 @@ class Props {
   hostname = '';
   port = undefined;
 
+  isDataLoadingInProgress = false;
+
   beforeMount() {
       this.$logger = inject('$logger');   
   }
@@ -218,6 +231,15 @@ class Props {
       
   }
 
+  formatLongValueForTooltip(value) {
+    try {
+      // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
+      return JSON.stringify(JSON.parse(value),null,'\t')
+    } catch (error) {
+        return value;
+    }
+  }
+
   onTableValueNonJsonSeeInFullClicked(val) {
     this.tableValViewInSizeBar = val
   }
@@ -225,7 +247,12 @@ class Props {
   getHostnameDisplay() {
 
     if (this.hostname != '' && this.port != undefined) {
-      return ` - ${this.hostname}:${this.port}`;
+      if (this.port != 80 && this.port != 443) {
+        return ` - ${this.hostname}:${this.port}`;
+      }
+      else {
+        return ` - ${this.hostname}`;
+      }
     }
 
     return '';
@@ -323,19 +350,28 @@ class Props {
 
   public async getFuzzCaseSet_And_RunSummaries(fuzzcontextId: string, fuzzCaseSetRunsId: string)
   {
-     const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+     this.isDataLoadingInProgress = true;
 
-    if(!ok)
-    {
-      this.toastError(error, 'Get Fuzz Cases');
-    }
-    else
-    {
-      if(!Utils.isNothing(result)){
-        this.fcsRunSums = result;
+     try {
+        const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+     
+      if(!ok)
+      {
+        this.toastError(error, 'Get Fuzz Cases');
       }
-      
-    }
+      else
+      {
+        if(!Utils.isNothing(result)){
+          this.fcsRunSums = result;
+        }
+        
+      }
+     } 
+     finally {
+        this.isDataLoadingInProgress = false;
+     }
+
+     
   }
 
   async onFuzzContextSelected(fuzzcontextId, hostname, port)
@@ -347,10 +383,13 @@ class Props {
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
 
-  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
   {
     this.fuzzContextId = fuzzcontextId;
     this.fuzzCaseSetRunsId = fuzzCaseSetRunsId;
+    this.hostname = hostname;
+    this.port = port;
+
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   

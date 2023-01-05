@@ -64,10 +64,10 @@
                   <div style="width: 100%; text-align:right;">
                     
                     <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
-                    mdi-check-circle-outline
+                    mdi-check-circle
                     </v-icon>
                     <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
-                    mdi-close-circle-outline
+                    mdi-close-circle
                     </v-icon>
                   </div>
                   <v-textarea 
@@ -685,10 +685,6 @@
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
-      <!-- <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-        <v-icon color="cyan darken-3">mdi-message-plus-outline</v-icon>
-      </v-btn> -->
-
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
@@ -725,7 +721,10 @@
                   slotProps.node.fuzzcontextId == selectedContextNode &&
                   selectedCaseSetRunNode == slotProps.node.fuzzCaseSetRunsId) ? 'p-1 border border-info border-2' : '')">
               <b 
-                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
+                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, 
+                slotProps.node.fuzzCaseSetRunsId,
+                slotProps.node.hostname,
+                slotProps.node.port),
                     selectedContextNode = slotProps.node.fuzzcontextId,
                     selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId)">
                 {{slotProps.node.label}}
@@ -1072,7 +1071,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
               isFuzzing: false,
               label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
-              isFuzzCaseRun: true
+              isFuzzCaseRun: true,
+              hostname: fc.hostname,
+              port: fc.port
             };
           
             if(fcNode.children == undefined)
@@ -1143,8 +1144,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, hostname, port);
   }
 
-  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
-    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId);
+  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId, hostname, port) {
+    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId, hostname, port);
   }
 
   async onRequestTextFileChange(event) {
