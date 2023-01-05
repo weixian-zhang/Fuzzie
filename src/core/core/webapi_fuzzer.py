@@ -93,7 +93,7 @@ class WebApiFuzzer:
             self.totalFuzzRuns = 0
             self.currentFuzzRuns = 0
             
-            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled')
+            update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled', message=errorMsg)
             
             self.fuzzingStatus = FuzzingStatus.Stop
      
@@ -305,6 +305,8 @@ class WebApiFuzzer:
                                         contentLength=0,
                                         invalidRequestError=err)
                 
+                self.cancel_fuzzing(errorMsg=Utils.errAsText(e))
+                
                 return fuzzDataCase, {}
             
             
@@ -317,6 +319,7 @@ class WebApiFuzzer:
                 
             except Exception as e:
                 self.eventstore.emitErr(e)
+                self.cancel_fuzzing(errorMsg=Utils.errAsText(e))
             
         except HTTPError as e:
             

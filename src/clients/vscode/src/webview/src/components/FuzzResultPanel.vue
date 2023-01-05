@@ -174,7 +174,7 @@
                     tableRequestValueSizeBar=selectedRequest,
                     showRequestValueSideBar = true) : ''
                   )">
-                  view
+                  Request
                   </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedRequest" />
@@ -190,7 +190,7 @@
                     (tableResponseValueSizeBar=selectedResponse,
                     showResponseValueSideBar = true) : ''
                   )">
-                  view
+                  Response
                   </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
                   :value="selectedResponse" />

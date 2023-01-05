@@ -84,11 +84,6 @@ class RequestMessageFuzzContextCreator:
         
     def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
-        try:
-            print(0)
-        except Exception as e:
-            
-            raise e
 
         if rqMsg == '' or rqMsg.strip() == '':
             return []
@@ -112,7 +107,7 @@ class RequestMessageFuzzContextCreator:
             multilineBlock: list[str] = eachReqBlock.strip().splitlines()
             
             if len(multilineBlock) == 0:
-                return
+                return True, '', fcSets  
 
             # remove all breaklines until first char is found
             multilineBlock = self.remove_breaklines_until_char_detected(multilineBlock)
@@ -140,7 +135,7 @@ class RequestMessageFuzzContextCreator:
             pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
-                return pathOK, Utils.errAsText(pathErr), []
+                return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
             
             fuzzcaseSet.pathDataTemplate = evalPath
             
@@ -152,7 +147,7 @@ class RequestMessageFuzzContextCreator:
             
             qsOK, qsErr, evalQS = Utils.inject_eval_into_wordlist_expression(qs)
             if not qsOK:
-                return qsOK, Utils.errAsText(qsErr), []
+                return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
             
             fuzzcaseSet.querystringDataTemplate = evalQS
             
@@ -173,7 +168,7 @@ class RequestMessageFuzzContextCreator:
                         hVal = headers[key]
                         hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(hVal)
                         if not hOK:
-                            return hOK, Utils.errAsText(hErr), []
+                            return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
                         
                         evalHeaderDict[key] = evalHeader
                 
@@ -190,7 +185,7 @@ class RequestMessageFuzzContextCreator:
                 
                 bOK, bErr, evalBody = Utils.inject_eval_into_wordlist_expression(body)
                 if not bOK:
-                    return bOK, Utils.errAsText(bErr), []
+                    return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
                 fuzzcaseSet.bodyDataTemplate = evalBody
                 

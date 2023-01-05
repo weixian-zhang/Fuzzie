@@ -20,8 +20,6 @@ class BackgroundTask_WS_EventSender(threading.Thread):
                                 msg = EventStore.wsMsgQueue.popleft()
                                 
                                 asyncio.run(wsClient.send_text(msg))
-                                
-                                time.sleep(0.2)
                             
             except Exception as e:
                 msg: str = e.args[0]

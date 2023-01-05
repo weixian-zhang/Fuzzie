@@ -571,22 +571,42 @@
       @hide="onDialogClose">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <div class="display:inline-block fill-height">
-        <v-btn
-          size="x-small"
-          color="cyan"
-          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
-          >
-          GET example
-        </v-btn>
-        <v-btn
-          size="x-small"
-          color="cyan"
-          class="ml-5"
-          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
-          POST example
-        </v-btn>
-      </div>
+      <div class="container-fluid width=100%">
+          <div class="row">
+            <div class="col-6">
+              <v-btn
+              size="x-small"
+              color="cyan"
+              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
+              >
+            GET example
+            </v-btn>
+            <v-btn
+              size="x-small"
+              color="cyan"
+              class="ml-5"
+              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
+              POST example
+            </v-btn>
+            </div>
+            <div class="col-6 text-right">
+                <v-btn
+                  size="x-small"
+                  color="cyan"
+                  @click="parseRequestMessage()"
+                  >
+                Parse
+                </v-btn>
+                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                      mdi-check-circle
+                </v-icon>
+                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                  mdi-close-circle
+                </v-icon>
+            </div>
+          </div>
+      </div> 
+
 
       <div style="height: 10px;"></div>
       <codemirror
@@ -1092,6 +1112,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onDialogClose() {
+    this.parseRequestMessage();
+  }
+
+  async parseRequestMessage() {
     if(this.newApiContext.requestTextContent == ''){
       return;
     }

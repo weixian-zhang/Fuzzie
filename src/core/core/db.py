@@ -82,6 +82,7 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('startTime', DateTime),
                             Column('endTime', DateTime),
                             Column('status', String),
+                            Column('message', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
@@ -777,13 +778,14 @@ def insert_api_fuzzrequest_fileupload(Id, fileName,fileContent, fuzzRequestId, f
     Session.commit()
     Session.close()
     
-def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed') -> None:
+def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed', message='') -> None:
     stmt = (
             update(ApiFuzzCaseSetRunsTable).
             where(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId).
             values(
                     endTime = datetime.now(),
-                    status = status
+                    status = status,
+                    message = message
                    )
             )
     
