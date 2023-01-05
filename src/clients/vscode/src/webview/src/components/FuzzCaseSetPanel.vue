@@ -95,7 +95,9 @@
             <td>{{ item.verb }}</td>
             
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer"
+                v-tooltip.bottom="formatLongValueForTooltip(item.path)"
+                @click="(
                 onTableValueNonJsonSeeInFullClicked(item.path),
                 showFullValueSideBar = true
               )">
@@ -114,7 +116,9 @@
               </span>
             </td>
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer" 
+                v-tooltip.bottom="formatLongValueForTooltip(item.bodyNonTemplate)"
+                @click="(
                 onTableValueSeeInFullClicked(item.bodyNonTemplate),
                 showFullValueSideBar = true
               )"> 
