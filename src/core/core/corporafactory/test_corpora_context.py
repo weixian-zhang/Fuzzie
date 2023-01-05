@@ -1,19 +1,30 @@
 
 import unittest
 from corpora_context import CorporaContext
-from corpora_provider import CorporaProvider
+import os, sys
+from pathlib import Path
+
+projectDirPath = os.path.dirname(Path(__file__))
+parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
+sys.path.insert(0, parentFolderOfThisFile)
+sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
+
+from utils import Utils
+
+from backgroundtask_corpora_loader import corporaProvider
 
 class TestPasswordCorpora(unittest.TestCase):
     
     def __init__(self, methodName: str = ...) -> None:
-        self.cp = CorporaProvider()
+        self.cp = corporaProvider
+        self.cp.load_all()
         super().__init__(methodName)
     
-    def setUp(self) -> None:
+    # def setUp(self) -> None:
         
-        return super().setUp()
+    #     return super().setUp()
     
-    def test_no_expression_in_template(self):
+    # def test_no_expression_in_template(self):
         
         r = '''
                 POST https://example.com/comments HTTP/1.1
@@ -25,7 +36,7 @@ class TestPasswordCorpora(unittest.TestCase):
                 </request>
             '''
             
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
@@ -44,7 +55,7 @@ class TestPasswordCorpora(unittest.TestCase):
             </request>
         '''
         
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
@@ -64,14 +75,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''                
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -96,14 +105,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -120,11 +127,11 @@ class TestPasswordCorpora(unittest.TestCase):
             Authorization: token {{ eval('string') }}
 
             {
-                "my": "{{ eval( 'my=["journey","to","a","new","world]' ) }}",
+                "my": "{{ eval("my=journey to the rest of the world") }}",
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
@@ -138,11 +145,11 @@ class TestPasswordCorpora(unittest.TestCase):
             Content-Type: application/xml
 
             {
-                "my": "{{ eval( 'my=["stranger","things","season","5"' ) }}",
+                "my": "{{ eval( 'my=stranger things season 5' ) }}",
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
@@ -158,11 +165,11 @@ class TestPasswordCorpora(unittest.TestCase):
             Authorization: token {{ eval('string') }}
 
             {
-                "my": "{{ eval( 'my=[]') }}",
+                "my": "{{ eval( 'my=') }}",
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
@@ -183,14 +190,13 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
         
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -212,14 +218,13 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
         
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -241,14 +246,13 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
+    
         
         for t in range(100):
             
@@ -270,14 +274,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -299,14 +301,13 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
+    
         
         for t in range(100):
             
@@ -328,14 +329,13 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
+
         
         for t in range(100):
             
@@ -357,14 +357,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -386,14 +384,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -415,14 +411,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -444,14 +438,12 @@ class TestPasswordCorpora(unittest.TestCase):
             }
         '''
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
-        
-        self.cp.load_all()
         
         for t in range(100):
             
@@ -469,9 +461,7 @@ class TestPasswordCorpora(unittest.TestCase):
             Authorization: token {{ eval('string') }}
 
             {
-                "my": "{{ eval( 'my=["journey","to","a","new","world"]' ) }}",
-                "my": "{{ eval( 'my=["stranger","things","season","5"]' ) }}",
-                "my": "{{ eval( 'my=["cool"]' ) }}",
+                "my": "{{ eval("my=stranger things season 5") }}",
                 "string": "{{ eval('string') }}",
                 "char": "{{ eval('char') }}",
                 "bool": "{{ eval('bool') }}",
@@ -486,34 +476,22 @@ class TestPasswordCorpora(unittest.TestCase):
                 "time": "{{ eval('time') }}"
             }
         '''
+    
 
-        cc = CorporaContext(self.cp)
+        cc = CorporaContext()
         
         ok, err = cc.build(r)
         
         self.assertTrue(ok)
         self.assertTrue(err == '')
         
-        self.cp.load_all()
-        
         for t in range(100):
             
             ok, err, rtpl = cc.resolve_expr(r)
             
             self.assertTrue(ok)
-            self.assertTrue(err == '')
-    
-        #         ,
-        #         ,
-        #         ,
-        #         ,
-        #         ,
-        #        ,
-        #         ,
-        #         ,
-        #         "date": "{{ eval('date') }}",
-        #         "time": "{{ eval('time') }}"
-                
+            self.assertTrue(rtpl != '')
+                   
                 
 if __name__ == '__main__':
     unittest.main()

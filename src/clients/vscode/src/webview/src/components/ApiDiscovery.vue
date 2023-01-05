@@ -58,8 +58,18 @@
               <b>API Discovery</b>
               <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
-
+                
+                
                 <div class="mb-2" style="display:inline">
+                  <div style="width: 100%; text-align:right;">
+                    
+                    <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle-outline
+                    </v-icon>
+                    <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                    mdi-close-circle-outline
+                    </v-icon>
+                  </div>
                   <v-textarea 
                     label="Request Message" 
                     shaped
@@ -67,6 +77,7 @@
                     density="compact"
                     readonly
                     no-resize
+                    style="border-color: rgba(192, 0, 250, 0.986);"
                     v-model="newApiContext.requestTextContent"
                      @click="(showReqMsgEditDialog = true)"
                   />
@@ -533,14 +544,17 @@
     <Dialog v-model:visible="showReqMsgEditDialog" 
       header="Request Message" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
-      :maximizable="true" :modal="true">
+      :maximizable="true" :modal="true"
+      :dismissableMask="true"
+      @hide="onDialogClose">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
       <div class="display:inline-block fill-height">
         <v-btn
           size="x-small"
           color="cyan"
-          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">
+          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
+          >
           GET example
         </v-btn>
         <v-btn
@@ -581,6 +595,7 @@
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
       header="Request Message" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :dismissableMask="true"
       :maximizable="true" :modal="true">
 
 <!-- codemirror vuejs example
@@ -598,21 +613,6 @@
           :extensions="extensions"
           :options="cmOption"
         />
-
-              <!-- <v-textarea 
-                    label="" 
-                    shaped
-                    variant="outlined"
-                    auto-grow
-                    readonly
-                    no-resize
-                    v-model="apiContextEdit.requestTextContent"
-                     density="compact" 
-                     rows="40"/>
-              <template #footer>
-                  <Button label="No" icon="pi pi-times" @click="closeBasic2" class="p-button-text" />
-                  <Button label="Yes" icon="pi pi-check" @click="closeBasic2" autofocus />
-              </template> -->
     </Dialog>
 
     
@@ -840,6 +840,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];
+  requestMsgHasError = false;
+  requestMsgErrorMessage = ''
 
   selectedContextNode = ''
   selectedCaseSetRunNode = ''
@@ -1064,6 +1066,21 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
+  async onDialogClose() {
+    if(this.newApiContext.requestTextContent == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(this.newApiContext.requestTextContent));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
 
@@ -1329,6 +1346,10 @@ input[type=text]{
    padding:0px;
    margin-bottom:2px; /* Reduced from whatever it currently is */
    margin-top:2px; /* Reduced from whatever it currently is */
+}
+
+.v-text-field--outlined fieldset {
+    color: red !important;
 }
 
 </style>

@@ -82,10 +82,6 @@ class WebApiFuzzer:
         #subscribe cancel-fuzzing event
         #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
 
-    # def pubsub_command_receiver(self, command):
-        
-    #     if command == self.eventstore.CancelFuzzWSTopic:
-    #         self.cancel_fuzzing()
             
     def cancel_fuzzing(self):
         try:

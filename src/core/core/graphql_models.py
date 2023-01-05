@@ -263,3 +263,8 @@ class FuzzRequestFileDownloadContentQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.String()
+    
+    
+class ParseRequestMessageResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()

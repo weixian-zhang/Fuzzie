@@ -15,6 +15,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzRequestFileUpload_ViewModel,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult)
+from corporafactory.corpora_context import CorporaContext
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -32,7 +33,6 @@ from db import  (get_fuzzcontext,
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
-import threading, time
 from datetime import datetime
 import queue
 
@@ -433,6 +433,36 @@ class ServiceManager:
             r.error = Utils.errAsText(e)
             r.result = ''
             return r
+        
+        
+    def parse_request_message(self, rqMsgB64: str) -> tuple([bool, str]):
+        
+        try:
+            
+            rqMsg = base64.b64decode(rqMsgB64).decode('utf-8')
+            
+            reqMsgFuzzCaseSetCreator = RequestMessageFuzzContextCreator()
+            cp = CorporaContext()
+            
+            fcsOK, fcsErr, _ = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
+            
+            if not fcsOK:
+                return False, fcsErr
+            
+            ok, error = cp.build(rqMsg)
+            
+            if not ok:
+                False, error
+            
+            reqMsgFuzzCaseSetCreator = None
+            cp = None
+            
+            return ok, error
+        
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            
+        
         
 
     

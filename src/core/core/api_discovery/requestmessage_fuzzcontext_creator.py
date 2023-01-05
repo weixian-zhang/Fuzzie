@@ -44,7 +44,7 @@ class RequestMessageFuzzContextCreator:
                  apikey = '') -> tuple([bool, str, ApiFuzzContext]):
         
         try:
-            ok, error, fcSets = self.parse_req_msg_into_fuzzcasesets(requestTextContent)
+            ok, error, fcSets = self.parse_request_msg_as_fuzzcasesets(requestTextContent)
         
             if not ok or len(fcSets) == 0:
                 return False, error, ApiFuzzContext()
@@ -82,8 +82,13 @@ class RequestMessageFuzzContextCreator:
             self.eventstore.emitErr(e)
         
         
-    def parse_req_msg_into_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
+    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
+        try:
+            print(0)
+        except Exception as e:
+            
+            raise e
 
         if rqMsg == '' or rqMsg.strip() == '':
             return []
@@ -196,11 +201,8 @@ class RequestMessageFuzzContextCreator:
         return True, '', fcSets                
     
     
-    
     def get_path(self, multilineBlock) -> tuple([bool, str, str]):
         
-        
-            
         path = ''
         
         if len(multilineBlock) >= 1:
@@ -215,27 +217,13 @@ class RequestMessageFuzzContextCreator:
             
             urlonly = requestLine.strip()
             
-            
             parseOutput = urlparse(urlonly)
-            
-            # if Utils.validUrl(urlonly) == False:
-            #     return False, f'Url {urlonly} is invalid', requestLine
                 
             path = parseOutput.path.strip()
             
-            # no path doesn't mean invalid, TBD
-            # if path == '':
-            #     return False, f'invalid Url provided {requestLine}', ''
-            
             return True, '', path
                 
-                
-        
-        # if path == '':
-        #     return False, 'request line contains invalid URL', path
-                
         return True, '', path
-    
     
     
      # examples
