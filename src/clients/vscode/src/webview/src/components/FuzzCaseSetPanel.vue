@@ -16,7 +16,7 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title>API Operations {{ this.getHostnameDisplay() }}</v-toolbar-title>
+      <v-toolbar-title v-tooltip.bottom="getHostnameDisplay()">API Operations {{ this.shortenValueInTable(this.getHostnameDisplay(), 80) }}</v-toolbar-title>
   
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
@@ -101,7 +101,7 @@
                 onTableValueNonJsonSeeInFullClicked(item.path),
                 showFullValueSideBar = true
               )">
-                {{ shortenJsonValueInTable(item.path) }}
+                {{ shortenValueInTable(item.path) }}
               </span>
             </td>
             
@@ -112,7 +112,7 @@
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
                 showFullValueSideBar = true
               )">
-                {{ shortenJsonValueInTable(item.headerNonTemplate, 40) }} 
+                {{ shortenValueInTable(item.headerNonTemplate, 40) }} 
               </span>
             </td>
             <td>
@@ -122,7 +122,7 @@
                 onTableValueSeeInFullClicked(item.bodyNonTemplate),
                 showFullValueSideBar = true
               )"> 
-              {{ shortenJsonValueInTable(item.bodyNonTemplate, 40) }} 
+              {{ shortenValueInTable(item.bodyNonTemplate, 40) }} 
               </span>
             </td>
             <td>
@@ -410,7 +410,7 @@ class Props {
     this.isTableDirty = true;
   }
 
-  shortenJsonValueInTable(bodyJson, length=40)
+  shortenValueInTable(bodyJson, length=40)
   {
     return Utils.shortenStr(bodyJson, length);
   }
