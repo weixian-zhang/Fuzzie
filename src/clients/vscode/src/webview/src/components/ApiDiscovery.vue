@@ -271,11 +271,22 @@
                   track-color="cyan"
                   thumb-color="cyan"
                   thumb-label="always"
-                  min=100
+                  min=1
                   max=50000
-                  step="5"
+                  step="1"
                 ></v-slider>
-
+                <InputNumber
+                            v-model="newApiContext.fuzzcaseToExec"
+                            inputId="horizontal"
+                            showButtons
+                            buttonLayout="horizontal"
+                            :step="1"
+                            :min="1" :max="50000"
+                            decrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus"                    
+                        />
               </form>
               
               <v-divider />
@@ -522,11 +533,22 @@
                   track-color="cyan"
                   thumb-color="cyan"
                   thumb-label="always"
-                  min=100
+                  min=1
                   max=50000
                   step="5"
                 ></v-slider>
-
+                <InputNumber
+                            v-model="apiContextEdit.fuzzcaseToExec"
+                            inputId="horizontal"
+                            showButtons
+                            buttonLayout="horizontal"
+                            :step="1"
+                            :min="1" :max="50000"
+                            decrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus"                    
+                        />
               </form>
               
               <v-divider />
@@ -793,6 +815,7 @@ import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
+import InputNumber from 'primevue/inputnumber';
 
 import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
@@ -815,7 +838,8 @@ class Props {
     Tree,
     Sidebar,
     Dialog,
-    Message
+    Message,
+    InputNumber
   },
 })
 
@@ -1350,6 +1374,11 @@ input[type=text]{
 
 .v-text-field--outlined fieldset {
     color: red !important;
+}
+
+.ui-button {
+	background-color: cyan!important;
+	color: cyan!important;
 }
 
 </style>

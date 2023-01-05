@@ -45,7 +45,7 @@ export class ApiFuzzContext {
     public bearerToken ='';
     public apikeyHeader ='Authorization';
     public apikey ='';
-    public hostname = 'https://pipedream.com/@Code-Norris/requestbin-p_ezC7Y8P/inspect'; //'https://httpbin.org';
+    public hostname = 'https://eovogku1ema9d9b.m.pipedream.net'; //'https://httpbin.org';
     public port = 443;
     public fuzzcaseToExec =500;
 

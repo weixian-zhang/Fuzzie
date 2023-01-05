@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 from requests import Request, Response, Session
 import requests
 from pubsub import pub
+import json
 from http import cookiejar
 from types import MappingProxyType
 import shortuuid
@@ -83,7 +84,7 @@ class WebApiFuzzer:
         #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
 
             
-    def cancel_fuzzing(self):
+    def cancel_fuzzing(self, errorMsg = ''):
         try:
             
             self.multithreadEventSet.set()
@@ -115,9 +116,7 @@ class WebApiFuzzer:
             self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
-            
-            self.apifuzzcontext.fuzzcaseToExec = 1 # uncomment for testing only
-            
+                        
             self.fuzzingStatus = FuzzingStatus.Fuzzing
             
             fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
@@ -190,7 +189,9 @@ class WebApiFuzzer:
                 
             
         except Exception as e:
+            errMsg = Utils.errAsText(e)
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
+            self.cancel_fuzzing(errorMsg=errMsg)
             
     def http_call_api(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
         
@@ -209,41 +210,55 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
                 return
             
-            
+            contentType = self.determine_and_set_content_type(headers)
             
             try:
                 req = None
-            
-                match fcs.verb:
-                    case 'GET':
-                        
-                        req = Request(fcs.verb, url, headers=headers)
-                        
-                    case 'POST':
-                        
-                        if 'application/x-www-form-urlencoded' in headers:
-                            req = Request(fcs.verb, url, headers=headers,data=body)
-                        elif len(files) > 0:   
-                            req = Request(fcs.verb, url, headers=headers, json=body, files=files)
-                        else:
-                            req = Request(fcs.verb, url, headers=headers, json=body, )
-                            
-                    case 'PUT':
-                        
-                        if 'application/x-www-form-urlencoded' in headers:
-                            req = Request(fcs.verb, url, headers=headers,data=body)
-                        else:
-                            req = Request(fcs.verb, url, headers=headers, json=body)
+                
+                if contentType == 'application/x-www-form-urlencoded':
+                    req = Request(fcs.verb, url, headers=headers, data=body)
                     
-                    case 'PATCH':
+                elif contentType == 'application/json':
+                    req = Request(fcs.verb, url, headers=headers, json=body)
+                    
+                elif contentType == 'application/xml':
+                    req = Request(fcs.verb, url, headers=headers, data=body)
+                    
+                elif len(files) > 0:   
+                    req = Request(fcs.verb, url, headers=headers, json=body, files=files)
+                    
+                else:
+                    req = Request(fcs.verb, url, headers=headers, json=body)
+            
+                # match fcs.verb:
+                #     case 'GET':
+                #         req = Request(fcs.verb, url, headers=headers)
                         
-                        if 'application/x-www-form-urlencoded' in headers:
-                            req = Request(fcs.verb, url, headers=headers,data=body)
-                        else:
-                            req = Request(fcs.verb, url, headers=headers, json=body)
+                #     case 'POST':
+                        
+                #         if contentType == 'application/x-www-form-urlencoded':
+                #             req = Request(fcs.verb, url, headers=headers, data=body)
+                #         elif len(files) > 0:   
+                #             req = Request(fcs.verb, url, headers=headers, json=body, files=files)
+                #         else:
+                #             req = Request(fcs.verb, url, headers=headers, json=body, )
                             
-                    case _:
-                        req = Request(fcs.verb, url, headers=headers)
+                #     case 'PUT':
+                        
+                #         if 'application/x-www-form-urlencoded' in headers:
+                #             req = Request(fcs.verb, url, headers=headers,data=body)
+                #         else:
+                #             req = Request(fcs.verb, url, headers=headers, json=body)
+                    
+                #     case 'PATCH':
+                        
+                #         if 'application/x-www-form-urlencoded' in headers:
+                #             req = Request(fcs.verb, url, headers=headers,data=body)
+                #         else:
+                #             req = Request(fcs.verb, url, headers=headers, json=body)
+                            
+                #     case _:
+                #         req = Request(fcs.verb, url, headers=headers)
                 
                 
                 prepReq = req.prepare()
@@ -493,7 +508,15 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e)
         
         
-    
+    def determine_and_set_content_type(self, headers: dict):
+        contentType = 'application/json'
+        if headers is None or 'Content-Type' not in headers:
+            headers['Content-Type'] = contentType
+        else:
+            contentType = headers['Content-Type']
+        
+        return contentType
+                
     def try_get_setcookie_value(self, respHeadersDict: dict):
         result = ''
         setCookieHeader = 'Set-Cookie'
@@ -536,15 +559,22 @@ class WebApiFuzzer:
             # prevent json.dump throwing error from Json reserved characters 
             headerDict = {}
             headerDTObj = jsonpickle.decode(headerDT, safe=False, keys=False)
-            for hk in headerDTObj.keys():
-                dt = headerDTObj[hk]
+            if isinstance(headerDT, str):
+                #double decode due to first decode removes '\\' escape characters from request-message headers
+                headerDTObj = jsonpickle.decode(jsonpickle.decode(headerDT, safe=False, keys=False), safe=False, keys=False)
+            #headerDTObj = json.loads(json.loads(headerDT))#jsonpickle.decode(headerDT, safe=False, keys=False)
+            
+            if len(headerDTObj) > 0:
                 
-                ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
-                if not ok:
-                    self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
-                    continue
-                
-                headerDict[hk] = resolvedVal
+                for hk in headerDTObj.keys():
+                    dt = headerDTObj[hk]
+                    
+                    ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    if not ok:
+                        self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
+                        continue
+                    
+                    headerDict[hk] = resolvedVal
                 
             # handle file upload with "proper" encoding, without encoding requests will throw error as requests uses utf-8 by default
             if len(fcs.file) > 0:
