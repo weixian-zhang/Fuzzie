@@ -9,13 +9,51 @@
      <!--view text in full Side Bar-->
      <Sidebar v-model:visible="showRequestValueSideBar" position="right" style="width:700px;">
       <TabView>
-        <TabPanel header="Request Message">
+        <!--raw request message -->
+        <TabPanel header="Message">
           <v-textarea auto-grow
                   outlined
                   rows="1"
                   readonly
-                  v-model="tableRequestValueSizeBar" />
+                  v-model="tableRequestValueSideBar" />
         </TabPanel>
+
+        <!--request path -->
+        <TabPanel header="Path">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableRequestPathSideBar" />
+        </TabPanel>
+
+        <!--request querystring -->
+        <TabPanel header="Querystring">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableRequestQSSideBar" />
+        </TabPanel>
+
+        <!--request headers -->
+        <TabPanel header="Headers">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableRequestHeaderSideBar" />
+        </TabPanel>
+
+        <!--request body -->
+        <TabPanel header="Body">
+          <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableRequestBodySideBar" />
+        </TabPanel>
+
         <TabPanel header="Fuzzing Files">
           <v-table  density="compact" fixed-header height="430" hover="true" >          
             <tbody>
@@ -26,28 +64,43 @@
               </tr>
             </tbody>
           </v-table>
-              
         </TabPanel>
       </TabView>      
     </Sidebar>
 
     <Sidebar v-model:visible="showResponseValueSideBar" position="right" style="width:700px;">
       <TabView>
-        <TabPanel header="Response Message">
+        <TabPanel header="Message">
           <v-textarea auto-grow
                   outlined
                   rows="1"
                   readonly
                   v-model="tableResponseValueSizeBar" />
         </TabPanel>
-        <TabPanel header="JSON">            
-            coming soon  
+        <TabPanel header="Header">            
+            <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableResponseHeader" />
         </TabPanel>
-        <TabPanel header="HTML">            
-            coming soon  
+        <TabPanel header="Body">            
+            <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableResponseBody" />
+        </TabPanel>
+        <TabPanel header="Reason">            
+             <v-textarea auto-grow
+                  outlined
+                  rows="1"
+                  readonly
+                  v-model="tableResponseReasonPhrase" />
         </TabPanel>
       </TabView>      
     </Sidebar>
+
      
      <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
@@ -135,16 +188,15 @@
               <td>{{ item.response.statusCode }}</td>
               
               <td>
-                <span style="cursor: pointer" @click="(
-                  tableRequestValueSizeBar=item.request.path,
-                  showRequestValueSideBar = true
-                )">
+                <span v-tooltip="item.request.path">
                   {{ shortenValueInTable(item.request.path, 15) }}
                 </span>
               </td>
               
               <td>
+                <span v-tooltip="item.response.reasonPharse">
                 {{shortenValueInTable(item.response.reasonPharse, 15) }}
+                </span>
               </td>
 
               <td>
@@ -171,7 +223,11 @@
                     color="cyan"
                     @click="(
                       selectedRequest != '' ? (
-                    tableRequestValueSizeBar=selectedRequest,
+                    tableRequestValueSideBar=selectedRequest,
+                    settableRequestPathSideBar(),
+                    setTableRequestQSSizeBar(),
+                    setTableRequestHeadersSizeBar(),
+                    setTableRequestBodySizeBar(),
                     showRequestValueSideBar = true) : ''
                   )">
                   Request
@@ -188,6 +244,9 @@
                     @click="(
                       selectedResponse != '' ?
                     (tableResponseValueSizeBar=selectedResponse,
+                    setTableResponseHeader(),
+                    setTableResponseReasonPhrase(),
+                    setTableResponseBody(),
                     showResponseValueSideBar = true) : ''
                   )">
                   Response
@@ -220,7 +279,7 @@ import Dropdown from 'primevue/dropdown';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import Utils from "../Utils";
-import { FuzzDataCase, FuzzRequestFileUpload_ViewModel } from "../Model";
+import { FuzzDataCase, FuzzRequestFileUpload_ViewModel, FuzzRequest, FuzzRequestResponseMessage_ViewModel } from "../Model";
 import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
@@ -257,6 +316,7 @@ class Props {
     selectedRow = '';
     showDropDownStatusCodeFilter = false;
 
+    selectedReqRespMessage: FuzzRequestResponseMessage_ViewModel;
     selectedRequest = ''
     selectedResponse = '';
 
@@ -268,7 +328,16 @@ class Props {
     fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
     
     showRequestValueSideBar = false;
-    tableRequestValueSizeBar = '';
+
+    tableRequestValueSideBar = '';
+    tableRequestPathSideBar = '';
+    tableRequestQSSideBar = '';
+    tableRequestHeaderSideBar = '';
+    tableRequestBodySideBar = '';
+    tableResponseReasonPhrase = '';
+    tableResponseHeader = '';
+    tableResponseBody= '';
+
     showResponseValueSideBar = false;
     tableResponseValueSizeBar = ''
 
@@ -443,17 +512,20 @@ class Props {
       const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
 
       if(!ok) {
+        this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
         this.selectedRequest = '';
         this.selectedResponse = '';
         return;
       }
 
+      this.selectedReqRespMessage = result
+
       if(!Utils.isNothing(result.requestMessage)) {
         this.selectedRequest = Utils.b64d(result.requestMessage);
       }
 
-      if(!Utils.isNothing(result.responseMessage)) {
-        this.selectedResponse = Utils.b64d(result.responseMessage);
+      if(!Utils.isNothing(result.responseDisplayText)) {
+        this.selectedResponse = Utils.b64d(result.responseDisplayText);
       }
 
       //get uploaded files
@@ -484,6 +556,152 @@ class Props {
       link.click(); 
     }
 
+    settableRequestPathSideBar() {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const path = this.selectedReqRespMessage.requestPath;
+
+      if (Utils.isNothing(path)) {
+        this.tableRequestPathSideBar = '';
+        return;
+      }
+
+      this.tableRequestPathSideBar = path;
+    }
+
+    setTableRequestQSSizeBar() {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const qs = this.selectedReqRespMessage.requestQuerystring;
+
+      try {
+        if (Utils.isNothing(qs)) {
+          this.tableRequestQSSideBar = '';
+          return;
+        }
+
+        this.tableRequestQSSideBar = qs; //qs.split('?').join('? \n').split('&').join('& \n');
+      }
+      catch (error) {
+          this.tableRequestQSSideBar = qs;
+      }
+      
+    }
+
+    setTableRequestHeadersSizeBar() {
+      
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const headersStr = this.selectedReqRespMessage.requestHeader;
+
+      try{
+        if (Utils.isNothing(headersStr)) {
+          this.tableRequestHeaderSideBar = '';
+          return;
+        }
+
+        if(Utils.jsonTryParse(headersStr)) {
+          this.tableRequestHeaderSideBar = JSON.stringify(JSON.parse(headersStr), null, 2)
+        }
+        else {
+          this.tableRequestHeaderSideBar = headersStr;
+        }
+        
+      }
+      catch (error) {
+          this.tableRequestHeaderSideBar = headersStr;
+      }
+
+    }
+    setTableRequestBodySizeBar() {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const body = this.selectedReqRespMessage.requestBody;
+
+      if (Utils.isNothing(body)) {
+        this.tableRequestBodySideBar = '';
+        return;
+      }
+
+      if(Utils.jsonTryParse(body)) {
+          this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
+        }
+        else {
+          this.tableRequestBodySideBar = body;
+        }
+    }
+
+    setTableResponseReasonPhrase() {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const reason = this.selectedReqRespMessage.responseReasonPhrase;
+
+      if (Utils.isNothing(reason)) {
+        this.tableResponseReasonPhrase = '';
+        return;
+      }
+
+      this.tableResponseReasonPhrase = reason;
+    }
+
+    setTableResponseHeader() {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      const header = this.selectedReqRespMessage.responseHeader;
+
+      if (Utils.isNothing(header)) {
+        this.tableResponseHeader = '';
+        return;
+      }
+
+      if(Utils.jsonTryParse(header)) {
+          this.tableResponseHeader = JSON.stringify(JSON.parse(header), null, 2)
+        }
+        else {
+          this.tableResponseHeader = header;
+        }
+    }
+
+    setTableResponseBody(selectedRequest: FuzzRequest) {
+
+      if (this.selectedReqRespMessage == undefined) {
+        return;
+      }
+
+      var body = this.selectedReqRespMessage.responseBody;
+
+      if (Utils.isNothing(body)) {
+        this.tableResponseBody = '';
+        return;
+      }
+
+      body = atob(body);
+
+      if(Utils.jsonTryParse(body)) {
+          this.tableResponseBody = JSON.stringify(JSON.parse(body), null, 2)
+        }
+        else {
+          this.tableResponseBody = body;
+        }
+    }
+
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
        this.clearTableBindingData();
@@ -496,6 +714,7 @@ class Props {
     }
 
     clearSelectedReqResp() {
+      this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
       this.selectedRequest = '';
       this.selectedResponse = '';
     }

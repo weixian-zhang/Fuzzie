@@ -11,7 +11,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzResponse_ViewModel,
                             FuzzDataCase_ViewModel,
                             WebApiFuzzerInfo,
-                            FuzzRequestResponseMessage,
+                            FuzzRequestResponseMessage_ViewModel,
                             FuzzRequestFileUpload_ViewModel,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult)
@@ -291,21 +291,32 @@ class ServiceManager:
         except Exception as e:
             return (False, Utils.errAsText(e), [])
     
-    def get_fuzz_request_response_messages(self, reqId, respId):
+    def get_fuzz_request_response_messages(self, reqId, respId) -> tuple([bool, str, FuzzRequestResponseMessage_ViewModel]):
         
         if reqId == '' or respId == '':
             return False, 'request id and response id cannot be empty', {}
+    
         
-        rrMsg = FuzzRequestResponseMessage()
+        ok, error, reqDict, respDict = get_fuzz_request_response_messages(reqId, respId)
         
-        reqMsg, respMsg, respBody = get_fuzz_request_response_messages(reqId, respId)
+        if not ok:
+            return True, '', FuzzRequestResponseMessage_ViewModel()
         
-        if reqMsg == '' or respMsg == '':
-            return True, '', {}
+        rrMsg = FuzzRequestResponseMessage_ViewModel()
+        rrMsg.ok = True
+        rrMsg.error = ''
+        rrMsg.requestVerb = reqDict['verb']
+        rrMsg.requestMessage = reqDict['requestMessage']
+        rrMsg.requestPath = reqDict['path']
+        rrMsg.requestQuerystring = reqDict['querystring']
+        rrMsg.requestHeader = reqDict['headers']
+        rrMsg.requestBody = reqDict['body']
         
-        rrMsg.requestMessage = reqMsg
-        rrMsg.responseMessage = respMsg
-        rrMsg.responseBody = respBody
+        rrMsg.responseDisplayText = respDict['responseDisplayText']
+        rrMsg.responseReasonPhrase = respDict['reasonPharse']
+        rrMsg.responseHeader = respDict['headerJson']
+        rrMsg.responseBody= respDict['responseBody']
+        
         
         return True, '', rrMsg
         

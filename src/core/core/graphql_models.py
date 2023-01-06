@@ -241,6 +241,27 @@ class FuzzDataCase_ViewModel(graphene.ObjectType):
     response = graphene.Field(FuzzResponse_ViewModel)
     
 
+class FuzzRequestResponseMessage_ViewModel(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    requestVerb = graphene.String()
+    requestMessage = graphene.String()
+    requestPath = graphene.String()
+    requestQuerystring = graphene.String()
+    requestHeader = graphene.String()
+    requestBody = graphene.String()
+    
+    responseDisplayText = graphene.String()
+    responseReasonPhrase = graphene.String()
+    responseHeader = graphene.String()
+    responseBody= graphene.String()
+    
+
+class FuzzRequestResponseMessage_QueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.Field(FuzzRequestResponseMessage_ViewModel)
+    
 class FuzzRequestResponseQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()

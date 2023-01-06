@@ -74,21 +74,6 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public totalDataCaseRunsToComplete = 0;
 }
 
-// export class FuzzRequest {
-//     public Id = '';
-//     public requestDateTime;
-//     public hostname = '';
-//     public port =  0;
-//     public verb = '';
-//     public url = '';
-//     public path = '';
-//     public querystring = '';
-//     public headers = '';
-//     public body = '';
-//     public contentLength = 0;
-//     public requestMessage = '';
-//     public invalidRequestError = '';
-// }
 
 export class FuzzResponse {
     public Id = '';
@@ -162,18 +147,6 @@ export class FuzzDataCase_ViewModel {
 
 }
 
-export class FuzzRequestResponseMessage {
-    public requestMessage =''
-    public responseMessage = ''
-    public responseBody = ''
-}
-
-export class FuzzReqRespMessageQueryResult {
-    public ok = '';
-    public error = '';
-    public result: FuzzRequestResponseMessage;
-}
-
 
 export class FuzzRequestFileUpload_ViewModel {
     public Id = '';
@@ -184,4 +157,28 @@ export class FuzzRequestFileUploadQueryResult {
     public ok = '';
     public error = '';
     public result: Array<FuzzRequestFileUpload_ViewModel|any>;
+}
+
+
+export class FuzzRequestResponseMessage_ViewModel {
+    ok = false;
+    error = '';
+    requestVerb = '';
+    requestMessage = '';
+    requestPath = '';
+    requestQuerystring = '';
+    requestHeader = '';
+    requestBody = '';
+    
+    responseDisplayText = '';
+    responseReasonPhrase = '';
+    responseHeader = '';
+    responseBody= '';
+}
+    
+
+export class FuzzRequestResponseMessage_QueryResult {
+    ok = false;
+    error = '';
+    result : FuzzRequestResponseMessage_ViewModel;
 }

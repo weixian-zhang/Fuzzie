@@ -493,14 +493,27 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
         Session = scoped_session(session_factory)
     
         reqRow = (
-                Session.query(ApiFuzzRequestTable.columns.requestMessage)
+                Session.query(
+                    ApiFuzzRequestTable.columns.requestMessage,
+                    ApiFuzzRequestTable.columns.verb,
+                    ApiFuzzRequestTable.columns.path,
+                    ApiFuzzRequestTable.columns.querystring,
+                    ApiFuzzRequestTable.columns.url,
+                    ApiFuzzRequestTable.columns.headers,
+                    ApiFuzzRequestTable.columns.body,
+                    ApiFuzzRequestTable.columns.invalidRequestError,                         
+                )
                 .filter(ApiFuzzRequestTable.c.Id == reqId)
                 .first()
                 )
         
         respRow = (
                 Session.query(ApiFuzzResponseTable.columns.responseDisplayText,
-                              ApiFuzzResponseTable.columns.body.label('responseBody'))
+                              ApiFuzzResponseTable.columns.body.label('responseBody'),
+                              ApiFuzzResponseTable.columns.reasonPharse,
+                              ApiFuzzResponseTable.columns.headerJson,
+                              ApiFuzzResponseTable.columns.body
+                )
                 .filter(ApiFuzzResponseTable.c.Id == respId)
                 .first()
                 )
@@ -508,20 +521,17 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
         Session.close()
         
         if reqRow is None or respRow is None:
-            return '', '', ''
+            return {}, {}
         
         
         reqRowDict = reqRow._asdict()
         respRowDict = respRow._asdict()
         
-        reqMsg = reqRowDict['requestMessage']
-        respMsg = respRowDict['responseDisplayText']
-        responseBody = respRowDict['responseBody']
-        
-        return (reqMsg, respMsg, responseBody)
+        return (True, '', reqRowDict, respRowDict)
     
     except Exception as e:
         eventstore.emitErr(e)
+        return (False, Utils.errAsText(e), {}, {})
         
     
     

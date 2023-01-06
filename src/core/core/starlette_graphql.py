@@ -10,7 +10,7 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             ApiFuzzContextUpdate,
                             FuzzCaseSetRunSummaryQueryResult,
                             FuzzerStatus,
-                            FuzzRequestResponseMessage,
+                            FuzzRequestResponseMessage_QueryResult,
                             FuzzReqRespMessageQueryResult,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult,
@@ -52,7 +52,7 @@ class Query(graphene.ObjectType):
                                          fuzzCaseSetRunId = graphene.Argument(graphene.String))
     
     
-    fuzzRequestResponseMessage = graphene.Field(FuzzReqRespMessageQueryResult,
+    fuzzRequestResponseMessage = graphene.Field(FuzzRequestResponseMessage_QueryResult,
                                                 reqId = graphene.Argument(graphene.String),
                                                 respId = graphene.Argument(graphene.String))
     
@@ -119,7 +119,7 @@ class Query(graphene.ObjectType):
         
         ok, error, result = sm.get_fuzz_request_response_messages(reqId, respId)
         
-        r = FuzzReqRespMessageQueryResult()
+        r = FuzzRequestResponseMessage_QueryResult()
         r.ok = ok
         r.error = error
         r.result = result

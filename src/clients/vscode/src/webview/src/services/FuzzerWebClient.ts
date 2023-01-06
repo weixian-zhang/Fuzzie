@@ -2,7 +2,8 @@ import { ApiFuzzContext,
     ApiFuzzContextUpdate, 
     FuzzerStatus, 
     FuzzDataCase, 
-    FuzzRequestResponseMessage,
+    FuzzRequestResponseMessage_QueryResult,
+    FuzzRequestResponseMessage_ViewModel,
     FuzzRequestFileUpload_ViewModel } from "../Model";
 
 import axios, {  AxiosError, AxiosResponse, } from "axios";
@@ -366,7 +367,7 @@ export default class FuzzerWebClient
         }        
     }
 
-    public async get_request_response_messages(reqId: string, respId: string): Promise<[boolean, string, FuzzRequestResponseMessage]> {
+    public async get_request_response_messages(reqId: string, respId: string): Promise<[boolean, string, FuzzRequestResponseMessage_ViewModel]> {
 
         const query = `
             query {
@@ -374,8 +375,17 @@ export default class FuzzerWebClient
                     ok,
                     error,
                     result {
+                        requestVerb
                         requestMessage
-                        responseMessage
+                        requestPath
+                        requestQuerystring
+                        requestHeader
+                        requestBody
+            
+                        responseDisplayText
+                        responseReasonPhrase
+                        responseHeader
+                        responseBody
                     }
                 } 
             }
@@ -389,7 +399,7 @@ export default class FuzzerWebClient
             {
                 const ok = response.data.data.fuzzRequestResponseMessage.ok;
                 const error = response.data.data.fuzzRequestResponseMessage.error;
-                const result = response.data.data.fuzzRequestResponseMessage.result;
+                const result: FuzzRequestResponseMessage_ViewModel = response.data.data.fuzzRequestResponseMessage.result;
                 return [ok, error, result];
             }
 
@@ -397,16 +407,16 @@ export default class FuzzerWebClient
 
             if(hasErr)
             {
-                return [!hasErr, err, new FuzzRequestResponseMessage()];
+                return [!hasErr, err, new FuzzRequestResponseMessage_ViewModel()];
             }
 
-            return [false, '', new FuzzRequestResponseMessage()];
+            return [false, '', new FuzzRequestResponseMessage_ViewModel()];
 
         } catch (err) {
 
             this.$logger.error(err);
 
-            return [false, this.errAsText(err as any[]), new FuzzRequestResponseMessage()];
+            return [false, this.errAsText(err as any[]), new FuzzRequestResponseMessage_ViewModel()];
         }        
     }
 
