@@ -20,7 +20,7 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 #### Terms and Concepts
 
 * Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered either through OpenAPI 3 spec or by writing Request Messages
-* wordlist-type - the real potential of Fuzzie is allowing user to draft out exact input format with parameters that API requires, and replace parameters with  wordlist-type.  
+* wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) combined with exact input format with parameters that API requires, and replace parameters with  wordlist-type.  
 Input can be in the format of JSON, XML, files, plain text or simply any format, by replacing input parameter in their format with wordlist-type,  
 during fuzzing, Fuzzie will replace the input paramaters with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
 example:  
@@ -73,8 +73,26 @@ example:
         }
     }
 }
-```
+```  
 
+There is a fixed set of built-in wordlist-type described below
+| WordList Type | Description   |
+| ------------- |:-------------:| 
+| {{ "a quick brown fox" &#124; my }} | Your own custom input, Fuzzie will mutate your input |
+| {{ string }} | minimaxir/big-list-of-naughty-strings |
+| {{ bool }} | boolean values and something naughty |
+| {{ digit }} | Integers, floats and something naughty |
+| {{ digit:1:5000.9999 }} | User supplied integers and float range |
+| {{ char }} | naughty chars |
+| {{ image }} |  Images mix with other file types encode with 'latin1' |
+| {{ pdf }} |  PDF mix with other file types encode with 'latin1' |
+| {{ file }} |  danielmiessler seclist payload encode with 'latin1' |
+| {{ datetime }} | date + time |
+| {{ date }} | date only |
+| {{ time }} | time only |
+
+
+</ br>
 #### API Discovery  
 
 Fuzzie needs to know your API schema and there are 2 ways fto discover them:
