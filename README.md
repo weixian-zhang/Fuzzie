@@ -81,7 +81,7 @@ POST https://httpbin.org/post
 The following are built-in wordlist-types available today, more will be added in future  
 | WordList Type | Description   |
 | ------------- |:-------------:| 
-| {{ "a quick brown fox" &#124; my }} | Your own custom input, Fuzzie will mutate your input |
+| {{ "a quick brown fox" &#124; my }} | your custom input, Fuzzie will mutate input |
 | {{ string }} | minimaxir/big-list-of-naughty-strings |
 | {{ bool }} | boolean values and something naughty |
 | {{ digit }} | Integers, floats and something naughty |
