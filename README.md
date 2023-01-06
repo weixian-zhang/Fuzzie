@@ -20,12 +20,13 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 #### Terms and Concepts
 
 * Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered either through OpenAPI 3 spec or by writing Request Messages
-* wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) combined with exact input format with parameters that API requires, and replace parameters with  wordlist-type.  
-Input can be in the format of JSON, XML, files, plain text or simply any format, by replacing input parameter in their format with wordlist-type,  
-during fuzzing, Fuzzie will replace the input paramaters with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
+* wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) and Fuzzie converts each Request Message into a http call.  Within Request Message, exact input format like JSON, XML, files, plain text or simply any format, with parameters can be described in Request Message.
+By replacing wordlist-type {{ wordlist type }} with parameter value, during fuzzing, Fuzzie will replace the parameter values with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
 example:  
 
-```json
+```
+POST https://httpbin.org/post  
+
 {
     "glossary": {
         "title": "example glossary",
@@ -50,7 +51,9 @@ example:
 }
 ```  
 
-```json
+```
+POST https://httpbin.org/post 
+
 {
     "glossary": {
         "title": "{{ string }}",
