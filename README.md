@@ -1,4 +1,4 @@
-## Fuzzie (in development)  
+## Fuzzie (still in development, coming very soon)  
 
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
@@ -7,41 +7,31 @@ The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brin
 * the ability to fuzz test very early in the SDLC
 * Fuzzer in IDE allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
-<img src="https://user-images.githubusercontent.com/43234101/184052538-5770d77e-6872-426a-ac28-cd79161790c6.png" width="600px" height="200" />
-
 <br />
 
-### Software Architecture Design  
-*subjected to change, diagram from another hobby project [Azure Workbench](https://www.azureworkbench.com/?id=IsxyrPUWclTXMoDPuAtK)
-![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)  
-
-
-
-
-
-### Roadmap  
-* HTML WebForm fuzzing
-
-
 ### How Fuzzie Works  
+<br />  
 
-Fuzzie needs to know the schema of your APIs before any fuzz test can happen, and here are several ways for Fuzzie to discover your API schemas
+#### API Discovery  
+
+Fuzzie needs to know the schema of your APIs, there are 2 ways for Fuzzie to discover your API:
 * [OpenAPI 3](https://editor.swagger.io/) specification
   * HTTP Url
   * File path
-* Request-Message (inspired from [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
-  * Input a single Request-Message in VSCode to instruct Fuzzie to fuzz test a single API
-  * File path to a list of Request-Messages in text file e.g: request-messages.fuzzie
-  * supports unlimited request-messages in a single file
-  * You can use the following supported data types as case-sensitive variables in Request-Message
   
-    * string - courtesy from [Big List of Naughty Strings](https://github.com/minimaxir/big-list-of-naughty-strings) and [SecList](https://github.com/danielmiessler/SecLists)
-    * integer
-    * float
-    * datetime
-    * [payload](https://github.com/danielmiessler/SecLists) - naughty files, images and zip bombs from SecList
-    * [username](https://github.com/danielmiessler/SecLists) - common and cracked user names from SecList
-    * [password](https://github.com/danielmiessler/SecLists) - common and hacked passwords from SecList
+* Request Message (concept inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
+  * single Request Message or as many Request Messages as you need to fuzz test
+  * Text files that contains a list of Request-Messages with extension .http, .rest or .fuzzie
+ 
+ Request Message can be written and validated in webview provided by Fuzzie  
+ 
+ ![image](https://user-images.githubusercontent.com/43234101/210977019-4b671b68-99e1-455b-bc8b-8fc147440140.png)  
+ 
+ <br />
+ 
+ ![image](https://user-images.githubusercontent.com/43234101/210977575-54ce66aa-2e0b-4b9a-b914-d47e0995c701.png)
+
+
     
   <br/>
   Examples: 
@@ -131,4 +121,7 @@ Fuzzie needs to know the schema of your APIs before any fuzz test can happen, an
     {{payload}}
     ```
     
+    ### Software Architecture Design  
+*subjected to change, diagram from another hobby project [Azure Workbench](https://www.azureworkbench.com/?id=IsxyrPUWclTXMoDPuAtK)
+![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)  
     
