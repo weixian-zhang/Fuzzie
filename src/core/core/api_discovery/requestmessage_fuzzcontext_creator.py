@@ -251,20 +251,6 @@ class RequestMessageFuzzContextCreator:
         requestline = requestline.strip()
         
         
-        
-        # tokens = requestline.split(' ')
-        
-        # try:
-        #     for t in tokens:
-        #         t = t.strip()
-        #         if Utils.isInString('?', t):
-        #             querystring = urlparse(t).query
-        #             querystring = '?' + querystring
-        #             break
-        # except ValueError as e:
-        #     #substring not found exception
-        #     pass
-        
         querystring = urlparse(requestline).query
         
         qsParts = querystring.split('&')
@@ -277,7 +263,7 @@ class RequestMessageFuzzContextCreator:
         while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
             lineIndex = lineIndex + 1
         
-        lineIndex = 0
+        #lineIndex = 0
         # # claim empty breaklines in case there are between requestline and headers/body
         # while self.is_next_line_breakline(multilineBlock, lineIndex):
         #     lineIndex = lineIndex + 1
@@ -285,7 +271,7 @@ class RequestMessageFuzzContextCreator:
         mergedQSTokens = "".join(qsTokens)
         querystring = querystring + mergedQSTokens
         
-        if not querystring.startswith('?'):
+        if querystring != '' and not querystring.startswith('?'):
             querystring = '?' + querystring
         
         return lineIndex, querystring

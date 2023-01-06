@@ -623,23 +623,32 @@ class Props {
     }
     setTableRequestBodySizeBar() {
 
-      if (this.selectedReqRespMessage == undefined) {
-        return;
+      try {
+        
+        if (this.selectedReqRespMessage == undefined) {
+          return;
+        }
+
+        var body = this.selectedReqRespMessage.requestBody;
+
+        if (Utils.isNothing(body)) {
+          this.tableRequestBodySideBar = '';
+          return;
+        }
+
+        body = atob(body);
+
+        if(Utils.jsonTryParse(body)) {
+            this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
+          }
+          else {
+            this.tableRequestBodySideBar = body;
+          }
       }
-
-      const body = this.selectedReqRespMessage.requestBody;
-
-      if (Utils.isNothing(body)) {
+      catch(error) {
+        this.$logger.error(error);
         this.tableRequestBodySideBar = '';
-        return;
       }
-
-      if(Utils.jsonTryParse(body)) {
-          this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
-        }
-        else {
-          this.tableRequestBodySideBar = body;
-        }
     }
 
     setTableResponseReasonPhrase() {
