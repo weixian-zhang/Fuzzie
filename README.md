@@ -10,6 +10,8 @@ The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brin
 <br />
 
 ### How Fuzzie Works  
+
+Fuzzie VSCode extension comes with a webview everything from API or GraphQL Discovery, fuzzing to analyzing fuzz test result can be done within this webview.
 <br />  
 
 #### API Discovery  
