@@ -713,8 +713,17 @@ class Props {
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
-       this.clearTableBindingData();
-       this.clearSelectedReqResp();
+      this.tableRequestValueSideBar = '';
+      this.tableRequestPathSideBar = '';
+      this.tableRequestQSSideBar = '';
+      this.tableRequestHeaderSideBar = '';
+      this.tableRequestBodySideBar = '';
+      this.tableResponseReasonPhrase = '';
+      this.tableResponseHeader = '';
+      this.tableResponseBody= '';
+
+      this.clearTableBindingData();
+      this.clearSelectedReqResp();
     }
 
     clearTableBindingData() {

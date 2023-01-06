@@ -1198,7 +1198,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onOpenApi3FileChange(event) {
-    console.log(event);
 
     const files = event.target.files;
 
@@ -1219,6 +1218,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
     {
       this.openapi3FileInputFileVModel = [];
       this.toastError('OpenAPI3 spec files are yaml or json', 'Invalid File Type');
+    }
+  }
+
+  async onRequestMessageFileChange(event) {
+
+    const files = event.target.files;
+
+    const file = files[0];
+
+    const reader = new FileReader();
+    if (file.name.includes(".http") || file.name.includes(".fuzzie") || file.name.includes(".rest")) {
+
+      const content = await Utils.readFileAsText(file);
+      this.newApiContext.requestTextContent = content;
+
+      if(this.requestTextFileInputFileVModel != null && this.requestTextFileInputFileVModel.length > 0)
+      {
+        this.newApiContext.requestTextFilePath = this.requestTextFileInputFileVModel[0]?.name;
+      }
+    }
+    else
+    {
+      this.requestTextFileInputFileVModel = [];
+      this.toastError('Request Message files must be either .http, .rest or .fuzzie', 'Invalid File Type');
     }
   }
 

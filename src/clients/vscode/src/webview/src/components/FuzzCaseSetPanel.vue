@@ -375,7 +375,7 @@ class Props {
         if(!Utils.isNothing(result)){
           this.fcsRunSums = result;
         }
-        
+
       }
      } 
      finally {
@@ -431,8 +431,11 @@ class Props {
 
   clearData() {
       this.fcsRunSums = [];
-      //this.dataCache = {};
+      this.hostname = '';
+      this.port = undefined;
       this.selectedRow = ''
+
+      this.refreshHostnameDisplay();
   }
 
  }
