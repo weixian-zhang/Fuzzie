@@ -78,7 +78,7 @@ POST https://httpbin.org/post
 }
 ```  
 
-There is a fixed set of built-in wordlist-type described below
+The following are built-in wordlist-types available today, more will be added in future  
 | WordList Type | Description   |
 | ------------- |:-------------:| 
 | {{ "a quick brown fox" &#124; my }} | Your own custom input, Fuzzie will mutate your input |
@@ -93,6 +93,9 @@ There is a fixed set of built-in wordlist-type described below
 | {{ datetime }} | date + time |
 | {{ date }} | date only |
 | {{ time }} | time only |
+| {{ username }} | hacked usernames from danielmiessler seclist |
+| {{ password }} | hacked password from danielmiessler seclist |
+| {{ filename }} | random file name and extensions |
 
 
 </ br>
