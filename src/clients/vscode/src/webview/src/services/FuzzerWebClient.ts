@@ -202,6 +202,8 @@ export default class FuzzerWebClient
                         fuzzcontextId
                         selected 
                         verb
+                        hostname
+                        port
                         path
                         querystringNonTemplate
                         bodyNonTemplate
@@ -236,6 +238,8 @@ export default class FuzzerWebClient
         {
             return [!hasErr, err, []];
         }
+
+        return [false, '', []];
     }
 
     public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {

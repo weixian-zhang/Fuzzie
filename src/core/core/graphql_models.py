@@ -147,6 +147,8 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzcontextId = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
+    hostname = graphene.String()
+    port = graphene.Int()
     path = graphene.String()
     querystringNonTemplate = graphene.String()
     bodyNonTemplate = graphene.String()

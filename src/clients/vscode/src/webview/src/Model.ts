@@ -58,6 +58,8 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public fuzzcontextId = '';
     public selected = true;
     public verb = '';
+    public hostname = '';
+    public port = -1;
     public path = '';
     public querystringNonTemplate = '';
     public bodyNonTemplate = '';

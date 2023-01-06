@@ -229,36 +229,6 @@ class WebApiFuzzer:
                     
                 else:
                     req = Request(fcs.verb, url, headers=headers, json=body)
-            
-                # match fcs.verb:
-                #     case 'GET':
-                #         req = Request(fcs.verb, url, headers=headers)
-                        
-                #     case 'POST':
-                        
-                #         if contentType == 'application/x-www-form-urlencoded':
-                #             req = Request(fcs.verb, url, headers=headers, data=body)
-                #         elif len(files) > 0:   
-                #             req = Request(fcs.verb, url, headers=headers, json=body, files=files)
-                #         else:
-                #             req = Request(fcs.verb, url, headers=headers, json=body, )
-                            
-                #     case 'PUT':
-                        
-                #         if 'application/x-www-form-urlencoded' in headers:
-                #             req = Request(fcs.verb, url, headers=headers,data=body)
-                #         else:
-                #             req = Request(fcs.verb, url, headers=headers, json=body)
-                    
-                #     case 'PATCH':
-                        
-                #         if 'application/x-www-form-urlencoded' in headers:
-                #             req = Request(fcs.verb, url, headers=headers,data=body)
-                #         else:
-                #             req = Request(fcs.verb, url, headers=headers, json=body)
-                            
-                #     case _:
-                #         req = Request(fcs.verb, url, headers=headers)
                 
                 
                 prepReq = req.prepare()
@@ -536,14 +506,22 @@ class WebApiFuzzer:
     def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):            
             
         try:
+            
             hostname = fc.hostname
-            port = fc.port
-            hostnamePort = fc.get_hostname_port()
+            port = 443
+            
+            if not Utils.isNoneEmpty(fcs.hostname):
+                hostname = fcs.hostname
+                
+            if fcs.port != -1:
+                port = fcs.port
+                
+            hostnamePort = f'{hostname}:{port}' #fc.get_hostname_port()
             pathDT = fcs.get_path_datatemplate()
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            files = [] #single file only for openapi3
+            files = []          #for openapi3 single file only
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -564,9 +542,7 @@ class WebApiFuzzer:
             headerDict = {}
             headerDTObj = jsonpickle.decode(headerDT, safe=False, keys=False)
             if isinstance(headerDTObj, dict) == False:
-                #double decode due to first decode removes '\\' escape characters from request-message headers
                 headerDTObj = jsonpickle.decode(jsonpickle.decode(headerDT, safe=False, keys=False), safe=False, keys=False)
-            #headerDTObj = json.loads(json.loads(headerDT))#jsonpickle.decode(headerDT, safe=False, keys=False)
             
             if len(headerDTObj) > 0:
                 

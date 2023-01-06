@@ -210,6 +210,8 @@ class ServiceManager:
                 fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']                    
                 fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
                 fcsSum.selected = rowDict['selected']
+                fcsSum.hostname = rowDict['hostname']
+                fcsSum.port = rowDict['port']
                 fcsSum.verb = rowDict['verb']
                 fcsSum.path = rowDict['path']
                 fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
@@ -318,7 +320,6 @@ class ServiceManager:
     def cancel_fuzz(self):
         try:
             self.webapiFuzzer.cancel_fuzzing()
-            #pub.sendMessage(self.eventstore.CancelFuzzWSTopic, command=self.eventstore.CancelFuzzWSTopic)
             return True
         except Exception as e:
             self.eventstore.emitErr(e)

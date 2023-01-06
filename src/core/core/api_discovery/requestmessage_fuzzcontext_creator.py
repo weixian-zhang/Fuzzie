@@ -125,13 +125,16 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.verb = self.get_verb(multilineBlock)
             
             # path
-            ok, error, path = self.get_path(multilineBlock)
+            ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
             if not ok:
                 # cannot find path, skip to next block
                 self.eventstore.emitErr(error)
                 continue
             
+            fuzzcaseSet.hostname = hostname
+            fuzzcaseSet.port - port
             fuzzcaseSet.path = path
+            
             pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
@@ -196,7 +199,7 @@ class RequestMessageFuzzContextCreator:
         return True, '', fcSets                
     
     
-    def get_path(self, multilineBlock) -> tuple([bool, str, str]):
+    def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
         
         path = ''
         
@@ -213,12 +216,14 @@ class RequestMessageFuzzContextCreator:
             urlonly = requestLine.strip()
             
             parseOutput = urlparse(urlonly)
-                
+            
+            hostname = f'{parseOutput.scheme}://{parseOutput.hostname}'
+            port = parseOutput.port if parseOutput.port != None else -1
             path = parseOutput.path.strip()
             
-            return True, '', path
+            return True, '', path, hostname, port
                 
-        return True, '', path
+        return True, '', path, '', -1
     
     
      # examples

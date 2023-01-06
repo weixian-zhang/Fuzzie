@@ -16,8 +16,7 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title v-tooltip.bottom="getHostnameDisplay()">API Operations {{ this.shortenValueInTable(this.getHostnameDisplay(), 80) }}</v-toolbar-title>
-  
+      <v-toolbar-title>API Operations</v-toolbar-title>
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
           @click="(
@@ -28,7 +27,12 @@
           </v-badge>
         </v-btn>
     </v-toolbar>
-      
+    <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly>
+    <!-- <InputText type="text" class="p-inputtext-sm" placeholder="" v-model="hostnameDisplay" ></InputText> -->
+      <!-- <v-text-field
+        readonly dense outlined style="height: 15px"
+        hide-details="auto"
+      >https://</v-text-field> -->
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
@@ -165,6 +169,7 @@ import Utils from '../Utils';
 import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
+import InputText from 'primevue/inputtext';
 
 class Props {
   toastInfo: any = {};
@@ -178,7 +183,8 @@ class Props {
 @Options({
   components: {
     DataTable,
-    Sidebar
+    Sidebar,
+    InputText
   },
   watch: {
 
@@ -218,6 +224,7 @@ class Props {
 
   hostname = '';
   port = undefined;
+  hostnameDisplay = ''
 
   isDataLoadingInProgress = false;
 
@@ -248,18 +255,18 @@ class Props {
     this.tableValViewInSizeBar = val
   }
 
-  getHostnameDisplay() {
+  refreshHostnameDisplay() {
+
+    this.hostnameDisplay = '';
 
     if (this.hostname != '' && this.port != undefined) {
       if (this.port != 80 && this.port != 443) {
-        return ` - ${this.hostname}:${this.port}`;
+        this.hostnameDisplay = `${this.hostname}:${this.port}`;
       }
       else {
-        return ` - ${this.hostname}`;
+        this.hostnameDisplay = `${this.hostname}`;
       }
     }
-
-    return '';
   }
 
   mounted(){
@@ -357,7 +364,7 @@ class Props {
      this.isDataLoadingInProgress = true;
 
      try {
-        const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+        const [ok, error, result] = await this.webclient.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
      
       if(!ok)
       {
@@ -373,9 +380,7 @@ class Props {
      } 
      finally {
         this.isDataLoadingInProgress = false;
-     }
-
-     
+     } 
   }
 
   async onFuzzContextSelected(fuzzcontextId, hostname, port)
@@ -383,6 +388,8 @@ class Props {
      this.fuzzContextId = fuzzcontextId;
      this.hostname = hostname;
      this.port = port;
+
+     this.refreshHostnameDisplay();
 
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
@@ -394,6 +401,8 @@ class Props {
     this.hostname = hostname;
     this.port = port;
 
+    this.refreshHostnameDisplay();
+
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
@@ -401,6 +410,11 @@ class Props {
   onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
     // send event to FuzzResult panel to display request and response
     this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
+
+    if (fcsrs.hostname != '') {
+      this.hostname = fcsrs.hostname;
+      this.refreshHostnameDisplay();
+    }
   }
 
   selectAllChanged(event) {
