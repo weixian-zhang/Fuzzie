@@ -27,11 +27,13 @@ const logger = new Logger();
 loadFonts()
 
 const app = createApp(App);
-app.provide("$logger", logger); // gloval singleton instance of logger
+
+app.provide("$logger", logger); // global singleton instance of logger
+
 app.use(vuetify)
 app.use(PrimeVue)
 app.use(ToastService);
-//https://github.com/surmon-china/vue-codemirror/issues/171
+
 app.use(VueCodemirror, {
   // optional default global options
   autofocus: true,

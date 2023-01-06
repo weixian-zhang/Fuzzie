@@ -125,7 +125,7 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
                 return
             
-            self.totalFuzzRuns = fcsLen * self.apifuzzcontext.fuzzcaseToExec
+            self.totalFuzzRuns = self.apifuzzcontext.fuzzcaseToExec
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -212,30 +212,32 @@ class WebApiFuzzer:
             
             contentType = self.determine_and_set_content_type(headers)
             
+            reqBody = ''
+            reqBody = self.try_decode_body(body)
+
             try:
                 req = None
                 
                 if contentType == 'application/x-www-form-urlencoded':
-                    req = Request(fcs.verb, url, headers=headers, data=body)
+                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
                     
                 elif contentType == 'application/json':
-                    req = Request(fcs.verb, url, headers=headers, json=body)
+                    req = Request(fcs.verb, url, headers=headers, json=reqBody)
                     
                 elif contentType == 'application/xml':
-                    req = Request(fcs.verb, url, headers=headers, data=body)
+                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
                     
                 elif len(files) > 0:   
-                    req = Request(fcs.verb, url, headers=headers, json=body, files=files)
+                    req = Request(fcs.verb, url, headers=headers, json=reqBody, files=files)
                     
                 else:
-                    req = Request(fcs.verb, url, headers=headers, json=body)
+                    if fcs.verb == 'GET':
+                        req = Request(fcs.verb, url, headers=headers)
+                    else:
+                        req = Request(fcs.verb, url, headers=headers, json=reqBody)
                 
                 
                 prepReq = req.prepare()
-                
-                reqBody = ''
-                if hasattr(prepReq, 'body'):
-                    reqBody = self.try_decode_body(prepReq.body)
                 
                 reqHeaders = prepReq.headers
                 reqContentLength =  prepReq.headers['Content-Length']
@@ -271,7 +273,7 @@ class WebApiFuzzer:
                                         qs=querystring,
                                         verb=fcs.verb,
                                         headers=headers,
-                                        body=body,
+                                        body=reqBody,
                                         contentLength=0,
                                         invalidRequestError=err)
                 
@@ -615,6 +617,9 @@ class WebApiFuzzer:
     
     def try_decode_body(self, body):
         try:
+            if body == '':
+                return body
+            
             dbody = body.decode('utf-8')
             return dbody
         except Exception as e:

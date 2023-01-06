@@ -741,7 +741,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = header,
                         headerNonTemplate = fcset.headerNonTemplate,
-                        bodyDataTemplate =  body,
+                        bodyDataTemplate =  fcset.bodyDataTemplate,
                         file= fileStr,
                         fuzzcontextId = fuzzcontext.Id
                         )

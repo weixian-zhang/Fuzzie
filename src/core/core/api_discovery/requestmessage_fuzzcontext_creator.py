@@ -174,8 +174,9 @@ class RequestMessageFuzzContextCreator:
                             return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
                         
                         evalHeaderDict[key] = evalHeader
-                
-                    fuzzcaseSet.headerDataTemplate = json.dumps(evalHeaderDict)
+
+                    if len(evalHeaderDict) > 0:
+                        fuzzcaseSet.headerDataTemplate = json.dumps(evalHeaderDict)
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
