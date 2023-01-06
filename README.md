@@ -1,4 +1,4 @@
-## Fuzzie (still in development, coming very soon)  
+## Fuzzie (in development, coming soon)  
 
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
@@ -11,18 +11,79 @@ The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brin
 
 ### How Fuzzie Works  
 
-Fuzzie VSCode extension comes with a webview everything from API or GraphQL Discovery, fuzzing to analyzing fuzz test result can be done within this webview.
+Fuzzie VSCode extension comes with a webview, everything from API and GraphQL discovery to fuzzing and analyzing test result can be done in webview.  
+
+![Animation - Copy](https://user-images.githubusercontent.com/43234101/211010226-679c7e24-50a6-4a64-ad32-8fd3e40642fe.gif)
+
 <br />  
+
+#### Terms and Concepts
+
+* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered either through OpenAPI 3 spec or by writing Request Messages
+* wordlist-type - the real potential of Fuzzie is allowing user to draft out exact input format with parameters that API requires, and replace parameters with  wordlist-type.  
+Input can be in the format of JSON, XML, files, plain text or simply any format, by replacing input parameter in their format with wordlist-type,  
+during fuzzing, Fuzzie will replace the input paramaters with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
+example:  
+
+```json
+{
+    "glossary": {
+        "title": "example glossary",
+		"GlossDiv": {
+            "title": "S",
+			"GlossList": {
+                "GlossEntry": {
+                    "ID": "SGML",
+					"SortAs": "SGML",
+					"GlossTerm": "Standard Generalized Markup Language",
+					"Acronym": "SGML",
+					"Abbrev": "ISO 8879:1986",
+					"GlossDef": {
+                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
+						"GlossSeeAlso": ["GML", "XML"]
+                    },
+					"GlossSee": "markup"
+                }
+            }
+        }
+    }
+}
+```  
+
+```json
+{
+    "glossary": {
+        "title": "{{ string }}",
+		"GlossDiv": {
+            "title": "{{ string }}",
+			"GlossList": {
+                "GlossEntry": {
+                    "ID": "{{ digit }}",
+					"SortAs": "{{ string }}",
+					"GlossTerm": "{{ "Standard Generalized Markup Language" | my }}",
+					"Acronym": "{{ string }}",
+					"Abbrev": "ISO {{ digit }}:{{ digit }}",
+					"GlossDef": {
+                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
+						"GlossSeeAlso": ["{{ "GML" | my }}", "{{ "XML" | my }}"]
+                    },
+					"GlossSee": "{{ string }}"
+                }
+            }
+        }
+    }
+}
+```
 
 #### API Discovery  
 
-Fuzzie needs to know the schema of your APIs, there are 2 ways for Fuzzie to discover your API:
+Fuzzie needs to know your API schema and there are 2 ways fto discover them:
 * [OpenAPI 3](https://editor.swagger.io/) specification
-  * HTTP Url
-  * File path
+  * Url to OpenAPI 3 specification
+  * File path to OpenAPI 3 specification
   
 * Request Message (concept inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
-  * single Request Message or as many Request Messages as you need to fuzz test
+  * write Request Message(s) in webview while creating a new Fuzz Context
   * Text files that contains a list of Request-Messages with extension .http, .rest or .fuzzie
  
  Request Message can be written and validated in webview provided by Fuzzie  
