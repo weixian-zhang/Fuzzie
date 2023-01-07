@@ -868,6 +868,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
+  fuzzcontexts: Array<ApiFuzzContext> = [];
   nodes: TreeNode[] = [];
   expandedNodeKeys = {};
   showTree = this.nodes.length > 0 ? "true": "false";
@@ -935,22 +936,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
 
     this.getFuzzcontexts()
-
-    // const jsDocCompletions = jsonLanguage.data.of({
-    //   autocomplete: this.completeJSDoc
-    // })
   }
 
   // #### websocket events ####
 
   onFuzzStartReady() {
-      
     this.fuzzerConnected = true;
     this.getFuzzcontexts();
   }
 
   onFuzzerNotReady() {
-    //this.clearData()
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -977,7 +972,21 @@ export default class ApiDiscovery extends Vue.with(Props) {
     //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
-    this.toastInfo('fuzzing started');
+    this.toastInfo('fuzzing started', '', 2000);
+
+
+    // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
+    // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
+    this.fuzzcontexts.forEach(context => {
+        if(context.Id == this.currentFuzzingContextId) {
+          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, 
+                this.currentFuzzingCaseSetRunId,
+                context.hostname,
+                context.port)
+                return;
+        }
+    });
+    
   }
 
   onFuzzStop() {
@@ -1020,6 +1029,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
         if (OK)
         {
+          this.fuzzcontexts = fcs;
           this.nodes = [];
           this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
 
@@ -1398,6 +1408,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   clearData() {
+     this.fuzzcontexts = [];
     this.nodes = [];
     this.selectedContextNode = '';
     this.selectedCaseSetRunNode = '';
