@@ -14,11 +14,11 @@ GET https://eovogku1ema9d9b.m.pipedream.net/user/id/{{ string }} HTTP/1.1
 ###
 
 # GET is the default verb
-https://example.com/comments/{{ digit }} 
+https://eovogku1ema9d9b.m.pipedream.net/comments/{{ digit }} 
 
 ###
 
-https://example.com/user
+https://httpbin.org/get
             ?name={{username}}&address={{string}}
 
 ###

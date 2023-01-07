@@ -719,8 +719,6 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
         # insert fuzzcasesets
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
-                header = json.dumps(fcset.headerDataTemplate)
-                body = json.dumps(fcset.bodyDataTemplate)
                 
                 fileStr = ''
                 if len(fcset.file) > 0:
@@ -739,7 +737,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         bodyNonTemplate = fcset.bodyNonTemplate,
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
-                        headerDataTemplate = header,
+                        headerDataTemplate = fcset.headerDataTemplate,
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  fcset.bodyDataTemplate,
                         file= fileStr,

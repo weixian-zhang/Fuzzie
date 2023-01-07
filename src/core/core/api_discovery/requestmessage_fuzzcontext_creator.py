@@ -176,7 +176,7 @@ class RequestMessageFuzzContextCreator:
                         evalHeaderDict[key] = evalHeader
 
                     if len(evalHeaderDict) > 0:
-                        fuzzcaseSet.headerDataTemplate = json.dumps(evalHeaderDict)
+                        fuzzcaseSet.headerDataTemplate = '' if len(evalHeaderDict) == 0 else json.dumps(evalHeaderDict)
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             

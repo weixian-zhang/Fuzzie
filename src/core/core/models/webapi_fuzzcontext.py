@@ -106,7 +106,7 @@ class ApiFuzzCaseSet:
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
         self.bodyDataTemplate = ''
-        self.headerDataTemplate = {}
+        self.headerDataTemplate = ''
 
     def get_path_datatemplate(self):
         if not self.pathDataTemplate.startswith('/'):
