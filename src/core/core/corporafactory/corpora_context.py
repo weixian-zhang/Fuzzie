@@ -1,13 +1,12 @@
 import os, sys
 from pathlib import Path
-currentDir = os.path.dirname(Path(__file__))
-sys.path.insert(0, currentDir)
 core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
+
 import json
 import jinja2
-import ast
 
+from utils import Utils
 from corpora_provider import CorporaProvider
 from user_supplied_corpora import UserSuppliedCorpora
 from boolean_corpora import BoolCorpora
@@ -28,7 +27,7 @@ class CorporaContext:
     
     
     def __init__(self) -> None:
-        self.es = EventStore()
+        self.eventstore = EventStore()
         self.cp = corporaProvider     # CorporaProvider is singleton and already loaded with data during fuzzer startup
         self.context = {}
             
@@ -54,27 +53,28 @@ class CorporaContext:
                         return False
             
     
-    
+    # will also be use of "parsing" request message. By parsing means build a corpora-context
+    # if successful, request message is valid
     def build(self, expression) -> tuple[bool, str]:
         
         if expression == '' or expression == '{}':
             return True, ''
         
         try:
-                        
-            if isinstance(template, str):
-                template = jinja2.Template(template)
-                template.render({ 'eval': self.eval_expression_by_build })
+                                    
+            if isinstance(expression, str):
+                expression = jinja2.Template(expression)
+                expression.render({ 'eval': self.eval_expression_by_build })
             else:
-                for dt in template:
-                    template = jinja2.Template(dt)
-                    template.render({ 'eval': self.eval_expression_by_build })
+                for dt in expression:
+                    expression = jinja2.Template(dt)
+                    expression.render({ 'eval': self.eval_expression_by_build })
                 
             return True, ''
                 
         except Exception as e:
-            self.es.emitErr(e, 'CorporaContext.build')
-            return False, f'Invalid expression: {template}'
+            self.eventstore.emitErr(e, 'CorporaContext.build')
+            return False, f'Invalid expression: {Utils.errAsText(e)}'
         
     def resolve_expr(self, expression) -> tuple[bool, str, object]:
         
@@ -86,7 +86,7 @@ class CorporaContext:
             return True, '', rendered
             
         except Exception as e:
-            self.es.emitErr(e, 'CorporaContext.resolve_expr')
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_expr')
             return False, e, ''
     
     # used by openapi 3 web fuzzer only
@@ -105,7 +105,7 @@ class CorporaContext:
             return False, f'Exression {expression} is not a file type', None
 
         except Exception as e:
-            self.es.emitErr(e, 'CorporaContext.resolve_expr')
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_expr')
             return False, e, ''
         
     
@@ -117,7 +117,8 @@ class CorporaContext:
         originalExpression = f'{{ eval(\'{expr.strip()}\') }}'
         
         if expr is None or expression is None or expression == '':
-            raise(Exception('Expression is invalid, detected empty string'))
+            self.context[''] = self.cp.stringCorpora
+            return originalExpression
         
         if expression.startswith('my'):
             userSuppliedOrStringCorpora = self.build_MY_expression(expr)
@@ -186,49 +187,65 @@ class CorporaContext:
                     return originalExpression
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                self.es.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
+                self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
                 return originalExpression
     
     def eval_expression_by_injection(self, expr: str, jsonEscape=True):
         
-        expression = expr
+        try:
+            expression = expr
         
-        provider = self.context[expression] 
+            provider = self.context[expression] 
+            
+            if provider != None:
+                data = provider.next_corpora()
+                
+                if jsonEscape and not self.is_byte_data(data):
+                    data = json.dumps(data)
+                        
+                return data
+            else:
+                return expression
+        except Exception as e:
+            self.eventstore.emitErr(e, 'eval_expression_by_injection')
         
-        if provider != None:
-            data = provider.next_corpora()
-            
-            if jsonEscape and not self.is_byte_data(data):
-                data = json.dumps(data)
-                    
-            return data
-        else:
-            return expression
-            
+    
+    # my wordlist type will have "=" sign e.g: my=
     def build_MY_expression(self, expr: str) -> UserSuppliedCorpora:
         
         try:
-            exprStartIndex = expr.find('=')
-            startExpr = expr[exprStartIndex + 1:]
+            
+            
+            myInput = expr.removeprefix('my=')
+            
+            if myInput == '':
+                self.eventstore.emitErr('failure to detect "my" input using String corpora instead', 'build_MY_expression')
+                return self.cp .stringCorpora
+
             
             usc = UserSuppliedCorpora()
             
-            usrInputList = ast.literal_eval(startExpr)
+            usc.load_corpora(myInput)
             
-            # multiple user supplied string
-            if type(usrInputList) is list and len(usrInputList) > 0:
+            return usc
             
-                for t in usrInputList:
-                    if t != '':
-                        usc.load_corpora(t)
+            # usrInputList = ast.literal_eval(startExpr)
+            
+            # # multiple user supplied string
+            # if type(usrInputList) is list and len(usrInputList) > 0:
+            
+            #     for t in usrInputList:
+            #         if t != '':
+            #             usc.load_corpora(t)
                         
-                return usc
+            #     return usc
             
-            else:
-                return self.cp .stringCorpora       # my list is empty use string corpora instead
+            # else:
+            #     return self.cp .stringCorpora       # my list is empty use string corpora instead
             
         except Exception as e:
-            raise(Exception(f'invalid "my" expression {expr}, {e.msg}. valid expression e.g: my=["fuzzie","is","great"]'))
+            self.eventstore.emitErr(e, 'build_MY_expression')
+            return self.cp .stringCorpora 
    
             
     def handle_string_expression(self, expr: str):

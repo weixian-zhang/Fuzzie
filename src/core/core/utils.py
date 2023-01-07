@@ -133,10 +133,9 @@ class Utils:
             
             # insert my wordlist type
             def myWordlist(value):
-                return f'{{{{ eval(\'my:{value}\') }}}}'
+                return f'{{{{ eval(\'my={value}\') }}}}'
             
-            # env = jinja2.Environment()
-            environment.DEFAULT_FILTERS['my'] = myWordlist
+            jinja2.filters.FILTERS['my'] = myWordlist
 
             tpl = jinja2.Template(expr)
             

@@ -147,6 +147,8 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzcontextId = graphene.String()
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
+    hostname = graphene.String()
+    port = graphene.Int()
     path = graphene.String()
     querystringNonTemplate = graphene.String()
     bodyNonTemplate = graphene.String()
@@ -239,6 +241,27 @@ class FuzzDataCase_ViewModel(graphene.ObjectType):
     response = graphene.Field(FuzzResponse_ViewModel)
     
 
+class FuzzRequestResponseMessage_ViewModel(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    requestVerb = graphene.String()
+    requestMessage = graphene.String()
+    requestPath = graphene.String()
+    requestQuerystring = graphene.String()
+    requestHeader = graphene.String()
+    requestBody = graphene.String()
+    
+    responseDisplayText = graphene.String()
+    responseReasonPhrase = graphene.String()
+    responseHeader = graphene.String()
+    responseBody= graphene.String()
+    
+
+class FuzzRequestResponseMessage_QueryResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()
+    result = graphene.Field(FuzzRequestResponseMessage_ViewModel)
+    
 class FuzzRequestResponseQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
@@ -263,3 +286,8 @@ class FuzzRequestFileDownloadContentQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
     result = graphene.String()
+    
+    
+class ParseRequestMessageResult(graphene.ObjectType):
+    ok = graphene.Boolean()
+    error = graphene.String()

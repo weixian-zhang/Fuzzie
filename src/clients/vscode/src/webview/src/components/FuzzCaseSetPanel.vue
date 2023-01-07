@@ -7,7 +7,7 @@
     outlined
     style="display: flex; flex-flow: column; height: 100%;">
   
-  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;">
+  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;" :modal="true" :dismissable="true">
     <v-textarea auto-grow
           outlined
           rows="1"
@@ -16,8 +16,7 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title>API Operations {{ this.getHostnameDisplay() }}</v-toolbar-title>
-  
+      <v-toolbar-title>API Operations</v-toolbar-title>
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
           @click="(
@@ -28,7 +27,12 @@
           </v-badge>
         </v-btn>
     </v-toolbar>
-      
+    <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly>
+    <!-- <InputText type="text" class="p-inputtext-sm" placeholder="" v-model="hostnameDisplay" ></InputText> -->
+      <!-- <v-text-field
+        readonly dense outlined style="height: 15px"
+        hide-details="auto"
+      >https://</v-text-field> -->
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
@@ -69,6 +73,15 @@
               Total Runs
             </th>
           </tr>
+          <tr v-show="isDataLoadingInProgress">
+              <th colspan="10">
+              <v-progress-linear
+                    indeterminate
+                    rounded
+                    color="cyan">
+                  </v-progress-linear>
+              </th>
+            </tr>
         </thead>
         <tbody>
           <tr
@@ -86,28 +99,34 @@
             <td>{{ item.verb }}</td>
             
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer"
+                v-tooltip.bottom="formatLongValueForTooltip(item.path)"
+                @click="(
                 onTableValueNonJsonSeeInFullClicked(item.path),
                 showFullValueSideBar = true
               )">
-                {{ shortenJsonValueInTable(item.path) }}
+                {{ shortenValueInTable(item.path) }}
               </span>
             </td>
             
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer"
+               v-tooltip.bottom="formatLongValueForTooltip(item.headerNonTemplate)"
+                @click="(
                 onTableValueSeeInFullClicked(item.headerNonTemplate),
                 showFullValueSideBar = true
               )">
-                {{ shortenJsonValueInTable(item.headerNonTemplate, 40) }} 
+                {{ shortenValueInTable(item.headerNonTemplate, 40) }} 
               </span>
             </td>
             <td>
-              <span style="cursor: pointer" @click="(
+              <span style="cursor: pointer" 
+                v-tooltip.bottom="formatLongValueForTooltip(item.bodyNonTemplate)"
+                @click="(
                 onTableValueSeeInFullClicked(item.bodyNonTemplate),
                 showFullValueSideBar = true
               )"> 
-              {{ shortenJsonValueInTable(item.bodyNonTemplate, 40) }} 
+              {{ shortenValueInTable(item.bodyNonTemplate, 40) }} 
               </span>
             </td>
             <td>
@@ -150,6 +169,7 @@ import Utils from '../Utils';
 import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
+import InputText from 'primevue/inputtext';
 
 class Props {
   toastInfo: any = {};
@@ -163,7 +183,8 @@ class Props {
 @Options({
   components: {
     DataTable,
-    Sidebar
+    Sidebar,
+    InputText
   },
   watch: {
 
@@ -203,6 +224,9 @@ class Props {
 
   hostname = '';
   port = undefined;
+  hostnameDisplay = ''
+
+  isDataLoadingInProgress = false;
 
   beforeMount() {
       this.$logger = inject('$logger');   
@@ -218,17 +242,31 @@ class Props {
       
   }
 
+  formatLongValueForTooltip(value) {
+    try {
+      // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
+      return JSON.stringify(JSON.parse(value),null,'\t')
+    } catch (error) {
+        return value;
+    }
+  }
+
   onTableValueNonJsonSeeInFullClicked(val) {
     this.tableValViewInSizeBar = val
   }
 
-  getHostnameDisplay() {
+  refreshHostnameDisplay() {
+
+    this.hostnameDisplay = '';
 
     if (this.hostname != '' && this.port != undefined) {
-      return ` - ${this.hostname}:${this.port}`;
+      if (this.port != 80 && this.port != 443) {
+        this.hostnameDisplay = `${this.hostname}:${this.port}`;
+      }
+      else {
+        this.hostnameDisplay = `${this.hostname}`;
+      }
     }
-
-    return '';
   }
 
   mounted(){
@@ -323,19 +361,26 @@ class Props {
 
   public async getFuzzCaseSet_And_RunSummaries(fuzzcontextId: string, fuzzCaseSetRunsId: string)
   {
-     const [ok, error, result] = await this.fuzzermanager.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+     this.isDataLoadingInProgress = true;
 
-    if(!ok)
-    {
-      this.toastError(error, 'Get Fuzz Cases');
-    }
-    else
-    {
-      if(!Utils.isNothing(result)){
-        this.fcsRunSums = result;
+     try {
+        const [ok, error, result] = await this.webclient.getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+     
+      if(!ok)
+      {
+        this.toastError(error, 'Get Fuzz Cases');
       }
-      
-    }
+      else
+      {
+        if(!Utils.isNothing(result)){
+          this.fcsRunSums = result;
+        }
+
+      }
+     } 
+     finally {
+        this.isDataLoadingInProgress = false;
+     } 
   }
 
   async onFuzzContextSelected(fuzzcontextId, hostname, port)
@@ -344,13 +389,20 @@ class Props {
      this.hostname = hostname;
      this.port = port;
 
+     this.refreshHostnameDisplay();
+
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
   }
 
-  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
+  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
   {
     this.fuzzContextId = fuzzcontextId;
     this.fuzzCaseSetRunsId = fuzzCaseSetRunsId;
+    this.hostname = hostname;
+    this.port = port;
+
+    this.refreshHostnameDisplay();
+
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
@@ -358,6 +410,11 @@ class Props {
   onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
     // send event to FuzzResult panel to display request and response
     this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
+
+    if (fcsrs.hostname != '') {
+      this.hostname = fcsrs.hostname;
+      this.refreshHostnameDisplay();
+    }
   }
 
   selectAllChanged(event) {
@@ -367,15 +424,18 @@ class Props {
     this.isTableDirty = true;
   }
 
-  shortenJsonValueInTable(bodyJson, length=40)
+  shortenValueInTable(bodyJson, length=40)
   {
     return Utils.shortenStr(bodyJson, length);
   }
 
   clearData() {
       this.fcsRunSums = [];
-      //this.dataCache = {};
+      this.hostname = '';
+      this.port = undefined;
       this.selectedRow = ''
+
+      this.refreshHostnameDisplay();
   }
 
  }

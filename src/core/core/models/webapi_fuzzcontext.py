@@ -94,7 +94,8 @@ class ApiFuzzCaseSet:
         self.fuzzcontextId = ''
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
         
-        # "original" non jinja data template strings
+        self.hostname = ''
+        self.port = -1
         self.path = ''
         self.querystringNonTemplate = ''
         self.bodyNonTemplate = ''
@@ -105,7 +106,7 @@ class ApiFuzzCaseSet:
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
         self.bodyDataTemplate = ''
-        self.headerDataTemplate = {}
+        self.headerDataTemplate = ''
 
     def get_path_datatemplate(self):
         if not self.pathDataTemplate.startswith('/'):

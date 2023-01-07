@@ -96,6 +96,8 @@ class OpenApi3FuzzContextCreator:
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
             fuzzcaseSet.verb = api.verb.name
+            fuzzcaseSet.hostname = ''
+            fuzzcaseSet.port = -1
             
             fuzzcaseSet.path = api.path
             

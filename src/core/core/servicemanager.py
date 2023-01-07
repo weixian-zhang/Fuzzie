@@ -11,10 +11,11 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzResponse_ViewModel,
                             FuzzDataCase_ViewModel,
                             WebApiFuzzerInfo,
-                            FuzzRequestResponseMessage,
+                            FuzzRequestResponseMessage_ViewModel,
                             FuzzRequestFileUpload_ViewModel,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult)
+from corporafactory.corpora_context import CorporaContext
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -32,7 +33,6 @@ from db import  (get_fuzzcontext,
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
-import threading, time
 from datetime import datetime
 import queue
 
@@ -210,6 +210,8 @@ class ServiceManager:
                 fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']                    
                 fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
                 fcsSum.selected = rowDict['selected']
+                fcsSum.hostname = rowDict['hostname']
+                fcsSum.port = rowDict['port']
                 fcsSum.verb = rowDict['verb']
                 fcsSum.path = rowDict['path']
                 fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
@@ -289,21 +291,32 @@ class ServiceManager:
         except Exception as e:
             return (False, Utils.errAsText(e), [])
     
-    def get_fuzz_request_response_messages(self, reqId, respId):
+    def get_fuzz_request_response_messages(self, reqId, respId) -> tuple([bool, str, FuzzRequestResponseMessage_ViewModel]):
         
         if reqId == '' or respId == '':
             return False, 'request id and response id cannot be empty', {}
+    
         
-        rrMsg = FuzzRequestResponseMessage()
+        ok, error, reqDict, respDict = get_fuzz_request_response_messages(reqId, respId)
         
-        reqMsg, respMsg, respBody = get_fuzz_request_response_messages(reqId, respId)
+        if not ok:
+            return True, '', FuzzRequestResponseMessage_ViewModel()
         
-        if reqMsg == '' or respMsg == '':
-            return True, '', {}
+        rrMsg = FuzzRequestResponseMessage_ViewModel()
+        rrMsg.ok = True
+        rrMsg.error = ''
+        rrMsg.requestVerb = reqDict['verb']
+        rrMsg.requestMessage = reqDict['requestMessage']
+        rrMsg.requestPath = reqDict['path']
+        rrMsg.requestQuerystring = reqDict['querystring']
+        rrMsg.requestHeader = reqDict['headers']
+        rrMsg.requestBody = reqDict['body']
         
-        rrMsg.requestMessage = reqMsg
-        rrMsg.responseMessage = respMsg
-        rrMsg.responseBody = respBody
+        rrMsg.responseDisplayText = respDict['responseDisplayText']
+        rrMsg.responseReasonPhrase = respDict['reasonPharse']
+        rrMsg.responseHeader = respDict['headerJson']
+        rrMsg.responseBody= respDict['responseBody']
+        
         
         return True, '', rrMsg
         
@@ -318,7 +331,6 @@ class ServiceManager:
     def cancel_fuzz(self):
         try:
             self.webapiFuzzer.cancel_fuzzing()
-            #pub.sendMessage(self.eventstore.CancelFuzzWSTopic, command=self.eventstore.CancelFuzzWSTopic)
             return True
         except Exception as e:
             self.eventstore.emitErr(e)
@@ -433,6 +445,36 @@ class ServiceManager:
             r.error = Utils.errAsText(e)
             r.result = ''
             return r
+        
+        
+    def parse_request_message(self, rqMsgB64: str) -> tuple([bool, str]):
+        
+        try:
+            
+            rqMsg = base64.b64decode(rqMsgB64).decode('utf-8')
+            
+            reqMsgFuzzCaseSetCreator = RequestMessageFuzzContextCreator()
+            cp = CorporaContext()
+            
+            fcsOK, fcsErr, _ = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
+            
+            if not fcsOK:
+                return False, fcsErr
+            
+            ok, error = cp.build(rqMsg)
+            
+            if not ok:
+                False, error
+            
+            reqMsgFuzzCaseSetCreator = None
+            cp = None
+            
+            return ok, error
+        
+        except Exception as e:
+            self.eventstore.emitErr(e)
+            
+        
         
 
     

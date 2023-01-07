@@ -61,6 +61,8 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
 ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
+                            Column('hostname', String),
+                            Column('port', Integer),
                             Column('verb', String),
                             Column('path', String),
                             Column('querystringNonTemplate', String),
@@ -82,6 +84,7 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('startTime', DateTime),
                             Column('endTime', DateTime),
                             Column('status', String),
+                            Column('message', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
@@ -490,14 +493,27 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
         Session = scoped_session(session_factory)
     
         reqRow = (
-                Session.query(ApiFuzzRequestTable.columns.requestMessage)
+                Session.query(
+                    ApiFuzzRequestTable.columns.requestMessage,
+                    ApiFuzzRequestTable.columns.verb,
+                    ApiFuzzRequestTable.columns.path,
+                    ApiFuzzRequestTable.columns.querystring,
+                    ApiFuzzRequestTable.columns.url,
+                    ApiFuzzRequestTable.columns.headers,
+                    ApiFuzzRequestTable.columns.body,
+                    ApiFuzzRequestTable.columns.invalidRequestError,                         
+                )
                 .filter(ApiFuzzRequestTable.c.Id == reqId)
                 .first()
                 )
         
         respRow = (
                 Session.query(ApiFuzzResponseTable.columns.responseDisplayText,
-                              ApiFuzzResponseTable.columns.body.label('responseBody'))
+                              ApiFuzzResponseTable.columns.body.label('responseBody'),
+                              ApiFuzzResponseTable.columns.reasonPharse,
+                              ApiFuzzResponseTable.columns.headerJson,
+                              ApiFuzzResponseTable.columns.body
+                )
                 .filter(ApiFuzzResponseTable.c.Id == respId)
                 .first()
                 )
@@ -505,20 +521,17 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
         Session.close()
         
         if reqRow is None or respRow is None:
-            return '', '', ''
+            return {}, {}
         
         
         reqRowDict = reqRow._asdict()
         respRowDict = respRow._asdict()
         
-        reqMsg = reqRowDict['requestMessage']
-        respMsg = respRowDict['responseDisplayText']
-        responseBody = respRowDict['responseBody']
-        
-        return (reqMsg, respMsg, responseBody)
+        return (True, '', reqRowDict, respRowDict)
     
     except Exception as e:
         eventstore.emitErr(e)
+        return (False, Utils.errAsText(e), {}, {})
         
     
     
@@ -706,8 +719,6 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
         # insert fuzzcasesets
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
-                header = json.dumps(fcset.headerDataTemplate)
-                body = json.dumps(fcset.bodyDataTemplate)
                 
                 fileStr = ''
                 if len(fcset.file) > 0:
@@ -719,14 +730,16 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         Id=fcset.Id, 
                         selected = fcset.selected,
                         verb = fcset.verb,
+                        hostname = fcset.hostname,
+                        port = fcset.port,
                         path = fcset.path,
                         querystringNonTemplate = fcset.querystringNonTemplate,
                         bodyNonTemplate = fcset.bodyNonTemplate,
                         pathDataTemplate = fcset.pathDataTemplate,
                         querystringDataTemplate = fcset.querystringDataTemplate,
-                        headerDataTemplate = header,
+                        headerDataTemplate = fcset.headerDataTemplate,
                         headerNonTemplate = fcset.headerNonTemplate,
-                        bodyDataTemplate =  body,
+                        bodyDataTemplate =  fcset.bodyDataTemplate,
                         file= fileStr,
                         fuzzcontextId = fuzzcontext.Id
                         )
@@ -777,13 +790,14 @@ def insert_api_fuzzrequest_fileupload(Id, fileName,fileContent, fuzzRequestId, f
     Session.commit()
     Session.close()
     
-def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed') -> None:
+def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed', message='') -> None:
     stmt = (
             update(ApiFuzzCaseSetRunsTable).
             where(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId).
             values(
                     endTime = datetime.now(),
-                    status = status
+                    status = status,
+                    message = message
                    )
             )
     

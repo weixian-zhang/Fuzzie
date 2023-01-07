@@ -44,7 +44,7 @@ class RequestMessageFuzzContextCreator:
                  apikey = '') -> tuple([bool, str, ApiFuzzContext]):
         
         try:
-            ok, error, fcSets = self.parse_req_msg_into_fuzzcasesets(requestTextContent)
+            ok, error, fcSets = self.parse_request_msg_as_fuzzcasesets(requestTextContent)
         
             if not ok or len(fcSets) == 0:
                 return False, error, ApiFuzzContext()
@@ -82,7 +82,7 @@ class RequestMessageFuzzContextCreator:
             self.eventstore.emitErr(e)
         
         
-    def parse_req_msg_into_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
+    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
 
         if rqMsg == '' or rqMsg.strip() == '':
@@ -107,7 +107,7 @@ class RequestMessageFuzzContextCreator:
             multilineBlock: list[str] = eachReqBlock.strip().splitlines()
             
             if len(multilineBlock) == 0:
-                return
+                return True, '', fcSets  
 
             # remove all breaklines until first char is found
             multilineBlock = self.remove_breaklines_until_char_detected(multilineBlock)
@@ -125,17 +125,20 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.verb = self.get_verb(multilineBlock)
             
             # path
-            ok, error, path = self.get_path(multilineBlock)
+            ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
             if not ok:
                 # cannot find path, skip to next block
                 self.eventstore.emitErr(error)
                 continue
             
+            fuzzcaseSet.hostname = hostname
+            fuzzcaseSet.port - port
             fuzzcaseSet.path = path
+            
             pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
-                return pathOK, Utils.errAsText(pathErr), []
+                return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
             
             fuzzcaseSet.pathDataTemplate = evalPath
             
@@ -147,7 +150,7 @@ class RequestMessageFuzzContextCreator:
             
             qsOK, qsErr, evalQS = Utils.inject_eval_into_wordlist_expression(qs)
             if not qsOK:
-                return qsOK, Utils.errAsText(qsErr), []
+                return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
             
             fuzzcaseSet.querystringDataTemplate = evalQS
             
@@ -168,11 +171,12 @@ class RequestMessageFuzzContextCreator:
                         hVal = headers[key]
                         hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(hVal)
                         if not hOK:
-                            return hOK, Utils.errAsText(hErr), []
+                            return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
                         
                         evalHeaderDict[key] = evalHeader
-                
-                    fuzzcaseSet.headerDataTemplate = json.dumps(evalHeaderDict)
+
+                    if len(evalHeaderDict) > 0:
+                        fuzzcaseSet.headerDataTemplate = '' if len(evalHeaderDict) == 0 else json.dumps(evalHeaderDict)
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
@@ -185,7 +189,7 @@ class RequestMessageFuzzContextCreator:
                 
                 bOK, bErr, evalBody = Utils.inject_eval_into_wordlist_expression(body)
                 if not bOK:
-                    return bOK, Utils.errAsText(bErr), []
+                    return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
                 fuzzcaseSet.bodyDataTemplate = evalBody
                 
@@ -196,11 +200,8 @@ class RequestMessageFuzzContextCreator:
         return True, '', fcSets                
     
     
-    
-    def get_path(self, multilineBlock) -> tuple([bool, str, str]):
+    def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
         
-        
-            
         path = ''
         
         if len(multilineBlock) >= 1:
@@ -215,27 +216,15 @@ class RequestMessageFuzzContextCreator:
             
             urlonly = requestLine.strip()
             
-            
             parseOutput = urlparse(urlonly)
             
-            # if Utils.validUrl(urlonly) == False:
-            #     return False, f'Url {urlonly} is invalid', requestLine
-                
+            hostname = f'{parseOutput.scheme}://{parseOutput.hostname}'
+            port = parseOutput.port if parseOutput.port != None else -1
             path = parseOutput.path.strip()
             
-            # no path doesn't mean invalid, TBD
-            # if path == '':
-            #     return False, f'invalid Url provided {requestLine}', ''
-            
-            return True, '', path
+            return True, '', path, hostname, port
                 
-                
-        
-        # if path == '':
-        #     return False, 'request line contains invalid URL', path
-                
-        return True, '', path
-    
+        return True, '', path, '', -1
     
     
      # examples
@@ -263,20 +252,6 @@ class RequestMessageFuzzContextCreator:
         requestline = requestline.strip()
         
         
-        
-        # tokens = requestline.split(' ')
-        
-        # try:
-        #     for t in tokens:
-        #         t = t.strip()
-        #         if Utils.isInString('?', t):
-        #             querystring = urlparse(t).query
-        #             querystring = '?' + querystring
-        #             break
-        # except ValueError as e:
-        #     #substring not found exception
-        #     pass
-        
         querystring = urlparse(requestline).query
         
         qsParts = querystring.split('&')
@@ -289,7 +264,7 @@ class RequestMessageFuzzContextCreator:
         while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
             lineIndex = lineIndex + 1
         
-        lineIndex = 0
+        #lineIndex = 0
         # # claim empty breaklines in case there are between requestline and headers/body
         # while self.is_next_line_breakline(multilineBlock, lineIndex):
         #     lineIndex = lineIndex + 1
@@ -297,7 +272,7 @@ class RequestMessageFuzzContextCreator:
         mergedQSTokens = "".join(qsTokens)
         querystring = querystring + mergedQSTokens
         
-        if not querystring.startswith('?'):
+        if querystring != '' and not querystring.startswith('?'):
             querystring = '?' + querystring
         
         return lineIndex, querystring

@@ -58,8 +58,18 @@
               <b>API Discovery</b>
               <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
               <v-divider />
-
+                
+                
                 <div class="mb-2" style="display:inline">
+                  <div style="width: 100%; text-align:right;">
+                    
+                    <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle
+                    </v-icon>
+                    <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                    mdi-close-circle
+                    </v-icon>
+                  </div>
                   <v-textarea 
                     label="Request Message" 
                     shaped
@@ -67,6 +77,7 @@
                     density="compact"
                     readonly
                     no-resize
+                    style="border-color: rgba(192, 0, 250, 0.986);"
                     v-model="newApiContext.requestTextContent"
                      @click="(showReqMsgEditDialog = true)"
                   />
@@ -260,11 +271,22 @@
                   track-color="cyan"
                   thumb-color="cyan"
                   thumb-label="always"
-                  min=100
+                  min=1
                   max=50000
-                  step="5"
+                  step="1"
                 ></v-slider>
-
+                <InputNumber
+                            v-model="newApiContext.fuzzcaseToExec"
+                            inputId="horizontal"
+                            showButtons
+                            buttonLayout="horizontal"
+                            :step="1"
+                            :min="1" :max="50000"
+                            decrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus"                    
+                        />
               </form>
               
               <v-divider />
@@ -511,11 +533,22 @@
                   track-color="cyan"
                   thumb-color="cyan"
                   thumb-label="always"
-                  min=100
+                  min=1
                   max=50000
                   step="5"
                 ></v-slider>
-
+                <InputNumber
+                            v-model="apiContextEdit.fuzzcaseToExec"
+                            inputId="horizontal"
+                            showButtons
+                            buttonLayout="horizontal"
+                            :step="1"
+                            :min="1" :max="50000"
+                            decrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonClass="p-button-outlined p-button-plain"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus"                    
+                        />
               </form>
               
               <v-divider />
@@ -533,24 +566,47 @@
     <Dialog v-model:visible="showReqMsgEditDialog" 
       header="Request Message" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
-      :maximizable="true" :modal="true">
+      :maximizable="true" :modal="true"
+      :dismissableMask="true"
+      @hide="onDialogClose">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <div class="display:inline-block fill-height">
-        <v-btn
-          size="x-small"
-          color="cyan"
-          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">
-          GET example
-        </v-btn>
-        <v-btn
-          size="x-small"
-          color="cyan"
-          class="ml-5"
-          @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
-          POST example
-        </v-btn>
-      </div>
+      <div class="container-fluid width=100%">
+          <div class="row">
+            <div class="col-6">
+              <v-btn
+              size="x-small"
+              color="cyan"
+              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
+              >
+            GET example
+            </v-btn>
+            <v-btn
+              size="x-small"
+              color="cyan"
+              class="ml-5"
+              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
+              POST example
+            </v-btn>
+            </div>
+            <div class="col-6 text-right">
+                <v-btn
+                  size="x-small"
+                  color="cyan"
+                  @click="parseRequestMessage()"
+                  >
+                Parse
+                </v-btn>
+                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                      mdi-check-circle
+                </v-icon>
+                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                  mdi-close-circle
+                </v-icon>
+            </div>
+          </div>
+      </div> 
+
 
       <div style="height: 10px;"></div>
       <codemirror
@@ -581,6 +637,7 @@
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
       header="Request Message" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :dismissableMask="true"
       :maximizable="true" :modal="true">
 
 <!-- codemirror vuejs example
@@ -598,21 +655,6 @@
           :extensions="extensions"
           :options="cmOption"
         />
-
-              <!-- <v-textarea 
-                    label="" 
-                    shaped
-                    variant="outlined"
-                    auto-grow
-                    readonly
-                    no-resize
-                    v-model="apiContextEdit.requestTextContent"
-                     density="compact" 
-                     rows="40"/>
-              <template #footer>
-                  <Button label="No" icon="pi pi-times" @click="closeBasic2" class="p-button-text" />
-                  <Button label="Yes" icon="pi pi-check" @click="closeBasic2" autofocus />
-              </template> -->
     </Dialog>
 
     
@@ -663,10 +705,6 @@
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
-      <!-- <v-btn  variant="plain" height="30px" plain icon v-tooltip.bottom="'create new messaging fuzz context (in roadmap)'">
-        <v-icon color="cyan darken-3">mdi-message-plus-outline</v-icon>
-      </v-btn> -->
-
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
@@ -703,7 +741,10 @@
                   slotProps.node.fuzzcontextId == selectedContextNode &&
                   selectedCaseSetRunNode == slotProps.node.fuzzCaseSetRunsId) ? 'p-1 border border-info border-2' : '')">
               <b 
-                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, slotProps.node.fuzzCaseSetRunsId),
+                v-on:click="( onFuzzCaseSetRunSelected(slotProps.node.fuzzcontextId, 
+                slotProps.node.fuzzCaseSetRunsId,
+                slotProps.node.hostname,
+                slotProps.node.port),
                     selectedContextNode = slotProps.node.fuzzcontextId,
                     selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId)">
                 {{slotProps.node.label}}
@@ -793,6 +834,7 @@ import dateformat from 'dateformat';
 import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
+import InputNumber from 'primevue/inputnumber';
 
 import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
@@ -815,7 +857,8 @@ class Props {
     Tree,
     Sidebar,
     Dialog,
-    Message
+    Message,
+    InputNumber
   },
 })
 
@@ -825,6 +868,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
+  fuzzcontexts: Array<ApiFuzzContext> = [];
   nodes: TreeNode[] = [];
   expandedNodeKeys = {};
   showTree = this.nodes.length > 0 ? "true": "false";
@@ -840,6 +884,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   inputRules= [
         () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
   ];
+  requestMsgHasError = false;
+  requestMsgErrorMessage = ''
 
   selectedContextNode = ''
   selectedCaseSetRunNode = ''
@@ -890,22 +936,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
 
     this.getFuzzcontexts()
-
-    // const jsDocCompletions = jsonLanguage.data.of({
-    //   autocomplete: this.completeJSDoc
-    // })
   }
 
   // #### websocket events ####
 
   onFuzzStartReady() {
-      
     this.fuzzerConnected = true;
     this.getFuzzcontexts();
   }
 
   onFuzzerNotReady() {
-    //this.clearData()
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -932,7 +972,21 @@ export default class ApiDiscovery extends Vue.with(Props) {
     //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
-    this.toastInfo('fuzzing started');
+    this.toastInfo('fuzzing started', '', 2000);
+
+
+    // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
+    // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
+    this.fuzzcontexts.forEach(context => {
+        if(context.Id == this.currentFuzzingContextId) {
+          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, 
+                this.currentFuzzingCaseSetRunId,
+                context.hostname,
+                context.port)
+                return;
+        }
+    });
+    
   }
 
   onFuzzStop() {
@@ -975,6 +1029,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
         if (OK)
         {
+          this.fuzzcontexts = fcs;
           this.nodes = [];
           this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
 
@@ -1046,7 +1101,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
               isFuzzing: false,
               label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
-              isFuzzCaseRun: true
+              isFuzzCaseRun: true,
+              hostname: fc.hostname,
+              port: fc.port
             };
           
             if(fcNode.children == undefined)
@@ -1064,6 +1121,25 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
+  async onDialogClose() {
+    this.parseRequestMessage();
+  }
+
+  async parseRequestMessage() {
+    if(this.newApiContext.requestTextContent == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(this.newApiContext.requestTextContent));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
 
@@ -1102,8 +1178,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, hostname, port);
   }
 
-  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
-    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId);
+  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId, hostname, port) {
+    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId, hostname, port);
   }
 
   async onRequestTextFileChange(event) {
@@ -1132,7 +1208,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onOpenApi3FileChange(event) {
-    console.log(event);
 
     const files = event.target.files;
 
@@ -1153,6 +1228,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
     {
       this.openapi3FileInputFileVModel = [];
       this.toastError('OpenAPI3 spec files are yaml or json', 'Invalid File Type');
+    }
+  }
+
+  async onRequestMessageFileChange(event) {
+
+    const files = event.target.files;
+
+    const file = files[0];
+
+    const reader = new FileReader();
+    if (file.name.includes(".http") || file.name.includes(".fuzzie") || file.name.includes(".rest")) {
+
+      const content = await Utils.readFileAsText(file);
+      this.newApiContext.requestTextContent = content;
+
+      if(this.requestTextFileInputFileVModel != null && this.requestTextFileInputFileVModel.length > 0)
+      {
+        this.newApiContext.requestTextFilePath = this.requestTextFileInputFileVModel[0]?.name;
+      }
+    }
+    else
+    {
+      this.requestTextFileInputFileVModel = [];
+      this.toastError('Request Message files must be either .http, .rest or .fuzzie', 'Invalid File Type');
     }
   }
 
@@ -1309,6 +1408,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   clearData() {
+     this.fuzzcontexts = [];
     this.nodes = [];
     this.selectedContextNode = '';
     this.selectedCaseSetRunNode = '';
@@ -1329,6 +1429,15 @@ input[type=text]{
    padding:0px;
    margin-bottom:2px; /* Reduced from whatever it currently is */
    margin-top:2px; /* Reduced from whatever it currently is */
+}
+
+.v-text-field--outlined fieldset {
+    color: red !important;
+}
+
+.ui-button {
+	background-color: cyan!important;
+	color: cyan!important;
 }
 
 </style>
