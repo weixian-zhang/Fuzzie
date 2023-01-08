@@ -188,11 +188,15 @@ class WSMsg_Fuzzing_FuzzCaseSetSummary:
         
         
 class FuzzTestResult:
-    def __init__(self, fdc: ApiFuzzDataCase, fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, httpCode, completedDataCaseRuns=1) -> None:
-        self.fdc = fdc
+    def __init__(self, fdc: ApiFuzzDataCase, fuzzcontextId, 
+                 fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, files,
+                 httpCode, completedDataCaseRuns=1) -> None:
+        
+        self.fuzzDataCase = fdc
         self.fuzzcontextId = fuzzcontextId
         self.fuzzCaseSetRunId = fuzzCaseSetRunId
         self.fuzzCaseSetId = fuzzCaseSetId
         self.caseSetRunSummaryId = caseSetRunSummaryId
         self.httpCode = httpCode
         self.completedDataCaseRuns = completedDataCaseRuns
+        self.files = files

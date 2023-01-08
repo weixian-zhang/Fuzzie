@@ -316,14 +316,14 @@ class Fuzz(graphene.Mutation):
     ok = graphene.Boolean()
     msg = graphene.String()
     
-    def mutate(self, info, fuzzcontextId):
+    async def mutate(self, info, fuzzcontextId):
         
         ok = True
         msg = ''
         
         sm = ServiceManager()
         
-        ok, msg = sm.fuzz(fuzzcontextId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        ok, msg = await sm.fuzz(fuzzcontextId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
         return Fuzz(ok=ok, msg=msg)
     

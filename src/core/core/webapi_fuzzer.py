@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 from requests import Request, Response, Session
 import requests
 from pubsub import pub
-import json
+import asyncio
 from http import cookiejar
 from types import MappingProxyType
 import shortuuid
@@ -29,6 +29,7 @@ from db import (insert_api_fuzzCaseSetRuns,
                 insert_api_fuzzresponse,
                 create_casesetrun_summary,
                 update_casesetrun_summary,
+                get_fuzzcaseset_run_statistics,
                 insert_api_fuzzrequest_fileupload)
 import time
 from multiprocessing import Lock
@@ -88,10 +89,15 @@ class WebApiFuzzer:
         
         #subscribe cancel-fuzzing event
         #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
+        
+    def __del__(self):
+        self.eventstore.emitInfo('WebApi Fuzzer shutting down')
 
             
     def cancel_fuzzing(self, errorMsg = ''):
         try:
+            
+            self.fuzzingStatus = FuzzingStatus.Stop
             
             self.multithreadEventSet.set()
             
@@ -100,21 +106,19 @@ class WebApiFuzzer:
             
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled', message=errorMsg)
             
-            self.fuzzingStatus = FuzzingStatus.Stop
-     
         except Exception as e:
             self.eventstore.emitErr(e)
         
         
-    def fuzz(self):
+    async def fuzz(self):
         
         if self.apifuzzcontext == None or len(self.apifuzzcontext.fuzzcaseSets) == 0:
             self.eventstore.emitErr(f'WebApiFuzzer detected empty ApiFuzzContext: {self.apifuzzcontext}')
             return
         
-        self.begin_fuzzing()
+        await self.begin_fuzzing()
         
-    def begin_fuzzing(self):
+    async def begin_fuzzing(self):
           
         try:
             
@@ -150,7 +154,7 @@ class WebApiFuzzer:
                     
                     self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber )
                     
-                    time.sleep(0.3)
+                    await asyncio.sleep(0.2)
                     
                     
         except Exception as e:
@@ -182,9 +186,9 @@ class WebApiFuzzer:
             
             fuzzDataCase, files = self.http_call_api(fcs)
             
-            summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
+            summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, files)
             
-            self.save_uploaded_files(files=files,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
+            #self.save_uploaded_files(files=files,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
             
             # update run status
             self.fuzzcaseset_done(runNumber)
@@ -373,15 +377,28 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e)
         
-    def save_fuzzDataCase(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
+    def enqueue_fuzz_result_for_persistent(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase, files) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
             
-            fuzztestResult = FuzzTestResult(fdc=fdc, fuzzcontextId=fdc.fuzzcontextId, fuzzCaseSetId=fdc.fuzzCaseSetId,
-                                            fuzzCaseSetRunId=self.fuzzCaseSetRunId, caseSetRunSummaryId=caseSetRunSummaryId, 
-                                            httpCode=int(fdc.response.statusCode), completedDataCaseRuns=1 )
+            fuzztestResult = FuzzTestResult(fdc=fdc, 
+                                            fuzzcontextId=fdc.fuzzcontextId, 
+                                            fuzzCaseSetId=fdc.fuzzCaseSetId,
+                                            fuzzCaseSetRunId=self.fuzzCaseSetRunId, 
+                                            caseSetRunSummaryId=caseSetRunSummaryId, 
+                                            files=files,
+                                            httpCode=int(fdc.response.statusCode), 
+                                            completedDataCaseRuns=1 )
             
             FuzzTestResultQueue.enqueue(fuzztestResult)
+            
+            # background task result saver is upadting run-statistics
+            runSummaryStatistics = get_fuzzcaseset_run_statistics(fuzzcontextId=fdc.fuzzcontextId,
+                                           caseSetRunSummaryId=caseSetRunSummaryId,
+                                           fuzzCaseSetId=fdc.fuzzCaseSetId,
+                                           fuzzCaseSetRunId=self.fuzzCaseSetRunId)
+            
+            return runSummaryStatistics
             
             # insert_api_fuzzdatacase(self.fuzzCaseSetRunId, fdc)
             
@@ -404,11 +421,11 @@ class WebApiFuzzer:
             # else:
             #     print('response is none')
             
-            return None
+            # return None
             
         except Exception as e:
             errMsg = Utils.errAsText(e)
-            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {errMsg}', data='WebApiFuzzer.save_fuzzDataCase')
+            self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {errMsg}', data='WebApiFuzzer.enqueue_fuzz_result_for_persistent')
                 
             
     def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError='', files=[]):

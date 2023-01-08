@@ -971,7 +971,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
-    this.toastInfo('fuzzing started', '', 2000);
+    this.toastInfo('fuzzing started', '', 1000);
 
 
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
@@ -1142,11 +1142,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
-    const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
-    if(!ok) {
-      this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
-      return;
-    }
+    await this.webclient.fuzz(fuzzcontextId)
   }
 
   isFuzzingInProgress() {

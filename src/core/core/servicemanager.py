@@ -331,14 +331,16 @@ class ServiceManager:
     
     def cancel_fuzz(self):
         try:
-            self.webapiFuzzer.cancel_fuzzing()
-            return True
+            if ServiceManager.webapiFuzzer is not None:
+                ServiceManager.webapiFuzzer.cancel_fuzzing()
+                ServiceManager.webapiFuzzer = None
+                return True
         except Exception as e:
-            self.eventstore.emitErr(e)
+            self.eventstore.emitErr(e, 'ServiceManager.cancel_fuzz')
             return False
         
     
-    def fuzz(self, fuzzcontextId):
+    async def fuzz(self, fuzzcontextId):
         
         try:
             fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
@@ -346,15 +348,15 @@ class ServiceManager:
             if fuzzcontext is None:
                 return False, 'Context not found or no FuzzCaseSet is selected'
             
-            if ServiceManager.webapiFuzzer is None:
+            if ServiceManager.webapiFuzzer is None or ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
-                ServiceManager.webapiFuzzer.fuzz()
+                await ServiceManager.webapiFuzzer.fuzz()
                 
-            elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop):
+            # elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop):
                 
-                ServiceManager.webapiFuzzer = None
-                ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
-                ServiceManager.webapiFuzzer.fuzz()
+            #     ServiceManager.webapiFuzzer = None
+            #     ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
+            #     await ServiceManager.webapiFuzzer.fuzz()
                 
             return True, ''
         

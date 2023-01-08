@@ -1047,14 +1047,14 @@ def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId
     Session.commit()
     Session.close()
     
-def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  Id, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
+def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  caseSetRunSummaryId, httpCode, completedDataCaseRuns = 0) -> ApiFuzzCaseSets_With_RunSummary_ViewModel :
     
     Session = scoped_session(session_factory)
 
     summary = (
                 Session
                 .query(ApiFuzzRunSummaryPerCaseSetTable)
-                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id)
+                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId)
                 .first()
                )
     rowDict =  summary._asdict()
@@ -1069,7 +1069,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
         existingHttp2xx = existingHttp2xx + 1
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
-            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
             values(
                     http2xx = existingHttp2xx
                    )
@@ -1082,7 +1082,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
         existingHttp3xx = existingHttp3xx + 1
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
-            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
             values(
                     http3xx = existingHttp3xx
                    )
@@ -1095,7 +1095,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
         existingHttp4xx = existingHttp4xx + 1
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
-            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
             values(
                     http4xx = existingHttp4xx
                    )
@@ -1108,7 +1108,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
         existingHttp5xx = existingHttp5xx + 1
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
-            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+            where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
             values(
                     http5xx = existingHttp5xx
                    )
@@ -1121,7 +1121,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
     existingCompletedDataCaseRuns = existingCompletedDataCaseRuns + completedDataCaseRuns
     stmt = (
         update(ApiFuzzRunSummaryPerCaseSetTable).
-        where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id).
+        where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
         values(
                 completedDataCaseRuns = existingCompletedDataCaseRuns
                 )
@@ -1129,12 +1129,16 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
     Session.execute(stmt)
     Session.commit()
     Session.close()
+
+
+def get_fuzzcaseset_run_statistics(caseSetRunSummaryId, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId):
     
-    #query from db again to retrieve latest data
+    Session = scoped_session(session_factory)
+    
     latestSummary = (
                 Session
                 .query(ApiFuzzRunSummaryPerCaseSetTable)
-                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id)
+                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId)
                 .first()
                )
     rowDict =  latestSummary._asdict()
@@ -1144,14 +1148,12 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
     existingHttp5xx = rowDict['http5xx']
     existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
     totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
-
-    Session.close()
     
     # retrieve again from DB to get the latest stats as during the above code execution, concurrent fuzzing process
     # will be updating DB at the same time, so once execution reach this line of code, stats could be likely outdated.
     # therefore retrieving again is necessary
     summary = ApiFuzzCaseSets_With_RunSummary_ViewModel()
-    summary.Id = Id
+    summary.Id = caseSetRunSummaryId
     summary.fuzzCaseSetId = fuzzCaseSetId
     summary.fuzzCaseSetRunId = fuzzCaseSetRunId
     summary.fuzzcontextId = fuzzcontextId
@@ -1161,8 +1163,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
     summary.http5xx = existingHttp5xx
     summary.completedDataCaseRuns = existingCompletedDataCaseRuns
     summary.totalDataCaseRunsToComplete = totalDataCaseRunsToComplete
-    return summary
-        
+    return summary      
                
     
 # create tables if not exist
