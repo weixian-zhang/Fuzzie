@@ -352,12 +352,6 @@ class ServiceManager:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
                 await ServiceManager.webapiFuzzer.fuzz()
                 
-            # elif (ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop):
-                
-            #     ServiceManager.webapiFuzzer = None
-            #     ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
-            #     await ServiceManager.webapiFuzzer.fuzz()
-                
             return True, ''
         
         except Exception as e:

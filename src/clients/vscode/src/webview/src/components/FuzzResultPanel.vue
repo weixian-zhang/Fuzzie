@@ -188,7 +188,7 @@
               <td>{{ item.response.statusCode }}</td>
               
               <td>
-                <span v-tooltip="item.request.path">
+                <span>
                   {{ shortenValueInTable(item.request.path, 15) }}
                 </span>
               </td>
