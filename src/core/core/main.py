@@ -16,6 +16,7 @@ from docopt import docopt
 from eventstore import EventStore
 from backgroundtask_corpora_loader import load_corpora_background
 from backgroundtask_event_sender import BackgroundTask_WS_EventSender
+from backgroundtask_fuzz_test_result_saver import BackgroundTask_FuzzTest_Result_Saver
 from starlette_graphql import schema
 import asyncio
 import uvicorn
@@ -33,8 +34,11 @@ import socket, errno
 
 eventstore = EventStore()
 
-t = BackgroundTask_WS_EventSender()
-t.start()
+# background tasks
+wsEventSender = BackgroundTask_WS_EventSender()
+wsEventSender.start()
+fuzztestResultSaver = BackgroundTask_FuzzTest_Result_Saver()
+fuzztestResultSaver.start()
 
 async def server_error(request, exc):
     return JSONResponse(content={"error": 500}, status_code=exc.status_code)

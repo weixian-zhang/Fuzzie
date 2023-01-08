@@ -12,7 +12,7 @@
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h5>Create new Fuzz Context</h5></div>
+        <div class="row mb-3"><h4>Create new Fuzz Context</h4></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -20,16 +20,17 @@
                   <v-text-field
                     v-model="newApiContext.name"
                     variant="underlined"
-                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
                     counter="40"
                     density="compact"
                     hint="e.g: my REST/GraphQL API"
                     label="Name"
+                    maxlength="40"
                     clearable
                   ></v-text-field>
                 </div>
 
-              <b>Test Properties</b>
+              <v-divider />
+              <!-- <h4>Test Properties</h4>
               <v-divider />
 
               <div class="form-group mb-3" >
@@ -53,12 +54,13 @@
                     hint=""
                     max="65535"
                     label="Port number" />
-                </div>
+                </div> -->
 
-              <b>API Discovery</b>
-              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
+              <h4>API Discovery</h4>
+              
               <v-divider />
-                
+              <b>Request Message</b>
+              <p><small>Tell Fuzzie about your API schema with Request Messages</small></p>
                 
                 <div class="mb-2" style="display:inline">
                   <div style="width: 100%; text-align:right;">
@@ -82,11 +84,12 @@
                      @click="(showReqMsgEditDialog = true)"
                   />
                 </div>
-
+               
+                <small>or load from Request Message file (.http, .rest or .fuzzie)</small>
                 <div class="mb-2">
                   <v-file-input
                     v-model="requestTextFileInputFileVModel"
-                    label="Request Text File"
+                    label="Request Message File"
                     density="compact"
                     ref="rtFileInput"
                     @change="onRequestTextFileChange"
@@ -100,7 +103,7 @@
                   ></v-file-input>
                 </div>
 
-                <div class="mb-2 mt-3">
+                <!-- <div class="mb-2 mt-3">
                   <v-file-input
                     label="OpenAPI 3 File"
                     v-model="openapi3FileInputFileVModel"
@@ -129,14 +132,14 @@
                       newApiContext.openapi3Url=''
                     )"
                     label="OpenAPI 3 URL" />
-                </div>
+                </div> -->
               </form>
             </div>
             <div class="col-6">
               
               <form>
 
-                <b>API Authentication</b>
+                <h4>API Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -261,10 +264,11 @@
 
                 <v-divider />
 
-                <b>Fuzz Properties</b>
-                <v-divider />
+                <h4>Fuzz Properties</h4>
                 <v-divider />
                 
+                <p><small>Number of fuzz test runs per API operation</small></p>
+                <v-divider />
                 <v-slider
                   v-model="newApiContext.fuzzcaseToExec"
                   label=''
@@ -306,7 +310,7 @@
      <Sidebar v-model:visible="updateContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h5>Update Fuzz Context</h5></div>
+        <div class="row mb-3"><h4>Update Fuzz Context</h4></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -323,7 +327,7 @@
                   ></v-text-field>
                 </div>
 
-              <b>Test Properties</b>
+              <h4>Test Properties</h4>
               <v-divider />
 
               <div class="form-group mb-3" >
@@ -349,8 +353,10 @@
                     label="Port number" />
                 </div>
 
-              <b>API Discovery (Read-Only)</b>
-              <p><small>Tell Fuzzie about your API schema in one of the following ways</small></p>
+              <h4>API Discovery</h4>
+
+              <v-divider />
+              <b>Request Message (readonly)</b>
               <v-divider />
 
                 <div class="mb-2">
@@ -359,23 +365,30 @@
                     shaped
                     variant="outlined"
                     density="compact"
-                    readonly
                     no-resize
+                    readonly
                     v-model="apiContextEdit.requestTextContent"
                     @click="(showReqMsgReadOnlyDialog = true)"
                   ></v-textarea>
+                  <small>Request Messages will not be updated, please create a new context</small>
                 </div>
 
-                <div class="mb-2">
-                  <v-text-field
-                    v-model="apiContextEdit.requestTextFilePath"
-                    variant="underlined"
+                <!-- <v-file-input
+                    v-model="requestTextFileInputFileVModel"
+                    label="Request Text File"
                     density="compact"
-                    readonly
-                    label="Request Text File Path" />
-                </div>
+                    ref="rtFileInput"
+                    @change="onRequestTextFileChange"
+                    variant="underlined"
+                    clearable
+                    @click:clear="(
+                      requestTextFileInputFileVModel=[],
+                      apiContextEdit.requestTextContent='',
+                      apiContextEdit.requestTextFilePath=''
+                    )"
+                  ></v-file-input> -->
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                   <v-text-field
                     v-model="apiContextEdit.openapi3FilePath"
                     variant="underlined"
@@ -391,14 +404,14 @@
                     density="compact"
                     readonly
                     label="Request Text File Path" />
-                </div>
+                </div> -->
               </form>
             </div>
             <div class="col-6">
               
               <form>
 
-                <b>API Authentication</b>
+                <h4>API Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -523,10 +536,12 @@
 
                 <v-divider />
 
-                <b>Fuzz Properties</b>
+                <h4>Fuzz Properties</h4>
                 <v-divider />
                 <v-divider />
-                
+
+                <p><small>Number of fuzz test runs per API operation</small></p>
+                <v-divider />
                 <v-slider
                   v-model="apiContextEdit.fuzzcaseToExec"
                   label=''
@@ -535,7 +550,7 @@
                   thumb-label="always"
                   min=1
                   max=50000
-                  step="5"
+                  step="1"
                 ></v-slider>
                 <InputNumber
                             v-model="apiContextEdit.fuzzcaseToExec"
@@ -555,6 +570,7 @@
 
               <div style="text-align:right">
                 <button class="btn btn-outline-info" @click="updateApiContext">Update</button>
+                
               </div>
             <!-- col end-->
             </div>
@@ -568,7 +584,7 @@
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true"
-      @hide="onDialogClose">
+      @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
       <div class="container-fluid width=100%">
@@ -593,7 +609,7 @@
                 <v-btn
                   size="x-small"
                   color="cyan"
-                  @click="parseRequestMessage()"
+                  @click="parseRequestMessage(newApiContext.requestTextContent)"
                   >
                 Parse
                 </v-btn>
@@ -619,31 +635,13 @@
           :extensions="extensions"
           @ready="onCMReady" 
         />
-              <!-- <v-textarea 
-                    label="" 
-                    shaped
-                    variant="outlined"
-                    auto-grow
-                    no-resize
-                    v-model="newApiContext.requestTextContent"
-                     density="compact" 
-                     rows="40"/>
-              <template #footer>
-                  <Button label="No" icon="pi pi-times" @click="closeBasic2" class="p-button-text" />
-                  <Button label="Yes" icon="pi pi-check" @click="closeBasic2" autofocus />
-              </template> -->
     </Dialog>
 
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
       header="Request Message" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
-      :dismissableMask="true"
-      :maximizable="true" :modal="true">
-
-<!-- codemirror vuejs example
-  https://codemirror.net/examples/autocompletion/
-  https://codemirror.net/docs/guide/
-  https://github.com/surmon-china/vue-codemirror/issues/66-->
+      :maximizable="true" :modal="true"
+      :dismissableMask="true">
 
           <codemirror
           v-model="apiContextEdit.requestTextContent"
@@ -726,7 +724,7 @@
               :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&
                 slotProps.node.fuzzcontextId === selectedContextNode) ? 'p-1 border border-info border-2' : '')">
               <b 
-                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId, slotProps.node.hostname, slotProps.node.port),
+                v-on:click="(onFuzzContextSelected(slotProps.node.fuzzcontextId),
                 selectedContextNode = slotProps.node.fuzzcontextId)">
                 {{slotProps.node.label}}
               </b>
@@ -882,7 +880,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   apiContextToDelete: any = {};
   apiContextIdToFuzz = '';
   inputRules= [
-        () => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid"
+        //() => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid",
+        v => v.length <= 40 || 'Max 40 characters'
   ];
   requestMsgHasError = false;
   requestMsgErrorMessage = ''
@@ -972,7 +971,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
-    this.toastInfo('fuzzing started', '', 2000);
+    this.toastInfo('fuzzing started', '', 1000);
 
 
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
@@ -980,9 +979,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.fuzzcontexts.forEach(context => {
         if(context.Id == this.currentFuzzingContextId) {
           this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, 
-                this.currentFuzzingCaseSetRunId,
-                context.hostname,
-                context.port)
+                this.currentFuzzingCaseSetRunId)
                 return;
         }
     });
@@ -1121,15 +1118,15 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   }
 
-  async onDialogClose() {
-    this.parseRequestMessage();
+  async onDialogClose(rqMsg: string) {
+    this.parseRequestMessage(rqMsg);
   }
 
-  async parseRequestMessage() {
-    if(this.newApiContext.requestTextContent == ''){
+  async parseRequestMessage(rqMsg) {
+    if(rqMsg == ''){
       return;
     }
-    const [ok, error] = await this.webclient.parseRequestMessage(btoa(this.newApiContext.requestTextContent));
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
 
     if(!ok) {
       this.requestMsgHasError = true;
@@ -1145,11 +1142,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
-    const [ok, msg] = await this.webclient.fuzz(fuzzcontextId)
-    if(!ok) {
-      this.toastError(`error when start fuzzing: ${msg}`, 'Fuzzing');
-      return;
-    }
+    await this.webclient.fuzz(fuzzcontextId)
   }
 
   isFuzzingInProgress() {
@@ -1174,12 +1167,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
  }
 
-  onFuzzContextSelected(fuzzcontextId, hostname, port) {
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, hostname, port);
+  onFuzzContextSelected(fuzzcontextId) {
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId);
   }
 
-  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId, hostname, port) {
-    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId, hostname, port);
+  onFuzzCaseSetRunSelected(fuzzcontextId, fuzzCaseSetRunsId) {
+    this.eventemitter.emit("onFuzzCaseSetRunSelected", fuzzcontextId, fuzzCaseSetRunsId);
   }
 
   async onRequestTextFileChange(event) {
@@ -1274,7 +1267,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.eventemitter.emit("onFuzzContextDelete", id);
       this.getFuzzcontexts();
 
-      this.toastSuccess(`${this.apiContextToDelete.name} updated successfully`, 'Delete API FuzzContext');
+      this.toastSuccess(`${this.apiContextToDelete.name} deleted successfully`, '');
     }
 
     this.showDeleteConfirmDialog = false;
@@ -1293,7 +1286,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     Utils.mapProp(this.apiContextEdit, apiFCUpdate);
 
-    const [ok, error] = await this.fuzzermanager.updateApiFuzzContext(apiFCUpdate);
+    const [ok, error] = await this.webclient.updateApiFuzzContext(apiFCUpdate);
 
     if(!ok)
     {
@@ -1303,7 +1296,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     {
       this.apiContextEdit = new ApiFuzzContext();
 
-      this.toastSuccess(`${apiFCUpdate.name} updated successfully`, 'Update API FuzzContext');
+      this.toastSuccess(`${apiFCUpdate.name} updated successfully`, '');
     }
 
     this.updateContextSideBarVisible = false;
@@ -1319,31 +1312,37 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
-    if(this.newApiContext.name == '' || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
+    if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
     {
-      this.toastError('Name, hostname, port are required', 'New API Context - Missing Info');
+      this.toastError('Name is required');
       return;
     }
 
-    if(this.newApiContext.openapi3Url != '') {
-      const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
-
-      if(!ok)
-      {
-        this.toastError(error, 'Trying to get OpenApi3 spec by Url');
-
-        return;
-      }
-
-      this.newApiContext.openapi3Content = data;
-
-    }
-
-    if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
+    if(this.newApiContext.requestTextContent == '' || this.requestMsgHasError == true)
     {
-      this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
+      this.toastError('Request Message is either empty or has error', 'API Discovery');
       return;
     }
+
+    // if(this.newApiContext.openapi3Url != '') {
+    //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+
+    //   if(!ok)
+    //   {
+    //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
+
+    //     return;
+    //   }
+
+    //   this.newApiContext.openapi3Content = data;
+
+    // }
+
+    // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
+    // {
+    //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
+    //   return;
+    // }
    
     const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
     apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';

@@ -223,8 +223,10 @@ class Props {
   fuzzCaseSetRunsId = '';
 
   hostname = '';
-  port = undefined;
+  port = -1;
   hostnameDisplay = ''
+
+  rowClickEnabled = true;
 
   isDataLoadingInProgress = false;
 
@@ -407,14 +409,26 @@ class Props {
   }
   
 
-  onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
-    // send event to FuzzResult panel to display request and response
-    this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
+  async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
 
-    if (fcsrs.hostname != '') {
-      this.hostname = fcsrs.hostname;
-      this.refreshHostnameDisplay();
-    }
+    if (!this.rowClickEnabled) {
+        return;
+      }
+
+      this.rowClickEnabled = false;
+
+      // send event to FuzzResult panel to display request and response
+      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
+
+      if (fcsrs.hostname != '') {
+        this.hostname = fcsrs.hostname;
+        this.port = fcsrs.port;
+        this.refreshHostnameDisplay();
+      }
+
+    await Utils.delay(2000);   // spam click prevention
+    this.rowClickEnabled = true;
+    
   }
 
   selectAllChanged(event) {
@@ -432,7 +446,7 @@ class Props {
   clearData() {
       this.fcsRunSums = [];
       this.hostname = '';
-      this.port = undefined;
+      this.port = -1;
       this.selectedRow = ''
 
       this.refreshHostnameDisplay();
