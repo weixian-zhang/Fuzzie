@@ -32,6 +32,7 @@ import io
 from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
+from utils import Utils
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -184,10 +185,6 @@ class WebApiFuzzer:
             fuzzDataCase.response.responseDisplayText = ''
             self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
-            # update run status
-            self.fuzzcaseset_done()
-                
-            
         except Exception as e:
             errMsg = Utils.errAsText(e)
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
@@ -239,8 +236,9 @@ class WebApiFuzzer:
                 
                 prepReq = req.prepare()
                 
-                reqHeaders = prepReq.headers
-                reqContentLength =  prepReq.headers['Content-Length']
+                reqContentLength =  0
+                if 'Content-Length' in prepReq.headers:
+                    reqContentLength = prepReq.headers['Content-Length']
                 
                 fuzzDataCase.request = self.create_fuzzrequest(
                         fuzzDataCaseId=fuzzDataCase.Id,
@@ -252,7 +250,7 @@ class WebApiFuzzer:
                         path=path,
                         qs=querystring,
                         verb=fcs.verb,
-                        headers=reqHeaders,
+                        headers=headers,
                         body=reqBody,
                         contentLength=reqContentLength,
                         files=files)
@@ -261,7 +259,7 @@ class WebApiFuzzer:
                 resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
             
             except Exception as e:
-                err =  Utils.jsone(e.args)
+                err =  Utils.errAsText(e.args)
                 fuzzDataCase.request = self.create_fuzzrequest(
                                         fuzzDataCaseId=fuzzDataCase.Id,
                                         fuzzcontextId=self.apifuzzcontext.Id,
@@ -288,6 +286,9 @@ class WebApiFuzzer:
                 fuzzDataCase.response = fuzzResp
                 
                 self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
+                
+                # update run status
+                self.fuzzcaseset_done()
                 
             except Exception as e:
                 self.eventstore.emitErr(e)
@@ -509,15 +510,8 @@ class WebApiFuzzer:
             
         try:
             
-            hostname = fc.hostname
-            port = 443
-            
-            if not Utils.isNoneEmpty(fcs.hostname):
-                hostname = fcs.hostname
-                
-            if fcs.port != -1:
-                port = fcs.port
-                
+            hostname = fcs.hostname
+            port = fcs.port
             hostnamePort = f'{hostname}:{port}' #fc.get_hostname_port()
             pathDT = fcs.get_path_datatemplate()
             querystringDT = fcs.querystringDataTemplate
@@ -539,25 +533,22 @@ class WebApiFuzzer:
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
-            
-            #if headerDT != '' or
             headerDict = {}
-            headerDTObj = jsonpickle.decode(headerDT, safe=False, keys=False)
-            if isinstance(headerDTObj, dict) == False:
-                headerDTObj = jsonpickle.decode(jsonpickle.decode(headerDT, safe=False, keys=False), safe=False, keys=False)
-            
-            if len(headerDTObj) > 0:
+            headerDTObj = Utils.try_parse_json_to_object(headerDT)
+            if Utils.dict_has_items(headerDTObj):
                 
                 for hk in headerDTObj.keys():
                     dt = headerDTObj[hk]
                     
                     ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    
                     if not ok:
                         self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
                         continue
                     
                     headerDict[hk] = resolvedVal
                 
+                    
             # handle file upload with "proper" encoding, without encoding requests will throw error as requests uses utf-8 by default
             if len(fcs.file) > 0:
                 for fileType in fcs.file:

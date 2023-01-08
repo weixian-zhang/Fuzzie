@@ -6,13 +6,18 @@ import re
 import xml.etree.ElementTree as elementTree
 import jinja2
 from jinja2 import environment
+import json
 
 class Utils:
     
-    def jsone(objDict):
-        if objDict is None:
-            return ''
-        return jsonpickle.encode(objDict, unpicklable=False)
+    def jsone(objDict) -> str:
+        try:
+            if objDict is None or objDict == '' or (isinstance(objDict, dict) and len(objDict) == 0):
+                return ''
+            return jsonpickle.encode(objDict, unpicklable=False)
+        except Exception as e:
+            return objDict
+        
     
     def jsondc(strValue):
         try:
@@ -95,9 +100,23 @@ class Utils:
             return False
         return True
     
+    def try_parse_json_to_object(jsonStr) -> dict:
+        try:
+            if jsonStr == '':
+                return {}
+            
+            return json.loads(jsonStr) 
+        except Exception as e:
+            return {}
+        
+    def dict_has_items(dictObj) -> bool:
+        if isinstance(dictObj, dict) and len(dictObj) > 0:
+            return True
+        return False
+    
     # expression example: {{pdf}} {{file}} {{image}}
     # this utility gets pdf, file or image from double curly braces
-    def is_filetype_expression(expr: str) -> tuple([bool, str]):
+    def is_file_wordlist_type(expr: str) -> tuple([bool, str]):
         try:
             exprGroups = re.search('{{(([^}][^}]?|[^}]}?)*)}}', expr)
         

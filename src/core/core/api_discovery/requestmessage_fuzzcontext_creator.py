@@ -132,7 +132,7 @@ class RequestMessageFuzzContextCreator:
                 continue
             
             fuzzcaseSet.hostname = hostname
-            fuzzcaseSet.port - port
+            fuzzcaseSet.port = port
             fuzzcaseSet.path = path
             
             pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
@@ -218,8 +218,19 @@ class RequestMessageFuzzContextCreator:
             
             parseOutput = urlparse(urlonly)
             
+            # determine port
+            port = -1
+            
+            scheme = parseOutput.scheme
+            if parseOutput.port != None:
+                port = parseOutput.port
+            elif scheme.lower() == 'http':
+                port = 80
+            elif scheme.lower() == 'https':
+                port = 443
+            
             hostname = f'{parseOutput.scheme}://{parseOutput.hostname}'
-            port = parseOutput.port if parseOutput.port != None else -1
+            
             path = parseOutput.path.strip()
             
             return True, '', path, hostname, port
@@ -399,7 +410,6 @@ class RequestMessageFuzzContextCreator:
 
     # name=foo
     # &password=bar
-    
     def get_body_and_files(self, multilineBlock: list[str]) -> str:
         
         body = []
@@ -413,7 +423,7 @@ class RequestMessageFuzzContextCreator:
             if line == '':
                 continue
             
-            yes, exprType = Utils.is_filetype_expression(line)
+            yes, exprType = Utils.is_file_wordlist_type(line)
             
             if yes:
                 files.append(exprType)

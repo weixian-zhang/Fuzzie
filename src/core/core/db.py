@@ -927,6 +927,8 @@ def create_fuzzcontext_from_dict(rowDict):
 def create_fuzzcaseset_from_dict(rowDict):
     fcs = ApiFuzzCaseSet()
     fcs.Id = rowDict['fuzzCaseSetId']
+    fcs.hostname = rowDict['hostname']
+    fcs.port = rowDict['port']
     fcs.path = rowDict['path']
     fcs.pathDataTemplate = rowDict['pathDataTemplate']
     fcs.querystringDataTemplate= rowDict['querystringDataTemplate']
