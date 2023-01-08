@@ -223,7 +223,7 @@ class Props {
   fuzzCaseSetRunsId = '';
 
   hostname = '';
-  port = undefined;
+  port = -1;
   hostnameDisplay = ''
 
   isDataLoadingInProgress = false;
@@ -413,6 +413,7 @@ class Props {
 
     if (fcsrs.hostname != '') {
       this.hostname = fcsrs.hostname;
+      this.port = fcsrs.port;
       this.refreshHostnameDisplay();
     }
   }
@@ -432,7 +433,7 @@ class Props {
   clearData() {
       this.fcsRunSums = [];
       this.hostname = '';
-      this.port = undefined;
+      this.port = -1;
       this.selectedRow = ''
 
       this.refreshHostnameDisplay();
