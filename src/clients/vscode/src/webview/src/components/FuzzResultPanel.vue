@@ -320,10 +320,10 @@ class Props {
     selectedRequest = ''
     selectedResponse = '';
 
-    dataCache = {};
+    //dataCache = {};
     fdcsDataOriginal: Array<FuzzDataCase> = [];
     fdcsDataFiltered: Array<FuzzDataCase> = [];
-    fdcsFuzzing = {};
+    //fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
     fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
     
@@ -364,7 +364,7 @@ class Props {
       //fuzzing data event stream
       this.eventemitter.on('fuzz.start', this.onFuzzStart);
       this.eventemitter.on('fuzz.stop', this.onFuzzStop);
-      this.eventemitter.on('fuzz.update.fuzzdatacase', this.onFuzzDataCaseReceived);
+      //this.eventemitter.on('fuzz.update.fuzzdatacase', this.onFuzzDataCaseReceived);
 
       
     }
@@ -380,48 +380,54 @@ class Props {
 
       this.currentFuzzingFuzzContextId = fuzzContextId;
       this.currentFuzzingFuzzCaseSetRunId = fuzzCaseSetRunId;
+
   }
 
     onFuzzStop(){
       this.currentFuzzingFuzzContextId = '';
       this.currentFuzzingFuzzCaseSetRunId = ''
-      this.switchFuzzingDataBucketToOriginal();
+      //this.switchFuzzingDataBucketToOriginal();
     }
 
-    switchOriginalToFuzzingDataBucket(fuzzCaseSetId) {
-        const fuzzingData: FuzzDataCase[] = this.fdcsFuzzing[fuzzCaseSetId];
-        this.fdcsDataFiltered = fuzzingData;
-        this.fdcsDataOriginal = [];
-    }
+    //switchOriginalToFuzzingDataBucket(fuzzCaseSetId) {
+        //const fuzzingData: FuzzDataCase[] = this.fdcsFuzzing[fuzzCaseSetId];
+        //this.fdcsDataFiltered = fuzzingData;
+        //this.fdcsDataOriginal = [];
+    //}
 
     // after fuzzing, move the fuzzing data array back to fdcsDataOriginal
-    switchFuzzingDataBucketToOriginal() {
-      this.fdcsDataOriginal = [...this.fdcsDataFiltered]
-      this.fdcsFuzzing = {};  //empty fuzzing data
-    }
+    //switchFuzzingDataBucketToOriginal() {
+      //this.fdcsDataOriginal = [...this.fdcsDataFiltered]
+      //this.fdcsFuzzing = {};  //empty fuzzing data
+    //} 
 
     storeFuzzDataCase(fdcs:  Array<FuzzDataCase|any>) {
       this.fdcsDataOriginal = fdcs;
       this.fdcsDataFiltered = [...this.fdcsDataOriginal]; //clone array
     }
 
-    onFuzzDataCaseReceived(fdc: FuzzDataCase) {
-      const list = this.fdcsFuzzing[fdc.fuzzCaseSetId]
-      if(list == undefined) {
-          this.fdcsFuzzing[fdc.fuzzCaseSetId] = []
-      }
-      this.fdcsFuzzing[fdc.fuzzCaseSetId].push(fdc);
-    }
+    //onFuzzDataCaseReceived(fdc: FuzzDataCase) {
+      //const list = this.fdcsFuzzing[fdc.fuzzCaseSetId]
+      //if(list == undefined) {
+          //this.fdcsFuzzing[fdc.fuzzCaseSetId] = []
+      //}
+      //this.fdcsFuzzing[fdc.fuzzCaseSetId].push(fdc);
+   // }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 
       try {
-          //check if selected caseSetRunId is currently in fuzzing mode,
-          //if yes do not retrieve data as fuzzer is sending data over websocket
-          if(this.isFuzzingInProgress() && this.currentFuzzingFuzzCaseSetRunId == fuzzCaseSetRunId) {
-            this.switchOriginalToFuzzingDataBucket(fuzzCaseSetId);
+
+          if(this.isDataLoadingInProgress) {
             return;
           }
+          
+          //check if selected caseSetRunId is currently in fuzzing mode,
+          //if yes do not retrieve data as fuzzer is sending data over websocket
+          //if(this.isFuzzingInProgress() && this.currentFuzzingFuzzCaseSetRunId == fuzzCaseSetRunId) {
+            //this.switchOriginalToFuzzingDataBucket(fuzzCaseSetId);
+            //return;
+          //}
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
             //this.toast.add({severity:'error', summary: '', detail:'fuzzcontextId or fuzzCaseSetRunId is missing in FuzzResultPanel ', life: 5000})
@@ -431,16 +437,16 @@ class Props {
 
           this.isDataLoadingInProgress = true;
 
-          this.clearSelectedReqResp();
+          //this.clearSelectedReqResp();
 
-          const cacheKey = this.getCacheKey(fuzzCaseSetId, fuzzCaseSetRunId)
+          //const cacheKey = this.getCacheKey(fuzzCaseSetId, fuzzCaseSetRunId)
 
           //check if cache has the data
-          if (cacheKey in this.dataCache){
-            const fcsd = this.dataCache[cacheKey];
-            this.storeFuzzDataCase(fcsd);
-            return;
-          }
+          //if (cacheKey in this.dataCache){
+            //const fcsd = this.dataCache[cacheKey];
+            //this.storeFuzzDataCase(fcsd);
+            //return;
+          //} 
 
           const [ok, error, result] = await this.webclient.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
 
@@ -455,7 +461,7 @@ class Props {
 
           this.storeFuzzDataCase(result);
 
-          this.dataCache[cacheKey] = result;
+          //this.dataCache[cacheKey] = result;
 
           this.buildStatusCodesDropDown();
       }
@@ -764,9 +770,9 @@ class Props {
       return Utils.shortenStr(bodyJson, length);
     }
 
-    getCacheKey(fuzzContextId: string, fuzzCasetSetRunId: string) {
-      return fuzzContextId + '_' + fuzzCasetSetRunId;
-    }
+    //getCacheKey(fuzzContextId: string, fuzzCasetSetRunId: string) {
+      //return fuzzContextId + '_' + fuzzCasetSetRunId;
+    //}
 
     isFuzzingInProgress() {
         if(!Utils.isNothing(this.currentFuzzingFuzzContextId)  && !Utils.isNothing(this.currentFuzzingFuzzContextId)) {

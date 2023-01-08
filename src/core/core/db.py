@@ -1046,6 +1046,23 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  I
     Session.execute(stmt)
         
     Session.commit()
+    
+    #query from db again to retrieve latest data
+    summary = (
+                Session
+                .query(ApiFuzzRunSummaryPerCaseSetTable)
+                .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == Id)
+                .first()
+               )
+    rowDict =  summary._asdict()
+    existingHttp2xx = rowDict['http2xx']
+    existingHttp3xx = rowDict['http3xx']
+    existingHttp4xx = rowDict['http4xx']
+    existingHttp5xx = rowDict['http5xx']
+    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
+    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+
+    
     Session.close()
     
     summary = ApiFuzzCaseSets_With_RunSummary_ViewModel()

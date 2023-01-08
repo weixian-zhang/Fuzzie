@@ -28,7 +28,7 @@ from db import (insert_api_fuzzCaseSetRuns,
                 create_casesetrun_summary,
                 update_casesetrun_summary,
                 insert_api_fuzzrequest_fileupload)
-import io
+import time
 from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
@@ -67,8 +67,10 @@ class WebApiFuzzer:
         
         self.httpTimeoutInSec = 4
         self.fuzzCaseSetRunId = shortuuid.uuid()
-        self.totalFuzzRuns = 0
-        self.currentFuzzRuns = 0
+        
+        self.totalRunsForAllCaseSets = 0
+        self.totaRunsPerCaseSet = 0
+        
         self.executor = ThreadPoolExecutor(max_workers=5)
         
         self.multithreadEventSet = Event()
@@ -91,8 +93,7 @@ class WebApiFuzzer:
             self.multithreadEventSet.set()
             
             self.executor.shutdown(wait=False, cancel_futures=True)
-            self.totalFuzzRuns = 0
-            self.currentFuzzRuns = 0
+            self.totaRunsPerCaseSet = 0
             
             update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId, status='cancelled', message=errorMsg)
             
@@ -126,8 +127,10 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
                 return
             
-            self.totalFuzzRuns = self.apifuzzcontext.fuzzcaseToExec
+            self.totaRunsPerCaseSet = self.apifuzzcontext.fuzzcaseToExec
+            self.totalRunsForAllCaseSets = fcsLen * self.totaRunsPerCaseSet
             
+            runNumber = 0
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
                 caseSetRunSummaryId = shortuuid.uuid()
@@ -136,11 +139,13 @@ class WebApiFuzzer:
                                           fuzzCaseSetId=  fcs.Id,
                                           fuzzCaseSetRunId = self.fuzzCaseSetRunId,
                                           fuzzcontextId = self.apifuzzcontext.Id,
-                                          totalRunsToComplete = self.totalFuzzRuns)
+                                          totalRunsToComplete = self.totaRunsPerCaseSet)
                 
                 for _ in range(self.apifuzzcontext.fuzzcaseToExec):
-
-                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet )
+                    
+                    runNumber = runNumber + 1
+                    
+                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber )
                     
                     
         except Exception as e:
@@ -164,7 +169,7 @@ class WebApiFuzzer:
                 
             self.corporaContext.build_files(fcs.file)
         
-    def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event):
+    def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event, runNumber: int):
         
         try:
             if multithreadEventSet.is_set():
@@ -175,15 +180,18 @@ class WebApiFuzzer:
             summaryViewModel = self.save_fuzzDataCase(caseSetRunSummaryId, fuzzDataCase)
             
             self.save_uploaded_files(files=files,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
+            
+            # update run status
+            self.fuzzcaseset_done(runNumber)
                 
             if summaryViewModel is not None:
                 self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
             
             #reduce payload size, the following properties will be retrieved separately by webview "onClick"
-            fuzzDataCase.request.body = ''
-            fuzzDataCase.request.requestMessage = ''
-            fuzzDataCase.response.responseDisplayText = ''
-            self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
+            # fuzzDataCase.request.body = ''
+            # fuzzDataCase.request.requestMessage = ''
+            # fuzzDataCase.response.responseDisplayText = ''
+            # self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
         except Exception as e:
             errMsg = Utils.errAsText(e)
@@ -287,9 +295,6 @@ class WebApiFuzzer:
                 
                 self.save_resp_cookie_if_exists(hostnamePort, fuzzResp.setcookieHeader) 
                 
-                # update run status
-                self.fuzzcaseset_done()
-                
             except Exception as e:
                 self.eventstore.emitErr(e)
                 self.cancel_fuzzing(errorMsg=Utils.errAsText(e))
@@ -329,16 +334,13 @@ class WebApiFuzzer:
             
         return fuzzDataCase, files
 
-            
-                
-    def fuzzcaseset_done(self):
+             
+    def fuzzcaseset_done(self, runNumber):
         
         try:
-            
-            self.currentFuzzRuns = self.currentFuzzRuns + 1
-    
+                
             # check if last task, to end fuzzing
-            if self.currentFuzzRuns  >= self.totalFuzzRuns:
+            if runNumber >= self.totalRunsForAllCaseSets:
                 
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
