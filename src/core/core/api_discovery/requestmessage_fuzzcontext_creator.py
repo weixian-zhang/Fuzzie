@@ -2,7 +2,7 @@ import os,sys
 from pathlib import Path
 import shortuuid
 from datetime import datetime
-import re
+import jinja2
 from urllib.parse import urlparse
 import json
 from urllib.parse import urlparse
@@ -135,7 +135,7 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet.port = port
             fuzzcaseSet.path = path
             
-            pathOK, pathErr, evalPath = Utils.inject_eval_into_wordlist_expression(path)
+            pathOK, pathErr, evalPath = self.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
                 return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
@@ -148,7 +148,7 @@ class RequestMessageFuzzContextCreator:
             lineIndex, qs = self.get_querystring(multilineBlock)
             fuzzcaseSet.querystringNonTemplate = qs
             
-            qsOK, qsErr, evalQS = Utils.inject_eval_into_wordlist_expression(qs)
+            qsOK, qsErr, evalQS = self.inject_eval_into_wordlist_expression(qs)
             if not qsOK:
                 return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
             
@@ -169,7 +169,7 @@ class RequestMessageFuzzContextCreator:
                     evalHeaderDict = {}
                     for key in headers.keys():
                         hVal = headers[key]
-                        hOK, hErr, evalHeader = Utils.inject_eval_into_wordlist_expression(hVal)
+                        hOK, hErr, evalHeader = self.inject_eval_into_wordlist_expression(hVal)
                         if not hOK:
                             return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
                         
@@ -187,7 +187,7 @@ class RequestMessageFuzzContextCreator:
                 
                 fuzzcaseSet.bodyNonTemplate = body
                 
-                bOK, bErr, evalBody = Utils.inject_eval_into_wordlist_expression(body)
+                bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
@@ -490,6 +490,88 @@ class RequestMessageFuzzContextCreator:
         lines = rqMsg.splitlines()
         lines = [x for x in lines if not self.is_line_comment(x)]
         return '\n'.join(lines)
+    
+    
+    # integer type is to support OpenApi3, but is same as digit
+    def jinja_wordlist_types_render_dict(self) -> dict:
+        return {
+            'string': '{{ eval(wordlist_type=\'string\') }}',
+            'bool':  '{{ eval(wordlist_type=\'bool\') }}',
+            'digit': '{{ eval(wordlist_type=\'digit\') }}',
+            'integer': '{{ eval(wordlist_type=\'integer\') }}',
+            'char': '{{ eval(wordlist_type=\'char\') }}',
+            'filename': '{{ eval(wordlist_type=\'filename\') }}',
+            'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
+            'date': '{{ eval(wordlist_type=\'date\') }}',
+            'time': '{{ eval(wordlist_type=\'time\') }}',
+            'username': '{{ eval(wordlist_type=\'username\') }}',
+            'password': '{{ eval(wordlist_type=\'password\') }}'
+        }
+        
+    # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
+    # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
+    def inject_eval_into_wordlist_expression(self, expr: str) -> tuple([bool, str, str]):
+        
+        try:
+            
+        
+            jinja2.filters.FILTERS['my'] = self.wordlisttype_filter_my
+            
+            jinja2.filters.FILTERS['myfile'] = self.wordlisttype_filter_filecontent
+
+            tpl = jinja2.Template(expr)
+            
+            output = tpl.render(self.jinja_wordlist_types_render_dict())
+            # output = tpl.render(
+            #     string='{{ eval(wordlist_type=\'string\') }}',
+            #     bool='{{ eval(wordlist_type=\'bool\') }}',
+            #     digit='{{ eval(wordlist_type=\'digit\') }}',
+            #     integer='{{ eval(wordlist_type=\'integer\') }}',
+            #     char='{{ eval(wordlist_type=\'char\') }}',
+            #     filename='{{ eval(wordlist_type=\'filename\') }}',
+            #     datetime='{{ eval(wordlist_type=\'datetime\') }}',
+            #     date='{{ eval(wordlist_type=\'date\') }}',
+            #     time='{{ eval(wordlist_type=\'time\') }}',
+            #     username='{{ eval(wordlist_type=\'username\') }}',
+            #     password='{{ eval(wordlist_type=\'password\') }}'
+            # )                   
+                    
+            return True, '', output
+        
+        except Exception as e:
+            return False, e,  expr
+        
+    # insert my wordlist type
+    def wordlisttype_filter_my(self, value, my_uniquename = ''):
+        return f'{{{{ eval(wordlist_type=\'my\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
+    
+    def wordlisttype_filter_filecontent(self, content, filename):
+        
+        output = self.render_standard_wordlist_types(content)
+        
+        return f'{{{{ eval(wordlist_type=my_file_content, my_file_content_value=\'{output}\', my_file_content_filename=\'{filename}\') }}}}'
+    
+    
+    def render_standard_wordlist_types(self, expr):
+        
+        tpl = jinja2.Template(expr)
+        
+        output = tpl.render(self.jinja_wordlist_types_render_dict())  
+        # output = tpl.render(
+        #     string='{{ eval(wordlist_type=\'string\') }}',
+        #     bool='{{ eval(wordlist_type=\'bool\') }}',
+        #     digit='{{ eval(wordlist_type=\'digit\') }}',
+        #     integer='{{ eval(wordlist_type=\'integer\') }}',
+        #     char='{{ eval(wordlist_type=\'char\') }}',
+        #     filename='{{ eval(wordlist_type=\'filename\') }}',
+        #     datetime='{{ eval(wordlist_type=\'datetime\') }}',
+        #     date='{{ eval(wordlist_type=\'date\') }}',
+        #     time='{{ eval(wordlist_type=\'time\') }}',
+        #     username='{{ eval(wordlist_type=\'username\') }}',
+        #     password='{{ eval(wordlist_type=\'password\') }}'
+        # )
+        
+        return output
     
     
 

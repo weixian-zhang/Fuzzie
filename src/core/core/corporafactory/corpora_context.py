@@ -63,12 +63,14 @@ class CorporaContext:
         try:
                                     
             if isinstance(expression, str):
-                expression = jinja2.Template(expression)
-                expression.render({ 'eval': self.eval_expression_by_build })
-            else:
-                for dt in expression:
-                    expression = jinja2.Template(dt)
-                    expression.render({ 'eval': self.eval_expression_by_build })
+                tpl = jinja2.Template(expression)
+                tpl.render({ 'eval': self.eval_expression_by_build })
+                
+            # for multiple custom 'my' inputs not in used, to-be-deletd
+            # else:
+            #     for dt in expression:
+            #         expression = jinja2.Template(dt)
+            #         expression.render({ 'eval': self.eval_expression_by_build })
                 
             return True, ''
                 
@@ -110,37 +112,35 @@ class CorporaContext:
         
     
         
-    def eval_expression_by_build(self, expr: str):
+    def eval_expression_by_build(self, wordlist_type, my_value = '', my_uniquename='', my_file_content_value='', my_file_content_filename=''):
         
-        expression = expr
+        expression = wordlist_type
         
-        originalExpression = f'{{ eval(\'{expr.strip()}\') }}'
+        originalExpression = f'{{ eval(\'{wordlist_type.strip()}\') }}'
         
-        if expr is None or expression is None or expression == '':
+        if wordlist_type is None or wordlist_type is None or wordlist_type == '':
             self.context[''] = self.cp.stringCorpora
             return originalExpression
         
-        if expression.startswith('my'):
-            userSuppliedOrStringCorpora = self.build_MY_expression(expr)
-            self.context[expr] = userSuppliedOrStringCorpora
+        # "my"
+        if wordlist_type == 'my':
+            
+            inputVal = my_value
+            
+            userSuppliedOrStringCorpora = self.build_MY_expression(inputVal)
+            
+            key = 'my'
+            if my_uniquename != '':
+                key = f'{key}_{my_uniquename}'
+                
+            self.context[expression] = userSuppliedOrStringCorpora
             return originalExpression
         
-        # if expression.startswith('sha256'):
-        #     return originalExpression
+        # "myFile"
+        if wordlist_type == 'myfile':
+            pass
         
-        # if expression.startswith('base64e'):
-        #     return originalExpression
-        
-        # if expression.startswith('autonum'):
-        #     return originalExpression
-            
-        # if expression.startswith('uuid'):
-        #     return originalExpression
-        
-        # if expression.startswith('ip'):
-        #     return originalExpression
-            
-        match expression:
+        match wordlist_type:
             case 'string':
                 if not 'string' in self.context:
                     self.context['string'] = self.cp.stringCorpora
@@ -190,12 +190,11 @@ class CorporaContext:
                 self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
                 return originalExpression
     
-    def eval_expression_by_injection(self, expr: str, jsonEscape=True):
+    def eval_expression_by_injection(self, wordlistType: str, jsonEscape=True):
         
         try:
-            expression = expr
-        
-            provider = self.context[expression] 
+       
+            provider = self.context[wordlistType] 
             
             if provider != None:
                 data = provider.next_corpora()
@@ -205,7 +204,7 @@ class CorporaContext:
                         
                 return data
             else:
-                return expression
+                return wordlistType
         except Exception as e:
             self.eventstore.emitErr(e, 'eval_expression_by_injection')
         
@@ -215,12 +214,12 @@ class CorporaContext:
         
         try:
             
-            
-            myInput = expr.removeprefix('my=')
+            myInput = expr
+            # myInput = expr.removeprefix('my=')
             
             if myInput == '':
                 self.eventstore.emitErr('failure to detect "my" input using String corpora instead', 'build_MY_expression')
-                return self.cp .stringCorpora
+                return self.cp.stringCorpora
 
             
             usc = UserSuppliedCorpora()
