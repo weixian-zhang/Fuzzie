@@ -91,28 +91,32 @@ class MyFileCorpora:
         
     def resolve_primitive_wordlist_types(self, wordlist_type = 'string'):
         
+        data = ''
+        
         match wordlist_type:
             case 'string':
-                return self.stringCorpora.next_corpora()
+                data = self.stringCorpora.next_corpora()
             case 'bool':
-                return self.boolCorpora.next_corpora()
+                data = self.boolCorpora.next_corpora()
             case 'digit':
-                return self.digitCorpora.next_corpora()
+                data = self.digitCorpora.next_corpora()
             case 'char':
-                return self.charCorpora.next_corpora()
+                data = self.charCorpora.next_corpora()
             case 'filename':
-                return self.filenameCorpora.next_corpora()
+                data = self.filenameCorpora.next_corpora()
             case 'datetime':
-                return self.datetimeCorpora.next_corpora()
+                data = self.datetimeCorpora.next_corpora()
             case 'date':
-                return self.datetimeCorpora.next_date_corpora()
+                data = self.datetimeCorpora.next_date_corpora()
             case 'time':
-                return self.datetimeCorpora.next_time_corpora()
+                data = self.datetimeCorpora.next_time_corpora()
             case 'username':
-               return self.usernameCorpora.next_corpora()
+               data = self.usernameCorpora.next_corpora()
             case 'password':
-                return self.passwordCorpora.next_corpora()
+                data = self.passwordCorpora.next_corpora()
             case _:
-                return self.stringCorpora.next_corpora()
+                data = self.stringCorpora.next_corpora()
+                
+        return data
         
         

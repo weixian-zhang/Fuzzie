@@ -440,7 +440,7 @@ class RequestMessageFuzzContextCreator:
             body.append(line)
             
         
-        return ''.join(body), files
+        return '\n'.join(body), files
             
     
     def removeProcessedLines(self, toIndex, list):
@@ -551,17 +551,17 @@ class RequestMessageFuzzContextCreator:
     
     def wordlisttype_filter_filecontent(self, content: str, filename: str):
         
-        if not filename.startswith('\''):
-            filename = f'\'{filename}'
-        if not filename.endswith('\''):
-            filename = f'{filename}\''
+        # if not filename.startswith('\'') or not filename.startswith('"'):
+        #     filename = f'\'{filename}'
+        # if not filename.endswith('\'') or filename.endswith('"'):
+        #     filename = f'{filename}\''
         
         output = self.render_standard_wordlist_types(content)
         
         # escape single quote if any
         output = output.replace("'", "\\'")
         
-        evalOutput =  f'{{{{ eval(wordlist_type=\'{self.myfile_wordlist_type}\', my_file_content_value=\'{output}\', my_file_content_filename={filename}) }}}}'
+        evalOutput =  f'{{{{ eval(wordlist_type=\'{self.myfile_wordlist_type}\', my_file_content_value=\'{output}\', my_file_content_filename=\'{filename}\') }}}}'
         
         if self.currentFuzzCaseSet != None:
            self.currentFuzzCaseSet.file.append(self.wordlisttype_filter_filecontent)
@@ -574,20 +574,7 @@ class RequestMessageFuzzContextCreator:
         tpl = jinja2.Template(expr)
         
         output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())  
-        # output = tpl.render(
-        #     string='{{ eval(wordlist_type=\'string\') }}',
-        #     bool='{{ eval(wordlist_type=\'bool\') }}',
-        #     digit='{{ eval(wordlist_type=\'digit\') }}',
-        #     integer='{{ eval(wordlist_type=\'integer\') }}',
-        #     char='{{ eval(wordlist_type=\'char\') }}',
-        #     filename='{{ eval(wordlist_type=\'filename\') }}',
-        #     datetime='{{ eval(wordlist_type=\'datetime\') }}',
-        #     date='{{ eval(wordlist_type=\'date\') }}',
-        #     time='{{ eval(wordlist_type=\'time\') }}',
-        #     username='{{ eval(wordlist_type=\'username\') }}',
-        #     password='{{ eval(wordlist_type=\'password\') }}'
-        # )
-        
+
         return output
     
     

@@ -128,7 +128,9 @@ class CorporaContext:
                 key = f'{key}_{my_uniquename}'
                 
             self.context[expression] = userSuppliedOrStringCorpora
-            return originalExpression
+            
+            return
+            #return originalExpression
         
         # "myFile"
         if wordlist_type == 'myfile':
@@ -138,6 +140,9 @@ class CorporaContext:
             myfileCorpora = self.cp.new_myfile_corpora(my_file_content_value)
             
             self.context[corporaContextKey] = myfileCorpora
+            
+            return
+            #return my_file_content_value
         
         match wordlist_type:
             case 'string':
@@ -197,6 +202,8 @@ class CorporaContext:
         
         try:
             
+            data = ''
+            
             if wordlist_type == 'myfile':
                 key = self.get_myfile_corporacontext_key(my_file_content_filename)
                 provider = self.context[key]
@@ -206,8 +213,8 @@ class CorporaContext:
             if provider != None:
                 data = provider.next_corpora()
                 
-                if jsonEscape and not self.is_byte_data(data):
-                    data = json.dumps(data)
+                # if jsonEscape and not self.is_byte_data(data):
+                #     data = json.dumps(data)
                         
                 return data
             else:
