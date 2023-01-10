@@ -550,12 +550,7 @@ class RequestMessageFuzzContextCreator:
         return evalOutput
     
     def wordlisttype_filter_filecontent(self, content: str, filename: str):
-        
-        # if not filename.startswith('\'') or not filename.startswith('"'):
-        #     filename = f'\'{filename}'
-        # if not filename.endswith('\'') or filename.endswith('"'):
-        #     filename = f'{filename}\''
-        
+                
         output = self.render_standard_wordlist_types(content)
         
         # escape single quote if any
@@ -563,8 +558,11 @@ class RequestMessageFuzzContextCreator:
         
         evalOutput =  f'{{{{ eval(wordlist_type=\'{self.myfile_wordlist_type}\', my_file_content_value=\'{output}\', my_file_content_filename=\'{filename}\') }}}}'
         
+        # used in corpora_context to find myfile_corpora to supply myfile data
+        corporaContextKeyName = f'{self.wordlisttype_filter_filecontent}_filename'
+        
         if self.currentFuzzCaseSet != None:
-           self.currentFuzzCaseSet.file.append(self.wordlisttype_filter_filecontent)
+           self.currentFuzzCaseSet.file.append(corporaContextKeyName)
         
         return evalOutput
     

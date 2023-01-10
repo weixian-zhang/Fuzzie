@@ -54,16 +54,16 @@ class TestRequestMessageFuzzContextCreator_By_Wordlist_Type(unittest.TestCase):
         '''
     
 
-    def _custom_file_content_1(self):
+    def test_custom_file_content_1(self):
         
         rq = '''
         POST https://httpbin.org/post
         
         {{
             "
-            this is a custom file content \n
-            supports with multi breakline \n
-            {{ string }} : {{ datetime }} \n
+            this is a custom file content
+            supports with multi breakline
+            {{ string }} : {{ datetime }}
             
             {
                 \\"age\\": \\"{{ digit }}\\"
@@ -153,6 +153,59 @@ class TestRequestMessageFuzzContextCreator_By_Wordlist_Type(unittest.TestCase):
         self.assertTrue(fileContent != '')
         
         print (fileContent)
+        
+    def test_custom_file_content_3(self):
+        
+        rq = '''
+        POST https://httpbin.org/post
+        
+        {{
+            "
+            {{ string }}
+            {{ bool }}
+            {{ digit }}
+            {{ integer }}
+            {{ char }}
+            {{ filename }}
+            {{ datetime }}
+            {{ date }}
+            {{ time }}
+            {{ username }}
+            {{ password }}
+            
+            " | myfile("a-file.log")
+        }}
+        '''
+        
+        rqMsgFCCreator = RequestMessageFuzzContextCreator()
+        
+        ok, error, apicontext = rqMsgFCCreator.new_fuzzcontext(
+                            apiDiscoveryMethod= "request_message",
+                            name= "request-message-test",
+                            hostname='https://example.com',
+                            port='443',
+                            authnType=SupportedAuthnType.Anonymous.name,
+                            fuzzcaseToExec=500,
+                            openapi3FilePath='',
+                            requestTextContent= rq
+                            )
+        
+        self.assertTrue(ok)
+        self.assertTrue(error == '')
+        self.assertGreater(len(apicontext.fuzzcaseSets), 0)
+        
+        #evalOutput = "{{ eval(wordlist_type='myfile', my_file_content_value='this is a custom file content{{ eval(wordlist_type='string') }} : {{ eval(wordlist_type='datetime') }}', my_file_content_filename='a-file.log') }}"
+        #self.assertTrue(apicontext.fuzzcaseSets[0].bodyDataTemplate == evalOutput)
+        
+        
+        okCP, _ = self.corporaContext.build(apicontext.fuzzcaseSets[0].bodyDataTemplate)
+        self.assertTrue(okCP)
+        
+        # resolve data
+        rok, rError, fileContent = self.corporaContext.resolve_wordlistType_to_data(apicontext.fuzzcaseSets[0].bodyDataTemplate)
+        
+        self.assertTrue(rok)
+        self.assertTrue(fileContent != '')
         
         
 
