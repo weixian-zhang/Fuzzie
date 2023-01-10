@@ -11,6 +11,7 @@ sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 sys.path.insert(0, corporafactoryDir)
 
+from corporafactory.corpora_provider import CorporaProvider
 from corporafactory.corpora_context import CorporaContext
 from models.webapi_fuzzcontext import SupportedAuthnType
 from utils import Utils
@@ -19,6 +20,11 @@ from requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
 
 class TestRequestMessageFuzzContextCreator_By_Wordlist_Type(unittest.TestCase):
     
+    def __init__(self, methodName: str = ...) -> None:
+        self.corporaContext = CorporaContext()
+        self.corporaContext.cp.load_all()
+        super().__init__(methodName)
+        
     def test_MY_input_without_unique_name(self):
         rq = '''
             POST https://httpbin.org/post
@@ -87,11 +93,13 @@ class TestRequestMessageFuzzContextCreator_By_Wordlist_Type(unittest.TestCase):
         #evalOutput = "{{ eval(wordlist_type='myfile', my_file_content_value='this is a custom file content{{ eval(wordlist_type='string') }} : {{ eval(wordlist_type='datetime') }}', my_file_content_filename='a-file.log') }}"
         #self.assertTrue(apicontext.fuzzcaseSets[0].bodyDataTemplate == evalOutput)
         
-        cp = CorporaContext()
-        okCP, _ = cp.build(apicontext.fuzzcaseSets[0].bodyDataTemplate)
         
+        okCP, _ = self.corporaContext.build(apicontext.fuzzcaseSets[0].bodyDataTemplate)
         self.assertTrue(okCP)
         
+        # resolve data
+        rok, rError, fileContent = self.corporaContext.resolve_wordlistType_to_data(apicontext.fuzzcaseSets[0].bodyDataTemplate)
+
 
     def test_custom_file_content_delimited_batchfile(self):
         

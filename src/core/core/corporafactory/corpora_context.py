@@ -132,7 +132,7 @@ class CorporaContext:
         
         # "myFile"
         if wordlist_type == 'myfile':
-            corporaContextKey = f'myfile_{my_file_content_filename}'
+            corporaContextKey = self.get_myfile_corporacontext_key(my_file_content_filename)
             
             # myfileCorpora is a new instance for every myfile as expression is different
             myfileCorpora = self.cp.new_myfile_corpora(my_file_content_value)
@@ -152,10 +152,10 @@ class CorporaContext:
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
                     return originalExpression
-            case 'integer':                         # openapi 3 integer type, using digit corpora
-                if not 'integer' in self.context:
-                    self.context['integer'] = self.cp.digitCorpora
-                    return originalExpression
+            # case 'integer':                         # openapi 3 integer type, using digit corpora
+            #     if not 'integer' in self.context:
+            #         self.context['integer'] = self.cp.digitCorpora
+            #         return originalExpression
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
@@ -189,11 +189,19 @@ class CorporaContext:
                 self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
                 return originalExpression
     
-    def eval_expression_by_injection(self, wordlistType: str, jsonEscape=True):
+    def eval_expression_by_injection(self, wordlist_type, my_value = '', 
+                                     my_uniquename='', 
+                                     my_file_content_value='', 
+                                     my_file_content_filename='',
+                                     jsonEscape=True):
         
         try:
-       
-            provider = self.context[wordlistType] 
+            
+            if wordlist_type == 'myfile':
+                key = self.get_myfile_corporacontext_key(my_file_content_filename)
+                provider = self.context[key]
+            else:
+                provider = self.context[wordlist_type] 
             
             if provider != None:
                 data = provider.next_corpora()
@@ -203,7 +211,8 @@ class CorporaContext:
                         
                 return data
             else:
-                return wordlistType
+                return wordlist_type
+            
         except Exception as e:
             self.eventstore.emitErr(e, 'eval_expression_by_injection')
         
@@ -227,24 +236,12 @@ class CorporaContext:
             
             return usc
             
-            # usrInputList = ast.literal_eval(startExpr)
-            
-            # # multiple user supplied string
-            # if type(usrInputList) is list and len(usrInputList) > 0:
-            
-            #     for t in usrInputList:
-            #         if t != '':
-            #             usc.load_corpora(t)
-                        
-            #     return usc
-            
-            # else:
-            #     return self.cp .stringCorpora       # my list is empty use string corpora instead
-            
         except Exception as e:
             self.eventstore.emitErr(e, 'build_MY_expression')
             return self.cp .stringCorpora 
    
+    def get_myfile_corporacontext_key(self, filename):
+        return f'myfile_{filename}'
             
     def handle_string_expression(self, expr: str):
 

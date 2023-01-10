@@ -28,11 +28,7 @@ import jinja2
 # MyFileCorpora is not a singleton object, each myfile expression commands a dedicated object instance
 # MyFileCorpora only supports primitive corpora types as declared in constructor
 class MyFileCorpora:
-    
-    # def __new__(cls):
-    #     if not hasattr(cls, 'instance'):
-    #         cls.instance = super(MyFileCorpora, cls).__new__(cls)
-    #     return cls.instance
+
     
     def __init__(self, myfileContentExpr: str, 
                  boolCorpora, 
@@ -68,20 +64,55 @@ class MyFileCorpora:
         
     def next_corpora(self):
         
-        tpl = jinja2.Template(self.myfileContentExpr)
+        try:
+            tpl = jinja2.Template(self.myfileContentExpr)
+            output = tpl.render({ 'eval': self.resolve_primitive_wordlist_types })
             
-        output = tpl.render(
-            {
-                'string': self.stringCorpora.next_corpora(),
-                'bool':  self.boolCorpora.next_corpora(),
-                'digit': self.corporaProvider.digitCorpora.next_corpora(),
-                'char':self.charCorpora.next_corpora(),
-                'filename': self.filenameCorpora.next_corpora(),
-                'datetime': self.datetimeCorpora.next_corpora(),
-                'date': self.datetimeCorpora.next_date_corpora(),
-                'time': self.datetimeCorpora.next_time_corpora(),
-                'username': self.usernameCorpora.next_corpora(),
-                'password': self.filenameCorpora.next_corpora()
-            })
+            # output = tpl.render(
+            #     {
+            #         'string': self.stringCorpora.next_corpora(),
+            #         'bool':  self.boolCorpora.next_corpora(),
+            #         'digit': self.corporaProvider.digitCorpora.next_corpora(),
+            #         'char':self.charCorpora.next_corpora(),
+            #         'filename': self.filenameCorpora.next_corpora(),
+            #         'datetime': self.datetimeCorpora.next_corpora(),
+            #         'date': self.datetimeCorpora.next_date_corpora(),
+            #         'time': self.datetimeCorpora.next_time_corpora(),
+            #         'username': self.usernameCorpora.next_corpora(),
+            #         'password': self.filenameCorpora.next_corpora()
+            #     })
+            
+            return output
         
-        return output
+        except Exception as e:
+            self.es.emitErr(e)
+            return self.stringCorpora.next_corpora()
+        
+        
+    def resolve_primitive_wordlist_types(self, wordlist_type = 'string'):
+        
+        match wordlist_type:
+            case 'string':
+                return self.stringCorpora.next_corpora()
+            case 'bool':
+                return self.boolCorpora.next_corpora()
+            case 'digit':
+                return self.digitCorpora.next_corpora()
+            case 'char':
+                return self.charCorpora.next_corpora()
+            case 'filename':
+                return self.filenameCorpora.next_corpora()
+            case 'datetime':
+                return self.datetimeCorpora.next_corpora()
+            case 'date':
+                return self.datetimeCorpora.next_date_corpora()
+            case 'time':
+                return self.datetimeCorpora.next_time_corpora()
+            case 'username':
+               return self.usernameCorpora.next_corpora()
+            case 'password':
+                return self.passwordCorpora.next_corpora()
+            case _:
+                return self.stringCorpora.next_corpora()
+        
+        
