@@ -23,6 +23,13 @@ class RequestMessageFuzzContextCreator:
         self.eventstore = EventStore()
         self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         
+        self.my_wordlist_type = 'my'
+        self.myfile_wordlist_type = 'myfile'
+        
+        # use for jinja filters to access current processing fuzzcaseset
+        # for now, used by only myfile filter
+        self.currentFuzzCaseSet = None
+        
 
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  
@@ -118,6 +125,7 @@ class RequestMessageFuzzContextCreator:
             # start request-message parsing
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
+            self.currentFuzzCaseSet = fuzzcaseSet
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
@@ -492,8 +500,9 @@ class RequestMessageFuzzContextCreator:
         return '\n'.join(lines)
     
     
+    
     # integer type is to support OpenApi3, but is same as digit
-    def jinja_wordlist_types_render_dict(self) -> dict:
+    def jinja_primitive_wordlist_types_render_dict(self) -> dict:
         return {
             'string': '{{ eval(wordlist_type=\'string\') }}',
             'bool':  '{{ eval(wordlist_type=\'bool\') }}',
@@ -514,27 +523,13 @@ class RequestMessageFuzzContextCreator:
         
         try:
             
-        
-            jinja2.filters.FILTERS['my'] = self.wordlisttype_filter_my
+            jinja2.filters.FILTERS[self.my_wordlist_type] = self.wordlisttype_filter_my
             
-            jinja2.filters.FILTERS['myfile'] = self.wordlisttype_filter_filecontent
+            jinja2.filters.FILTERS[self.myfile_wordlist_type] = self.wordlisttype_filter_filecontent
 
             tpl = jinja2.Template(expr)
             
-            output = tpl.render(self.jinja_wordlist_types_render_dict())
-            # output = tpl.render(
-            #     string='{{ eval(wordlist_type=\'string\') }}',
-            #     bool='{{ eval(wordlist_type=\'bool\') }}',
-            #     digit='{{ eval(wordlist_type=\'digit\') }}',
-            #     integer='{{ eval(wordlist_type=\'integer\') }}',
-            #     char='{{ eval(wordlist_type=\'char\') }}',
-            #     filename='{{ eval(wordlist_type=\'filename\') }}',
-            #     datetime='{{ eval(wordlist_type=\'datetime\') }}',
-            #     date='{{ eval(wordlist_type=\'date\') }}',
-            #     time='{{ eval(wordlist_type=\'time\') }}',
-            #     username='{{ eval(wordlist_type=\'username\') }}',
-            #     password='{{ eval(wordlist_type=\'password\') }}'
-            # )                   
+            output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())                
                     
             return True, '', output
         
@@ -543,20 +538,42 @@ class RequestMessageFuzzContextCreator:
         
     # insert my wordlist type
     def wordlisttype_filter_my(self, value, my_uniquename = ''):
-        return f'{{{{ eval(wordlist_type=\'my\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
+        
+        # escape single quote if any
+        output = output.replace("'", "\\'")
+        
+        evalOutput = f'{{{{ eval(wordlist_type=\'{self.my_wordlist_type}\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
+        
+        #escape single quotes if any
+        evalOutput = evalOutput.replace("'", "\\'")
+        
+        return evalOutput
     
-    def wordlisttype_filter_filecontent(self, content, filename):
+    def wordlisttype_filter_filecontent(self, content: str, filename: str):
+        
+        if not filename.startswith('\''):
+            filename = f'\'{filename}'
+        if not filename.endswith('\''):
+            filename = f'{filename}\''
         
         output = self.render_standard_wordlist_types(content)
         
-        return f'{{{{ eval(wordlist_type=my_file_content, my_file_content_value=\'{output}\', my_file_content_filename=\'{filename}\') }}}}'
+        # escape single quote if any
+        output = output.replace("'", "\\'")
+        
+        evalOutput =  f'{{{{ eval(wordlist_type=\'{self.myfile_wordlist_type}\', my_file_content_value=\'{output}\', my_file_content_filename={filename}) }}}}'
+        
+        if self.currentFuzzCaseSet != None:
+           self.currentFuzzCaseSet.file.append(self.wordlisttype_filter_filecontent)
+        
+        return evalOutput
     
     
     def render_standard_wordlist_types(self, expr):
         
         tpl = jinja2.Template(expr)
         
-        output = tpl.render(self.jinja_wordlist_types_render_dict())  
+        output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())  
         # output = tpl.render(
         #     string='{{ eval(wordlist_type=\'string\') }}',
         #     bool='{{ eval(wordlist_type=\'bool\') }}',

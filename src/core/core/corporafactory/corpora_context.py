@@ -66,19 +66,13 @@ class CorporaContext:
                 tpl = jinja2.Template(expression)
                 tpl.render({ 'eval': self.eval_expression_by_build })
                 
-            # for multiple custom 'my' inputs not in used, to-be-deletd
-            # else:
-            #     for dt in expression:
-            #         expression = jinja2.Template(dt)
-            #         expression.render({ 'eval': self.eval_expression_by_build })
-                
             return True, ''
                 
         except Exception as e:
             self.eventstore.emitErr(e, 'CorporaContext.build')
             return False, f'Invalid expression: {Utils.errAsText(e)}'
         
-    def resolve_expr(self, expression) -> tuple[bool, str, object]:
+    def resolve_wordlistType_to_data(self, expression) -> tuple[bool, str, object]:
         
         try:
             
@@ -88,7 +82,7 @@ class CorporaContext:
             return True, '', rendered
             
         except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.resolve_expr')
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_wordlistType_to_data')
             return False, e, ''
     
     # used by openapi 3 web fuzzer only
@@ -107,7 +101,7 @@ class CorporaContext:
             return False, f'Exression {expression} is not a file type', None
 
         except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.resolve_expr')
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_wordlistType_to_data')
             return False, e, ''
         
     
@@ -138,7 +132,12 @@ class CorporaContext:
         
         # "myFile"
         if wordlist_type == 'myfile':
-            pass
+            corporaContextKey = f'myfile_{my_file_content_filename}'
+            
+            # myfileCorpora is a new instance for every myfile as expression is different
+            myfileCorpora = self.cp.new_myfile_corpora(my_file_content_value)
+            
+            self.context[corporaContextKey] = myfileCorpora
         
         match wordlist_type:
             case 'string':

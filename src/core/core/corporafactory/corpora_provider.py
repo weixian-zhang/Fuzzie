@@ -19,6 +19,7 @@ from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 from filename_corpora import FileNameCorpora
+from myfile_corpora_provider import MyFileCorpora
 
 from pubsub import pub
 
@@ -113,7 +114,27 @@ class CorporaProvider:
             pub.sendMessage(topicName=self.es.CorporaEventTopic, command='corpora_load_error', msgData=errText)
             self.es.emitErr(errText)
             return False, errText
+        
+    def new_myfile_corpora(self, myfileContentExpr: str):
+        myfilec = MyFileCorpora(myfileContentExpr, 
+                                boolCorpora=self._boolCorpora,
+                                charCorpora = self._charCorpora,
+                                datetimeCorpora = self._datetimeCorpora,
+                                digitCorpora = self._digitCorpora,
+                                passwordCorpora = self._passwordCorpora,
+                                stringCorpora = self._stringCorpora,
+                                usernameCorpora = self._usernameCorpora,
+                                filenameCorpora = self._filenameCorpora)
+        return myfilec
+        
 
+    # @property
+    # def myfileCorpora(self):
+    #     return self._myfileCorpora
+    # @myfileCorpora.setter
+    # def x(self, value):
+    #     self._myfileCorpora = value
+        
     @property
     def fileNameCorpora(self):
         return self._filenameCorpora

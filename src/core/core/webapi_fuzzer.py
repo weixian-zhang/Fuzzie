@@ -552,15 +552,15 @@ class WebApiFuzzer:
             headerDT = fcs.headerDataTemplate
             files = []          #for openapi3 single file only
             
-            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
+            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_wordlistType_to_data(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
                 return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_expr(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
+            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_wordlistType_to_data(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
             if not okqs:
                 return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_wordlistType_to_data(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
@@ -573,7 +573,7 @@ class WebApiFuzzer:
                 for hk in headerDTObj.keys():
                     dt = headerDTObj[hk]
                     
-                    ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    ok, err, resolvedVal = self.corporaContext.resolve_wordlistType_to_data(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
                     
                     if not ok:
                         self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')

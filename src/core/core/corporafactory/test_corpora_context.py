@@ -81,7 +81,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -111,7 +111,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -197,7 +197,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -225,7 +225,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -253,7 +253,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -280,7 +280,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -308,7 +308,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -336,7 +336,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -363,7 +363,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -390,7 +390,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -417,7 +417,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -444,7 +444,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(err == '')
@@ -484,7 +484,7 @@ class TestCorporaContext(unittest.TestCase):
         
     #     for t in range(100):
             
-    #         ok, err, rtpl = cc.resolve_expr(r)
+    #         ok, err, rtpl = cc.resolve_wordlistType_to_data(r)
             
     #         self.assertTrue(ok)
     #         self.assertTrue(rtpl != '')
