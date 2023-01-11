@@ -1016,7 +1016,7 @@ def create_fuzzcaseset_from_dict(rowDict):
     
     f = rowDict['file']
     if f != '':
-        fcs.file = f.split(',')
+        fcs.files = f.split(',')
     
     return fcs
 

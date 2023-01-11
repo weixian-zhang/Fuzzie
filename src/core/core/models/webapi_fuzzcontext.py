@@ -97,6 +97,11 @@ class FuzzCaseSetFile:
         self.wordlist_type = wordlist_type  #file, image, pdf, myfile
         self.content = content            # only used by myfile for now
         
+    def is_myfile(fileType: str):
+        if fileType.startswith(FuzzCaseSetFile.myfile_wordlist_type):
+            return True
+        return False
+        
         
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:

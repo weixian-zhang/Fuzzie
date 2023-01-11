@@ -19,7 +19,7 @@ from fuzz_test_result_queue import FuzzTestResultQueue
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, FuzzTestResult,
-                                        FuzzMode)
+                                        FuzzMode, FuzzCaseSetFile)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
 
 from db import (insert_api_fuzzCaseSetRuns,
@@ -122,7 +122,7 @@ class WebApiFuzzer:
           
         try:
             
-            self.self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
+            self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
                         
@@ -585,10 +585,16 @@ class WebApiFuzzer:
             # handle file upload with "proper" encoding,
             # without encoding requests will throw error as requests uses utf-8 by default
             if len(fcs.files) > 0:
-                for f in fcs.files:
+                for fileType in fcs.files:
                     
-                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(f.wordlist_type)
-                    #self.corporaContext.resolve_file(fileType.wordlist_type)
+                    ok = True
+                    err = ''
+                    fileContent = ''
+                      
+                    if FuzzCaseSetFile.is_myfile(fileType):
+                        ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.bodyDataTemplate)
+                    else:
+                        ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fileType)
                     
                     if ok:
                         
