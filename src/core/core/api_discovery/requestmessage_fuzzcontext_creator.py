@@ -12,7 +12,7 @@ sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 from utils import Utils
-from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext
+from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile)
 from eventstore import EventStore
 
 class RequestMessageFuzzContextCreator:
@@ -191,6 +191,7 @@ class RequestMessageFuzzContextCreator:
             # get body
             if len(multilineBlock) > 0:
                 
+                # myfile will be discovered later in "inject_eval_into_wordlist_expression"
                 body, files = self.get_body_and_files(multilineBlock)
                 
                 fuzzcaseSet.bodyNonTemplate = body
@@ -201,7 +202,8 @@ class RequestMessageFuzzContextCreator:
                 
                 fuzzcaseSet.bodyDataTemplate = evalBody
                 
-                fuzzcaseSet.file = files
+                for f in files:
+                    fuzzcaseSet.files.append(FuzzCaseSetFile(f))
                 
             fcSets.append(fuzzcaseSet)
             
@@ -420,7 +422,7 @@ class RequestMessageFuzzContextCreator:
     # &password=bar
     def get_body_and_files(self, multilineBlock: list[str]) -> str:
         
-        body = []
+        body = ''
         files = []
         
         for line in multilineBlock:
@@ -431,16 +433,18 @@ class RequestMessageFuzzContextCreator:
             if line == '':
                 continue
             
+            # file, image and pdf for now
             yes, exprType = Utils.is_file_wordlist_type(line)
             
             if yes:
                 files.append(exprType)
                 continue
         
-            body.append(line)
-            
+        # get body in original string as a whole including all whitespaces and breaklines
+        for s in multilineBlock:
+            body = body + s + '\n'
         
-        return '\n'.join(body), files
+        return body, files
             
     
     def removeProcessedLines(self, toIndex, list):
@@ -523,9 +527,10 @@ class RequestMessageFuzzContextCreator:
         
         try:
             
-            jinja2.filters.FILTERS[self.my_wordlist_type] = self.wordlisttype_filter_my
+            jinja2.filters.FILTERS[self.my_wordlist_type] = self.my_jinja_filter
             
-            jinja2.filters.FILTERS[self.myfile_wordlist_type] = self.wordlisttype_filter_filecontent
+            # discover myfile wordlist-type
+            jinja2.filters.FILTERS[self.myfile_wordlist_type] = self.myfile_jinja_filter
 
             tpl = jinja2.Template(expr)
             
@@ -537,7 +542,7 @@ class RequestMessageFuzzContextCreator:
             return False, e,  expr
         
     # insert my wordlist type
-    def wordlisttype_filter_my(self, value, my_uniquename = ''):
+    def my_jinja_filter(self, value, my_uniquename = ''):
         
         # escape single quote if any
         output = output.replace("'", "\\'")
@@ -549,20 +554,18 @@ class RequestMessageFuzzContextCreator:
         
         return evalOutput
     
-    def wordlisttype_filter_filecontent(self, content: str, filename: str):
-                
+    def myfile_jinja_filter(self, content: str, filename: str):
+        
         output = self.render_standard_wordlist_types(content)
         
-        # escape single quote if any
-        output = output.replace("'", "\\'")
-        
-        evalOutput =  f'{{{{ eval(wordlist_type=\'{self.myfile_wordlist_type}\', my_file_content_value=\'{output}\', my_file_content_filename=\'{filename}\') }}}}'
+        evalOutput =  f'{{{{ eval(wordlist_type="{self.myfile_wordlist_type}", my_file_content_value="{output}", my_file_content_filename="{filename}") }}}}'
         
         # used in corpora_context to find myfile_corpora to supply myfile data
-        corporaContextKeyName = f'{self.wordlisttype_filter_filecontent}_filename'
+        corporaContextKeyName = f'{FuzzCaseSetFile.myfile_wordlist_type}_{filename}'
+        #corporaContextKeyName = Utils.remove_special_chars(corporaContextKeyName)
         
         if self.currentFuzzCaseSet != None:
-           self.currentFuzzCaseSet.file.append(corporaContextKeyName)
+           self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(corporaContextKeyName, evalOutput))
         
         return evalOutput
     

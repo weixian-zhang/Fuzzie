@@ -84,6 +84,20 @@ class ApiFuzzDataCase:
     def json(self):
        return jsonpickle.encode(self, unpicklable=False)
 
+class FuzzCaseSetFile:
+    
+    myfile_wordlist_type = 'myfile'
+    file_wordlist_type = 'file'
+    image_wordlist_type = 'image'
+    pdf_wordlist_type = 'pdf'
+    
+    # wordlist_type for myfile is content_key name for e.g: "myfile_filename"
+    def __init__(self, wordlist_type='file', content='') -> None: 
+        
+        self.wordlist_type = wordlist_type  #file, image, pdf, myfile
+        self.content = content            # only used by myfile for now
+        
+        
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
     
@@ -101,7 +115,7 @@ class ApiFuzzCaseSet:
         self.bodyNonTemplate = ''
         self.headerNonTemplate = ''
         
-        self.file = []
+        self.files: list[FuzzCaseSetFile] = []
         
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''

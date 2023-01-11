@@ -590,7 +590,33 @@
       <div class="container-fluid width=100%">
           <div class="row">
             <div class="col-6">
-              <v-btn
+
+            <div class="btn-group">
+              <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                examples
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" 
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">GET</a></li>
+
+                <li><a class="dropdown-item" href="#" 
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">POST</a></li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-batchfile'))">Custom file content: delimited batch-file</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-json'))">Custom file content: json</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-wordlisttypes'))">Custom file content: primitive wordlist-type support</a>
+                </li>
+              </ul>
+            </div>
+
+              <!-- <v-btn
               size="x-small"
               color="cyan"
               @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
@@ -603,7 +629,7 @@
               class="ml-5"
               @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
               POST example
-            </v-btn>
+            </v-btn> -->
             </div>
             <div class="col-6 text-right">
                 <v-btn
@@ -833,6 +859,7 @@ import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
+import Dropdown from 'primevue/dropdown';
 
 import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
@@ -856,7 +883,8 @@ class Props {
     Sidebar,
     Dialog,
     Message,
-    InputNumber
+    InputNumber,
+    Dropdown
   },
 })
 

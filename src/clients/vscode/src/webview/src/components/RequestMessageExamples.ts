@@ -56,7 +56,62 @@ content-type: application/json
     "name": "{{ username }}",
     "time": "{{ datetime }}"
 }
-`
+`,
+
+    'myfile-batchfile': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    string,username,password,filename,datetime
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    "
+    | myfile("batchfile_1.log")
+}}
+    `,
+
+    'myfile-json': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    this is a custom file content
+    supports with multi breakline
+    
+    {
+        \\"name\\": \\"{{ string }}\\",
+        \\"age\\": \\"{{ digit }}\\"
+    }
+    
+    " | myfile("a-file.log")
+}}
+        `,
+    
+    'myfile-wordlisttypes': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    {{ string }}
+    {{ bool }}
+    {{ digit }}
+    {{ integer }}
+    {{ char }}
+    {{ filename }}
+    {{ datetime }}
+    {{ date }}
+    {{ time }}
+    {{ username }}
+    {{ password }}
+    
+    " | myfile("a-file.log")
+}}
+            `,
 
     };
 

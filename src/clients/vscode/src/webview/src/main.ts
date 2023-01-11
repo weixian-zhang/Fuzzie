@@ -12,6 +12,7 @@ import ToastService from "primevue/toastservice";
 import Tooltip from 'primevue/tooltip';
 
 import 'jquery/dist/jquery.min.js';
+import 'bootstrap';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -41,7 +42,7 @@ app.use(VueCodemirror, {
   indentWithTab: true,
   tabSize: 2,
   //placeholder: 'Code goes here...',
-  extensions: [json(), basicSetup, autocompletion({
+  extensions:  [basicSetup, autocompletion({ //[json(), basicSetup, autocompletion({
     override: [function myCompletions(context: CompletionContext){
 
       const word = context.matchBefore(/\w*/)

@@ -2,11 +2,11 @@ import os, sys
 from pathlib import Path
 core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
+sys.path.insert(0, os.path.join(core_core_dir, 'models'))
 
-import json
 import jinja2
-
 from utils import Utils
+from webapi_fuzzcontext import (ApiFuzzCaseSet, FuzzCaseSetFile)
 from corpora_provider import CorporaProvider
 from user_supplied_corpora import UserSuppliedCorpora
 from boolean_corpora import BoolCorpora
@@ -25,88 +25,122 @@ from backgroundtask_corpora_loader import corporaProvider
 
 class CorporaContext:
     
-    
     def __init__(self) -> None:
         self.eventstore = EventStore()
         self.cp = corporaProvider     # CorporaProvider is singleton and already loaded with data during fuzzer startup
         self.context = {}
-            
-    
-    def build_files(self, fileTypes: list[str])-> bool:
         
-        for fileType in fileTypes:
-            if fileType != '':
-                match fileType:
-                    case 'image':
-                        if not 'image' in self.context:
-                            self.context['image'] = self.cp.imageCorpora
-                            return True
-                    case 'pdf':
-                        if not 'pdf' in self.context:
-                            self.context['pdf'] = self.cp.pdfCorpora
-                            return True
-                    case 'file':
-                        if not 'file' in self.context:
-                            self.context['file'] = self.cp.seclistPayloadCorpora
-                            return True
-                    case _:
-                        return False
+        self.myfile_wordlist_type = 'myfile'
+    
+    def build_context(self, fcss: list[ApiFuzzCaseSet]):
+        
+        try:
+            for fcs in fcss:
+                
+                if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
+                    self.build_context_of_req_msg(fcs.pathDataTemplate)
+                    
+                if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
+                    self.build_context_of_req_msg(fcs.querystringDataTemplate)
+                    
+                if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
+                    self.build_context_of_req_msg(fcs.headerDataTemplate)
+                
+                if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
+                    self.build_context_of_req_msg(fcs.bodyDataTemplate)
+                    
+                return True, ''
+                
+        except Exception as e:
+            return False, Utils.errAsText(e)
+        
+                
+                
+            # self.corporaContext.build_context_of_files(fcs.files)
+    
+    # def build_context_of_files(self, fileTypes: list[FuzzCaseSetFile])-> bool:
+        
+    #     for fileType in fileTypes:
+    #         if fileType.wordlist_type != '':
+    #             match fileType.wordlist_type:
+                    
+    #                 case FuzzCaseSetFile.image_wordlist_type:
+    #                     if not 'image' in self.context:
+    #                         self.context['image'] = self.cp.imageCorpora
+    #                         return True
+                        
+    #                 case FuzzCaseSetFile.pdf_wordlist_type:
+    #                     if not 'pdf' in self.context:
+    #                         self.context['pdf'] = self.cp.pdfCorpora
+    #                         return True
+                        
+    #                 case FuzzCaseSetFile.file_wordlist_type:
+    #                     if not 'file' in self.context:
+    #                         self.context['file'] = self.cp.seclistPayloadCorpora
+    #                         return True
+                        
+    #                 # special file cases
+    #                 case _:
+                        
+    #                     if fileType.wordlist_type.startswith(FuzzCaseSetFile.myfile_wordlist_type):
+    #                         reqMsg = fileType.content
+    #                         self.context[fileType.wordlist_type] = self.cp.new_myfile_corpora(reqMsg)
+    #                         return True
+    #                     return False
             
     
     # will also be use of "parsing" request message. By parsing means build a corpora-context
     # if successful, request message is valid
-    def build(self, expression) -> tuple[bool, str]:
+    def build_context_of_req_msg(self, reqMsg) -> tuple[bool, str]:
         
-        if expression == '' or expression == '{}':
+        if reqMsg == '' or reqMsg == '{}':
             return True, ''
         
         try:
                                     
-            if isinstance(expression, str):
-                tpl = jinja2.Template(expression)
-                tpl.render({ 'eval': self.eval_expression_by_build })
+            if isinstance(reqMsg, str):
+                tpl = jinja2.Template(reqMsg)
+                tpl.render({ 'eval': self.parse_reqmsg_by_eval_func })
                 
             return True, ''
                 
         except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.build')
+            self.eventstore.emitErr(e, 'CorporaContext.build_context_of_req_msg')
             return False, f'Invalid expression: {Utils.errAsText(e)}'
         
-    def resolve_wordlistType_to_data(self, expression) -> tuple[bool, str, object]:
+    def resolve_fuzzdata(self, reqMsg) -> tuple[bool, str, object]:
         
         try:
             
-            template = jinja2.Template(expression)
-            rendered = template.render({ 'eval': self.eval_expression_by_injection })
+            template = jinja2.Template(reqMsg)
+            rendered = template.render({ 'eval': self.resolve_reqmsg_by_eval_func })
             
             return True, '', rendered
             
         except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.resolve_wordlistType_to_data')
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')
             return False, e, ''
+        
     
-    # used by openapi 3 web fuzzer only
-    def resolve_file(self, expression) -> tuple[bool, str, object]:
+    # get file content for wordlist-file-type
+    # def resolve_file(self, reqMsg) -> tuple[bool, str, object]:
         
-        try:
-        
-            if expression not in ['file', 'pdf', 'image']:
-                return False, f'Exression {expression} is not a file type', None
+    #     try:
             
-            provider = self.context[expression]
-            if provider != None:
-                data = provider.next_corpora()
-                return True, '', data
+    #         provider = self.context[reqMsg]
+            
+    #         if provider != None:
+    #             data = provider.next_corpora()
+    #             return True, '', data
                 
-            return False, f'Exression {expression} is not a file type', None
+    #         raise(Exception('corpora provider not found for file type'))
 
-        except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.resolve_wordlistType_to_data')
-            return False, e, ''
+    #     except Exception as e:
+    #         self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')
+    #         return False, Utils.errAsText(e), ''
         
     
-        
-    def eval_expression_by_build(self, wordlist_type, my_value = '', my_uniquename='', my_file_content_value='', my_file_content_filename=''):
+    def parse_reqmsg_by_eval_func(self, wordlist_type: str, my_value = '', my_uniquename='', my_file_content_value='', my_file_content_filename=''):
         
         expression = wordlist_type
         
@@ -133,7 +167,8 @@ class CorporaContext:
             #return originalExpression
         
         # "myFile"
-        if wordlist_type == 'myfile':
+        if wordlist_type == FuzzCaseSetFile.myfile_wordlist_type:
+            
             corporaContextKey = self.get_myfile_corporacontext_key(my_file_content_filename)
             
             # myfileCorpora is a new instance for every myfile as expression is different
@@ -189,12 +224,31 @@ class CorporaContext:
                 if not 'password' in self.context:
                     self.context['password'] = self.cp.passwordCorpora
                     return originalExpression
+                
+            # image
+            case FuzzCaseSetFile.image_wordlist_type:
+                if not 'image' in self.context:
+                    self.context[FuzzCaseSetFile.image_wordlist_type] = self.cp.imageCorpora
+                    return originalExpression
+            # pdf          
+            case FuzzCaseSetFile.pdf_wordlist_type:
+                if not FuzzCaseSetFile.pdf_wordlist_type in self.context:
+                    self.context[FuzzCaseSetFile.pdf_wordlist_type] = self.cp.pdfCorpora
+                    return True
+            
+            # file  
+            case FuzzCaseSetFile.file_wordlist_type:
+                if not FuzzCaseSetFile.file_wordlist_type in self.context:
+                    self.context[FuzzCaseSetFile.file_wordlist_type] = self.cp.seclistPayloadCorpora
+                    return True
+            
+            # no wordlist-type match     
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.eval_expression_by_build')
+                #self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.parse_reqmsg_by_eval_func')
                 return originalExpression
     
-    def eval_expression_by_injection(self, wordlist_type, my_value = '', 
+    def resolve_reqmsg_by_eval_func(self, wordlist_type, my_value = '', 
                                      my_uniquename='', 
                                      my_file_content_value='', 
                                      my_file_content_filename='',
@@ -212,16 +266,13 @@ class CorporaContext:
             
             if provider != None:
                 data = provider.next_corpora()
-                
-                # if jsonEscape and not self.is_byte_data(data):
-                #     data = json.dumps(data)
                         
                 return data
             else:
                 return wordlist_type
             
         except Exception as e:
-            self.eventstore.emitErr(e, 'eval_expression_by_injection')
+            self.eventstore.emitErr(e, 'resolve_reqmsg_by_eval_func')
         
     
     # my wordlist type will have "=" sign e.g: my=
@@ -264,5 +315,10 @@ class CorporaContext:
             return True
         except (UnicodeDecodeError, AttributeError):
             return False
+        
+    def isDataTemplateEmpty(self, template):
+        if template == '' or template == '{}':
+            return True
+        return False
        
         

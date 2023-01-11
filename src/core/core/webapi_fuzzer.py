@@ -122,7 +122,7 @@ class WebApiFuzzer:
           
         try:
             
-            self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
+            self.self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
                         
@@ -160,23 +160,23 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
             
-    def build_corpora_context(self, fcss: list[ApiFuzzCaseSet]):
+    # def build_corpora_context(self, fcss: list[ApiFuzzCaseSet]):
         
-        for fcs in fcss:
+    #     for fcs in fcss:
             
-            if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
-                self.corporaContext.build(fcs.pathDataTemplate)
+    #         if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
+    #             self.corporaContext.build(fcs.pathDataTemplate)
                 
-            if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
-                self.corporaContext.build(fcs.querystringDataTemplate)
+    #         if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
+    #             self.corporaContext.build(fcs.querystringDataTemplate)
                 
-            if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
-                self.corporaContext.build(fcs.headerDataTemplate)
+    #         if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
+    #             self.corporaContext.build(fcs.headerDataTemplate)
             
-            if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
-                self.corporaContext.build(fcs.bodyDataTemplate)
+    #         if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
+    #             self.corporaContext.build(fcs.bodyDataTemplate)
                 
-            self.corporaContext.build_files(fcs.file)
+    #         self.corporaContext.build_files(fcs.file)
         
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event, runNumber: int):
         
@@ -552,15 +552,15 @@ class WebApiFuzzer:
             headerDT = fcs.headerDataTemplate
             files = []          #for openapi3 single file only
             
-            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_wordlistType_to_data(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
+            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
                 return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_wordlistType_to_data(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
+            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_fuzzdata(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
             if not okqs:
                 return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_wordlistType_to_data(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
@@ -573,7 +573,7 @@ class WebApiFuzzer:
                 for hk in headerDTObj.keys():
                     dt = headerDTObj[hk]
                     
-                    ok, err, resolvedVal = self.corporaContext.resolve_wordlistType_to_data(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    ok, err, resolvedVal = self.corporaContext.resolve_fuzzdata(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
                     
                     if not ok:
                         self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
@@ -582,24 +582,31 @@ class WebApiFuzzer:
                     headerDict[hk] = resolvedVal
                 
                     
-            # handle file upload with "proper" encoding, without encoding requests will throw error as requests uses utf-8 by default
-            if len(fcs.file) > 0:
-                for fileType in fcs.file:
-                    ok, err, fileContent = self.corporaContext.resolve_file(fileType)
+            # handle file upload with "proper" encoding,
+            # without encoding requests will throw error as requests uses utf-8 by default
+            if len(fcs.fils) > 0:
+                for f in fcs.files:
+                    
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(f.wordlist_type)
+                    #self.corporaContext.resolve_file(fileType.wordlist_type)
+                    
                     if ok:
+                        
                         filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
                         
-                        if fileType == 'file':
-                            files.append((filename, fileContent.decode('latin1')))
+                        files.append((filename, fileContent.decode('latin1')))
+                        
+                        # if fileType == 'file':
+                        #     files.append((filename, fileContent.decode('latin1')))
                             
-                        elif fileType == 'image':
-                            files.append((filename, fileContent.decode('latin1')))
+                        # elif fileType == 'image':
+                        #     files.append((filename, fileContent.decode('latin1')))
                             
-                        elif fileType == 'pdf':
-                            files.append((filename, fileContent.decode('latin1')))
+                        # elif fileType == 'pdf':
+                        #     files.append((filename, fileContent.decode('latin1')))
                             
-                        else:
-                            files.append((filename, fileContent.decode('latin1')))
+                        # else:
+                        #     files.append((filename, fileContent.decode('latin1')))
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
@@ -660,7 +667,6 @@ class WebApiFuzzer:
     def isDataTemplateEmpty(self, template):
         if template == '' or template == '{}':
             return True
-        
         return False
     
     
