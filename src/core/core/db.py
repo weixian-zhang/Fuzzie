@@ -742,8 +742,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
             for fcset in fuzzcontext.fuzzcaseSets:
                 
                 fileStr = ''
-                if len(fcset.file) > 0:
-                    fileStr = ','.join(fcset.file)
+                if len(fcset.files) > 0:
+                    fileStr = ','.join([x.wordlist_type for x in fcset.files])
                 
                 fcSetStmt = (
                     insert(ApiFuzzCaseSetTable).

@@ -458,7 +458,7 @@ class ServiceManager:
             if not fcsOK:
                 return False, fcsErr
             
-            ok, error = cp.build(rqMsg)
+            ok, error = cp.try_build_context(rqMsg)
             
             if not ok:
                 False, error

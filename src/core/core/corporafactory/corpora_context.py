@@ -32,6 +32,14 @@ class CorporaContext:
         
         self.myfile_wordlist_type = 'myfile'
     
+    # try_build_context ised only for parsing request messages from webview
+    def try_build_context(self, dataTemplate: str) -> tuple([bool, str]):
+        try:
+            self.build_context_of_req_msg(dataTemplate)
+            return True, ''
+        except Exception as e:
+            return False, ''
+    
     def build_context(self, fcss: list[ApiFuzzCaseSet]):
         
         try:
@@ -54,7 +62,6 @@ class CorporaContext:
         except Exception as e:
             return False, Utils.errAsText(e)
         
-                
                 
             # self.corporaContext.build_context_of_files(fcs.files)
     

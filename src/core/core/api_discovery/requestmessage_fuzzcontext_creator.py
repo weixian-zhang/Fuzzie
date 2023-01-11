@@ -130,7 +130,7 @@ class RequestMessageFuzzContextCreator:
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
             # verb
-            fuzzcaseSet.verb = self.get_verb(multilineBlock)
+            self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
             # path
             ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
@@ -139,28 +139,28 @@ class RequestMessageFuzzContextCreator:
                 self.eventstore.emitErr(error)
                 continue
             
-            fuzzcaseSet.hostname = hostname
-            fuzzcaseSet.port = port
-            fuzzcaseSet.path = path
+            self.currentFuzzCaseSet.hostname = hostname
+            self.currentFuzzCaseSet.port = port
+            self.currentFuzzCaseSet.path = path
             
             pathOK, pathErr, evalPath = self.inject_eval_into_wordlist_expression(path)
             
             if not pathOK:
                 return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
             
-            fuzzcaseSet.pathDataTemplate = evalPath
+            self.currentFuzzCaseSet.pathDataTemplate = evalPath
             
             # get querystring
             # lineIndex is the index of the multiline list when querystring ends at
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
-            fuzzcaseSet.querystringNonTemplate = qs
+            self.currentFuzzCaseSet.querystringNonTemplate = qs
             
             qsOK, qsErr, evalQS = self.inject_eval_into_wordlist_expression(qs)
             if not qsOK:
                 return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
             
-            fuzzcaseSet.querystringDataTemplate = evalQS
+            self.currentFuzzCaseSet.querystringDataTemplate = evalQS
             
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
@@ -171,7 +171,7 @@ class RequestMessageFuzzContextCreator:
                 
                 headerJson = '' if len(headers) == 0 else json.dumps(headers)
                 
-                fuzzcaseSet.headerNonTemplate = headerJson
+                self.currentFuzzCaseSet.headerNonTemplate = headerJson
                 
                 if len(headers) > 0:
                     evalHeaderDict = {}
@@ -184,7 +184,7 @@ class RequestMessageFuzzContextCreator:
                         evalHeaderDict[key] = evalHeader
 
                     if len(evalHeaderDict) > 0:
-                        fuzzcaseSet.headerDataTemplate = '' if len(evalHeaderDict) == 0 else json.dumps(evalHeaderDict)
+                        self.currentFuzzCaseSet.headerDataTemplate = '' if len(evalHeaderDict) == 0 else json.dumps(evalHeaderDict)
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
@@ -194,18 +194,18 @@ class RequestMessageFuzzContextCreator:
                 # myfile will be discovered later in "inject_eval_into_wordlist_expression"
                 body, files = self.get_body_and_files(multilineBlock)
                 
-                fuzzcaseSet.bodyNonTemplate = body
+                self.currentFuzzCaseSet.bodyNonTemplate = body
                 
                 bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
-                fuzzcaseSet.bodyDataTemplate = evalBody
+                self.currentFuzzCaseSet.bodyDataTemplate = evalBody
                 
                 for f in files:
-                    fuzzcaseSet.files.append(FuzzCaseSetFile(f))
+                    self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(f))
                 
-            fcSets.append(fuzzcaseSet)
+            fcSets.append(self.currentFuzzCaseSet)
             
         return True, '', fcSets                
     

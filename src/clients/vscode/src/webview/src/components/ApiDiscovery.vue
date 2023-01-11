@@ -580,7 +580,7 @@
 
     <!--request message dialog-->
     <Dialog v-model:visible="showReqMsgEditDialog" 
-      header="Request Message" 
+      header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true"
@@ -597,21 +597,35 @@
               </button>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#" 
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">GET</a></li>
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">GET</a>
+                </li>
 
                 <li><a class="dropdown-item" href="#" 
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">POST</a></li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-batchfile'))">Custom file content: delimited batch-file</a>
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">POST</a>
                 </li>
 
                 <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-json'))">Custom file content: json</a>
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
                 </li>
 
                 <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('myfile-wordlisttypes'))">Custom file content: primitive wordlist-type support</a>
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-query'))">GraphQL Query</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-mutate'))">GraphQL Mutate</a>
                 </li>
               </ul>
             </div>
@@ -664,7 +678,7 @@
     </Dialog>
 
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
-      header="Request Message" 
+      header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true">

@@ -584,7 +584,7 @@ class WebApiFuzzer:
                     
             # handle file upload with "proper" encoding,
             # without encoding requests will throw error as requests uses utf-8 by default
-            if len(fcs.fils) > 0:
+            if len(fcs.files) > 0:
                 for f in fcs.files:
                     
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(f.wordlist_type)
@@ -595,18 +595,7 @@ class WebApiFuzzer:
                         filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
                         
                         files.append((filename, fileContent.decode('latin1')))
-                        
-                        # if fileType == 'file':
-                        #     files.append((filename, fileContent.decode('latin1')))
-                            
-                        # elif fileType == 'image':
-                        #     files.append((filename, fileContent.decode('latin1')))
-                            
-                        # elif fileType == 'pdf':
-                        #     files.append((filename, fileContent.decode('latin1')))
-                            
-                        # else:
-                        #     files.append((filename, fileContent.decode('latin1')))
+    
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             

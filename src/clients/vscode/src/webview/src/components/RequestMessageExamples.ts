@@ -1,7 +1,80 @@
 
 export default class RequestMessageExamples {
 
-    private examples = {
+    private fileupload = {
+        'file-upload-file-myfile-batchfile': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    string,username,password,filename,datetime
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
+    "
+    | myfile("batchfile_1.log")
+}}
+    `,
+
+    'file-upload-file-myfile-json': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    this is a custom file content
+    supports with multi breakline
+    
+    {
+        \\"name\\": \\"{{ string }}\\",
+        \\"age\\": \\"{{ digit }}\\"
+    }
+    
+    " | myfile("a-file.log")
+}}
+        `,
+    
+    'file-upload-file-myfile-wordlisttypes': `
+POST https://httpbin.org/post
+    
+{{
+    "
+    {{ string }}
+    {{ bool }}
+    {{ digit }}
+    {{ integer }}
+    {{ char }}
+    {{ filename }}
+    {{ datetime }}
+    {{ date }}
+    {{ time }}
+    {{ username }}
+    {{ password }}
+    
+    " | myfile("a-file.log")
+}}
+            `,
+    }
+    
+    private graphql = {
+
+    }
+
+    private post = {
+        
+        'post': `
+POST https://example.com/comments HTTP/1.1
+content-type: application/json
+
+{
+    "name": "{{ username }}",
+    "time": "{{ datetime }}"
+}`
+    }
+
+    private get = {
 
         'get': `
 // this is a comment and comment can be mark as '#' or '//'
@@ -47,75 +120,16 @@ CustomHeader-3: {{ username }}
 
 
 
-
-        'post': `
-POST https://example.com/comments HTTP/1.1
-content-type: application/json
-
-{
-    "name": "{{ username }}",
-    "time": "{{ datetime }}"
-}
-`,
-
-    'myfile-batchfile': `
-POST https://httpbin.org/post
     
-{{
-    "
-    string,username,password,filename,datetime
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    "
-    | myfile("batchfile_1.log")
-}}
-    `,
-
-    'myfile-json': `
-POST https://httpbin.org/post
-    
-{{
-    "
-    this is a custom file content
-    supports with multi breakline
-    
-    {
-        \\"name\\": \\"{{ string }}\\",
-        \\"age\\": \\"{{ digit }}\\"
-    }
-    
-    " | myfile("a-file.log")
-}}
-        `,
-    
-    'myfile-wordlisttypes': `
-POST https://httpbin.org/post
-    
-{{
-    "
-    {{ string }}
-    {{ bool }}
-    {{ digit }}
-    {{ integer }}
-    {{ char }}
-    {{ filename }}
-    {{ datetime }}
-    {{ date }}
-    {{ time }}
-    {{ username }}
-    {{ password }}
-    
-    " | myfile("a-file.log")
-}}
-            `,
 
     };
 
     public loadExample(key = 'get'): string {
-        return this.examples[key];
+
+        if (key == 'file-upload-file-myfile-batchfile') {
+            return this.fileupload['file-upload-file-myfile-batchfile'];
+        }
+
+        return '';
     }
 }
