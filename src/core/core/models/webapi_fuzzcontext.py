@@ -98,7 +98,7 @@ class FuzzCaseSetFile:
         self.content = content            # only used by myfile for now
         
     def is_myfile(fileType: str):
-        if fileType.startswith(FuzzCaseSetFile.myfile_wordlist_type):
+        if fileType.startswith(WordlistType.myfile):
             return True
         return False
         
@@ -219,3 +219,18 @@ class FuzzTestResult:
         self.httpCode = httpCode
         self.completedDataCaseRuns = completedDataCaseRuns
         self.files = files
+        
+class WordlistType:
+    my = 'my'
+    myfile = 'myfile'
+    string = 'string'
+    bool = 'bool'
+    digit = 'digit'
+    file = 'file'
+    pdf = 'pdf'
+    image = 'image'
+    char = 'char'
+    datetime = 'datetime'
+    username = 'username'
+    password = 'password'
+    filename = 'filename'

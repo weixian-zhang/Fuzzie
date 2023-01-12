@@ -152,6 +152,7 @@ ApiFuzzRequestFileUploadTable = Table(apifuzzRequestFileUpload_TableName, metada
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Id', String),
                             Column('datetime', DateTime),
+                            Column('wordlist_type', String),
                             Column('fileName', String),
                             Column('fileContent', String),
                             Column('fuzzRequestId', String, ForeignKey(f'{ApiFuzzRequestTable}.Id')),
@@ -790,12 +791,13 @@ def insert_api_fuzzCaseSetRuns(Id, fuzzcontextId) -> None:
     Session.close()
     
 
-def insert_api_fuzzrequest_fileupload(Id, fileName,fileContent, fuzzRequestId, fuzzDataCaseId, fuzzcontextId) -> None:
+def insert_api_fuzzrequest_fileupload(Id, wordlist_type, fileName,fileContent, fuzzRequestId, fuzzDataCaseId, fuzzcontextId) -> None:
     stmt = (
             insert(ApiFuzzRequestFileUploadTable).
             values(
                     Id=Id,
                     datetime = datetime.now(),
+                    wordlist_type = wordlist_type,
                     fileName = fileName,
                     fileContent = fileContent,
                     fuzzRequestId = fuzzRequestId,

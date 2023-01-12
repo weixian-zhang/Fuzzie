@@ -31,12 +31,13 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                     # save file content
                     if len(ftResult.files) > 0:
                         for ftuple in ftResult.files:
-                            fileName, content = ftuple
+                            wordlist_type, fileName, content = ftuple
                             insert_api_fuzzrequest_fileupload(
                                 Id=shortuuid.uuid(),
+                                wordlist_type=wordlist_type,
                                 fileName=fileName,
-                                fileContent= content,
-                                fuzzcontextId= self.apifuzzcontext.Id,
+                                fileContent=content,
+                                fuzzcontextId=ftResult.fuzzcontextId,
                                 fuzzDataCaseId=ftResult.fuzzDataCase.Id,
                                 fuzzRequestId=ftResult.fuzzDataCase.request.Id
                             )

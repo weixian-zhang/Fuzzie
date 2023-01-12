@@ -12,19 +12,17 @@ sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 from utils import Utils
-from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile)
+from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
 from eventstore import EventStore
 
 class RequestMessageFuzzContextCreator:
+
     
     def __init__(self):
         self.apicontext = None
         self.fuzzcontext = ApiFuzzContext()
         self.eventstore = EventStore()
         self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
-        
-        self.my_wordlist_type = 'my'
-        self.myfile_wordlist_type = 'myfile'
         
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
@@ -527,10 +525,10 @@ class RequestMessageFuzzContextCreator:
         
         try:
             
-            jinja2.filters.FILTERS[self.my_wordlist_type] = self.my_jinja_filter
+            jinja2.filters.FILTERS[WordlistType.my] = self.my_jinja_filter
             
             # discover myfile wordlist-type
-            jinja2.filters.FILTERS[self.myfile_wordlist_type] = self.myfile_jinja_filter
+            jinja2.filters.FILTERS[WordlistType.myfile] = self.myfile_jinja_filter
 
             tpl = jinja2.Template(expr)
             
@@ -542,12 +540,12 @@ class RequestMessageFuzzContextCreator:
             return False, e,  expr
         
     # insert my wordlist type
-    def my_jinja_filter(self, value, my_uniquename = ''):
+    def my_jinja_filter(self,value, my_uniquename = ''):
         
         # escape single quote if any
         output = output.replace("'", "\\'")
         
-        evalOutput = f'{{{{ eval(wordlist_type=\'{self.my_wordlist_type}\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
+        evalOutput = f'{{{{ eval(wordlist_type=\'{WordlistType.my}\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
         
         #escape single quotes if any
         evalOutput = evalOutput.replace("'", "\\'")
@@ -558,10 +556,10 @@ class RequestMessageFuzzContextCreator:
         
         output = self.render_standard_wordlist_types(content)
         
-        evalOutput =  f'{{{{ eval(wordlist_type="{self.myfile_wordlist_type}", my_file_content_value="{output}", my_file_content_filename="{filename}") }}}}'
+        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{output}", my_file_content_filename="{filename}") }}}}'
         
         # used in corpora_context to find myfile_corpora to supply myfile data
-        corporaContextKeyName = f'{FuzzCaseSetFile.myfile_wordlist_type}_{filename}'
+        corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
         #corporaContextKeyName = Utils.remove_special_chars(corporaContextKeyName)
         
         if self.currentFuzzCaseSet != None:

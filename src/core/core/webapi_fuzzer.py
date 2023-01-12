@@ -19,8 +19,9 @@ from fuzz_test_result_queue import FuzzTestResultQueue
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, FuzzTestResult,
-                                        FuzzMode, FuzzCaseSetFile)
+                                        FuzzMode, FuzzCaseSetFile, WordlistType)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
+import io
 
 from db import (insert_api_fuzzCaseSetRuns,
                 update_api_fuzzCaseSetRun_status,
@@ -36,7 +37,7 @@ from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
-import random
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -160,24 +161,6 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
             
-    # def build_corpora_context(self, fcss: list[ApiFuzzCaseSet]):
-        
-    #     for fcs in fcss:
-            
-    #         if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
-    #             self.corporaContext.build(fcs.pathDataTemplate)
-                
-    #         if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
-    #             self.corporaContext.build(fcs.querystringDataTemplate)
-                
-    #         if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
-    #             self.corporaContext.build(fcs.headerDataTemplate)
-            
-    #         if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
-    #             self.corporaContext.build(fcs.bodyDataTemplate)
-                
-    #         self.corporaContext.build_files(fcs.file)
-        
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event, runNumber: int):
         
         try:
@@ -218,6 +201,7 @@ class WebApiFuzzer:
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
             # url already includes hostname, port, path and qs
+            # files = list[tuple(wordlistType, filename, content)]
             ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
@@ -231,19 +215,59 @@ class WebApiFuzzer:
             reqBody = self.try_decode_body(body)
 
             try:
-                req = None
+                req = None                
                 
-                if contentType == 'application/x-www-form-urlencoded':
-                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                if len(files) == 0 and reqBody != '':
+                    if contentType == 'application/x-www-form-urlencoded':
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                        
+                    elif contentType == 'application/json':
+                        req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                        
+                    elif contentType == 'application/xml':
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    else:
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+
+                elif len(files) > 0:
                     
-                elif contentType == 'application/json':
-                    req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                    # use MultipartEncoder to uploaded file content without multipart headers in file content itself
+                    # e.g multipart-form header: Content-Disposition: form-data; name="foo"; filename="foo"
                     
-                elif contentType == 'application/xml':
-                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    # multipartFormFields = {}
                     
-                elif len(files) > 0:   
-                    req = Request(fcs.verb, url, headers=headers, json=reqBody, files=files)
+                    # uploadiles = {}
+                    
+                    # support single file only.
+                    # fuzzie's goal is to upload file content as the "whole" POST body.
+                    # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
+                    # which fuzzie tries to avoid altering original file content
+                    
+                    fTuple = files[0]
+                    wordlistType = fTuple[0]
+                    filename = fTuple[1]
+                    content = fTuple[2]
+                    
+                    # for fTuple in files:
+                    #     wordlistType = fTuple[0]
+                    #     filename = fTuple[1]
+                    #     content = fTuple[2]
+                        
+                    #     # create file-like object from a string
+                    #     f = io.StringIO(content)
+                    #     bio = io.BytesIO(f.read().encode('utf8'))
+                        
+                        #multipartFormFields[filename] = (filename, f, 'application/stream')
+                    
+                        # include other content-type like Json/XML/text in same multipart-form request
+                        # if wordlistType != WordlistType.myfile:
+                        #     multipartFormFields['data'] = reqBody
+                    
+                    #mp_encoder = MultipartEncoder(fields=multipartFormFields, boundary=None, encoding='utf-8')
+                    
+                    #headers['Content-Type'] = mp_encoder.content_type
+                
+                    req = Request(fcs.verb, url, headers=headers, data=content) #bio.read())
                     
                 else:
                     if fcs.verb == 'GET':
@@ -590,18 +614,15 @@ class WebApiFuzzer:
                     ok = True
                     err = ''
                     fileContent = ''
-                      
+                    filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                    
                     if FuzzCaseSetFile.is_myfile(fileType):
                         ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.bodyDataTemplate)
+                        files.append((WordlistType.myfile, filename, fileContent))
                     else:
                         ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fileType)
-                    
-                    if ok:
-                        
-                        filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
-                        
-                        files.append((filename, fileContent.decode('latin1')))
-    
+                        files.append((fileType, filename, fileContent.decode('latin1')))
+                                            
             
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
