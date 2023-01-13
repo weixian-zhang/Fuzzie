@@ -297,7 +297,7 @@
 
               <div style="text-align:right">
                 <button class="btn  btn-outline-info mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn  btn-outline-info" @click="createNewApiContext">Create</button>
+                <button class="btn  btn-outline-info" @click="createNewApiContext" :disabled="(createContextBtnDisable)">Create</button>
               </div>
             <!-- col end-->
             </div>
@@ -865,7 +865,7 @@
 </template>
 
 <script lang="ts">
-
+import { inject } from 'vue';
 import { Options, Vue } from 'vue-class-component';
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
@@ -905,6 +905,7 @@ class Props {
 
 export default class ApiDiscovery extends Vue.with(Props) {
   
+  $logger;
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
@@ -919,6 +920,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
+  createContextBtnDisable = false;
   apiContextToDelete: any = {};
   apiContextIdToFuzz = '';
   inputRules= [
@@ -969,6 +971,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   //methods
   
+  beforeMount(){
+    this.$logger = inject('$logger');
+  }
+
   async mounted() {
 
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
@@ -1349,67 +1355,79 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if(!this.fuzzerConnected){
           return;
     }
+
+    try {
+
+        this.createContextBtnDisable = true;
     
-    this.newApiContext.authnType = this.determineAuthnType();
+        this.newApiContext.authnType = this.determineAuthnType();
 
-    this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
+        this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
-    if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
-    {
-      this.toastError('Name is required');
-      return;
+        if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
+        {
+          this.toastError('Name is required');
+          return;
+        }
+
+        if(this.newApiContext.requestTextContent == '' || this.requestMsgHasError == true)
+        {
+          this.toastError('Request Message is either empty or has error', 'API Discovery');
+          return;
+        }
+
+        // if(this.newApiContext.openapi3Url != '') {
+        //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+
+        //   if(!ok)
+        //   {
+        //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
+
+        //     return;
+        //   }
+
+        //   this.newApiContext.openapi3Content = data;
+
+        // }
+
+        // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
+        // {
+        //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
+        //   return;
+        // }
+      
+        const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
+        apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
+        apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
+
+        const result =  await this.fuzzermanager.newFuzzContext(apifc);
+        const ok = result['ok'];
+        const error =result['error'];
+
+        if(!ok && error != '')
+        {
+          this.toastError(error, 'Create new API context');
+          return;
+        }
+        else
+        {
+          this.newContextSideBarVisible = false;
+          this.getFuzzcontexts();
+
+          this.toastSuccess(error, 'API Fuzz Context created');
+
+          //reset form
+          this.openapi3FileInputFileVModel = [];
+          this.requestTextFileInputFileVModel = [];
+          this.newApiContext = new ApiFuzzContext();
+          this.requestMsgHasError = false;
+        }
+
+    } catch (error) {
+      this.$logger.error(error);
     }
-
-    if(this.newApiContext.requestTextContent == '' || this.requestMsgHasError == true)
-    {
-      this.toastError('Request Message is either empty or has error', 'API Discovery');
-      return;
-    }
-
-    // if(this.newApiContext.openapi3Url != '') {
-    //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
-
-    //   if(!ok)
-    //   {
-    //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
-
-    //     return;
-    //   }
-
-    //   this.newApiContext.openapi3Content = data;
-
-    // }
-
-    // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
-    // {
-    //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
-    //   return;
-    // }
-   
-    const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
-    apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
-    apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
-
-    const result =  await this.fuzzermanager.newFuzzContext(apifc);
-    const ok = result['ok'];
-    const error =result['error'];
-
-    if(!ok && error != '')
-    {
-      this.toastError(error, 'Create new API context');
-      return;
-    }
-    else
-    {
-      this.newContextSideBarVisible = false;
-      this.getFuzzcontexts();
-
-      this.toastSuccess(error, 'API Fuzz Context created');
-
-      //reset form
-      this.openapi3FileInputFileVModel = [];
-      this.requestTextFileInputFileVModel = [];
-      this.newApiContext = new ApiFuzzContext();
+    finally {
+      this.createContextBtnDisable = false;
     }
   }
 

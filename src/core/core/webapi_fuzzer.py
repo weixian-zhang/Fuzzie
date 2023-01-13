@@ -167,7 +167,7 @@ class WebApiFuzzer:
             if multithreadEventSet.is_set():
                 return
             
-            fuzzDataCase, files = self.http_call_api(fcs)
+            fuzzDataCase, files = self.http_call(fcs)
             
             summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, files)
             
@@ -191,7 +191,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             self.cancel_fuzzing(errorMsg=errMsg)
             
-    def http_call_api(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
+    def http_call(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
         
         resp = None
         
@@ -219,13 +219,19 @@ class WebApiFuzzer:
                 
                 if len(files) == 0 and reqBody != '':
                     if contentType == 'application/x-www-form-urlencoded':
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
                         
-                    elif contentType == 'application/json':
-                        req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                        # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
+                        # supporting the above data format is purely to support syntax from rest-client 
                         
-                    elif contentType == 'application/xml':
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                        wwwformurlencodedDict = self.wwwformurlencoded_to_dict(reqBody)
+                        
+                        req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
+                      
+                    # elif contentType == 'application/json':
+                    #     req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                        
+                    # elif contentType == 'application/xml':
+                    #     req = Request(fcs.verb, url, headers=headers, data=reqBody)
                     else:
                         req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
@@ -270,12 +276,10 @@ class WebApiFuzzer:
                     req = Request(fcs.verb, url, headers=headers, data=content) #bio.read())
                     
                 else:
-                    if fcs.verb == 'GET':
-                        req = Request(fcs.verb, url, headers=headers)
-                    else:
-                        req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                    req = Request(fcs.verb, url, headers=headers)
                 
-                
+                headers['User-Agent'] = 'fuzzie'
+
                 prepReq = req.prepare()
                 
                 reqContentLength =  0
@@ -684,5 +688,24 @@ class WebApiFuzzer:
         if template == '' or template == '{}':
             return True
         return False
+    
+    def wwwformurlencoded_to_dict(self, wwwformurl: str)-> dict:
+        
+        if wwwformurl == '':
+            return {}
+        
+        result = {}
+        
+        keyval = wwwformurl.split('&')
+        
+        for kv in keyval:
+            
+            key = kv[0]
+            val = kv[1]
+            
+            if key != '' and val != '':
+                result[key] = val
+                
+        return result
     
     

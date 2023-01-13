@@ -92,9 +92,10 @@ class FuzzCaseSetFile:
     pdf_wordlist_type = 'pdf'
     
     # wordlist_type for myfile is content_key name for e.g: "myfile_filename"
-    def __init__(self, wordlist_type='file', content='') -> None: 
+    def __init__(self, wordlist_type='file', filename='', content='') -> None: 
         
         self.wordlist_type = wordlist_type  #file, image, pdf, myfile
+        self.filename = filename
         self.content = content            # only used by myfile for now
         
     def is_myfile(fileType: str):

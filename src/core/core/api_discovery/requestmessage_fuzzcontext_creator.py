@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
 from eventstore import EventStore
-
+from jinja2 import Environment
+    
 class RequestMessageFuzzContextCreator:
 
     
@@ -27,6 +28,14 @@ class RequestMessageFuzzContextCreator:
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
         self.currentFuzzCaseSet = None
+        
+        self.env = jinja2.Environment()
+        self.env.filters[WordlistType.my] = self.my_jinja_filter
+        self.env.filters[WordlistType.myfile] = self.myfile_jinja_filter
+        # jinja2.filters.FILTERS[WordlistType.my] = self.my_jinja_filter
+            
+        # # discover myfile wordlist-type
+        # jinja2.filters.FILTERS[WordlistType.myfile] = self.myfile_jinja_filter
         
 
     def new_fuzzcontext(self,
@@ -198,10 +207,15 @@ class RequestMessageFuzzContextCreator:
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
-                self.currentFuzzCaseSet.bodyDataTemplate = evalBody
-                
+                # currently fuzzie only supports 1 file upload. And when there is 1 file detected, this file takes up whole request body.
+                # which means for multipart-form, fuzzie uploads only a single file and not mix file and other content together
+                if len(self.currentFuzzCaseSet.files) > 0:
+                    self.currentFuzzCaseSet.bodyNonTemplate = ''
+                    self.currentFuzzCaseSet.bodyDataTemplate = evalBody  # myfile uses body can file content
+                    
                 for f in files:
                     self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(f))
+
                 
             fcSets.append(self.currentFuzzCaseSet)
             
@@ -524,13 +538,8 @@ class RequestMessageFuzzContextCreator:
     def inject_eval_into_wordlist_expression(self, expr: str) -> tuple([bool, str, str]):
         
         try:
-            
-            jinja2.filters.FILTERS[WordlistType.my] = self.my_jinja_filter
-            
-            # discover myfile wordlist-type
-            jinja2.filters.FILTERS[WordlistType.myfile] = self.myfile_jinja_filter
-
-            tpl = jinja2.Template(expr)
+        
+            tpl = self.env.from_string(expr)
             
             output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())                
                     
@@ -560,10 +569,13 @@ class RequestMessageFuzzContextCreator:
         
         # used in corpora_context to find myfile_corpora to supply myfile data
         corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
-        #corporaContextKeyName = Utils.remove_special_chars(corporaContextKeyName)
         
         if self.currentFuzzCaseSet != None:
-           self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(corporaContextKeyName, evalOutput))
+           self.currentFuzzCaseSet.files.append(
+               FuzzCaseSetFile(
+                   wordlist_type=WordlistType.myfile,
+                   filename = corporaContextKeyName,
+                   content=evalOutput))
         
         return evalOutput
     
