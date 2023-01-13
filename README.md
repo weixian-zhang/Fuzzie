@@ -1,4 +1,4 @@
-## Fuzzie (in development, coming soon)  
+## Fuzzie (coming soon)  
 
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
@@ -19,7 +19,7 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 
 #### Terms and Concepts
 
-* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered either through OpenAPI 3 spec or by writing Request Messages
+* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered by writing Request Messages
 * wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) and Fuzzie converts each Request Message into a http call.  Within Request Message, exact input format like JSON, XML, files, plain text or simply any format, with parameters can be described in Request Message.
 By replacing wordlist-type {{ wordlist type }} with parameter value, during fuzzing, Fuzzie will replace the parameter values with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
 example:  
@@ -101,14 +101,10 @@ The following are built-in wordlist-types available today, more will be added in
 </ br>
 #### API Discovery  
 
-Fuzzie needs to know your API schema and there are 2 ways fto discover them:
-* [OpenAPI 3](https://editor.swagger.io/) specification
-  * Url to OpenAPI 3 specification
-  * File path to OpenAPI 3 specification
-  
-* Request Message (concept inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
+Fuzzie needs to know your API or GraphQL "schema", this is achieved by Request Messages (concept inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
+
   * write Request Message(s) in webview while creating a new Fuzz Context
-  * Text files that contains a list of Request-Messages with extension .http, .rest or .fuzzie
+  * Fuzzie takes in text files that contains Request-Messages with file extension .http, .rest or .fuzzie
  
  Request Message can be written and validated in webview provided by Fuzzie  
  
