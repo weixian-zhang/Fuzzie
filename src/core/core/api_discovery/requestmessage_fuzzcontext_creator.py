@@ -199,7 +199,7 @@ class RequestMessageFuzzContextCreator:
             if len(multilineBlock) > 0:
                 
                 # myfile will be discovered later in "inject_eval_into_wordlist_expression"
-                body, files = self.get_body_and_files(multilineBlock)
+                body, file = self.get_body_and_file(multilineBlock)
                 
                 self.currentFuzzCaseSet.bodyNonTemplate = body
                 
@@ -207,16 +207,22 @@ class RequestMessageFuzzContextCreator:
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
-                # currently fuzzie only supports 1 file upload. And when there is 1 file detected, this file takes up whole request body.
-                # which means for multipart-form, fuzzie uploads only a single file and not mix file and other content together
-                if len(self.currentFuzzCaseSet.files) > 0:
+                # currently fuzzie only supports 1 file upload per request block.
+                # When there is 1 file detected, this file takes up whole request body.
+                # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
+                # check for myfile wordlist type
+                if self.currentFuzzCaseSet.file != '':
                     self.currentFuzzCaseSet.bodyNonTemplate = ''
                     self.currentFuzzCaseSet.bodyDataTemplate = evalBody  # myfile uses body can file content
                     
-                for f in files:
+                # check for file, pdf, image wordlist type
+                elif file != '':
+                    # get first and only one wordlist type
+                    f = file
+                    
                     self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(f))
+                   
 
-                
             fcSets.append(self.currentFuzzCaseSet)
             
         return True, '', fcSets                
@@ -432,11 +438,12 @@ class RequestMessageFuzzContextCreator:
 
     # name=foo
     # &password=bar
-    def get_body_and_files(self, multilineBlock: list[str]) -> str:
+    def get_body_and_file(self, multilineBlock: list[str]) -> str:
         
         body = ''
-        files = []
+        file = ''
         
+        # check lines for file wordlist type
         for line in multilineBlock:
             
             line = line.strip()
@@ -449,14 +456,14 @@ class RequestMessageFuzzContextCreator:
             yes, exprType = Utils.is_file_wordlist_type(line)
             
             if yes:
-                files.append(exprType)
-                continue
+                file = exprType
+                break
         
         # get body in original string as a whole including all whitespaces and breaklines
         for s in multilineBlock:
             body = body + s + '\n'
         
-        return body, files
+        return body, file
             
     
     def removeProcessedLines(self, toIndex, list):
@@ -571,11 +578,10 @@ class RequestMessageFuzzContextCreator:
         corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
         
         if self.currentFuzzCaseSet != None:
-           self.currentFuzzCaseSet.files.append(
-               FuzzCaseSetFile(
+           self.currentFuzzCaseSet.file = FuzzCaseSetFile(
                    wordlist_type=WordlistType.myfile,
                    filename = corporaContextKeyName,
-                   content=evalOutput))
+                   content=evalOutput)
         
         return evalOutput
     

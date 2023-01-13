@@ -3,20 +3,22 @@ export default class RequestMessageExamples {
 
     private fileupload = {
         'file-upload-file-myfile-batchfile': `
-POST https://httpbin.org/post
-    
+// content align to left with no trailing spaces between "" so that file content will not have trailing whitespaces either
+
+PUT https://httpbin.org/post
+x-ms-blob-type: BlockBlob
+
 {{
-    "
-    string,username,password,filename,datetime
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-    "
-    | myfile("batchfile_1.log")
+"string,username,password,filename,datetime
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}"
+| myfile("batchfile_1.log")
 }}
+    
     `,
 
     'file-upload-file-myfile-json': `

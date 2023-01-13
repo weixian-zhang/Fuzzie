@@ -138,6 +138,19 @@ class Utils:
     def remove_special_chars(text: str):
         return ''.join(e for e in text if e.isalnum())
     
+    def try_decode_latin1(content):
+        try:
+            return True, content.decode('latin-1')
+        except Exception as e:
+            return False, content
+        
+    def try_decode_utf8(content):
+        try:
+            return True, content.decode('UTF-8')
+        except Exception as e:
+            return False, content
+        
+    
     
         
         

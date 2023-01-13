@@ -305,7 +305,7 @@ class WebApiFuzzer:
                 resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
             
             except Exception as e:
-                err =  Utils.errAsText(e.args)
+                err =  Utils.errAsText(e)
                 fuzzDataCase.request = self.create_fuzzrequest(
                                         fuzzDataCaseId=fuzzDataCase.Id,
                                         fuzzcontextId=self.apifuzzcontext.Id,
@@ -339,7 +339,7 @@ class WebApiFuzzer:
             
         except HTTPError as e:
             
-            err = Utils.jsone(e.args)
+            err = Utils.errAsText(e)
             
             fr = ApiFuzzResponse()
             fr.Id = shortuuid.uuid()
@@ -364,7 +364,7 @@ class WebApiFuzzer:
                 fr.reasonPharse = resp.reason
                 fr.body = resp.text
             else:  
-                err =  Utils.jsone(e.args)
+                err =  Utils.errAsText(e)
                 fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
                 fr.reasonPharse = f'{err}'
             
@@ -612,22 +612,28 @@ class WebApiFuzzer:
                     
             # handle file upload with "proper" encoding,
             # without encoding requests will throw error as requests uses utf-8 by default
-            if len(fcs.files) > 0:
-                for fileType in fcs.files:
+            if fcs.file != '':
+                
+                ok = True
+                err = ''
+                fileContent = ''
+                fileWordlistType = fcs.file
+                filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                
+                if FuzzCaseSetFile.is_myfile(fcs.file):
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.bodyDataTemplate)
                     
-                    ok = True
-                    err = ''
-                    fileContent = ''
-                    filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                    decoded = self.try_decode_file_content(fileContent)
                     
-                    if FuzzCaseSetFile.is_myfile(fileType):
-                        ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.bodyDataTemplate)
-                        files.append((WordlistType.myfile, filename, fileContent))
-                    else:
-                        ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fileType)
-                        files.append((fileType, filename, fileContent.decode('latin1')))
-                                            
-            
+                    files.append((WordlistType.myfile, filename, fileContent))
+                else:
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fileWordlistType)
+                    
+                    decoded = self.try_decode_file_content(fileContent)
+                    
+                    files.append((fileWordlistType, filename, decoded))
+                    
+                    
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
             authnHeader= self.determine_authn_scheme(fc)
@@ -640,6 +646,20 @@ class WebApiFuzzer:
             errText =  Utils.errAsText(e)
             self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
             return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
+    
+    
+    def try_decode_file_content(self, content):
+        decoded = content
+        
+        latinOK, latinDecoded = Utils.try_decode_latin1(content)
+        if latinOK:
+            decoded = latinDecoded
+        else:
+            utf8OK, utf8Decoded = Utils.try_decode_utf8(content)
+            if utf8OK:
+                decoded = utf8Decoded
+                
+        return decoded
     
     # returns dict representing header
     def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:

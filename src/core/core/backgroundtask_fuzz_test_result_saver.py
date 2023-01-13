@@ -29,7 +29,7 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                                               caseSetRunSummaryId=ftResult.caseSetRunSummaryId)
                     
                     # save file content
-                    if len(ftResult.files) > 0:
+                    if ftResult.file != '':
                         for ftuple in ftResult.files:
                             wordlist_type, fileName, content = ftuple
                             insert_api_fuzzrequest_fileupload(

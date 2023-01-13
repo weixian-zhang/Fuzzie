@@ -742,9 +742,9 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
         if len(fuzzcontext.fuzzcaseSets) > 0:
             for fcset in fuzzcontext.fuzzcaseSets:
                 
-                fileStr = ''
-                if len(fcset.files) > 0:
-                    fileStr = ','.join([x.wordlist_type for x in fcset.files])
+                fileType= ''
+                if fcset.file != '':
+                    fileType = fcset.file.filename
                 
                 fcSetStmt = (
                     insert(ApiFuzzCaseSetTable).
@@ -762,7 +762,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         headerDataTemplate = fcset.headerDataTemplate,
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  fcset.bodyDataTemplate,
-                        file= fileStr,
+                        file = fileType,
                         fuzzcontextId = fuzzcontext.Id
                         )
                 )
@@ -1018,7 +1018,7 @@ def create_fuzzcaseset_from_dict(rowDict):
     
     f = rowDict['file']
     if f != '':
-        fcs.files = f.split(',')
+        fcs.file = f
     
     return fcs
 

@@ -121,7 +121,8 @@ class ApiFuzzCaseSet:
         self.bodyNonTemplate = ''
         self.headerNonTemplate = ''
         
-        self.files: list[FuzzCaseSetFile] = []
+        self.file = ''
+        #self.files: list[FuzzCaseSetFile] = []
         
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
@@ -219,7 +220,7 @@ class FuzzTestResult:
         self.caseSetRunSummaryId = caseSetRunSummaryId
         self.httpCode = httpCode
         self.completedDataCaseRuns = completedDataCaseRuns
-        self.files = files
+        self.file = file
         
 class WordlistType:
     my = 'my'
