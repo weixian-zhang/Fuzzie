@@ -30,17 +30,20 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                     
                     # save file content
                     if ftResult.file != '':
-                        for ftuple in ftResult.files:
-                            wordlist_type, fileName, content = ftuple
-                            insert_api_fuzzrequest_fileupload(
-                                Id=shortuuid.uuid(),
-                                wordlist_type=wordlist_type,
-                                fileName=fileName,
-                                fileContent=content,
-                                fuzzcontextId=ftResult.fuzzcontextId,
-                                fuzzDataCaseId=ftResult.fuzzDataCase.Id,
-                                fuzzRequestId=ftResult.fuzzDataCase.request.Id
+                        wordlist_type = ftResult.file.wordlist_type
+                        filename = ftResult.file.filename
+                        content = ftResult.file 
+
+                        insert_api_fuzzrequest_fileupload(
+                            Id=shortuuid.uuid(),
+                            wordlist_type=wordlist_type,
+                            fileName=filename,
+                            fileContent=content,
+                            fuzzcontextId=ftResult.fuzzcontextId,
+                            fuzzDataCaseId=ftResult.fuzzDataCase.Id,
+                            fuzzRequestId=ftResult.fuzzDataCase.request.Id
                             )
+                            
                    
                     
                 else:

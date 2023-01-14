@@ -210,7 +210,7 @@ class WSMsg_Fuzzing_FuzzCaseSetSummary:
         
 class FuzzTestResult:
     def __init__(self, fdc: ApiFuzzDataCase, fuzzcontextId, 
-                 fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, files,
+                 fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, file,
                  httpCode, completedDataCaseRuns=1) -> None:
         
         self.fuzzDataCase = fdc
