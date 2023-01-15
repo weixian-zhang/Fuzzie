@@ -38,7 +38,7 @@
           <tr>
             <th class="text-left">
               <div class="form-check">
-                <v-checkbox color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
+                <v-checkbox color="cyan" id="flexCheckDefault" label="Fuzz All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
             </th>

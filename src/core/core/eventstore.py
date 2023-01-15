@@ -1,5 +1,6 @@
 '''Fuzzie EventStore'''
 
+from utils import Utils
 from enum import Enum
 from multiprocessing import Event
 import jsonpickle
@@ -90,6 +91,19 @@ class EventStore:
         
         errMsg = ''
         
+        source = ''
+        
+        # include source of error raised
+        if hasattr(err, 'source'):
+            source = err.source
+
+        dataDict = {
+            'data': data,
+            'source': source
+        }     
+        
+        dataJson = jsonpickle.encode(dataDict, unpicklable=False)          
+        
         if type(err) is str:
             errMsg = err
         else:
@@ -100,13 +114,13 @@ class EventStore:
                 datetime.now(),
                 str(MessageLevel.ERROR),
                 errMsg,
-                data)
+                dataJson)
         elif isinstance(err, str):
             m = Message(
                 datetime.now(),
                 str(MessageLevel.ERROR),
                 errMsg,
-                data)
+                dataJson)
         else:
             return
         

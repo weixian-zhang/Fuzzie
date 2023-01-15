@@ -100,7 +100,7 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 2500);
+      setInterval(this.checkFuzzerReady, 2000);
     }
 
     
@@ -124,7 +124,7 @@
         }
 
          if (!status.isDataLoaded) {
-            this.toastInfo('connected to fuzzer, loading corpora, this may take a moment')
+            this.toastInfo('connected to fuzzer, loading fuzz-data, this may take a moment')
             return;
          } else {
             if(!this.fuzzerConnected) {

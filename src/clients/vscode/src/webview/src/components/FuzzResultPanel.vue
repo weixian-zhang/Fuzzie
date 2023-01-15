@@ -129,7 +129,10 @@
                     <div class="dropdown-content">
                       <a href="#" 
                       v-for="item in unqStatusCodesFromFDCS"
-                      :key="item">{{ item }}</a>
+                      :key="item"
+                      @click="onStatusCodeFilterClicked(item)">
+                        {{ item }}
+                      </a>
                     </div>
                   </div>
               </th>
@@ -142,7 +145,7 @@
               <th class="text-left">
                 
                 <div class="dropdown">
-                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length</button>
+                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length(bytes)</button>
                     <div class="dropdown-content">
                       <v-radio-group inline v-model="tableFilterSmallerLarger" >
                         <v-radio
@@ -156,8 +159,11 @@
                           value="<="
                         ></v-radio>
                       </v-radio-group>
-                      <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange" v-model="contentLengthInputValue" />
-                  
+                      <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange"  step="20" v-model="contentLengthInputValue" />
+                      <!-- <button class="btn-sm btn-info btn-sm dropdown-toggle"
+                        @click="onContentLengthFilterClicked()">
+                        Filter
+                      </button> -->
                     </div>                 
                   </div>
               </th>
@@ -321,8 +327,8 @@ class Props {
     selectedResponse = '';
 
     //dataCache = {};
-    fdcsDataOriginal: Array<FuzzDataCase> = [];
-    fdcsDataFiltered: Array<FuzzDataCase> = [];
+    fdcsDataOriginal: Array<FuzzDataCase|any> = [];
+    fdcsDataFiltered: Array<FuzzDataCase|any> = [];
     //fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
     fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
@@ -414,6 +420,50 @@ class Props {
       //this.fdcsFuzzing[fdc.fuzzCaseSetId].push(fdc);
    // }
 
+   onStatusCodeFilterClicked(httpStatusCode) {
+
+    if (this.fdcsDataOriginal == undefined || this.fdcsDataOriginal.length == 0) {
+          return;
+    }
+
+      this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
+        if(x != undefined && x.response != undefined  && x.response.statusCode == httpStatusCode) {
+          return x;
+        }
+      });
+   }
+
+   oncontentLengthInputChange(input) {
+      //const contentLengthToFilter = input.data;
+
+      try {
+        if (this.fdcsDataOriginal == undefined || this.fdcsDataOriginal.length == 0) {
+          return;
+        }
+
+        var operator = '>=';
+
+        if (this.tableFilterSmallerLarger == '>=') {
+          this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
+            if(x != undefined && x.response.contentLength >= this.contentLengthInputValue) {
+              return x;
+            }
+          });
+        }
+        else {
+          this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
+            if(x != undefined && x.response.contentLength <= this.contentLengthInputValue) {
+              return x;
+            }
+          });
+        }
+      }
+      catch(error) {
+        this.$logger.error(error)
+      }
+  
+    }
+
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 
       try {
@@ -488,9 +538,7 @@ class Props {
 
     }
 
-    oncontentLengthInputChange(input) {
-      const searchText = input.data;
-    }
+    
 
     buildStatusCodesDropDown() {
 

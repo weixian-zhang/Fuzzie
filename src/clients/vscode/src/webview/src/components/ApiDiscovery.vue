@@ -297,7 +297,7 @@
 
               <div style="text-align:right">
                 <button class="btn  btn-outline-info mr-3" @click="clearContextForm">Reset</button>
-                <button class="btn  btn-outline-info" @click="createNewApiContext">Create</button>
+                <button class="btn  btn-outline-info" @click="createNewApiContext" :disabled="(createContextBtnDisable)">Create</button>
               </div>
             <!-- col end-->
             </div>
@@ -580,17 +580,57 @@
 
     <!--request message dialog-->
     <Dialog v-model:visible="showReqMsgEditDialog" 
-      header="Request Message" 
+      header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true"
+      :dismissableMask="true" :closeOnEscape="false"
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
       <div class="container-fluid width=100%">
           <div class="row">
             <div class="col-6">
-              <v-btn
+
+            <div class="btn-group">
+              <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                examples
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" 
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">GET</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#" 
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">POST</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-query'))">GraphQL Query</a>
+                </li>
+
+                <li><a class="dropdown-item" href="#"
+                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-mutate'))">GraphQL Mutate</a>
+                </li>
+              </ul>
+            </div>
+
+              <!-- <v-btn
               size="x-small"
               color="cyan"
               @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
@@ -603,7 +643,7 @@
               class="ml-5"
               @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
               POST example
-            </v-btn>
+            </v-btn> -->
             </div>
             <div class="col-6 text-right">
                 <v-btn
@@ -638,7 +678,7 @@
     </Dialog>
 
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
-      header="Request Message" 
+      header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true">
@@ -825,7 +865,7 @@
 </template>
 
 <script lang="ts">
-
+import { inject } from 'vue';
 import { Options, Vue } from 'vue-class-component';
 import Tree, { TreeNode } from 'primevue/tree';
 import dateformat from 'dateformat';
@@ -833,6 +873,7 @@ import Sidebar from 'primevue/sidebar';
 import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
+import Dropdown from 'primevue/dropdown';
 
 import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
@@ -856,13 +897,15 @@ class Props {
     Sidebar,
     Dialog,
     Message,
-    InputNumber
+    InputNumber,
+    Dropdown
   },
 })
 
 
 export default class ApiDiscovery extends Vue.with(Props) {
   
+  $logger;
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
   showPasswordValue = false;
@@ -877,6 +920,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
+  createContextBtnDisable = false;
   apiContextToDelete: any = {};
   apiContextIdToFuzz = '';
   inputRules= [
@@ -927,6 +971,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   //methods
   
+  beforeMount(){
+    this.$logger = inject('$logger');
+  }
+
   async mounted() {
 
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
@@ -1307,67 +1355,79 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if(!this.fuzzerConnected){
           return;
     }
+
+    try {
+
+        this.createContextBtnDisable = true;
     
-    this.newApiContext.authnType = this.determineAuthnType();
+        this.newApiContext.authnType = this.determineAuthnType();
 
-    this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
+        this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
 
-    if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
-    {
-      this.toastError('Name is required');
-      return;
+        if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
+        {
+          this.toastError('Name is required');
+          return;
+        }
+
+        if(this.newApiContext.requestTextContent == '' || this.requestMsgHasError == true)
+        {
+          this.toastError('Request Message is either empty or has error', 'API Discovery');
+          return;
+        }
+
+        // if(this.newApiContext.openapi3Url != '') {
+        //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
+
+        //   if(!ok)
+        //   {
+        //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
+
+        //     return;
+        //   }
+
+        //   this.newApiContext.openapi3Content = data;
+
+        // }
+
+        // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
+        // {
+        //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
+        //   return;
+        // }
+      
+        const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
+        apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
+        apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
+
+        const result =  await this.fuzzermanager.newFuzzContext(apifc);
+        const ok = result['ok'];
+        const error =result['error'];
+
+        if(!ok && error != '')
+        {
+          this.toastError(error, 'Create new API context');
+          return;
+        }
+        else
+        {
+          this.newContextSideBarVisible = false;
+          this.getFuzzcontexts();
+
+          this.toastSuccess(error, 'API Fuzz Context created');
+
+          //reset form
+          this.openapi3FileInputFileVModel = [];
+          this.requestTextFileInputFileVModel = [];
+          this.newApiContext = new ApiFuzzContext();
+          this.requestMsgHasError = false;
+        }
+
+    } catch (error) {
+      this.$logger.error(error);
     }
-
-    if(this.newApiContext.requestTextContent == '' || this.requestMsgHasError == true)
-    {
-      this.toastError('Request Message is either empty or has error', 'API Discovery');
-      return;
-    }
-
-    // if(this.newApiContext.openapi3Url != '') {
-    //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
-
-    //   if(!ok)
-    //   {
-    //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
-
-    //     return;
-    //   }
-
-    //   this.newApiContext.openapi3Content = data;
-
-    // }
-
-    // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
-    // {
-    //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
-    //   return;
-    // }
-   
-    const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
-    apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
-    apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
-
-    const result =  await this.fuzzermanager.newFuzzContext(apifc);
-    const ok = result['ok'];
-    const error =result['error'];
-
-    if(!ok && error != '')
-    {
-      this.toastError(error, 'Create new API context');
-      return;
-    }
-    else
-    {
-      this.newContextSideBarVisible = false;
-      this.getFuzzcontexts();
-
-      this.toastSuccess(error, 'API Fuzz Context created');
-
-      //reset form
-      this.openapi3FileInputFileVModel = [];
-      this.requestTextFileInputFileVModel = [];
-      this.newApiContext = new ApiFuzzContext();
+    finally {
+      this.createContextBtnDisable = false;
     }
   }
 

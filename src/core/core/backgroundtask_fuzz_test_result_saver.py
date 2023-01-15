@@ -29,17 +29,21 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                                               caseSetRunSummaryId=ftResult.caseSetRunSummaryId)
                     
                     # save file content
-                    if len(ftResult.files) > 0:
-                        for ftuple in ftResult.files:
-                            fileName, content = ftuple
-                            insert_api_fuzzrequest_fileupload(
-                                Id=shortuuid.uuid(),
-                                fileName=fileName,
-                                fileContent= content,
-                                fuzzcontextId= self.apifuzzcontext.Id,
-                                fuzzDataCaseId=ftResult.fuzzDataCase.Id,
-                                fuzzRequestId=ftResult.fuzzDataCase.request.Id
+                    if ftResult.file != '':
+                        wordlist_type = ftResult.file.wordlist_type
+                        filename = ftResult.file.filename
+                        content = ftResult.file.content 
+
+                        insert_api_fuzzrequest_fileupload(
+                            Id=shortuuid.uuid(),
+                            wordlist_type=wordlist_type,
+                            fileName=filename,
+                            fileContent=content,
+                            fuzzcontextId=ftResult.fuzzcontextId,
+                            fuzzDataCaseId=ftResult.fuzzDataCase.Id,
+                            fuzzRequestId=ftResult.fuzzDataCase.request.Id
                             )
+                            
                    
                     
                 else:

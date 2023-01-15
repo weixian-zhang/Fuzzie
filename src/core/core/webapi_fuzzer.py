@@ -19,8 +19,9 @@ from fuzz_test_result_queue import FuzzTestResultQueue
 from models.apicontext import SupportedAuthnType
 from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDataCase, 
                                        ApiFuzzRequest, ApiFuzzResponse, FuzzTestResult,
-                                        FuzzMode)
+                                        FuzzMode, FuzzCaseSetFile, WordlistType)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
+import io
 
 from db import (insert_api_fuzzCaseSetRuns,
                 update_api_fuzzCaseSetRun_status,
@@ -36,7 +37,7 @@ from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
-import random
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -122,7 +123,7 @@ class WebApiFuzzer:
           
         try:
             
-            self.build_corpora_context(self.apifuzzcontext.fuzzcaseSets)
+            self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
                         
@@ -160,35 +161,17 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
             
-    def build_corpora_context(self, fcss: list[ApiFuzzCaseSet]):
-        
-        for fcs in fcss:
-            
-            if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
-                self.corporaContext.build(fcs.pathDataTemplate)
-                
-            if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
-                self.corporaContext.build(fcs.querystringDataTemplate)
-                
-            if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
-                self.corporaContext.build(fcs.headerDataTemplate)
-            
-            if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
-                self.corporaContext.build(fcs.bodyDataTemplate)
-                
-            self.corporaContext.build_files(fcs.file)
-        
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event, runNumber: int):
         
         try:
             if multithreadEventSet.is_set():
                 return
             
-            fuzzDataCase, files = self.http_call_api(fcs)
+            fuzzDataCase, file = self.http_call(fcs)
             
-            summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, files)
+            summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, file)
             
-            #self.save_uploaded_files(files=files,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
+            self.save_uploaded_file(file=file,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
             
             # update run status
             self.fuzzcaseset_done(runNumber)
@@ -208,7 +191,7 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzz_each_fuzzcaseset')
             self.cancel_fuzzing(errorMsg=errMsg)
             
-    def http_call_api(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
+    def http_call(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
         
         resp = None
         
@@ -218,7 +201,8 @@ class WebApiFuzzer:
                                                     fuzzcontextId=self.apifuzzcontext.Id)
             
             # url already includes hostname, port, path and qs
-            ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, files = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            # files = list[tuple(wordlistType, filename, content)]
+            ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, file = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
@@ -231,27 +215,42 @@ class WebApiFuzzer:
             reqBody = self.try_decode_body(body)
 
             try:
-                req = None
+                req = None                
                 
-                if contentType == 'application/x-www-form-urlencoded':
-                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
-                    
-                elif contentType == 'application/json':
-                    req = Request(fcs.verb, url, headers=headers, json=reqBody)
-                    
-                elif contentType == 'application/xml':
-                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
-                    
-                elif len(files) > 0:   
-                    req = Request(fcs.verb, url, headers=headers, json=reqBody, files=files)
-                    
-                else:
-                    if fcs.verb == 'GET':
-                        req = Request(fcs.verb, url, headers=headers)
+                if file != None and reqBody != '':
+                    if contentType == 'application/x-www-form-urlencoded':
+                        
+                        # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
+                        # supporting the above data format is purely to support syntax from rest-client 
+                        
+                        wwwformurlencodedDict = self.wwwformurlencoded_to_dict(reqBody)
+                        
+                        req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
+                      
+                    # elif contentType == 'application/json':
+                    #     req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                        
+                    # elif contentType == 'application/xml':
+                    #     req = Request(fcs.verb, url, headers=headers, data=reqBody)
                     else:
-                        req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+
+                elif file != None:
+                
+                    # support single file only.
+                    # fuzzie's goal is to upload file content as the "whole" POST body.
+                    # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
+                    # which fuzzie tries to avoid altering original file content
+                    
+                    content = file.content
+                
+                    req = Request(fcs.verb, url, headers=headers, data=content)
+                else:
+                    req = Request(fcs.verb, url, headers=headers)
                 
                 
+                headers['User-Agent'] = 'fuzzie'
+
                 prepReq = req.prepare()
                 
                 reqContentLength =  0
@@ -270,14 +269,13 @@ class WebApiFuzzer:
                         verb=fcs.verb,
                         headers=headers,
                         body=reqBody,
-                        contentLength=reqContentLength,
-                        files=files)
+                        contentLength=reqContentLength)
                 
                 httpSession = Session()
                 resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
             
             except Exception as e:
-                err =  Utils.errAsText(e.args)
+                err =  Utils.errAsText(e)
                 fuzzDataCase.request = self.create_fuzzrequest(
                                         fuzzDataCaseId=fuzzDataCase.Id,
                                         fuzzcontextId=self.apifuzzcontext.Id,
@@ -311,7 +309,7 @@ class WebApiFuzzer:
             
         except HTTPError as e:
             
-            err = Utils.jsone(e.args)
+            err = Utils.errAsText(e)
             
             fr = ApiFuzzResponse()
             fr.Id = shortuuid.uuid()
@@ -336,13 +334,13 @@ class WebApiFuzzer:
                 fr.reasonPharse = resp.reason
                 fr.body = resp.text
             else:  
-                err =  Utils.jsone(e.args)
+                err =  Utils.errAsText(e)
                 fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
                 fr.reasonPharse = f'{err}'
             
             fuzzDataCase.response = fr
             
-        return fuzzDataCase, files
+        return fuzzDataCase, file
 
              
     def fuzzcaseset_done(self, runNumber):
@@ -359,25 +357,28 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
     
-    def save_uploaded_files(self, files, fuzzDataCaseId, fuzzRequestId):
+    def save_uploaded_file(self, file: FuzzCaseSetFile, fuzzDataCaseId, fuzzRequestId):
         
         try:
-            if len(files) > 0:
-                for ftuple in files:
-                    fileName, content = ftuple
-                    insert_api_fuzzrequest_fileupload(
-                        Id=shortuuid.uuid(),
-                        fileName=fileName,
-                        fileContent= content,
-                        fuzzcontextId= self.apifuzzcontext.Id,
-                        fuzzDataCaseId=fuzzDataCaseId,
-                        fuzzRequestId=fuzzRequestId
-                    )
+            if file != None:
+                wordlist_type = file.wordlist_type
+                fileName = file.filename
+                content = file.content
+                insert_api_fuzzrequest_fileupload(
+                    Id=shortuuid.uuid(),
+                    wordlist_type=wordlist_type,
+                    fileName=fileName,
+                    fileContent= content,
+                    fuzzcontextId= self.apifuzzcontext.Id,
+                    fuzzDataCaseId=fuzzDataCaseId,
+                    fuzzRequestId=fuzzRequestId
+                )
+                    
 
         except Exception as e:
             self.eventstore.emitErr(e)
         
-    def enqueue_fuzz_result_for_persistent(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase, files) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
+    def enqueue_fuzz_result_for_persistent(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase, file) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     
         try:
             
@@ -386,7 +387,7 @@ class WebApiFuzzer:
                                             fuzzCaseSetId=fdc.fuzzCaseSetId,
                                             fuzzCaseSetRunId=self.fuzzCaseSetRunId, 
                                             caseSetRunSummaryId=caseSetRunSummaryId, 
-                                            files=files,
+                                            file=file,
                                             httpCode=int(fdc.response.statusCode), 
                                             completedDataCaseRuns=1 )
             
@@ -400,35 +401,12 @@ class WebApiFuzzer:
             
             return runSummaryStatistics
             
-            # insert_api_fuzzdatacase(self.fuzzCaseSetRunId, fdc)
-            
-            # #insert_api_fuzzrequest(fdc.request)
-            
-            # if fdc.response is not None and fdc.response != {}:
-            #     #insert_api_fuzzresponse(fdc.response)
-                
-            #     # update run summary
-            #     summaryViewModel = update_casesetrun_summary(
-            #                                                  fuzzcontextId=fdc.fuzzcontextId, 
-            #                                                  fuzzCaseSetRunId=self.fuzzCaseSetRunId, 
-            #                                                  fuzzCaseSetId=fdc.fuzzCaseSetId, 
-            #                                                  Id=caseSetRunSummaryId,
-            #                                                 httpCode=int(fdc.response.statusCode),
-            #                                                 completedDataCaseRuns=1
-            #                                                 )
-                
-            #     return summaryViewModel
-            # else:
-            #     print('response is none')
-            
-            # return None
-            
         except Exception as e:
             errMsg = Utils.errAsText(e)
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {errMsg}', data='WebApiFuzzer.enqueue_fuzz_result_for_persistent')
                 
             
-    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError='', files=[]):
+    def create_fuzzrequest(self, fuzzDataCaseId, fuzzcontextId, hostname, port, hostnamePort, verb, path, qs, url, headers, body, contentLength=0, invalidRequestError=''):
         
         try:
             fr = ApiFuzzRequest()
@@ -550,17 +528,17 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            files = []          #for openapi3 single file only
+            file = None        #for openapi3 single file only
             
-            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_expr(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
+            okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
                 return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_expr(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
+            okqs, errqs, resolvedQSDT = self.corporaContext.resolve_fuzzdata(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
             if not okqs:
                 return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
-            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_expr(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
             
@@ -573,7 +551,7 @@ class WebApiFuzzer:
                 for hk in headerDTObj.keys():
                     dt = headerDTObj[hk]
                     
-                    ok, err, resolvedVal = self.corporaContext.resolve_expr(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    ok, err, resolvedVal = self.corporaContext.resolve_fuzzdata(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
                     
                     if not ok:
                         self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
@@ -582,37 +560,57 @@ class WebApiFuzzer:
                     headerDict[hk] = resolvedVal
                 
                     
-            # handle file upload with "proper" encoding, without encoding requests will throw error as requests uses utf-8 by default
-            if len(fcs.file) > 0:
-                for fileType in fcs.file:
-                    ok, err, fileContent = self.corporaContext.resolve_file(fileType)
-                    if ok:
-                        filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
-                        
-                        if fileType == 'file':
-                            files.append((filename, fileContent.decode('latin1')))
-                            
-                        elif fileType == 'image':
-                            files.append((filename, fileContent.decode('latin1')))
-                            
-                        elif fileType == 'pdf':
-                            files.append((filename, fileContent.decode('latin1')))
-                            
-                        else:
-                            files.append((filename, fileContent.decode('latin1')))
-            
+            # handle file upload with "proper" encoding,
+            # without encoding requests will throw error as requests uses utf-8 by default
+            if fcs.file != '':
+                
+                ok = True
+                err = ''
+                fileContent = ''
+                fileWordlistType = fcs.file
+                filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
+                
+                if FuzzCaseSetFile.is_myfile(fcs.file):
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
+                    
+                    decoded = self.try_decode_file_content(fileContent)
+                    
+                    file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
+                # image, file, pdf
+                else:
+                    ok, err, fileContent = self.corporaContext.resolve_file(fcs.file)
+                    
+                    #decoded = self.try_decode_file_content(fileContent)
+                    
+                    file = FuzzCaseSetFile(wordlist_type=fcs.file, filename=filename, content=fileContent)
+                    
+                    
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
             authnHeader= self.determine_authn_scheme(fc)
                     
             headers = {**authnHeader, **headerDict}     #merge 2 dicts
             
-            return [True, '', hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
+            return [True, '', hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
         
         except Exception as e:
             errText =  Utils.errAsText(e)
             self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
-            return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, files]
+            return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
+    
+    
+    def try_decode_file_content(self, content):
+        decoded = content
+        
+        latinOK, latinDecoded = Utils.try_decode_latin1(content)
+        if latinOK:
+            decoded = latinDecoded
+        else:
+            utf8OK, utf8Decoded = Utils.try_decode_utf8(content)
+            if utf8OK:
+                decoded = utf8Decoded
+                
+        return decoded
     
     # returns dict representing header
     def determine_authn_scheme(self, fc: ApiFuzzContext) -> dict:
@@ -660,7 +658,25 @@ class WebApiFuzzer:
     def isDataTemplateEmpty(self, template):
         if template == '' or template == '{}':
             return True
-        
         return False
+    
+    def wwwformurlencoded_to_dict(self, wwwformurl: str)-> dict:
+        
+        if wwwformurl == '':
+            return {}
+        
+        result = {}
+        
+        keyval = wwwformurl.split('&')
+        
+        for kv in keyval:
+            
+            key = kv[0]
+            val = kv[1]
+            
+            if key != '' and val != '':
+                result[key] = val
+                
+        return result
     
     

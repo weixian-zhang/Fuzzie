@@ -84,6 +84,26 @@ class ApiFuzzDataCase:
     def json(self):
        return jsonpickle.encode(self, unpicklable=False)
 
+class FuzzCaseSetFile:
+    
+    myfile_wordlist_type = 'myfile'
+    file_wordlist_type = 'file'
+    image_wordlist_type = 'image'
+    pdf_wordlist_type = 'pdf'
+    
+    # wordlist_type for myfile is content_key name for e.g: "myfile_filename"
+    def __init__(self, wordlist_type='file', filename='', content='') -> None: 
+        
+        self.wordlist_type = wordlist_type  #file, image, pdf, myfile
+        self.filename = filename
+        self.content = content            # only used by myfile for now
+        
+    def is_myfile(fileType: str):
+        if fileType.startswith(WordlistType.myfile):
+            return True
+        return False
+        
+        
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
     
@@ -101,7 +121,8 @@ class ApiFuzzCaseSet:
         self.bodyNonTemplate = ''
         self.headerNonTemplate = ''
         
-        self.file = []
+        self.file = ''
+        self.fileDataTemplate = ''
         
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
@@ -189,7 +210,7 @@ class WSMsg_Fuzzing_FuzzCaseSetSummary:
         
 class FuzzTestResult:
     def __init__(self, fdc: ApiFuzzDataCase, fuzzcontextId, 
-                 fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, files,
+                 fuzzCaseSetRunId, fuzzCaseSetId, caseSetRunSummaryId, file,
                  httpCode, completedDataCaseRuns=1) -> None:
         
         self.fuzzDataCase = fdc
@@ -199,4 +220,19 @@ class FuzzTestResult:
         self.caseSetRunSummaryId = caseSetRunSummaryId
         self.httpCode = httpCode
         self.completedDataCaseRuns = completedDataCaseRuns
-        self.files = files
+        self.file = file
+        
+class WordlistType:
+    my = 'my'
+    myfile = 'myfile'
+    string = 'string'
+    bool = 'bool'
+    digit = 'digit'
+    file = 'file'
+    pdf = 'pdf'
+    image = 'image'
+    char = 'char'
+    datetime = 'datetime'
+    username = 'username'
+    password = 'password'
+    filename = 'filename'

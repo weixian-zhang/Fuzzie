@@ -126,55 +126,31 @@ class Utils:
             
             exprType = exprGroups[1].strip()
             
-            # fileTypeStrIndexRange = fileType.strip()
-            # startIdx = fileTypeStrIndexRange[0]
-            # endIdx = fileTypeStrIndexRange[1]
-            
-            # expressionType = expr[startIdx:endIdx]
-            
             for f in  ['file', 'pdf', 'image']:
                 if f == exprType:
-                    return True, f
+                    return True, f  # return original expression with {{ }} so that later eval can be injected
             
             return False, exprType
         except Exception as e:
             return False, expr
     
-    # integer type is to support OpenApi3, but is same as digit
-    def wordlist_types():
-        return ['string', 'bool', 'digit', 'integer', 'char', 'filename', 'datetime','date', 'time', 'username', 'password']
-        
-    # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
-    # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
-    def inject_eval_into_wordlist_expression(expr: str) -> tuple([bool, str, str]):
-        
+    #remove all special characters punctuation and spaces
+    def remove_special_chars(text: str):
+        return ''.join(e for e in text if e.isalnum())
+    
+    def try_decode_latin1(content):
         try:
-            
-            # insert my wordlist type
-            def myWordlist(value):
-                return f'{{{{ eval(\'my={value}\') }}}}'
-            
-            jinja2.filters.FILTERS['my'] = myWordlist
-
-            tpl = jinja2.Template(expr)
-            
-            output = tpl.render(
-                string='{{ eval(\'string\') }}',
-                bool='{{ eval(\'bool\') }}',
-                digit='{{ eval(\'digit\') }}',
-                integer='{{ eval(\'integer\') }}',
-                char='{{ eval(\'char\') }}',
-                filename='{{ eval(\'filename\') }}',
-                datetime='{{ eval(\'datetime\') }}',
-                date='{{ eval(\'date\') }}',
-                time='{{ eval(\'time\') }}',
-                username='{{ eval(\'username\') }}',
-                password='{{ eval(\'password\') }}'
-            )                    
-                    
-            return True, '', output
-        
+            return True, content.decode('latin-1')
         except Exception as e:
-            return False, e,  expr
+            return False, content
+        
+    def try_decode_utf8(content):
+        try:
+            return True, content.decode('UTF-8')
+        except Exception as e:
+            return False, content
+        
+    
+    
         
         
