@@ -14,6 +14,8 @@ from db import session_factory, RandomImageTable
 from eventstore import EventStore
 import os
 import random
+import io
+from PIL import Image
 
 class ImageCorpora:
     
@@ -50,6 +52,7 @@ class ImageCorpora:
                 
                 imgStrCleansed = self.removeExtraEncodedChars(content)
                 imgByte = base64.b64decode(imgStrCleansed)
+                #image_file = io.StringIO(imgByte)
                 self.data[str(rn)] = imgByte
                 
             rows = None
@@ -75,5 +78,16 @@ class ImageCorpora:
             return None
         
         randIdx = random.randint(0, len(self.data) - 1)
-        return self.data[str(randIdx)]
+        content = self.data[str(randIdx)]
+        
+        fBio= io.BytesIO(content)
+        fBio.seek(0)
+        
+        # img = Image.open(fBio)
+        
+        # img.save(fBio, format='png')
+        
+        # fBio.seek(0)
+
+        return fBio
     

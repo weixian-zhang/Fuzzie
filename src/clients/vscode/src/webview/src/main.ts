@@ -67,6 +67,11 @@ app.use(VueCodemirror, {
             {label: "password", type: "keyword", apply: "{{ password  }}", info:"password from danielmiessler's seclist"},
             {label: "filename", type: "keyword", apply: "{{ filename  }}", info:""},
             {label: "string", type: "keyword", apply: "{{ string  }}", info:"minimaxir/big-list-of-naughty-strings"},
+            {label: "GET", type: "keyword", apply: "GET", info:"GET HTTP verb"},
+            {label: "PUT", type: "keyword", apply: "PUT", info:"PUT HTTP verb"},
+            {label: "POST", type: "keyword", apply: "POST", info:"POST verb"},
+            {label: "DELETE", type: "keyword", apply: "DELETE", info:"DELETE verb"},
+            {label: "PATCH", type: "keyword", apply: "PATCH", info:"PATCH verb"},
           ]
         }
     }]

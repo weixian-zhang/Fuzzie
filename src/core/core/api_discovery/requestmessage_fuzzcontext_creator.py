@@ -199,7 +199,7 @@ class RequestMessageFuzzContextCreator:
             if len(multilineBlock) > 0:
                 
                 # myfile will be discovered later in "inject_eval_into_wordlist_expression"
-                body, file = self.get_body_and_file(multilineBlock)
+                body, fileExpr, fileType = self.get_body_and_file(multilineBlock)
                 
                 self.currentFuzzCaseSet.bodyNonTemplate = body
                 
@@ -207,20 +207,23 @@ class RequestMessageFuzzContextCreator:
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
                 
+                # check for file, pdf, image wordlist type
+                if fileExpr != '' and fileType != '':
+                    fOK, fErr, evalFile = self.inject_eval_into_wordlist_expression(fileExpr)
+                    if not fOK:
+                        return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
+                    
+                    self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
+                    self.currentFuzzCaseSet.fileDataTemplate = evalFile
+                
                 # currently fuzzie only supports 1 file upload per request block.
                 # When there is 1 file detected, this file takes up whole request body.
                 # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
                 # check for myfile wordlist type
-                if self.currentFuzzCaseSet.file != '':
+                elif isinstance(self.currentFuzzCaseSet.file, FuzzCaseSetFile) and self.currentFuzzCaseSet.file.wordlist_type == WordlistType.myfile:
                     self.currentFuzzCaseSet.bodyNonTemplate = ''
-                    self.currentFuzzCaseSet.bodyDataTemplate = evalBody  # myfile uses body can file content
-                    
-                # check for file, pdf, image wordlist type
-                elif file != '':
-                    # get first and only one wordlist type
-                    f = file
-                    
-                    self.currentFuzzCaseSet.files.append(FuzzCaseSetFile(f))
+                    self.currentFuzzCaseSet.bodyDataTemplate = ''  # myfile uses body can file content
+                    self.currentFuzzCaseSet.fileDataTemplate = evalBody                    
                    
 
             fcSets.append(self.currentFuzzCaseSet)
@@ -441,7 +444,9 @@ class RequestMessageFuzzContextCreator:
     def get_body_and_file(self, multilineBlock: list[str]) -> str:
         
         body = ''
-        file = ''
+        fileExpr = ''
+        fileType = ''
+        copiedMB = []
         
         # check lines for file wordlist type
         for line in multilineBlock:
@@ -450,20 +455,23 @@ class RequestMessageFuzzContextCreator:
             
             # breakline marker for multipart/form-data
             if line == '':
+                copiedMB.append(line)
                 continue
             
             # file, image and pdf for now
-            yes, exprType = Utils.is_file_wordlist_type(line)
+            yes, fType = Utils.is_file_wordlist_type(line)
             
             if yes:
-                file = exprType
-                break
+                fileExpr = line # line will contain the curly braces e.g {{ file }}
+                fileType = fType
+            else:
+                copiedMB.append(line)
         
         # get body in original string as a whole including all whitespaces and breaklines
-        for s in multilineBlock:
+        for s in copiedMB:
             body = body + s + '\n'
         
-        return body, file
+        return body, fileExpr, fileType
             
     
     def removeProcessedLines(self, toIndex, list):
@@ -537,7 +545,10 @@ class RequestMessageFuzzContextCreator:
             'date': '{{ eval(wordlist_type=\'date\') }}',
             'time': '{{ eval(wordlist_type=\'time\') }}',
             'username': '{{ eval(wordlist_type=\'username\') }}',
-            'password': '{{ eval(wordlist_type=\'password\') }}'
+            'password': '{{ eval(wordlist_type=\'password\') }}',
+            'image': '{{ eval(wordlist_type=\'image\') }}',
+            'pdf': '{{ eval(wordlist_type=\'pdf\') }}',
+            'file': '{{ eval(wordlist_type=\'file\') }}',
         }
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}

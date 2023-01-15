@@ -128,7 +128,7 @@ class Utils:
             
             for f in  ['file', 'pdf', 'image']:
                 if f == exprType:
-                    return True, f
+                    return True, f  # return original expression with {{ }} so that later eval can be injected
             
             return False, exprType
         except Exception as e:

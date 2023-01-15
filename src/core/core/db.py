@@ -73,6 +73,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('headerDataTemplate', String, nullable=True),
                             Column('bodyDataTemplate', String, nullable=True),
                             Column('file', String),
+                            Column('fileDataTemplate', String),
                             Column('progressState', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
@@ -763,6 +764,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  fcset.bodyDataTemplate,
                         file = fileType,
+                        fileDataTemplate = fcset.fileDataTemplate,
                         fuzzcontextId = fuzzcontext.Id
                         )
                 )
@@ -1016,10 +1018,9 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.selected = rowDict['selected']
     fcs.verb = rowDict['verb']
     
-    f = rowDict['file']
-    if f != '':
-        fcs.file = f
-    
+    fcs.file = rowDict['file']
+    fcs.fileDataTemplate = rowDict['fileDataTemplate']
+
     return fcs
 
 

@@ -150,17 +150,10 @@ class FileNameCorpora:
         
         ext = 'pdf' #set a default, no particular reason for pdf
         
-        basename = str(uuid.uuid4())[:random.randint(0, 256)]    # more than 255 chars
+        randNameRange = random.randint(0, 300)
+        filename = ''.join(random.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase) for _ in range(randNameRange))
         
-        randY = random.randint(1970, 2022)
-        randMth = random.randint(1, 12)
-        randDay = random.randint(1, 28)
-        randHr = random.randint(1, 23)
-        randMin = random.randint(1, 59)
-        randSec = random.randint(1, 59)
-        
-        suffix = datetime.datetime(randY, randMth, randDay, randHr, randMin, randSec).strftime("%y%m%d_%H%M%S")
-        
+        # random extension for "file"
         if fileType == 'file':
             extIndex =  random.randint(0, len(self.extensions) - 1)
             ext = self.extensions[extIndex]
@@ -168,7 +161,7 @@ class FileNameCorpora:
             extIndex =  random.randint(0, len(self.imageExtensions) - 1)
             ext = self.imageExtensions[extIndex]
             
-        fn = f'{basename}_{suffix}.{ext}'
+        fn = f'{filename}.{ext}'
         
         return fn
         

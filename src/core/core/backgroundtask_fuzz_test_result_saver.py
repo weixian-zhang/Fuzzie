@@ -32,7 +32,7 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                     if ftResult.file != '':
                         wordlist_type = ftResult.file.wordlist_type
                         filename = ftResult.file.filename
-                        content = ftResult.file 
+                        content = ftResult.file.content 
 
                         insert_api_fuzzrequest_fileupload(
                             Id=shortuuid.uuid(),

@@ -81,11 +81,15 @@ class PDFCorpora():
                     <tbody>
                         <tr>
                             <td>name</td>
-                            <td>{self.faker.name()}</td>
+                            <td>
+                                {self.faker.name()}
+                            </td>
                         </tr>
                         <tr>
                             <td>address</td>
-                            <td>{self.faker.address()}</td>
+                            <td>
+                                {self.faker.address()}
+                            </td>
                         </tr>
                     </tbody>
                     </table>

@@ -122,7 +122,7 @@ class ApiFuzzCaseSet:
         self.headerNonTemplate = ''
         
         self.file = ''
-        #self.files: list[FuzzCaseSetFile] = []
+        self.fileDataTemplate = ''
         
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''

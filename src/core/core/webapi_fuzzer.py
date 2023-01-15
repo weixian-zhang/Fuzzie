@@ -568,20 +568,21 @@ class WebApiFuzzer:
                 err = ''
                 fileContent = ''
                 fileWordlistType = fcs.file
-                filename = self.corporaContext.cp.fileNameCorpora.next_corpora()
+                filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
                 
                 if FuzzCaseSetFile.is_myfile(fcs.file):
-                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.bodyDataTemplate)
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
                     
                     decoded = self.try_decode_file_content(fileContent)
                     
                     file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
+                # image, file, pdf
                 else:
-                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fileWordlistType)
+                    ok, err, fileContent = self.corporaContext.resolve_file(fcs.file)
                     
-                    decoded = self.try_decode_file_content(fileContent)
+                    #decoded = self.try_decode_file_content(fileContent)
                     
-                    file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
+                    file = FuzzCaseSetFile(wordlist_type=fcs.file, filename=filename, content=fileContent)
                     
                     
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'

@@ -32,7 +32,7 @@ class CorporaContext:
         
         self.myfile_wordlist_type = 'myfile'
     
-    # try_build_context ised only for parsing request messages from webview
+    # try_build_context is used only for parsing request messages from webview
     def try_build_context(self, dataTemplate: str) -> tuple([bool, str]):
         try:
             self.build_context_of_req_msg(dataTemplate)
@@ -45,56 +45,26 @@ class CorporaContext:
         try:
             for fcs in fcss:
                 
-                if self.isDataTemplateEmpty(fcs.pathDataTemplate) == False:
+                if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
                     self.build_context_of_req_msg(fcs.pathDataTemplate)
                     
-                if self.isDataTemplateEmpty(fcs.querystringDataTemplate) == False:
+                if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
                     self.build_context_of_req_msg(fcs.querystringDataTemplate)
                     
-                if self.isDataTemplateEmpty(fcs.headerDataTemplate) == False:
+                if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
                     self.build_context_of_req_msg(fcs.headerDataTemplate)
                 
-                if self.isDataTemplateEmpty(fcs.bodyDataTemplate) == False:
+                if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
                     self.build_context_of_req_msg(fcs.bodyDataTemplate)
+                    
+                if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
+                    self.build_context_of_req_msg(fcs.fileDataTemplate)
                     
                 return True, ''
                 
         except Exception as e:
             return False, Utils.errAsText(e)
-        
-                
-            # self.corporaContext.build_context_of_files(fcs.files)
-    
-    # def build_context_of_files(self, fileTypes: list[FuzzCaseSetFile])-> bool:
-        
-    #     for fileType in fileTypes:
-    #         if fileType.wordlist_type != '':
-    #             match fileType.wordlist_type:
-                    
-    #                 case FuzzCaseSetFile.image_wordlist_type:
-    #                     if not 'image' in self.context:
-    #                         self.context['image'] = self.cp.imageCorpora
-    #                         return True
-                        
-    #                 case FuzzCaseSetFile.pdf_wordlist_type:
-    #                     if not 'pdf' in self.context:
-    #                         self.context['pdf'] = self.cp.pdfCorpora
-    #                         return True
-                        
-    #                 case FuzzCaseSetFile.file_wordlist_type:
-    #                     if not 'file' in self.context:
-    #                         self.context['file'] = self.cp.seclistPayloadCorpora
-    #                         return True
-                        
-    #                 # special file cases
-    #                 case _:
-                        
-    #                     if fileType.wordlist_type.startswith(FuzzCaseSetFile.myfile_wordlist_type):
-    #                         reqMsg = fileType.content
-    #                         self.context[fileType.wordlist_type] = self.cp.new_myfile_corpora(reqMsg)
-    #                         return True
-    #                     return False
-            
+           
     
     # will also be use of "parsing" request message. By parsing means build a corpora-context
     # if successful, request message is valid
@@ -130,21 +100,21 @@ class CorporaContext:
         
     
     # get file content for wordlist-file-type
-    # def resolve_file(self, reqMsg) -> tuple[bool, str, object]:
+    def resolve_file(self, reqMsg) -> tuple[bool, str, object]:
         
-    #     try:
+        try:
             
-    #         provider = self.context[reqMsg]
+            provider = self.context[reqMsg]
             
-    #         if provider != None:
-    #             data = provider.next_corpora()
-    #             return True, '', data
+            if provider != None:
+                data = provider.next_corpora()
+                return True, '', data
                 
-    #         raise(Exception('corpora provider not found for file type'))
+            raise(Exception('corpora provider not found for file type'))
 
-    #     except Exception as e:
-    #         self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')
-    #         return False, Utils.errAsText(e), ''
+        except Exception as e:
+            self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')
+            return False, Utils.errAsText(e), ''
         
     
     def parse_reqmsg_by_eval_func(self, wordlist_type: str, my_value = '', my_uniquename='', my_file_content_value='', my_file_content_filename=''):
@@ -252,7 +222,6 @@ class CorporaContext:
             # no wordlist-type match     
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                #self.eventstore.emitInfo(f'Expression is invalid: "{expression}". Using string corpora instead', 'CorporaContext.parse_reqmsg_by_eval_func')
                 return originalExpression
     
     def resolve_reqmsg_by_eval_func(self, wordlist_type, my_value = '', 
