@@ -7,6 +7,88 @@
     outlined
     style="display: flex; flex-flow: column; height: 100%;">
   
+  <Dialog v-model:visible="showReqMsgEditDialog" 
+      header="Request Message Editor" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true"
+      :dismissableMask="true" :closeOnEscape="false"
+      @hide="onDialogClose(rqInEdit)">
+      <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
+
+      <div class="container-fluid width=100%">
+          <div class="row">
+            <div class="col-6">
+              <div class="btn-group">
+                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  examples
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('get'))">GET</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('post'))">POST</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('graphql-query'))">GraphQL Query</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('graphql-mutate'))">GraphQL Mutate</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-6 text-right">
+                <v-btn
+                  size="x-small"
+                  color="cyan"
+                  @click="parseRequestMessage(rqInEdit)"
+                  >
+                Parse
+                </v-btn>
+                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                      mdi-check-circle
+                </v-icon>
+                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                  mdi-close-circle
+                </v-icon>
+            </div>
+          </div>
+      </div> 
+
+
+      <div style="height: 10px;"></div>
+      <codemirror
+          v-model="rqInEdit"
+          placeholder="request message goes here..."
+          :style="{ height: '600px' }"
+          :autofocus="true"
+          :indent-with-tab="true"
+          :tab-size="2"
+          :extensions="extensions"
+          @ready="onCMReady" 
+        />
+    </Dialog>
+
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;" :modal="true" :dismissable="true">
     <v-textarea auto-grow
           outlined
@@ -28,11 +110,6 @@
         </v-btn>
     </v-toolbar>
     <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly>
-    <!-- <InputText type="text" class="p-inputtext-sm" placeholder="" v-model="hostnameDisplay" ></InputText> -->
-      <!-- <v-text-field
-        readonly dense outlined style="height: 15px"
-        hide-details="auto"
-      >https://</v-text-field> -->
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
@@ -41,6 +118,11 @@
                 <v-checkbox color="cyan" id="flexCheckDefault" label="Fuzz All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
+            </th>
+            <th class="text-left">
+            </th>
+            <th class="text-left">
+              Fuzz Once
             </th>
             <th class="text-left">
               Verb
@@ -94,8 +176,37 @@
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
               </div>
-
             </td>
+            
+            <td>
+              <v-icon
+                  variant="flat"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    showReqMsgEditDialog = true,
+                    rqInEdit = item.requestMessage,
+                    rqInEditOriginal = item.requestMessage,
+                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
+                  )" >
+                  </v-icon>
+            </td>
+
+            <td>
+              <v-icon
+                  variant="flat"
+                  icon="mdi-lightning-bolt"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    ''
+                  )" >
+                  </v-icon>
+            </td>
+
+
+
             <td>{{ item.verb }}</td>
             
             <td>
@@ -163,6 +274,7 @@ import { inject } from 'vue';
 import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
+import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
@@ -170,6 +282,7 @@ import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import InputText from 'primevue/inputtext';
+import RequestMessageExamples from './RequestMessageExamples';
 
 class Props {
   toastInfo: any = {};
@@ -184,7 +297,8 @@ class Props {
   components: {
     DataTable,
     Sidebar,
-    InputText
+    InputText,
+    Dialog
   },
   watch: {
 
@@ -198,6 +312,14 @@ class Props {
   //fuzzingfcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
   //dataCache = {};
+
+  showReqMsgEditDialog = false;
+  rqInEdit = '';
+  rqInEditOriginal = '';
+  requestMsgHasError = false;
+  requestMsgErrorMessage = '';
+  currentEditFuzzCaseSetId = '';
+  reqMsgExampleLoader = new RequestMessageExamples();
 
   $logger: Logger|any;
 
@@ -303,6 +425,21 @@ class Props {
     this.currentFuzzContextId = '';
   }
 
+  async parseRequestMessage(rqMsg) {
+    if(rqMsg == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
  
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
@@ -330,14 +467,27 @@ class Props {
 
     this.saveBtnDisabled = true;
 
-    const newFCS = this.fcsRunSums.map(x => {
+    const updatedFCSList = this.fcsRunSums.map(x => {
       return {
         fuzzCaseSetId: x.fuzzCaseSetId,
-        selected: x.selected
+        selected: x.selected,
+        requestMessage: x.requestMessage
       }
     });
 
-    const [ok, error] = await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
+    // fcsStr = fcsStr.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
+
+     //fcsStr = fcsStr.replaceAll("\"selected\"","selected");
+
+    let jsonFCSUpdated: string = JSON.stringify(updatedFCSList);
+    jsonFCSUpdated = btoa(jsonFCSUpdated)
+    // jsonFCSUpdated = jsonFCSUpdated.replace("[","");
+    // jsonFCSUpdated = jsonFCSUpdated.replace("]","");
+    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
+    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"selected\"","selected");
+    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"requestMessage\"","requestMessage");
+
+    const [ok, error] =  await this.webclient.saveFuzzCaseSets(jsonFCSUpdated); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
     if(!ok)
       {
@@ -429,6 +579,22 @@ class Props {
     await Utils.delay(2000);   // spam click prevention
     this.rowClickEnabled = true;
     
+  }
+
+  async onDialogClose() {
+    //this.parseRequestMessage(this.rqInEdit);
+    if (this.rqInEditOriginal != this.rqInEdit) {
+      this.isTableDirty = true;
+
+       this.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+        if (fcs.fuzzCaseSetId == this.currentEditFuzzCaseSetId ) {
+            fcs.requestMessage = this.rqInEdit;
+        }
+      });
+    }
+    this.currentEditFuzzCaseSetId = ''
+    this.rqInEditOriginal = ''
+    this.rqInEdit = '';
   }
 
   selectAllChanged(event) {

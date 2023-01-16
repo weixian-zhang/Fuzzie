@@ -158,7 +158,7 @@ class Query(graphene.ObjectType):
 
 class SaveEditedFuzzCaseSets(graphene.Mutation):
     class Arguments:
-        fcsus = graphene.List(ApiFuzzCaseSetUpdate)
+        fcsus = graphene.String() #graphene.List(ApiFuzzCaseSetUpdate)
 
     #define output
     ok = graphene.Boolean()
@@ -333,7 +333,7 @@ class Mutation(graphene.ObjectType):
     
     update_api_fuzz_context = UpdateApiContext.Field()
     
-    save_api_fuzzcaseset_selected = SaveEditedFuzzCaseSets.Field()
+    save_api_fuzzcaseset= SaveEditedFuzzCaseSets.Field()
     
     delete_api_fuzz_context = DeleteApiContext.Field()
     

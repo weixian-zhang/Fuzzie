@@ -218,6 +218,7 @@ export default class FuzzerWebClient
                         completedDataCaseRuns
                         totalDataCaseRunsToComplete
                         file
+                        requestMessage
                     }
                 }
             }
@@ -536,6 +537,37 @@ export default class FuzzerWebClient
             this.$logger.error(error);
             return [false, error];
         }
+    }
+
+    public async saveFuzzCaseSets(fcsList: string) {
+        
+        const query = `
+        mutation {
+                saveApiFuzzcaseset(fcsus: "${fcsList}") {
+                    ok,
+                    error
+                }
+            }
+        `;
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
+            const error = response.data.data.fuzzCaseSetWithRunSummary.error;
+            const result = response.data.data.fuzzCaseSetWithRunSummary.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+
+        return [false, '', []];
     }
 
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {

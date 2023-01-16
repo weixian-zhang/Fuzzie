@@ -74,7 +74,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('bodyDataTemplate', String, nullable=True),
                             Column('file', String),
                             Column('fileDataTemplate', String),
-                            Column('progressState', String),
+                            Column('requestMessage', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
@@ -765,7 +765,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         bodyDataTemplate =  fcset.bodyDataTemplate,
                         file = fileType,
                         fileDataTemplate = fcset.fileDataTemplate,
-                        fuzzcontextId = fuzzcontext.Id
+                        fuzzcontextId = fuzzcontext.Id,
+                        requestMessage = fcset.requestMessage
                         )
                 )
                 

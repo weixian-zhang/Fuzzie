@@ -219,6 +219,7 @@ class ServiceManager:
                 fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
+                fcsSum.requestMessage = rowDict['requestMessage']
                 
                 if 'fuzzCaseSetRunId' in rowDict:
                     fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']

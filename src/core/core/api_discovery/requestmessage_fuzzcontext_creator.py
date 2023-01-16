@@ -133,6 +133,7 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
             self.currentFuzzCaseSet = fuzzcaseSet
+            self.currentFuzzCaseSet.requestMessage = eachReqBlock
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
