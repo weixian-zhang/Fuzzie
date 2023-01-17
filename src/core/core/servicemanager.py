@@ -3,7 +3,7 @@
 from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
 from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
 from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
-from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext
+from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, FuzzCaseSetFile
 from graphql_models import (ApiFuzzContext_Runs_ViewModel, 
                             ApiFuzzContextUpdate, 
                             ApiFuzzCaseSets_With_RunSummary_ViewModel,
@@ -25,7 +25,9 @@ from db import  (get_fuzzcontext,
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
                  get_fuzzContexts_and_runs,
-                 save_caseset_selected,
+                 save_updated_fuzzcasesets,
+                 update_rqmsg_in_fuzz_context,
+                 update_api_fuzz_context,
                  get_fuzz_request_response,
                  get_fuzz_request_response_messages,
                  get_uploaded_files,
@@ -35,7 +37,7 @@ import base64
 from pubsub import pub
 from datetime import datetime
 import queue
-
+from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
          
 class ServiceManager:
     
@@ -177,13 +179,67 @@ class ServiceManager:
         
         
     
-    def save_caseset_selected(self, caseSetSelected):
+    def save_updated_fuzzcasesets(self, fuzzcontextId: str, fcsList: list):
         
-        if caseSetSelected is None or len(caseSetSelected) == 0:
+        if fcsList is None or len(fcsList) == 0:
             return (True, '')
         
         try:
-            return save_caseset_selected(caseSetSelected)
+            
+            rqParser = RequestMessageFuzzContextCreator()
+            
+            allUpdatedRqMsgs = []
+            parsedFCSs = {}
+            
+            for unParsedFCS in fcsList:
+                
+                rq = unParsedFCS['requestMessage']
+                
+                if rq == '':
+                    continue
+                
+                # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
+                ok, err, parsedFCS = rqParser.parse_request_msg_as_fuzzcasesets(rq, parseFirst=True)
+                
+                if ok and len(parsedFCS) == 1:
+                    
+                    pFCS = parsedFCS[0]
+                    
+                    parsedRequestMsg = pFCS.requestMessage
+                    
+                    parsedFCSs['fuzzCaseSetId'] = unParsedFCS['fuzzCaseSetId']
+                    parsedFCSs['selected'] = unParsedFCS['selected']
+                    parsedFCSs['verb'] = pFCS.verb
+                    parsedFCSs['hostname'] =  pFCS.hostname
+                    parsedFCSs['port'] = pFCS.port
+                    parsedFCSs['path'] = pFCS.path
+                    parsedFCSs['querystringNonTemplate'] = pFCS.querystringNonTemplate
+                    parsedFCSs['bodyNonTemplate'] = pFCS.bodyNonTemplate
+                    parsedFCSs['headerNonTemplate'] = pFCS.headerNonTemplate
+                    
+                    if pFCS.file != '':
+                        parsedFCSs['file'] = pFCS.file.wordlist_type
+                    else:
+                        parsedFCSs['file'] = ''
+                        
+                    parsedFCSs['fileDataTemplate'] = pFCS.fileDataTemplate 
+                    parsedFCSs['pathDataTemplate'] = pFCS.pathDataTemplate
+                    parsedFCSs['querystringDataTemplate'] = pFCS.querystringDataTemplate
+                    parsedFCSs['bodyDataTemplate'] = pFCS.bodyDataTemplate
+                    parsedFCSs['headerDataTemplate'] = pFCS.headerDataTemplate
+                    parsedFCSs['requestMessage'] = parsedRequestMsg
+
+                    allUpdatedRqMsgs.append(parsedRequestMsg)
+            
+                    fcsOK, fcsError = save_updated_fuzzcasesets(parsedFCSs)
+            
+            # FuzzCaseSet.requestMessage is update, now update the "whole" fuzzcontext.requestTextContent
+            if len(allUpdatedRqMsgs) > 0:
+                newEntireRqMsg = '\n\n###\n\n'.join(allUpdatedRqMsgs)
+                update_rqmsg_in_fuzz_context(rqMsg=newEntireRqMsg, fuzzcontextId=fuzzcontextId)
+                
+            return True, ''
+                
         except Exception as e:
             return (False, Utils.errAsText(e))
     

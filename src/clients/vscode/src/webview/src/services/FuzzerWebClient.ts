@@ -539,11 +539,11 @@ export default class FuzzerWebClient
         }
     }
 
-    public async saveFuzzCaseSets(fcsList: string) {
+    public async saveFuzzCaseSets(fuzzcontextId: string, fcsList: string) {
         
         const query = `
         mutation {
-                saveApiFuzzcaseset(fcsus: "${fcsList}") {
+                saveApiFuzzcaseset(fuzzcontextId: "${fuzzcontextId}", fcsus: "${fcsList}") {
                     ok,
                     error
                 }
@@ -554,20 +554,19 @@ export default class FuzzerWebClient
 
         if(this.responseHasData(response))
         {
-            const ok = response.data.data.fuzzCaseSetWithRunSummary.ok;
-            const error = response.data.data.fuzzCaseSetWithRunSummary.error;
-            const result = response.data.data.fuzzCaseSetWithRunSummary.result;
-            return [ok, error, result];
+            const ok = response.data.data.saveApiFuzzcaseset.ok;
+            const error = response.data.data.saveApiFuzzcaseset.error;
+            return [ok, error];
         }
 
         const [hasErr, err] = this.hasGraphqlErr(response);
 
         if(hasErr)
         {
-            return [!hasErr, err, []];
+            return [!hasErr, err];
         }
 
-        return [false, '', []];
+        return [false, ''];
     }
 
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {

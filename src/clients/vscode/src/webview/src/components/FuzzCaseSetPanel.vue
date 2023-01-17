@@ -11,7 +11,7 @@
       header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true" :closeOnEscape="false"
+      :dismissableMask="false" :closeOnEscape="false"
       @hide="onDialogClose(rqInEdit)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
@@ -459,47 +459,53 @@ class Props {
 
   async saveFuzzCaseSets() {
 
-    if(!this.isTableDirty) {
+    if(!this.isTableDirty || this.fcsRunSums == undefined || this.fcsRunSums.length == 0) {
       this.toastInfo('no changes to save');
       return;
     }
     
+    try {
+      this.saveBtnDisabled = true;
 
-    this.saveBtnDisabled = true;
+      const updatedFCSList = this.fcsRunSums.map(x => {
+        return {
+          fuzzcontextId: x.fuzzcontextId,
+          fuzzCaseSetId: x.fuzzCaseSetId,
+          selected: x.selected,
+          requestMessage: x.requestMessage
+        }
+      });
 
-    const updatedFCSList = this.fcsRunSums.map(x => {
-      return {
-        fuzzCaseSetId: x.fuzzCaseSetId,
-        selected: x.selected,
-        requestMessage: x.requestMessage
-      }
-    });
+      const fuzzcontextId = updatedFCSList[0].fuzzcontextId;
 
-    // fcsStr = fcsStr.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
+      let jsonFCSUpdated: string = JSON.stringify(updatedFCSList);
+      
+      // base64 encode to easily transport via GraphQL as single string
+      jsonFCSUpdated = btoa(jsonFCSUpdated)
 
-     //fcsStr = fcsStr.replaceAll("\"selected\"","selected");
+      const [ok, error] =  await this.webclient.saveFuzzCaseSets(fuzzcontextId, jsonFCSUpdated); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
-    let jsonFCSUpdated: string = JSON.stringify(updatedFCSList);
-    jsonFCSUpdated = btoa(jsonFCSUpdated)
-    // jsonFCSUpdated = jsonFCSUpdated.replace("[","");
-    // jsonFCSUpdated = jsonFCSUpdated.replace("]","");
-    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
-    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"selected\"","selected");
-    // jsonFCSUpdated = jsonFCSUpdated.replaceAll("\"requestMessage\"","requestMessage");
+      if(!ok)
+        {
+          this.toastError(error, 'Update Fuzz Cases');
+        }
+        else
+        {
+          // get latest updated fuzzcaseset
+          await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
 
-    const [ok, error] =  await this.webclient.saveFuzzCaseSets(jsonFCSUpdated); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
+          // get latest updated fuzzcontext
+          this.eventemitter.emit("onFuzzCaseSetUpdated");
 
-    if(!ok)
-      {
-        this.toastError(error, 'Update Fuzz Cases');
-      }
-      else
-      {
-        this.isTableDirty = false;
-        this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
-      }
-
-    this.saveBtnDisabled = false;
+          this.isTableDirty = false;
+          this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
+        }
+    } catch (error) {
+       this.toastError(error, 'Update Fuzz Cases');
+    }
+    finally{
+      this.saveBtnDisabled = false;
+    }
   }
 
   onFuzzContextDeleted(fuzzcontextId) {
@@ -527,7 +533,6 @@ class Props {
         if(!Utils.isNothing(result)){
           this.fcsRunSums = result;
         }
-
       }
      } 
      finally {
@@ -543,7 +548,7 @@ class Props {
 
      this.refreshHostnameDisplay();
 
-     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
+     await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
   }
 
   async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)

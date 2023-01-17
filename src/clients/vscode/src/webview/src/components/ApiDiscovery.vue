@@ -953,6 +953,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
+    this.eventemitter.on('onFuzzCaseSetUpdated', this.getFuzzcontexts());
 
     this.getFuzzcontexts()
   }

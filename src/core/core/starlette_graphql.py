@@ -17,6 +17,8 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             ParseRequestMessageResult
                             )
 from utils import Utils 
+import base64
+import json
 
 es = EventStore()
 
@@ -158,22 +160,29 @@ class Query(graphene.ObjectType):
 
 class SaveEditedFuzzCaseSets(graphene.Mutation):
     class Arguments:
+        fuzzcontextId = graphene.String()
         fcsus = graphene.String() #graphene.List(ApiFuzzCaseSetUpdate)
 
     #define output
     ok = graphene.Boolean()
     error = graphene.String()
     
-    def mutate(self, info, fcsus):
+    def mutate(self, info, fuzzcontextId, fcsus):
+        if fcsus == '':
+            return True, ''
         
-        if fcsus is None or len(fcsus) == 0:
+        b64d = base64.b64decode(fcsus)
+        
+        fcsList = json.loads(b64d)
+        
+        if fcsList is None or len(fcsList) == 0:
             ok = True
             error = ''
             return SaveEditedFuzzCaseSets(ok=ok,error=error) 
         
         sm = ServiceManager()
         
-        OK, error = sm.save_caseset_selected(fcsus)
+        OK, error = sm.save_updated_fuzzcasesets(fuzzcontextId, fcsList)
 
         ok = OK
         error = error
@@ -342,5 +351,5 @@ class Mutation(graphene.ObjectType):
     cancel_Fuzz = CancelFuzz.Field()
     
     
-schema = graphene.Schema(query=Query, mutation=Mutation) #, subscription= Subscription)
+schema = graphene.Schema(query=Query, mutation=Mutation)
 

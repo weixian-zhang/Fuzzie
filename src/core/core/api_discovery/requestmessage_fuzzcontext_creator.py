@@ -95,8 +95,10 @@ class RequestMessageFuzzContextCreator:
         except Exception as e:
             self.eventstore.emitErr(e)
         
-        
-    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
+    # parse_request_msg_as_fuzzcasesets
+    # take means process the number of request-msg-blocks within the entire Request MEssage.
+    # # -1 means take-in all
+    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str, parseFirst=False) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
 
         if rqMsg == '' or rqMsg.strip() == '':
@@ -108,11 +110,17 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
+        requestBlocks = []
         # split request-blocks by delimiter ###
-        multiReqMsgBlocks = rqMsgWithoutComments.strip().split('###')
+        splittedRqBlocks = rqMsgWithoutComments.strip().split('###')
+        
+        if parseFirst and len(splittedRqBlocks) >= 1:
+            requestBlocks.append(splittedRqBlocks[0])
+        else:
+            requestBlocks = splittedRqBlocks
         
         # each block is a fuzzcaseset
-        for eachReqBlock in multiReqMsgBlocks:
+        for eachReqBlock in requestBlocks:
             
             if eachReqBlock == '':
                 continue
@@ -217,7 +225,7 @@ class RequestMessageFuzzContextCreator:
                     self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
                     self.currentFuzzCaseSet.fileDataTemplate = evalFile
                 
-                # currently fuzzie only supports 1 file upload per request block.
+                # currently, fuzzie only supports 1 file upload per request block.
                 # When there is 1 file detected, this file takes up whole request body.
                 # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
                 # check for myfile wordlist type
