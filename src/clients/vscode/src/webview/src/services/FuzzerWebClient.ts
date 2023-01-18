@@ -188,6 +188,35 @@ export default class FuzzerWebClient
         }
     }
 
+    public async deleteApiFuzzCaseSetRun(fuzzcontextId): Promise<[boolean, string]> {
+        const query = `
+            mutation delete {
+                deleteApiFuzzcasesetrun(fuzzCaseSetRunId:"${fuzzcontextId}"){
+                ok
+                error
+                }
+            }
+        `
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.deleteApiFuzzcasesetrun.ok;
+            const error = response.data.data.deleteApiFuzzcasesetrun.error;
+            return [ok, error];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err];
+        }
+
+        return [false, ''];
+    }
+
     public async getApiFuzzCaseSetsWithRunSummaries(fuzzcontextId: string, fuzzCaseSetRunId: string) {
         
         const query = `

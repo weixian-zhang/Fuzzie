@@ -1,12 +1,14 @@
 import threading
 import time
-import asyncio
 from fuzz_test_result_queue import FuzzTestResultQueue
-from models.webapi_fuzzcontext import FuzzTestResult
+from models.webapi_fuzzcontext import FuzzTestResult, WordlistType
 from eventstore import EventStore
 import shortuuid
 from db import insert_api_fuzzdatacase, update_casesetrun_summary, insert_api_fuzzrequest_fileupload
+import io
 eventstore = EventStore()
+from utils import Utils
+
 
 class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
     
@@ -29,10 +31,16 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                                               caseSetRunSummaryId=ftResult.caseSetRunSummaryId)
                     
                     # save file content
-                    if ftResult.file != '':
+                    if not Utils.isNoneEmpty(ftResult.file):
                         wordlist_type = ftResult.file.wordlist_type
                         filename = ftResult.file.filename
-                        content = ftResult.file.content 
+                        content = ''
+                        
+                        if wordlist_type == WordlistType.image:
+                            ftResult.file.content.seek(0)
+                            content = ftResult.file.content.getvalue()
+                        else:
+                            content = ftResult.file.content
 
                         insert_api_fuzzrequest_fileupload(
                             Id=shortuuid.uuid(),

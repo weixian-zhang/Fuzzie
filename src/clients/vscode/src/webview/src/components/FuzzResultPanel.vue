@@ -370,8 +370,6 @@ class Props {
       //fuzzing data event stream
       this.eventemitter.on('fuzz.start', this.onFuzzStart);
       this.eventemitter.on('fuzz.stop', this.onFuzzStop);
-      //this.eventemitter.on('fuzz.update.fuzzdatacase', this.onFuzzDataCaseReceived);
-
       
     }
 
@@ -775,6 +773,8 @@ class Props {
       this.tableResponseReasonPhrase = '';
       this.tableResponseHeader = '';
       this.tableResponseBody= '';
+
+      this.unqStatusCodesFromFDCS = []
 
       this.clearTableBindingData();
       this.clearSelectedReqResp();

@@ -213,6 +213,30 @@ class DeleteApiContext(graphene.Mutation):
         
         return DeleteApiContext(ok=ok,error=error)
 
+class DeleteApiFuzzCaseSetRun(graphene.Mutation):
+    class Arguments:
+        fuzzCaseSetRunId= graphene.String()
+
+    #define output
+    ok = graphene.Boolean()
+    error = graphene.String()
+    
+    def mutate(self, info, fuzzCaseSetRunId):
+        
+        if Utils.isNoneEmpty(fuzzCaseSetRunId):
+            ok = False
+            error = 'fuzz-run-id cannot be empty when deleting a fuzz-run'
+            return DeleteApiFuzzCaseSetRun(ok=ok,error=error) 
+        
+        sm = ServiceManager()
+        
+        OK, error = sm.delete_api_fuzzCaseSetRun(fuzzCaseSetRunId)
+
+        ok = OK
+        error = error
+        
+        return DeleteApiFuzzCaseSetRun(ok=ok,error=error)
+
 class UpdateApiContext(graphene.Mutation):
     class Arguments:
         fuzzContext= ApiFuzzContextUpdate(required=True)
@@ -345,6 +369,8 @@ class Mutation(graphene.ObjectType):
     save_api_fuzzcaseset= SaveEditedFuzzCaseSets.Field()
     
     delete_api_fuzz_context = DeleteApiContext.Field()
+    
+    delete_api_fuzzcasesetrun =  DeleteApiFuzzCaseSetRun.Field()
     
     fuzz = Fuzz.Field()
     

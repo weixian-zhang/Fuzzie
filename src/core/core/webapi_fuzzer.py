@@ -28,7 +28,7 @@ from db import (insert_api_fuzzCaseSetRuns,
                 insert_api_fuzzdatacase, 
                 insert_api_fuzzrequest, 
                 insert_api_fuzzresponse,
-                create_casesetrun_summary,
+                create_runsummary_per_fuzzcaseset,
                 update_casesetrun_summary,
                 get_fuzzcaseset_run_statistics,
                 insert_api_fuzzrequest_fileupload)
@@ -109,7 +109,44 @@ class WebApiFuzzer:
             
         except Exception as e:
             self.eventstore.emitErr(e)
-        
+    
+    async def fuzz_once(self):
+        try:
+            
+            self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
+            
+            insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
+                        
+            self.fuzzingStatus = FuzzingStatus.Fuzzing
+            
+            fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
+            
+            if fcsLen == 0:
+                self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
+                return
+            
+            self.totaRunsPerCaseSet = self.apifuzzcontext.fuzzcaseToExec
+            self.totalRunsForAllCaseSets = fcsLen * self.totaRunsPerCaseSet
+            
+            runNumber = 0
+            for fcs in self.apifuzzcontext.fuzzcaseSets:
+                
+                caseSetRunSummaryId = shortuuid.uuid()
+                
+                create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
+                                          fuzzCaseSetId=  fcs.Id,
+                                          fuzzCaseSetRunId = self.fuzzCaseSetRunId,
+                                          fuzzcontextId = self.apifuzzcontext.Id,
+                                          totalRunsToComplete = self.totaRunsPerCaseSet)
+                
+                for _ in range(self.apifuzzcontext.fuzzcaseToExec):
+                    
+                    runNumber = runNumber + 1
+                    
+                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
+                    
+        except Exception as e:
+            self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
         
     async def fuzz(self):
         
@@ -143,7 +180,7 @@ class WebApiFuzzer:
                 
                 caseSetRunSummaryId = shortuuid.uuid()
                 
-                create_casesetrun_summary(Id = caseSetRunSummaryId,
+                create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
                                           fuzzCaseSetId=  fcs.Id,
                                           fuzzCaseSetRunId = self.fuzzCaseSetRunId,
                                           fuzzcontextId = self.apifuzzcontext.Id,
@@ -153,10 +190,7 @@ class WebApiFuzzer:
                     
                     runNumber = runNumber + 1
                     
-                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber )
-                    
-                    await asyncio.sleep(0.2)
-                    
+                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
@@ -216,7 +250,7 @@ class WebApiFuzzer:
                         # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
                         # supporting the above data format is purely to support syntax from rest-client 
                         
-                        wwwformurlencodedDict = self.wwwformurlencoded_to_dict(reqBody)
+                        wwwformurlencodedDict = self.create_dict_for_wwwformurlencoded(reqBody)
                         
                         req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
                       
@@ -229,13 +263,15 @@ class WebApiFuzzer:
                         req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
                 elif file != None:
-                
+                    
                     # support single file only.
                     # fuzzie's goal is to upload file content as the "whole" POST body.
                     # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
                     # which fuzzie tries to avoid altering original file content
-                    
-                    content = file.content
+                    if Utils.isNoneEmpty(file.content):
+                        self.eventstore.emitErr(Exception(f'fuzz data wordlist-type {file.wordlist_type} content is empty'))
+                    else:
+                        content = file.content
                 
                     req = Request(fcs.verb, url, headers=headers, data=content)
                 else:
@@ -653,7 +689,7 @@ class WebApiFuzzer:
             return True
         return False
     
-    def wwwformurlencoded_to_dict(self, wwwformurl: str)-> dict:
+    def create_dict_for_wwwformurlencoded(self, wwwformurl: str)-> dict:
         
         if wwwformurl == '':
             return {}

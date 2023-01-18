@@ -86,11 +86,6 @@ class ApiFuzzDataCase:
 
 class FuzzCaseSetFile:
     
-    myfile_wordlist_type = 'myfile'
-    file_wordlist_type = 'file'
-    image_wordlist_type = 'image'
-    pdf_wordlist_type = 'pdf'
-    
     # wordlist_type for myfile is content_key name for e.g: "myfile_filename"
     def __init__(self, wordlist_type='file', filename='', content='') -> None: 
         

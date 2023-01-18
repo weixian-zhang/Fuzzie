@@ -662,6 +662,46 @@ def delete_api_fuzz_context(fuzzcontextId: str):
     
     Session.close()
 
+def delete_api_fuzzCaseSetRun(fuzzCaseSetRunId: str):
+    
+    
+    Session = scoped_session(session_factory)
+    
+    fuzzdatacaseIDs  = (
+        Session.query(ApiFuzzDataCaseTable.columns.Id).
+        filter(ApiFuzzDataCaseTable.columns.fuzzCaseSetRunId == fuzzCaseSetRunId)
+    )
+    
+    fuzzrequestTsql = (
+        Session.query(ApiFuzzRequestTable).
+        filter(ApiFuzzRequestTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+    )
+
+    fuzzrequestTsql.delete()
+    
+    fuzzresponseTsql = (
+        Session.query(ApiFuzzResponseTable).
+        filter(ApiFuzzResponseTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+    )
+
+    fuzzresponseTsql.delete()
+    
+    apiDataCaseStmt = ApiFuzzDataCaseTable.delete(ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+    
+    runSumPerCaseSetStmt = ApiFuzzRunSummaryPerCaseSetTable.delete(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+    
+    caseSetRunsStmt = ApiFuzzCaseSetRunsTable.delete(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId)
+    
+    Session.execute(apiDataCaseStmt)
+    
+    Session.execute(runSumPerCaseSetStmt)
+    
+    Session.execute(caseSetRunsStmt)
+    
+    Session.commit()
+    
+    Session.close()
+
 def save_updated_fuzzcasesets(fcsList: dict):
         
     Session = scoped_session(session_factory)
@@ -1057,7 +1097,7 @@ def create_fuzzcaseset_from_dict(rowDict):
 
 
 
-def create_casesetrun_summary(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId, totalRunsToComplete=1):
+def create_runsummary_per_fuzzcaseset(Id, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId, totalRunsToComplete=1):
     
     stmt = (
             insert(ApiFuzzRunSummaryPerCaseSetTable).

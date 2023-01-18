@@ -147,13 +147,6 @@ export default class FuzzerManager
         return [gqlOK, error];
     }
 
-    // public async updateApiFuzzContext(fuzzcontext: ApiFuzzContextUpdate): Promise<[boolean, string]>
-    // {
-    //     const [ok, error] = await this._wc.updateApiFuzzContext(fuzzcontext);
-
-    //     return [ok, error];
-    // }
-
     public async newFuzzContext(fuzzcontext: ApiFuzzContext): Promise<ApiFuzzContext>
     {
         

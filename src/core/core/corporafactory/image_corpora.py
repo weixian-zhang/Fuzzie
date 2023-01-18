@@ -80,14 +80,9 @@ class ImageCorpora:
         randIdx = random.randint(0, len(self.data) - 1)
         content = self.data[str(randIdx)]
         
-        fBio= io.BytesIO(content)
+        fBio= io.BytesIO(content)   # convert to file-like binary object
+        
         fBio.seek(0)
-        
-        # img = Image.open(fBio)
-        
-        # img.save(fBio, format='png')
-        
-        # fBio.seek(0)
 
         return fBio
     
