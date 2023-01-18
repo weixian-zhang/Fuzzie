@@ -25,6 +25,7 @@ class RequestMessageFuzzContextCreator:
         self.eventstore = EventStore()
         self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         
+        # currentFuzzCaseSet:
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
         self.currentFuzzCaseSet = None
@@ -32,11 +33,6 @@ class RequestMessageFuzzContextCreator:
         self.env = jinja2.Environment()
         self.env.filters[WordlistType.my] = self.my_jinja_filter
         self.env.filters[WordlistType.myfile] = self.myfile_jinja_filter
-        # jinja2.filters.FILTERS[WordlistType.my] = self.my_jinja_filter
-            
-        # # discover myfile wordlist-type
-        # jinja2.filters.FILTERS[WordlistType.myfile] = self.myfile_jinja_filter
-        
 
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  

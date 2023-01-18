@@ -128,6 +128,15 @@ CustomHeader-3: {{ username }}
 
     public loadExample(key = 'get'): string {
 
+        switch(key) {
+            case 'file-upload-file-myfile-batchfile':
+                return this.fileupload['file-upload-file-myfile-batchfile'];
+            case 'get':
+                return this.get['get'];
+            default:
+              // code block
+        }
+
         if (key == 'file-upload-file-myfile-batchfile') {
             return this.fileupload['file-upload-file-myfile-batchfile'];
         }

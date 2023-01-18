@@ -491,13 +491,14 @@ class Props {
         }
         else
         {
+            // get latest updated fuzzcontext
+          this.eventemitter.emit("onFuzzCaseSetUpdated");
+
           // get latest updated fuzzcaseset
           await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
 
-          // get latest updated fuzzcontext
-          this.eventemitter.emit("onFuzzCaseSetUpdated");
-
           this.isTableDirty = false;
+          
           this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
         }
     } catch (error) {
