@@ -25,6 +25,7 @@ class RequestMessageFuzzContextCreator:
         self.eventstore = EventStore()
         self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         
+        # currentFuzzCaseSet:
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
         self.currentFuzzCaseSet = None
@@ -32,11 +33,6 @@ class RequestMessageFuzzContextCreator:
         self.env = jinja2.Environment()
         self.env.filters[WordlistType.my] = self.my_jinja_filter
         self.env.filters[WordlistType.myfile] = self.myfile_jinja_filter
-        # jinja2.filters.FILTERS[WordlistType.my] = self.my_jinja_filter
-            
-        # # discover myfile wordlist-type
-        # jinja2.filters.FILTERS[WordlistType.myfile] = self.myfile_jinja_filter
-        
 
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  
@@ -94,13 +90,40 @@ class RequestMessageFuzzContextCreator:
             return True, '', fuzzcontext
         except Exception as e:
             self.eventstore.emitErr(e)
+            
+    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str) -> tuple([bool, str, ApiFuzzCaseSet]):
         
+        if rqMsg == '' or rqMsg.strip() == '':
+            return True, '', []
         
+        rqMsgWithoutComments = self.remove_all_comments(rqMsg)
+        
+        splittedRqBlocks = rqMsgWithoutComments.strip().split('###')
+        
+        singleRQBlock = ''
+        
+        if len(splittedRqBlocks) > 0:
+            singleRQBlock = splittedRqBlocks[0]
+        
+        if singleRQBlock == '' or singleRQBlock.strip() == '':
+            return True, '', []
+        
+        ok, error, fcsList = self.parse_request_msg_as_fuzzcasesets(singleRQBlock)
+        
+        fcsSingleResult = None
+        if ok and len(fcsList) > 0:
+            fcsResult = fcsList[0]
+            
+        return True, '', fcsResult
+        
+    # parse_request_msg_as_fuzzcasesets
+    # take means process the number of request-msg-blocks within the entire Request MEssage.
+    # # -1 means take-in all
     def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
 
 
         if rqMsg == '' or rqMsg.strip() == '':
-            return []
+            return True, '', []
         
         # multiline split
         
@@ -109,10 +132,10 @@ class RequestMessageFuzzContextCreator:
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
         # split request-blocks by delimiter ###
-        multiReqMsgBlocks = rqMsgWithoutComments.strip().split('###')
+        requestBlocks = rqMsgWithoutComments.strip().split('###')
         
         # each block is a fuzzcaseset
-        for eachReqBlock in multiReqMsgBlocks:
+        for eachReqBlock in requestBlocks:
             
             if eachReqBlock == '':
                 continue
@@ -133,6 +156,7 @@ class RequestMessageFuzzContextCreator:
             fuzzcaseSet = ApiFuzzCaseSet()
             fuzzcaseSet.Id = shortuuid.uuid()
             self.currentFuzzCaseSet = fuzzcaseSet
+            self.currentFuzzCaseSet.requestMessage = eachReqBlock
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
@@ -216,7 +240,7 @@ class RequestMessageFuzzContextCreator:
                     self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
                     self.currentFuzzCaseSet.fileDataTemplate = evalFile
                 
-                # currently fuzzie only supports 1 file upload per request block.
+                # currently, fuzzie only supports 1 file upload per request block.
                 # When there is 1 file detected, this file takes up whole request body.
                 # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
                 # check for myfile wordlist type

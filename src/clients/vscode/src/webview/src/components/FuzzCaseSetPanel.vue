@@ -7,6 +7,32 @@
     outlined
     style="display: flex; flex-flow: column; height: 100%;">
   
+  <Dialog v-model:visible="showReqMsgEditDialog" 
+      header="Request Message Editor" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true"
+      :dismissableMask="false" :closeOnEscape="false"
+      @hide="onDialogClose(rqInEdit)">
+      <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
+
+      <RequestMessageExampleView 
+        v-bind:rqmsg:loadexample="rqInEdit"
+        v-on:rqmsg:loadexample="rqInEdit = $event" />
+
+  
+      <div style="height: 10px;"></div>
+      <codemirror
+          v-model="rqInEdit"
+          placeholder="request message goes here..."
+          :style="{ height: '600px' }"
+          :autofocus="true"
+          :indent-with-tab="true"
+          :tab-size="2"
+          :extensions="extensions"
+          @ready="onCMReady" 
+        />
+    </Dialog>
+
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;" :modal="true" :dismissable="true">
     <v-textarea auto-grow
           outlined
@@ -28,11 +54,6 @@
         </v-btn>
     </v-toolbar>
     <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly>
-    <!-- <InputText type="text" class="p-inputtext-sm" placeholder="" v-model="hostnameDisplay" ></InputText> -->
-      <!-- <v-text-field
-        readonly dense outlined style="height: 15px"
-        hide-details="auto"
-      >https://</v-text-field> -->
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
@@ -41,6 +62,11 @@
                 <v-checkbox color="cyan" id="flexCheckDefault" label="Fuzz All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
+            </th>
+            <th class="text-left">
+            </th>
+            <th class="text-left">
+              Fuzz Once
             </th>
             <th class="text-left">
               Verb
@@ -94,8 +120,37 @@
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
               </div>
-
             </td>
+            
+            <td>
+              <v-icon
+                  variant="flat"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    showReqMsgEditDialog = true,
+                    rqInEdit = item.requestMessage,
+                    rqInEditOriginal = item.requestMessage,
+                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
+                  )" >
+                  </v-icon>
+            </td>
+
+            <td>
+              <v-icon
+                  variant="flat"
+                  icon="mdi-lightning-bolt"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    ''
+                  )" >
+                  </v-icon>
+            </td>
+
+
+
             <td>{{ item.verb }}</td>
             
             <td>
@@ -163,6 +218,7 @@ import { inject } from 'vue';
 import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
 // import { Watch } from 'vue-property-decorator'
+import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
@@ -170,6 +226,7 @@ import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import InputText from 'primevue/inputtext';
+import RequestMessageExampleView from './RequestMessageExampleView.vue';
 
 class Props {
   toastInfo: any = {};
@@ -184,7 +241,9 @@ class Props {
   components: {
     DataTable,
     Sidebar,
-    InputText
+    InputText,
+    Dialog,
+    RequestMessageExampleView
   },
   watch: {
 
@@ -198,6 +257,13 @@ class Props {
   //fuzzingfcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
 
   //dataCache = {};
+
+  showReqMsgEditDialog = false;
+  rqInEdit = '';
+  rqInEditOriginal = '';
+  requestMsgHasError = false;
+  requestMsgErrorMessage = '';
+  currentEditFuzzCaseSetId = '';
 
   $logger: Logger|any;
 
@@ -303,6 +369,21 @@ class Props {
     this.currentFuzzContextId = '';
   }
 
+  async parseRequestMessage(rqMsg) {
+    if(rqMsg == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
  
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
@@ -322,34 +403,54 @@ class Props {
 
   async saveFuzzCaseSets() {
 
-    if(!this.isTableDirty) {
+    if(!this.isTableDirty || this.fcsRunSums == undefined || this.fcsRunSums.length == 0) {
       this.toastInfo('no changes to save');
       return;
     }
     
+    try {
+      this.saveBtnDisabled = true;
 
-    this.saveBtnDisabled = true;
+      const updatedFCSList = this.fcsRunSums.map(x => {
+        return {
+          fuzzcontextId: x.fuzzcontextId,
+          fuzzCaseSetId: x.fuzzCaseSetId,
+          selected: x.selected,
+          requestMessage: x.requestMessage
+        }
+      });
 
-    const newFCS = this.fcsRunSums.map(x => {
-      return {
-        fuzzCaseSetId: x.fuzzCaseSetId,
-        selected: x.selected
-      }
-    });
+      const fuzzcontextId = updatedFCSList[0].fuzzcontextId;
 
-    const [ok, error] = await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
+      let jsonFCSUpdated: string = JSON.stringify(updatedFCSList);
+      
+      // base64 encode to easily transport via GraphQL as single string
+      jsonFCSUpdated = btoa(jsonFCSUpdated)
 
-    if(!ok)
-      {
-        this.toastError(error, 'Update Fuzz Cases');
-      }
-      else
-      {
-        this.isTableDirty = false;
-        this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
-      }
+      const [ok, error] =  await this.webclient.saveFuzzCaseSets(fuzzcontextId, jsonFCSUpdated); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
-    this.saveBtnDisabled = false;
+      if(!ok)
+        {
+          this.toastError(error, 'Update Fuzz Cases');
+        }
+        else
+        {
+            // get latest updated fuzzcontext
+          this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
+
+          // get latest updated fuzzcaseset
+          //await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
+
+          this.isTableDirty = false;
+          
+          this.toastSuccess('Fuzz Cases are updated successfully', 'Update Fuzz Cases');
+        }
+    } catch (error) {
+       this.toastError(error, 'Update Fuzz Cases');
+    }
+    finally{
+      this.saveBtnDisabled = false;
+    }
   }
 
   onFuzzContextDeleted(fuzzcontextId) {
@@ -377,7 +478,6 @@ class Props {
         if(!Utils.isNothing(result)){
           this.fcsRunSums = result;
         }
-
       }
      } 
      finally {
@@ -393,7 +493,7 @@ class Props {
 
      this.refreshHostnameDisplay();
 
-     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '');
+     await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
   }
 
   async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
@@ -429,6 +529,22 @@ class Props {
     await Utils.delay(2000);   // spam click prevention
     this.rowClickEnabled = true;
     
+  }
+
+  async onDialogClose() {
+    //this.parseRequestMessage(this.rqInEdit);
+    if (this.rqInEditOriginal != this.rqInEdit) {
+      this.isTableDirty = true;
+
+       this.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+        if (fcs.fuzzCaseSetId == this.currentEditFuzzCaseSetId ) {
+            fcs.requestMessage = this.rqInEdit;
+        }
+      });
+    }
+    this.currentEditFuzzCaseSetId = ''
+    this.rqInEditOriginal = ''
+    this.rqInEdit = '';
   }
 
   selectAllChanged(event) {

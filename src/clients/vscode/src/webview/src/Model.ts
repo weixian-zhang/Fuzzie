@@ -25,6 +25,8 @@ export class ApiFuzzContextUpdate {
     public port: number;
     public fuzzcaseToExec: number;
     public authnType: string;
+    public apiDiscoveryMethod  ='request_message';
+
 }
 
 export class ApiFuzzContext {
@@ -32,7 +34,7 @@ export class ApiFuzzContext {
     public Id = '';
     public name ='my REST Api';
     public datetime ='';
-    public apiDiscoveryMethod  ='';
+    public apiDiscoveryMethod  ='request_message';
     public requestTextContent ='';
     public requestTextFilePath ='';
     public openapi3FilePath ='';
@@ -65,6 +67,7 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public bodyNonTemplate = '';
     public headerNonTemplate = '';
     public authnType = '';
+    public requestMessage = '';
     public runSummaryId = '';
     public http2xx = 0;
     public http3xx = 0;

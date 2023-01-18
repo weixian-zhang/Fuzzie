@@ -93,9 +93,9 @@ export default class FuzzerManager
         return [gqlOK, error, result];
     }
 
-    public async saveFuzzCaseSetSelected(fuzzCaseSetSelected): Promise<[boolean, string]> {
+    public async saveFuzzCaseSetSelected(fcsList): Promise<[boolean, string]> {
 
-        let fcsStr = JSON.stringify(fuzzCaseSetSelected);
+        let fcsStr = JSON.stringify(fcsList);
 
         fcsStr = fcsStr.replaceAll("\"fuzzCaseSetId\"","fuzzCaseSetId");
 

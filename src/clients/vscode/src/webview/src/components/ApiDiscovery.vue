@@ -30,31 +30,6 @@
                 </div>
 
               <v-divider />
-              <!-- <h4>Test Properties</h4>
-              <v-divider />
-
-              <div class="form-group mb-3" >
-                <v-text-field
-                    v-model="newApiContext.hostname"
-                    variant="underlined"
-                    :rules="[() => !!newApiContext.hostname || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    label="Hostname" 
-                    clearable/>
-                </div>
-
-                <div class="form-group">
-                  <v-text-field
-                    v-model="newApiContext.port"
-                    type="number" 
-                    variant="underlined"
-                    :rules="[() => !!newApiContext.port || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    max="65535"
-                    label="Port number" />
-                </div> -->
 
               <h4>API Discovery</h4>
               
@@ -81,7 +56,7 @@
                     no-resize
                     style="border-color: rgba(192, 0, 250, 0.986);"
                     v-model="newApiContext.requestTextContent"
-                     @click="(showReqMsgEditDialog = true)"
+                     @click="(showReqMsgCreateDialog = true)"
                   />
                 </div>
                
@@ -370,23 +345,10 @@
                     v-model="apiContextEdit.requestTextContent"
                     @click="(showReqMsgReadOnlyDialog = true)"
                   ></v-textarea>
-                  <small>Request Messages will not be updated, please create a new context</small>
+                  <small>Request Messages will not be updated, please create a new context or 
+                    update individual API Operation
+                  </small>
                 </div>
-
-                <!-- <v-file-input
-                    v-model="requestTextFileInputFileVModel"
-                    label="Request Text File"
-                    density="compact"
-                    ref="rtFileInput"
-                    @change="onRequestTextFileChange"
-                    variant="underlined"
-                    clearable
-                    @click:clear="(
-                      requestTextFileInputFileVModel=[],
-                      apiContextEdit.requestTextContent='',
-                      apiContextEdit.requestTextFilePath=''
-                    )"
-                  ></v-file-input> -->
 
                 <!-- <div class="form-group">
                   <v-text-field
@@ -579,7 +541,7 @@
     </Sidebar>
 
     <!--request message dialog-->
-    <Dialog v-model:visible="showReqMsgEditDialog" 
+    <Dialog v-model:visible="showReqMsgCreateDialog" 
       header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
@@ -587,83 +549,10 @@
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <div class="container-fluid width=100%">
-          <div class="row">
-            <div class="col-6">
-
-            <div class="btn-group">
-              <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                examples
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" 
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))">GET</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#" 
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">POST</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-query'))">GraphQL Query</a>
-                </li>
-
-                <li><a class="dropdown-item" href="#"
-                @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('graphql-mutate'))">GraphQL Mutate</a>
-                </li>
-              </ul>
-            </div>
-
-              <!-- <v-btn
-              size="x-small"
-              color="cyan"
-              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('get'))"
-              >
-            GET example
-            </v-btn>
-            <v-btn
-              size="x-small"
-              color="cyan"
-              class="ml-5"
-              @click="(newApiContext.requestTextContent=this.reqMsgExampleLoader.loadExample('post'))">
-              POST example
-            </v-btn> -->
-            </div>
-            <div class="col-6 text-right">
-                <v-btn
-                  size="x-small"
-                  color="cyan"
-                  @click="parseRequestMessage(newApiContext.requestTextContent)"
-                  >
-                Parse
-                </v-btn>
-                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
-                      mdi-check-circle
-                </v-icon>
-                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
-                  mdi-close-circle
-                </v-icon>
-            </div>
-          </div>
-      </div> 
-
-
+      <RequestMessageExampleView 
+        v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
+        v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+      
       <div style="height: 10px;"></div>
       <codemirror
           v-model="newApiContext.requestTextContent"
@@ -682,6 +571,7 @@
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true">
+
 
           <codemirror
           v-model="apiContextEdit.requestTextContent"
@@ -755,8 +645,10 @@
       </v-btn>
 
     </v-toolbar>
+
+    
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" class="border-0">
+        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" style="height: 320px" class=" border-0">
           <template #default="slotProps" >
 
             <!--fuzz context-->
@@ -791,18 +683,40 @@
 
             <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == false">
                 &nbsp;
-                <v-icon
+
+                <div class="btn-group">
+                  <v-icon
+                  variant="flat"
+                  icon="mdi-cog-outline"
+                  color="cyan darken-3"
+                  size="x-small"
+                  data-bs-toggle="dropdown">
+                  </v-icon>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><button class="dropdown-item" type="button" @click="(
+                    onEditFuzzContextClicked(slotProps.node.data)
+                  )">Edit</button></li>
+                  <li><button class="dropdown-item" type="button" @click="(
+                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
+                  )">Delete</button></li>
+                </ul>
+              </div>
+
+                
+
+
+                <!-- <v-icon
                   variant="flat"
                   icon="mdi-pencil"
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
                     onEditFuzzContextClicked(slotProps.node.data)
-                  )"
-                  >
-
+                  )" >
                   </v-icon>
+
                   &nbsp;
+
                   <v-icon
                   variant="flat"
                   icon="mdi-delete"
@@ -810,7 +724,7 @@
                   size="x-small"
                   @click="(
                     onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
-                  )"/>
+                  )"/> -->
 
                   &nbsp;
 
@@ -874,8 +788,7 @@ import Dialog from 'primevue/dialog';
 import Message from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
-
-import RequestMessageExamples from './RequestMessageExamples';
+import RequestMessageExampleView from './RequestMessageExampleView.vue';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
@@ -898,7 +811,8 @@ class Props {
     Dialog,
     Message,
     InputNumber,
-    Dropdown
+    Dropdown,
+    RequestMessageExampleView
   },
 })
 
@@ -908,6 +822,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   $logger;
   openapi3FileInputFileVModel: Array<any> = [];
   requestTextFileInputFileVModel: Array<any>  = [];
+  requestTextEditFileInputVModel: Array<any> = [];
   showPasswordValue = false;
   fuzzcontexts: Array<ApiFuzzContext> = [];
   nodes: TreeNode[] = [];
@@ -915,7 +830,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
   showFuzzConfirmDialog = false;
-  showReqMsgEditDialog = false;
+  showReqMsgCreateDialog = false;
   showReqMsgReadOnlyDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
@@ -967,8 +882,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
         extraKeys: { Ctrl: "autocomplete" }
     };
 
-  reqMsgExampleLoader = new RequestMessageExamples()
-
   //methods
   
   beforeMount(){
@@ -981,6 +894,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
+    this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
 
     this.getFuzzcontexts()
   }
@@ -1058,6 +972,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
   onFuzzFuzzContextClicked(fuzzcontextId: string) {
     this.apiContextIdToFuzz = fuzzcontextId;
     this.showFuzzConfirmDialog = true
+  }
+
+  onFuzzCaseSetUpdated(fuzzContextId) {
+    this.getFuzzcontexts();
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, '');
   }
 
   
@@ -1224,7 +1144,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onRequestTextFileChange(event) {
-    console.log(event);
 
     const files = event.target.files;
 
@@ -1247,6 +1166,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.toastError('Request Text file has ext of .http, .text or .fuzzie', 'Invalid File Type');
     }
   }
+
 
   async onOpenApi3FileChange(event) {
 

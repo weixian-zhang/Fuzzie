@@ -74,7 +74,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('bodyDataTemplate', String, nullable=True),
                             Column('file', String),
                             Column('fileDataTemplate', String),
-                            Column('progressState', String),
+                            Column('requestMessage', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
                             )
 
@@ -662,18 +662,32 @@ def delete_api_fuzz_context(fuzzcontextId: str):
     
     Session.close()
 
-def save_caseset_selected(selectedCaseSets: dict):
+def save_updated_fuzzcasesets(fcsList: dict):
         
     Session = scoped_session(session_factory)
        
     stmt = (update(ApiFuzzCaseSetTable).
         where(ApiFuzzCaseSetTable.c.Id == bindparam('fuzzCaseSetId')).
         values(
-                selected = bindparam('selected')
+                selected = bindparam('selected'),
+                verb = bindparam('verb'),
+                hostname =  bindparam('hostname'),
+                port = bindparam('port'),
+                path = bindparam('path'),
+                querystringNonTemplate = bindparam('querystringNonTemplate'),
+                bodyNonTemplate = bindparam('bodyNonTemplate'),
+                headerNonTemplate = bindparam('headerNonTemplate'),
+                file = bindparam('file'),
+                fileDataTemplate = bindparam('fileDataTemplate'),
+                pathDataTemplate = bindparam('pathDataTemplate'),
+                querystringDataTemplate = bindparam('querystringDataTemplate'),
+                bodyDataTemplate = bindparam('bodyDataTemplate'),
+                headerDataTemplate = bindparam('headerDataTemplate'),
+                requestMessage = bindparam('requestMessage')
             )
     )
     
-    Session.execute(stmt, selectedCaseSets)
+    Session.execute(stmt, fcsList)
     
     Session.commit()
         
@@ -698,6 +712,23 @@ def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
                     port = fuzzcontext.port,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
                     authnType = fuzzcontext.authnType
+                   )
+            )
+    
+    Session = scoped_session(session_factory)
+        
+    Session.execute(stmt)
+    
+    Session.commit()
+    Session.close()
+
+def update_rqmsg_in_fuzz_context(rqMsg: str, fuzzcontextId):
+    
+    stmt = (
+            update(ApiFuzzContextTable).
+            where(ApiFuzzContextTable.c.Id == fuzzcontextId).
+            values(
+                    requestTextContent = rqMsg
                    )
             )
     
@@ -765,7 +796,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         bodyDataTemplate =  fcset.bodyDataTemplate,
                         file = fileType,
                         fileDataTemplate = fcset.fileDataTemplate,
-                        fuzzcontextId = fuzzcontext.Id
+                        fuzzcontextId = fuzzcontext.Id,
+                        requestMessage = fcset.requestMessage
                         )
                 )
                 
