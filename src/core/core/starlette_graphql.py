@@ -140,9 +140,14 @@ class Query(graphene.ObjectType):
         
         sm = ServiceManager()
         
-        result = sm.get_uploaded_file_content(fuzzFileUploadId)
+        ok, error, content = sm.get_uploaded_file_content(fuzzFileUploadId)
         
-        return result
+        r = FuzzRequestFileDownloadContentQueryResult()
+        r.ok = True
+        r.error = ''
+        r.result = content
+        
+        return r
     
     def resolve_parseRequestMessageResult(self, info, rqMsg):
         

@@ -517,20 +517,16 @@ class ServiceManager:
             row = get_uploaded_file_content(fileUploadId)
         
             if row is None:
-                r = FuzzRequestFileDownloadContentQueryResult()
-                r.ok = True
-                r.error = ''
-                r.result = ''
-                return r
+                return True, '', ''
             
             rDict = row._asdict()
             
-            r = FuzzRequestFileDownloadContentQueryResult()
-            r.ok = True
-            r.error = ''
-            r.result = rDict['fileContent']
+            fileContent = rDict['fileContent']
             
-            return r
+            #b64Encoded = base64.b64encode(bytes(byteContent, 'utf-8'))
+            
+            return True, '', fileContent
+        
         except Exception as e:
             self.eventstore.emitErr(e)
             r = FuzzRequestFileDownloadContentQueryResult()

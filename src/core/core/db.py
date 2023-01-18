@@ -519,7 +519,7 @@ def get_fuzz_request_response_messages(reqId, respId) -> tuple[str, str, str]:
                     ApiFuzzRequestTable.columns.url,
                     ApiFuzzRequestTable.columns.headers,
                     ApiFuzzRequestTable.columns.body,
-                    ApiFuzzRequestTable.columns.invalidRequestError,                         
+                    ApiFuzzRequestTable.columns.invalidRequestError                  
                 )
                 .filter(ApiFuzzRequestTable.c.Id == reqId)
                 .first()
@@ -672,11 +672,18 @@ def delete_api_fuzzCaseSetRun(fuzzCaseSetRunId: str):
         filter(ApiFuzzDataCaseTable.columns.fuzzCaseSetRunId == fuzzCaseSetRunId)
     )
     
+    fuzzrequestUploadFileTsql = (
+        Session.query(ApiFuzzRequestFileUploadTable).
+        filter(ApiFuzzRequestFileUploadTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+    )
+    
+    fuzzrequestUploadFileTsql.delete()
+    
     fuzzrequestTsql = (
         Session.query(ApiFuzzRequestTable).
         filter(ApiFuzzRequestTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
     )
-
+    
     fuzzrequestTsql.delete()
     
     fuzzresponseTsql = (

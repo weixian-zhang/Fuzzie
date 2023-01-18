@@ -1122,6 +1122,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
     await this.webclient.fuzz(fuzzcontextId)
+
+    await Utils.delay(0.5);
+
+    this.getFuzzcontexts();
   }
 
   isFuzzingInProgress() {
