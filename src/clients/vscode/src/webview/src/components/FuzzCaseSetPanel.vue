@@ -15,67 +15,11 @@
       @hide="onDialogClose(rqInEdit)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <div class="container-fluid width=100%">
-          <div class="row">
-            <div class="col-6">
-              <div class="btn-group">
-                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                  examples
-                </button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#" 
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('get'))">GET</a>
-                  </li>
+      <RequestMessageExampleView 
+        v-bind:rqmsg:loadexample="rqInEdit"
+        v-on:rqmsg:loadexample="rqInEdit = $event" />
 
-                  <li><a class="dropdown-item" href="#" 
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('post'))">POST</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('graphql-query'))">GraphQL Query</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(rqInEdit=this.reqMsgExampleLoader.loadExample('graphql-mutate'))">GraphQL Mutate</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div class="col-6 text-right">
-                <v-btn
-                  size="x-small"
-                  color="cyan"
-                  @click="parseRequestMessage(rqInEdit)"
-                  >
-                Parse
-                </v-btn>
-                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
-                      mdi-check-circle
-                </v-icon>
-                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
-                  mdi-close-circle
-                </v-icon>
-            </div>
-          </div>
-      </div> 
-
-
+  
       <div style="height: 10px;"></div>
       <codemirror
           v-model="rqInEdit"
@@ -282,7 +226,7 @@ import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import InputText from 'primevue/inputtext';
-import RequestMessageExamples from './RequestMessageExamples';
+import RequestMessageExampleView from './RequestMessageExampleView.vue';
 
 class Props {
   toastInfo: any = {};
@@ -298,7 +242,8 @@ class Props {
     DataTable,
     Sidebar,
     InputText,
-    Dialog
+    Dialog,
+    RequestMessageExampleView
   },
   watch: {
 
@@ -319,7 +264,6 @@ class Props {
   requestMsgHasError = false;
   requestMsgErrorMessage = '';
   currentEditFuzzCaseSetId = '';
-  reqMsgExampleLoader = new RequestMessageExamples();
 
   $logger: Logger|any;
 
@@ -492,10 +436,10 @@ class Props {
         else
         {
             // get latest updated fuzzcontext
-          this.eventemitter.emit("onFuzzCaseSetUpdated");
+          this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
 
           // get latest updated fuzzcaseset
-          await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
+          //await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
 
           this.isTableDirty = false;
           

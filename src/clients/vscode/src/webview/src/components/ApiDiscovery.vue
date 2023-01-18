@@ -789,7 +789,6 @@ import Message from 'primevue/message';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
 import RequestMessageExampleView from './RequestMessageExampleView.vue';
-import RequestMessageExamples from './RequestMessageExamples';
 import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
@@ -883,8 +882,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
         extraKeys: { Ctrl: "autocomplete" }
     };
 
-  reqMsgExampleLoader = new RequestMessageExamples()
-
   //methods
   
   beforeMount(){
@@ -897,7 +894,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
-    this.eventemitter.on('onFuzzCaseSetUpdated', this.getFuzzcontexts);
+    this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
 
     this.getFuzzcontexts()
   }
@@ -975,6 +972,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
   onFuzzFuzzContextClicked(fuzzcontextId: string) {
     this.apiContextIdToFuzz = fuzzcontextId;
     this.showFuzzConfirmDialog = true
+  }
+
+  onFuzzCaseSetUpdated(fuzzContextId) {
+    this.getFuzzcontexts();
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, '');
   }
 
   

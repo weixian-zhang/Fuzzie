@@ -2,7 +2,7 @@
 export default class RequestMessageExamples {
 
     private fileupload = {
-        'file-upload-file-myfile-batchfile': `
+        'file-upload-myfile-batchfile': `
 // content align to left with no trailing spaces between "" so that file content will not have trailing whitespaces either
 
 PUT https://httpbin.org/post
@@ -21,41 +21,41 @@ x-ms-blob-type: BlockBlob
     
     `,
 
-    'file-upload-file-myfile-json': `
+    'file-upload-myfile-json': `
 POST https://httpbin.org/post
     
 {{
-    "
-    this is a custom file content
-    supports with multi breakline
-    
-    {
-        \\"name\\": \\"{{ string }}\\",
-        \\"age\\": \\"{{ digit }}\\"
-    }
-    
-    " | myfile("a-file.log")
+"
+this is a custom file content
+supports with multi breakline
+
+{
+    \\"name\\": \\"{{ string }}\\",
+    \\"age\\": \\"{{ digit }}\\"
+}
+
+" | myfile("a-file.log")
 }}
         `,
     
-    'file-upload-file-myfile-wordlisttypes': `
+    'file-upload-myfile-wordlisttypes': `
 POST https://httpbin.org/post
     
 {{
-    "
-    {{ string }}
-    {{ bool }}
-    {{ digit }}
-    {{ integer }}
-    {{ char }}
-    {{ filename }}
-    {{ datetime }}
-    {{ date }}
-    {{ time }}
-    {{ username }}
-    {{ password }}
-    
-    " | myfile("a-file.log")
+"
+{{ string }}
+{{ bool }}
+{{ digit }}
+{{ integer }}
+{{ char }}
+{{ filename }}
+{{ datetime }}
+{{ date }}
+{{ time }}
+{{ username }}
+{{ password }}
+
+" | myfile("a-file.log")
 }}
             `,
     }
@@ -129,10 +129,16 @@ CustomHeader-3: {{ username }}
     public loadExample(key = 'get'): string {
 
         switch(key) {
-            case 'file-upload-file-myfile-batchfile':
-                return this.fileupload['file-upload-file-myfile-batchfile'];
+            case 'file-upload-myfile-batchfile':
+                return this.fileupload['file-upload-myfile-batchfile'];
+            case 'file-upload-myfile-wordlisttypes':
+                return this.fileupload['file-upload-myfile-wordlisttypes'];
+            case 'file-upload-myfile-json':
+                return this.fileupload['file-upload-myfile-json'];
             case 'get':
                 return this.get['get'];
+            case 'post':
+                return this.post['post'];
             default:
               // code block
         }

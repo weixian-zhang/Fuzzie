@@ -178,13 +178,6 @@ class WebApiFuzzer:
                 
             if summaryViewModel is not None:
                 self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
-                
-            
-            #reduce payload size, the following properties will be retrieved separately by webview "onClick"
-            # fuzzDataCase.request.body = ''
-            # fuzzDataCase.request.requestMessage = ''
-            # fuzzDataCase.response.responseDisplayText = ''
-            # self.eventstore.feedback_client('fuzz.update.fuzzdatacase', fuzzDataCase)
             
         except Exception as e:
             errMsg = Utils.errAsText(e)

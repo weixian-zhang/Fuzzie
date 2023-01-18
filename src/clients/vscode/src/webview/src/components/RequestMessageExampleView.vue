@@ -18,19 +18,15 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-file-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                  @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-file-myfile-json'))">Upload File: custom file content - JSON</a>
+                  @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-file-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-file'))">Upload File: upload file with naughty strings</a>
+                  @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"

@@ -199,39 +199,40 @@ class ServiceManager:
                     continue
                 
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
-                ok, err, parsedFCS = rqParser.parse_request_msg_as_fuzzcasesets(rq, parseFirst=True)
+                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)
                 
-                if ok and len(parsedFCS) == 1:
+                if ok and singleFCS != None:
                     
-                    pFCS = parsedFCS[0]
-                    
-                    parsedRequestMsg = pFCS.requestMessage
+                    parsedRequestMsg = singleFCS.requestMessage
                     
                     parsedFCSs['fuzzCaseSetId'] = unParsedFCS['fuzzCaseSetId']
                     parsedFCSs['selected'] = unParsedFCS['selected']
-                    parsedFCSs['verb'] = pFCS.verb
-                    parsedFCSs['hostname'] =  pFCS.hostname
-                    parsedFCSs['port'] = pFCS.port
-                    parsedFCSs['path'] = pFCS.path
-                    parsedFCSs['querystringNonTemplate'] = pFCS.querystringNonTemplate
-                    parsedFCSs['bodyNonTemplate'] = pFCS.bodyNonTemplate
-                    parsedFCSs['headerNonTemplate'] = pFCS.headerNonTemplate
+                    parsedFCSs['verb'] = singleFCS.verb
+                    parsedFCSs['hostname'] =  singleFCS.hostname
+                    parsedFCSs['port'] = singleFCS.port
+                    parsedFCSs['path'] = singleFCS.path
+                    parsedFCSs['querystringNonTemplate'] = singleFCS.querystringNonTemplate
+                    parsedFCSs['bodyNonTemplate'] = singleFCS.bodyNonTemplate
+                    parsedFCSs['headerNonTemplate'] = singleFCS.headerNonTemplate
                     
-                    if pFCS.file != '':
-                        parsedFCSs['file'] = pFCS.file.wordlist_type
+                    if singleFCS.file != '':
+                        parsedFCSs['file'] = singleFCS.file.wordlist_type
                     else:
                         parsedFCSs['file'] = ''
                         
-                    parsedFCSs['fileDataTemplate'] = pFCS.fileDataTemplate 
-                    parsedFCSs['pathDataTemplate'] = pFCS.pathDataTemplate
-                    parsedFCSs['querystringDataTemplate'] = pFCS.querystringDataTemplate
-                    parsedFCSs['bodyDataTemplate'] = pFCS.bodyDataTemplate
-                    parsedFCSs['headerDataTemplate'] = pFCS.headerDataTemplate
+                    parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
+                    parsedFCSs['pathDataTemplate'] = singleFCS.pathDataTemplate
+                    parsedFCSs['querystringDataTemplate'] = singleFCS.querystringDataTemplate
+                    parsedFCSs['bodyDataTemplate'] = singleFCS.bodyDataTemplate
+                    parsedFCSs['headerDataTemplate'] = singleFCS.headerDataTemplate
                     parsedFCSs['requestMessage'] = parsedRequestMsg
 
                     allUpdatedRqMsgs.append(parsedRequestMsg)
             
                     fcsOK, fcsError = save_updated_fuzzcasesets(parsedFCSs)
+                    
+                    if not fcsOK:
+                        self.eventstore.emitErr(fcsError)
             
             # FuzzCaseSet.requestMessage is update, now update the "whole" fuzzcontext.requestTextContent
             if len(allUpdatedRqMsgs) > 0:
