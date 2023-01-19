@@ -77,12 +77,24 @@ Content-Type: application/json
 }
 `,
         'post-xwwwformurlencoded': `
-POST https://api.example.com/login HTTP/1.1
+POST https://httpbin.org/post HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
 
 name=foo
 &password=bar
-`
+`,
+
+'post-pdf': `
+POST https://httpbin.org/post HTTP/1.1
+
+{{ pdf }}
+`,
+
+'post-image': `
+POST https://httpbin.org/post HTTP/1.1
+
+{{ image }}
+`,
     }
 
     private get = {
@@ -148,6 +160,10 @@ CustomHeader-3: {{ username }}
                 return this.get['get'];
             case 'post-json':
                 return this.post['post-json'];
+            case 'post-image':
+                 return this.post['post-image'];
+            case 'post-pdf':
+                return this.post['post-pdf'];
             case 'post-xwwwformurlencoded':
                     return this.post['post-xwwwformurlencoded'];
             default:

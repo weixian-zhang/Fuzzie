@@ -593,21 +593,36 @@ class Props {
 
     async downloadFuzzFile(fuzzFileUploadId, fileName) {
 
-      var content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+      try {
+        var downloadedContent = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
 
-      const bytesContent = this.stringToArrayBuffer(content);
+        if(Utils.isNothing(downloadedContent)) {
+          this.toastInfo('file content is empty');
+          return;
+        }
 
-      if(content == '') {
-        this.toastInfo('file content is empty');
+        const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
+
+        //const fileExt = fileName.split('.').pop();
+        //if (fileExt == 'pdf') {
+        //  content =  this.stringToArrayBuffer(content);
+        //}
+        //else {
+        //  content = downloadedContent
+        //}
+
+        const url = window.URL.createObjectURL(new Blob([byteArrContent]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = "fileDownloader"; //arbitrary name of iframe
+        link.setAttribute('download', `${fileName}`);
+        document.body.appendChild(link);
+        link.click(); 
       }
-
-      const url = window.URL.createObjectURL(new Blob([bytesContent]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = "fileDownloader"; //arbitrary name of iframe
-      link.setAttribute('download', `${fileName}`);
-      document.body.appendChild(link);
-      link.click(); 
+      catch(error) {
+        this.$logger.error(error);
+        this.toastError(error);
+      }
     }
 
   stringToArrayBuffer(data) {

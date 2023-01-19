@@ -21,6 +21,13 @@
                   @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
                   </li>
                   
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-pdf'))">POST a PDF</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-image'))">POST an Image</a>
+                  </li>
 
                   <li><a class="dropdown-item" href="#"
                   @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
