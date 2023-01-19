@@ -549,9 +549,31 @@
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <RequestMessageExampleView 
-        v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
-        v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col text-left">
+              <RequestMessageExampleView 
+              v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
+              v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+          </div>
+          <div class="col text-right">
+              <v-btn
+                size="x-small"
+                color="cyan"
+                @click="parseRequestMessage(newApiContext.requestTextContent)"
+                >
+              Parse
+              </v-btn>
+              <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle
+              </v-icon>
+              <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                mdi-close-circle
+              </v-icon>
+          </div>
+        </div>
+      </div>
+      
       
       <div style="height: 10px;"></div>
       <codemirror
@@ -1206,6 +1228,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.toastError('OpenAPI3 spec files are yaml or json', 'Invalid File Type');
     }
   }
+
+  
 
   async onRequestMessageFileChange(event) {
 
