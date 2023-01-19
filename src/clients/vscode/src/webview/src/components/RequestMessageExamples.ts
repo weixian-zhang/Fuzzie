@@ -66,14 +66,23 @@ POST https://httpbin.org/post
 
     private post = {
         
-        'post': `
+        'post-json': `
 POST https://example.com/comments HTTP/1.1
-content-type: application/json
+Content-Type: application/json
 
 {
     "name": "{{ username }}",
-    "time": "{{ datetime }}"
-}`
+    "time": "{{ datetime }}",
+    "age": "{{ digit }}"
+}
+`,
+        'post-xwwwformurlencoded': `
+POST https://api.example.com/login HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+name=foo
+&password=bar
+`
     }
 
     private get = {
@@ -137,8 +146,10 @@ CustomHeader-3: {{ username }}
                 return this.fileupload['file-upload-myfile-json'];
             case 'get':
                 return this.get['get'];
-            case 'post':
-                return this.post['post'];
+            case 'post-json':
+                return this.post['post-json'];
+            case 'post-xwwwformurlencoded':
+                    return this.post['post-xwwwformurlencoded'];
             default:
               // code block
         }

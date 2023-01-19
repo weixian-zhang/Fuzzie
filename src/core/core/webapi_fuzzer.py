@@ -482,7 +482,7 @@ class WebApiFuzzer:
                 headers[k] = resp.headers[k]
                 headersMultilineText = headersMultilineText + f'{k}: {resp.headers[k]}\n'
                 
-            fuzzResp.headersJson = Utils.jsone(headers)
+            fuzzResp.headerJson = Utils.jsone(headers)
                 
             fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
             

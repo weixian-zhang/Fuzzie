@@ -14,8 +14,13 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post'))">POST</a>
+                  @click="(loadExample('post-json'))">POST JSON</a>
                   </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
+                  </li>
+                  
 
                   <li><a class="dropdown-item" href="#"
                   @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>

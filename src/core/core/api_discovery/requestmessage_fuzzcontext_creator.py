@@ -227,9 +227,12 @@ class RequestMessageFuzzContextCreator:
                 
                 self.currentFuzzCaseSet.bodyNonTemplate = body
                 
+                #evalBody an contain myfile content
                 bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
                 if not bOK:
                     return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
+                
+                self.currentFuzzCaseSet.bodyDataTemplate = evalBody
                 
                 # check for file, pdf, image wordlist type
                 if fileExpr != '' and fileType != '':
@@ -482,14 +485,14 @@ class RequestMessageFuzzContextCreator:
                 copiedMB.append(line)
                 continue
             
-            # file, image and pdf for now
+            # check if body contains {{file}}, {{image}} or {{pdf}}
             yes, fType = Utils.is_file_wordlist_type(line)
             
             if yes:
-                fileExpr = line # line will contain the curly braces e.g {{ file }}
+                fileExpr = line         # line will contain the curly braces e.g {{ file }}
                 fileType = fType
             else:
-                copiedMB.append(line)
+                copiedMB.append(line)   # append lines without {{file}}, {{image}} or {{pdf}}
         
         # get body in original string as a whole including all whitespaces and breaklines
         for s in copiedMB:

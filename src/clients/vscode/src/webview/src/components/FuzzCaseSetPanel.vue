@@ -323,6 +323,9 @@ class Props {
 
   isDataLoadingInProgress = false;
 
+  requestMsgHasError = false;
+  requestMsgErrorMessage = ''
+
   beforeMount() {
       this.$logger = inject('$logger');   
   }
@@ -553,8 +556,23 @@ class Props {
     
   }
 
+  async parseRequestMessage(rqMsg) {
+    if(rqMsg == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
+
   async onDialogClose() {
-    //this.parseRequestMessage(this.rqInEdit);
     if (this.rqInEditOriginal != this.rqInEdit) {
       this.isTableDirty = true;
 

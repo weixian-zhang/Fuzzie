@@ -593,13 +593,15 @@ class Props {
 
     async downloadFuzzFile(fuzzFileUploadId, fileName) {
 
-      const content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+      var content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+
+      const bytesContent = this.stringToArrayBuffer(content);
 
       if(content == '') {
         this.toastInfo('file content is empty');
       }
 
-      const url = window.URL.createObjectURL(new Blob([content]));
+      const url = window.URL.createObjectURL(new Blob([bytesContent]));
       const link = document.createElement('a');
       link.href = url;
       link.target = "fileDownloader"; //arbitrary name of iframe
@@ -607,6 +609,16 @@ class Props {
       document.body.appendChild(link);
       link.click(); 
     }
+
+  stringToArrayBuffer(data) {
+    var binaryLen = data.length;
+    var bytes = new Uint8Array(binaryLen);
+    for (var i = 0; i < binaryLen; i++) {
+        var ascii = data.charCodeAt(i);
+        bytes[i] = ascii;
+    }
+    return bytes;
+  }
 
     settableRequestPathSideBar() {
 

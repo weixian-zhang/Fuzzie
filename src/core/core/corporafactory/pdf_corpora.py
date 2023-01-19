@@ -16,6 +16,7 @@ core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
+import io
 
 from eventstore import EventStore
 

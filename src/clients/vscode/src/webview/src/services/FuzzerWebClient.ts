@@ -507,7 +507,7 @@ export default class FuzzerWebClient
         `;
 
         try {
-            const response = await axios.post(this.gqlUrl, {query});
+            const response = await axios.post(this.gqlUrl, {query, responseType: 'arraybuffer'});
 
             if(this.responseHasData(response))
             {
