@@ -22,10 +22,21 @@ export default class Logger {
     }
 
     public error(ex: any, source='') {
-        if(!Utils.isNothing(ex) && !Utils.isNothing(ex.message) && !Utils.isNothing(ex.stack)) {
-            const errMsg = `${ex.message}, ${ex.stack}`;
-            console.log(errMsg);
-            this._vscodeConsole.send(errMsg);
+        
+        if (ex instanceof Error) {
+            if(!Utils.isNothing(ex) && !Utils.isNothing(ex.message) && !Utils.isNothing(ex.stack)) {
+                const errMsg = `${ex.message}, ${ex.stack}`;
+                console.log(errMsg);
+                this._vscodeConsole.send(errMsg);
+            }
+        }
+        //ex is string
+        else if (typeof ex === 'string') {
+            console.log(ex);
+            this._vscodeConsole.send(ex);
+        }
+        else {
+            console.log(ex);
         }
         
     }

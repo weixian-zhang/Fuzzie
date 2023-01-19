@@ -38,8 +38,9 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                         
                         if wordlist_type == WordlistType.image:
                             ftResult.file.content.seek(0)
-                            decodedImg = ftResult.file.content.getvalue().decode('latin-1')
-                            content = decodedImg
+                            byteVal = ftResult.file.content.getvalue()
+                            decoded = Utils.try_decode_bytes_string(byteVal)
+                            content = decoded
                         else:
                             content = ftResult.file.content
 

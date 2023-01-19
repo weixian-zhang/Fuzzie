@@ -407,7 +407,7 @@ class ServiceManager:
             self.eventstore.emitErr(e, 'ServiceManager.cancel_fuzz')
             return False
     
-    async def fuzz_once(self, fuzzcontextId, fuzzcasesetId):
+    async def fuzz_once(self, fuzzcontextId, fuzzcasesetId) -> tuple([bool, str, str]):
         try:
             fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
             
@@ -425,11 +425,11 @@ class ServiceManager:
             
             if ServiceManager.webapiFuzzer is None or ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
-                await ServiceManager.webapiFuzzer.fuzz_once()
+                caseSetRunSummaryId = await ServiceManager.webapiFuzzer.fuzz_once()
             else:
                 return False, 'fuzzing in progress'
                 
-            return True, ''
+            return True, '', caseSetRunSummaryId
         
         except Exception as e:
             self.eventstore.emitErr(e)

@@ -14,7 +14,8 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             FuzzReqRespMessageQueryResult,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult,
-                            ParseRequestMessageResult
+                            ParseRequestMessageResult,
+                            FuzzOnceResult
                             )
 from utils import Utils 
 import base64
@@ -344,7 +345,27 @@ class CancelFuzz(graphene.Mutation):
         sm.cancel_fuzz()
         
         return CancelFuzz(ok)
+
+class FuzzOnce(graphene.Mutation):
+    class Arguments:
+        fuzzcontextId = graphene.String()
+        fuzzCaseSetId = graphene.String()
+
+    #define output
+    ok = graphene.Boolean()
+    msg = graphene.String()
+    caseSetRunSummaryId = graphene.String()
+    
+    async def mutate(self, info, fuzzcontextId, fuzzCaseSetId):
         
+        ok = True
+        msg = ''
+        
+        sm = ServiceManager()
+        
+        ok, msg, caseSetRunSummaryId = await sm.fuzz_once(fuzzcontextId, fuzzCaseSetId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+
+        return FuzzOnce(ok=ok, msg=msg, caseSetRunSummaryId=caseSetRunSummaryId)
     
 class Fuzz(graphene.Mutation):
     class Arguments:
@@ -378,6 +399,8 @@ class Mutation(graphene.ObjectType):
     delete_api_fuzzcasesetrun =  DeleteApiFuzzCaseSetRun.Field()
     
     fuzz = Fuzz.Field()
+    
+    fuzz_once = FuzzOnce.Field()
     
     cancel_Fuzz = CancelFuzz.Field()
     

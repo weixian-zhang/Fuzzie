@@ -927,6 +927,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
+    this.eventemitter.on('onFuzzCaseSet_FuzzRun_Complete', this.onFuzzCaseSet_FuzzRun_Complete);
 
     this.getFuzzcontexts()
   }
@@ -984,6 +985,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
+  }
+
+  onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
+    this.getFuzzcontexts();
+
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, caseSetRunSummaryId);
   }
 
   //#### websocket event ends ####
@@ -1097,7 +1105,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
               fuzzcontextId: fcsr.fuzzcontextId,
               fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
-              label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              label: dateformat(fcsr.startTime, "dS mmm, yy - H:MM:ss"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
               isFuzzCaseRun: true,
               hostname: fc.hostname,

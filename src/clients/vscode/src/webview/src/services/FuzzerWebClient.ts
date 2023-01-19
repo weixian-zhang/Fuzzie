@@ -598,6 +598,37 @@ export default class FuzzerWebClient
         return [false, ''];
     }
 
+    
+
+    public async fuzzOnce(fuzzcontextId: string, fuzzCaseSetId: string): Promise<[boolean, string, string]> {
+        const query = `
+        mutation fuzzOnce {
+            fuzzOnce(fuzzcontextId:"${fuzzcontextId}", fuzzCaseSetId: "${fuzzCaseSetId}") {
+                  ok,
+                  msg
+            }
+          }
+        `;
+
+        try {
+            const response = await axios.post(this.gqlUrl, {query});
+
+            if(this.responseHasData(response))
+            {
+                const ok = response.data.data.fuzzOnce.ok;
+                const error = response.data.data.fuzzOnce.msg;
+                const caseSetRunSummaryId = response.data.data.fuzzOnce.caseSetRunSummaryId;
+                return [ok, error, caseSetRunSummaryId];
+            }
+
+            return [false, '', '']
+            
+        } catch (error: any) {
+            this.$logger.error(error);
+            return [false, error.message, ''];
+        }
+    }
+
     public async fuzz(fuzzContextId: string): Promise<[boolean, string]> {
         const query = `
         mutation fuzz {

@@ -125,14 +125,13 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
                 return
             
-            self.totaRunsPerCaseSet = self.apifuzzcontext.fuzzcaseToExec
-            self.totalRunsForAllCaseSets = fcsLen * self.totaRunsPerCaseSet
-            
+            caseSetRunSummaryId = shortuuid.uuid()
+            self.totaRunsPerCaseSet = 1
+            self.totalRunsForAllCaseSets = 1
             runNumber = 0
+            
             for fcs in self.apifuzzcontext.fuzzcaseSets:
-                
-                caseSetRunSummaryId = shortuuid.uuid()
-                
+                 
                 create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
                                           fuzzCaseSetId=  fcs.Id,
                                           fuzzCaseSetRunId = self.fuzzCaseSetRunId,
@@ -144,6 +143,9 @@ class WebApiFuzzer:
                     runNumber = runNumber + 1
                     
                     self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
+                    
+            
+            return caseSetRunSummaryId
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
@@ -505,7 +507,8 @@ class WebApiFuzzer:
                 
             fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
             
-            fuzzResp.contentLength = resp.headers['Content-Length']
+            if 'Content-Length' in resp.headers:
+                fuzzResp.contentLength = resp.headers['Content-Length']
             
             respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse} ' \
                                         '\n' \

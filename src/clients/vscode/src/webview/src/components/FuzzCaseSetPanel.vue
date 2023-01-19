@@ -165,7 +165,7 @@
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    ''
+                    onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
                   )" >
                   </v-icon>
             </td>
@@ -440,11 +440,8 @@ class Props {
         }
         else
         {
-            // get latest updated fuzzcontext
+          // get latest updated fuzzcontext
           this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
-
-          // get latest updated fuzzcaseset
-          //await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
 
           this.isTableDirty = false;
           
@@ -513,6 +510,18 @@ class Props {
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
+  async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
+    try {
+      
+      const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
+
+      // get latest updated fuzzcontext
+      this.eventemitter.emit("onFuzzCaseSet_FuzzRun_Complete", fuzzcontextId, caseSetRunSummaryId);
+      
+    } catch (error) {
+        this.$logger.error(error);
+    }
+  }
 
   async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
 
