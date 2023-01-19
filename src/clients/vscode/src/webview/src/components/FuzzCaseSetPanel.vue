@@ -209,16 +209,24 @@
               {{ item.file }}
             </td>
             <td>
-              {{ item.http2xx == undefined ? 0 : item.http2xx }}
+              <span :class="item.http2xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http2xx == undefined ? 0 : (item.http2xx) }}
+              </span>
             </td>
             <td>
-              {{ item.http3xx == undefined ? 0 : item.http3xx }}
+              <span :class="item.http3xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http3xx == undefined ? 0 : item.http3xx }}
+              </span>
             </td>
             <td>
-              {{ item.http4xx == undefined ? 0 : item.http4xx }}
+              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http4xx == undefined ? 0 : item.http4xx }}
+              </span>
             </td>
             <td>
-              {{ item.http5xx == undefined ? 0 : item.http5xx }}
+              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http5xx == undefined ? 0 : item.http5xx }}
+              </span>
             </td>
             <td>
               {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns  }} / {{ item.totalDataCaseRunsToComplete }}

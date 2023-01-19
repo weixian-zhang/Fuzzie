@@ -143,8 +143,8 @@
                 Reason
               </th>
               <th class="text-left">
-                
-                <div class="dropdown">
+                Content Length(response, bytes)
+                <!-- <div class="dropdown">
                     <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length(bytes)</button>
                     <div class="dropdown-content">
                       <v-radio-group inline v-model="tableFilterSmallerLarger" >
@@ -160,12 +160,12 @@
                         ></v-radio>
                       </v-radio-group>
                       <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange"  step="20" v-model="contentLengthInputValue" />
-                      <!-- <button class="btn-sm btn-info btn-sm dropdown-toggle"
+                    <button class="btn-sm btn-info btn-sm dropdown-toggle"
                         @click="onContentLengthFilterClicked()">
                         Filter
-                      </button> -->
+                      </button> 
                     </div>                 
-                  </div>
+                  </div>-->
               </th>
               <th class="text-left">
                 Duration(secs)
@@ -431,36 +431,36 @@ class Props {
       });
    }
 
-   oncontentLengthInputChange(input) {
-      //const contentLengthToFilter = input.data;
-
-      try {
-        if (this.fdcsDataOriginal == undefined || this.fdcsDataOriginal.length == 0) {
-          return;
-        }
-
-        var operator = '>=';
-
-        if (this.tableFilterSmallerLarger == '>=') {
-          this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
-            if(x != undefined && x.response.contentLength >= this.contentLengthInputValue) {
-              return x;
-            }
-          });
-        }
-        else {
-          this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
-            if(x != undefined && x.response.contentLength <= this.contentLengthInputValue) {
-              return x;
-            }
-          });
-        }
-      }
-      catch(error) {
-        this.$logger.error(error)
-      }
-  
-    }
+   //oncontentLengthInputChange(input) {
+   //   //const contentLengthToFilter = input.data;
+//
+   //   try {
+   //     if (this.fdcsDataOriginal == undefined || this.fdcsDataOriginal.length == 0) {
+   //       return;
+   //     }
+//
+   //     var operator = '>=';
+//
+   //     if (this.tableFilterSmallerLarger == '>=') {
+   //       this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
+   //         if(x != undefined && x.response.contentLength >= this.contentLengthInputValue) {
+   //           return x;
+   //         }
+   //       });
+   //     }
+   //     else {
+   //       this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
+   //         if(x != undefined && x.response.contentLength <= this.contentLengthInputValue) {
+   //           return x;
+   //         }
+   //       });
+   //     }
+   //   }
+   //   catch(error) {
+   //     this.$logger.error(error)
+   //   }
+  //
+   // }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 

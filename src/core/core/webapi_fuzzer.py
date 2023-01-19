@@ -596,8 +596,6 @@ class WebApiFuzzer:
                 else:
                     ok, err, fileContent = self.corporaContext.resolve_file(fcs.file)
                     
-                    #decoded = self.try_decode_file_content(fileContent)
-                    
                     file = FuzzCaseSetFile(wordlist_type=fcs.file, filename=filename, content=fileContent)
                     
                     

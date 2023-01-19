@@ -114,7 +114,7 @@
               
               <form>
 
-                <h4>API Authentication</h4>
+                <h4>Global Headers - Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -242,7 +242,7 @@
                 <h4>Fuzz Properties</h4>
                 <v-divider />
                 
-                <p><small>Number of fuzz test runs per API operation</small></p>
+                <p><small>Number of fuzz tests to run per API operation</small></p>
                 <v-divider />
                 <v-slider
                   v-model="newApiContext.fuzzcaseToExec"
@@ -373,7 +373,7 @@
               
               <form>
 
-                <h4>API Authentication</h4>
+                <h4>Global Headers - Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -502,7 +502,7 @@
                 <v-divider />
                 <v-divider />
 
-                <p><small>Number of fuzz test runs per API operation</small></p>
+                <p><small>Number of fuzz tests to run per API operation</small></p>
                 <v-divider />
                 <v-slider
                   v-model="apiContextEdit.fuzzcaseToExec"
