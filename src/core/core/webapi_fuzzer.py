@@ -126,6 +126,7 @@ class WebApiFuzzer:
                 return
             
             caseSetRunSummaryId = shortuuid.uuid()
+            self.apifuzzcontext.fuzzcaseToExec = 1
             self.totaRunsPerCaseSet = 1
             self.totalRunsForAllCaseSets = 1
             runNumber = 0
@@ -206,8 +207,6 @@ class WebApiFuzzer:
             fuzzDataCase, file = self.http_call(fcs)
             
             summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, file)
-            
-            self.save_uploaded_file(file=file,fuzzRequestId=fuzzDataCase.request.Id, fuzzDataCaseId=fuzzDataCase.Id )
             
             # update run status
             self.fuzzcaseset_done(runNumber)
@@ -387,27 +386,7 @@ class WebApiFuzzer:
                 
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.fuzzcaseset_done')
-    
-    def save_uploaded_file(self, file: FuzzCaseSetFile, fuzzDataCaseId, fuzzRequestId):
-        
-        try:
-            if file != None:
-                wordlist_type = file.wordlist_type
-                fileName = file.filename
-                content = file.content
-                insert_api_fuzzrequest_fileupload(
-                    Id=shortuuid.uuid(),
-                    wordlist_type=wordlist_type,
-                    fileName=fileName,
-                    fileContent= content,
-                    fuzzcontextId= self.apifuzzcontext.Id,
-                    fuzzDataCaseId=fuzzDataCaseId,
-                    fuzzRequestId=fuzzRequestId
-                )
-                    
 
-        except Exception as e:
-            self.eventstore.emitErr(e)
         
     def enqueue_fuzz_result_for_persistent(self, caseSetRunSummaryId, fdc: ApiFuzzDataCase, file) -> ApiFuzzCaseSets_With_RunSummary_ViewModel:
     

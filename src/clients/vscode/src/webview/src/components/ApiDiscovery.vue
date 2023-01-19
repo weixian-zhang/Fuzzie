@@ -688,7 +688,13 @@
 
     
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" style="height: 320px" class=" border-0">
+        <Tree :value="nodes"
+        ref="tree"
+        selectionMode="single" 
+        :expandedKeys="expandedNodeKeys" 
+        v-show="showTree" 
+        scrollHeight="320px" 
+        style="height: 320px" class=" border-0">
           <template #default="slotProps" >
 
             <!--fuzz context-->
@@ -987,11 +993,17 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
   }
 
-  onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
+  async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
+
     this.getFuzzcontexts();
 
+    await Utils.delay(200);
+
+    //
+    this.selectTreeNodeByKey(caseSetRunSummaryId);
+
     //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-    this.eventemitter.emit("onFuzzContextSelected", fuzzcontextId, caseSetRunSummaryId);
+    this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
   }
 
   //#### websocket event ends ####
@@ -1021,7 +1033,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, '');
   }
 
-  
   async getFuzzcontexts() {
 
     try {
@@ -1125,6 +1136,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     return nodes;
 
+  }
+
+  selectTreeNodeByKey(fuzzCaseSetRunID) {
+    const tree: any = this.$refs.tree;
+    tree.selectionKeys = {};
+    tree.selectionKeys[fuzzCaseSetRunID] = true;
   }
 
   async onDialogClose(rqMsg: string) {
