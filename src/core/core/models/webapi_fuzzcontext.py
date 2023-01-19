@@ -97,6 +97,13 @@ class FuzzCaseSetFile:
         if fileType.startswith(WordlistType.myfile):
             return True
         return False
+    
+    def get_myfile_filename(filename):
+        if filename.startswith(WordlistType.myfile):
+            return filename[filename.index('_') + 1:]
+        else:
+            filename
+            
         
         
 # each "fuzz data set" is one a unique verb + path

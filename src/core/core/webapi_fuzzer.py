@@ -582,6 +582,11 @@ class WebApiFuzzer:
                 filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
                 
                 if FuzzCaseSetFile.is_myfile(fcs.file):
+                    
+                    fn = FuzzCaseSetFile.get_myfile_filename(fcs.file)
+                    if not Utils.isNoneEmpty(fn):
+                        filename = fn
+                    
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
                     
                     decoded = self.try_decode_file_content(fileContent)
