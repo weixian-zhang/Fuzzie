@@ -13,14 +13,35 @@
       :maximizable="true" :modal="true"
       :dismissableMask="false" :closeOnEscape="false"
       @hide="onDialogClose(rqInEdit)">
-      <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <RequestMessageExampleView 
-        v-bind:rqmsg:loadexample="rqInEdit"
-        v-on:rqmsg:loadexample="rqInEdit = $event" />
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col text-left">
+              <RequestMessageExampleView 
+              v-bind:rqmsg:loadexample="rqInEdit"
+              v-on:rqmsg:loadexample="rqInEdit = $event" />
+          </div>
+          <div class="col text-right">
+              <v-btn
+                size="x-small"
+                color="cyan"
+                @click="parseRequestMessage(rqInEdit)"
+                >
+              Parse
+              </v-btn>
+              <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle
+              </v-icon>
+              <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                mdi-close-circle
+              </v-icon>
+          </div>
+        </div>
+      </div>
 
-  
+
       <div style="height: 10px;"></div>
+
       <codemirror
           v-model="rqInEdit"
           placeholder="request message goes here..."
@@ -144,7 +165,7 @@
                   color="cyan darken-3"
                   size="x-small"
                   @click="(
-                    ''
+                    onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
                   )" >
                   </v-icon>
             </td>
@@ -188,16 +209,24 @@
               {{ item.file }}
             </td>
             <td>
-              {{ item.http2xx == undefined ? 0 : item.http2xx }}
+              <span :class="item.http2xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http2xx == undefined ? 0 : (item.http2xx) }}
+              </span>
             </td>
             <td>
-              {{ item.http3xx == undefined ? 0 : item.http3xx }}
+              <span :class="item.http3xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http3xx == undefined ? 0 : item.http3xx }}
+              </span>
             </td>
             <td>
-              {{ item.http4xx == undefined ? 0 : item.http4xx }}
+              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http4xx == undefined ? 0 : item.http4xx }}
+              </span>
             </td>
             <td>
-              {{ item.http5xx == undefined ? 0 : item.http5xx }}
+              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http5xx == undefined ? 0 : item.http5xx }}
+              </span>
             </td>
             <td>
               {{ item.completedDataCaseRuns == undefined ? 0 : item.completedDataCaseRuns  }} / {{ item.totalDataCaseRunsToComplete }}
@@ -261,8 +290,6 @@ class Props {
   showReqMsgEditDialog = false;
   rqInEdit = '';
   rqInEditOriginal = '';
-  requestMsgHasError = false;
-  requestMsgErrorMessage = '';
   currentEditFuzzCaseSetId = '';
 
   $logger: Logger|any;
@@ -369,21 +396,7 @@ class Props {
     this.currentFuzzContextId = '';
   }
 
-  async parseRequestMessage(rqMsg) {
-    if(rqMsg == ''){
-      return;
-    }
-    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
 
-    if(!ok) {
-      this.requestMsgHasError = true;
-      this.requestMsgErrorMessage = error;
-      this.toastError(error);
-      return;
-    }
-    this.requestMsgErrorMessage = '';
-    this.requestMsgHasError = false;
-  }
  
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
@@ -435,11 +448,8 @@ class Props {
         }
         else
         {
-            // get latest updated fuzzcontext
+          // get latest updated fuzzcontext
           this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
-
-          // get latest updated fuzzcaseset
-          //await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
 
           this.isTableDirty = false;
           
@@ -508,6 +518,18 @@ class Props {
      await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
+  async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
+    try {
+      
+      const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
+
+      // get latest updated fuzzcontext
+      this.eventemitter.emit("onFuzzCaseSet_FuzzRun_Complete", fuzzcontextId, caseSetRunSummaryId);
+      
+    } catch (error) {
+        this.$logger.error(error);
+    }
+  }
 
   async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
 

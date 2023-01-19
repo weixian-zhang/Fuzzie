@@ -614,7 +614,7 @@ class RequestMessageFuzzContextCreator:
         
         if self.currentFuzzCaseSet != None:
            self.currentFuzzCaseSet.file = FuzzCaseSetFile(
-                   wordlist_type=WordlistType.myfile,
+                   wordlist_type=corporaContextKeyName, #WordlistType.myfile,
                    filename = corporaContextKeyName,
                    content=evalOutput)
         

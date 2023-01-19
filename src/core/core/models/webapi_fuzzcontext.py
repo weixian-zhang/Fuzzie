@@ -86,11 +86,6 @@ class ApiFuzzDataCase:
 
 class FuzzCaseSetFile:
     
-    myfile_wordlist_type = 'myfile'
-    file_wordlist_type = 'file'
-    image_wordlist_type = 'image'
-    pdf_wordlist_type = 'pdf'
-    
     # wordlist_type for myfile is content_key name for e.g: "myfile_filename"
     def __init__(self, wordlist_type='file', filename='', content='') -> None: 
         
@@ -102,6 +97,13 @@ class FuzzCaseSetFile:
         if fileType.startswith(WordlistType.myfile):
             return True
         return False
+    
+    def get_myfile_filename(filename):
+        if filename.startswith(WordlistType.myfile):
+            return filename[filename.index('_') + 1:]
+        else:
+            filename
+            
         
         
 # each "fuzz data set" is one a unique verb + path

@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(core_core_dir, 'models'))
 
 import jinja2
 from utils import Utils
-from webapi_fuzzcontext import (ApiFuzzCaseSet, FuzzCaseSetFile)
+from webapi_fuzzcontext import (ApiFuzzCaseSet, WordlistType)
 from corpora_provider import CorporaProvider
 from user_supplied_corpora import UserSuppliedCorpora
 from boolean_corpora import BoolCorpora
@@ -35,7 +35,7 @@ class CorporaContext:
     # try_build_context is used only for parsing request messages from webview
     def try_build_context(self, dataTemplate: str) -> tuple([bool, str]):
         try:
-            self.build_context_of_req_msg(dataTemplate)
+            self.build_data_context_from_req_msg(dataTemplate)
             return True, ''
         except Exception as e:
             return False, ''
@@ -46,21 +46,21 @@ class CorporaContext:
             for fcs in fcss:
                 
                 if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
-                    self.build_context_of_req_msg(fcs.pathDataTemplate)
+                    self.build_data_context_from_req_msg(fcs.pathDataTemplate)
                     
                 if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
-                    self.build_context_of_req_msg(fcs.querystringDataTemplate)
+                    self.build_data_context_from_req_msg(fcs.querystringDataTemplate)
                     
                 if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
-                    self.build_context_of_req_msg(fcs.headerDataTemplate)
+                    self.build_data_context_from_req_msg(fcs.headerDataTemplate)
                 
                 if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
-                    self.build_context_of_req_msg(fcs.bodyDataTemplate)
+                    self.build_data_context_from_req_msg(fcs.bodyDataTemplate)
                     
                 if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
-                    self.build_context_of_req_msg(fcs.fileDataTemplate)
+                    self.build_data_context_from_req_msg(fcs.fileDataTemplate)
                     
-                return True, ''
+            return True, ''
                 
         except Exception as e:
             return False, Utils.errAsText(e)
@@ -68,7 +68,7 @@ class CorporaContext:
     
     # will also be use of "parsing" request message. By parsing means build a corpora-context
     # if successful, request message is valid
-    def build_context_of_req_msg(self, reqMsg) -> tuple[bool, str]:
+    def build_data_context_from_req_msg(self, reqMsg) -> tuple[bool, str]:
         
         if reqMsg == '' or reqMsg == '{}':
             return True, ''
@@ -82,7 +82,7 @@ class CorporaContext:
             return True, ''
                 
         except Exception as e:
-            self.eventstore.emitErr(e, 'CorporaContext.build_context_of_req_msg')
+            self.eventstore.emitErr(e, 'CorporaContext.build_data_context_from_req_msg')
             return False, f'Invalid expression: {Utils.errAsText(e)}'
         
     def resolve_fuzzdata(self, reqMsg) -> tuple[bool, str, object]:
@@ -144,7 +144,7 @@ class CorporaContext:
             #return originalExpression
         
         # "myFile"
-        if wordlist_type == FuzzCaseSetFile.myfile_wordlist_type:
+        if wordlist_type == WordlistType.myfile:
             
             corporaContextKey = self.get_myfile_corporacontext_key(my_file_content_filename)
             
@@ -203,20 +203,20 @@ class CorporaContext:
                     return originalExpression
                 
             # image
-            case FuzzCaseSetFile.image_wordlist_type:
+            case WordlistType.image:
                 if not 'image' in self.context:
-                    self.context[FuzzCaseSetFile.image_wordlist_type] = self.cp.imageCorpora
+                    self.context[WordlistType.image] = self.cp.imageCorpora
                     return originalExpression
             # pdf          
-            case FuzzCaseSetFile.pdf_wordlist_type:
-                if not FuzzCaseSetFile.pdf_wordlist_type in self.context:
-                    self.context[FuzzCaseSetFile.pdf_wordlist_type] = self.cp.pdfCorpora
+            case WordlistType.pdf:
+                if not WordlistType.pdf in self.context:
+                    self.context[WordlistType.pdf] = self.cp.pdfCorpora
                     return True
             
             # file  
-            case FuzzCaseSetFile.file_wordlist_type:
-                if not FuzzCaseSetFile.file_wordlist_type in self.context:
-                    self.context[FuzzCaseSetFile.file_wordlist_type] = self.cp.seclistPayloadCorpora
+            case WordlistType.file:
+                if not WordlistType.file in self.context:
+                    self.context[WordlistType.file] = self.cp.seclistPayloadCorpora
                     return True
             
             # no wordlist-type match     

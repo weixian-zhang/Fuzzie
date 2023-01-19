@@ -38,21 +38,7 @@
                   </li>
                 </ul>
               </div>
-            </div>
-            <div class="col-6 text-right">
-                <v-btn
-                  size="x-small"
-                  color="cyan"
-                  @click="parseRequestMessage(newApiContext.requestTextContent)"
-                  >
-                Parse
-                </v-btn>
-                <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
-                      mdi-check-circle
-                </v-icon>
-                <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
-                  mdi-close-circle
-                </v-icon>
+              
             </div>
           </div>
       </div>
@@ -78,10 +64,15 @@ class Props {
  export default class RequestMessageExampleView extends Vue.with(Props) {
     reqMsgExampleLoader = new RequestMessageExamples();
 
+    requestMsgHasError = false;
+    requestMsgErrorMessage = '';
+
     loadExample(key) {
       const example = this.reqMsgExampleLoader.loadExample(key);
       this.$emit('rqmsg:loadexample', example);
     }
+
+
  }
 
 </script>

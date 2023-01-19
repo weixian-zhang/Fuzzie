@@ -134,8 +134,8 @@ export default class Utils
 
     private static sleep = m => new Promise(r => setTimeout(r, m))
 
-    public static async delay(sec) {
-        await Utils.sleep(sec);
+    public static async delay(milliseconds) {
+        await Utils.sleep(milliseconds);
     }
 
     public static jsonTryParse(jsonStr: string) {

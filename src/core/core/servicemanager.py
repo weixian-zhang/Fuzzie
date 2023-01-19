@@ -24,6 +24,7 @@ from db import  (get_fuzzcontext,
                  insert_db_fuzzcontext, 
                  update_api_fuzz_context,
                  delete_api_fuzz_context,
+                 delete_api_fuzzCaseSetRun,
                  get_fuzzContexts_and_runs,
                  save_updated_fuzzcasesets,
                  update_rqmsg_in_fuzz_context,
@@ -61,7 +62,16 @@ class ServiceManager:
             
         except Exception as e:
             return (False, Utils.errAsText(e))
+    
+    def delete_api_fuzzCaseSetRun(self, fuzzCaseSetRunId):
         
+        try:
+            delete_api_fuzzCaseSetRun(fuzzCaseSetRunId)
+            
+            return (True, '')
+            
+        except Exception as e:
+            return (False, Utils.errAsText(e))
         
     
     def update_api_fuzzcontext(self, apiFuzzcontext: ApiFuzzContextUpdate):
@@ -396,7 +406,33 @@ class ServiceManager:
         except Exception as e:
             self.eventstore.emitErr(e, 'ServiceManager.cancel_fuzz')
             return False
+    
+    async def fuzz_once(self, fuzzcontextId, fuzzcasesetId) -> tuple([bool, str, str]):
+        try:
+            fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
+            
+            # find single fuzzcaseset
+            singleFCSList = []
+            for x in fuzzcontext.fuzzcaseSets:
+                if x.Id == fuzzcasesetId:
+                    singleFCSList.append(x)
+                    break
+                
+            fuzzcontext.fuzzcaseSets = singleFCSList
         
+            if fuzzcontext is None:
+                return False, 'Context not found or no FuzzCaseSet is selected'
+            
+            if ServiceManager.webapiFuzzer is None or ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop:
+                ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
+                caseSetRunSummaryId = await ServiceManager.webapiFuzzer.fuzz_once()
+            else:
+                return False, 'fuzzing in progress'
+                
+            return True, '', caseSetRunSummaryId
+        
+        except Exception as e:
+            self.eventstore.emitErr(e)
     
     async def fuzz(self, fuzzcontextId):
         
@@ -409,7 +445,9 @@ class ServiceManager:
             if ServiceManager.webapiFuzzer is None or ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
                 await ServiceManager.webapiFuzzer.fuzz()
-                
+            else:
+                return False, 'fuzzing in progress'
+            
             return True, ''
         
         except Exception as e:
@@ -479,20 +517,16 @@ class ServiceManager:
             row = get_uploaded_file_content(fileUploadId)
         
             if row is None:
-                r = FuzzRequestFileDownloadContentQueryResult()
-                r.ok = True
-                r.error = ''
-                r.result = ''
-                return r
+                return True, '', ''
             
             rDict = row._asdict()
             
-            r = FuzzRequestFileDownloadContentQueryResult()
-            r.ok = True
-            r.error = ''
-            r.result = rDict['fileContent']
+            fileContent = rDict['fileContent']
             
-            return r
+            #b64Encoded = base64.b64encode(bytes(byteContent, 'utf-8'))
+            
+            return True, '', fileContent
+        
         except Exception as e:
             self.eventstore.emitErr(e)
             r = FuzzRequestFileDownloadContentQueryResult()

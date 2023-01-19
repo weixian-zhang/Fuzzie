@@ -114,7 +114,7 @@
               
               <form>
 
-                <h4>API Authentication</h4>
+                <h4>Global Headers - Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -242,7 +242,7 @@
                 <h4>Fuzz Properties</h4>
                 <v-divider />
                 
-                <p><small>Number of fuzz test runs per API operation</small></p>
+                <p><small>Number of fuzz tests to run per API operation</small></p>
                 <v-divider />
                 <v-slider
                   v-model="newApiContext.fuzzcaseToExec"
@@ -373,7 +373,7 @@
               
               <form>
 
-                <h4>API Authentication</h4>
+                <h4>Global Headers - Authentication</h4>
                 <v-divider />
 
                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic radio toggle button group">
@@ -502,7 +502,7 @@
                 <v-divider />
                 <v-divider />
 
-                <p><small>Number of fuzz test runs per API operation</small></p>
+                <p><small>Number of fuzz tests to run per API operation</small></p>
                 <v-divider />
                 <v-slider
                   v-model="apiContextEdit.fuzzcaseToExec"
@@ -549,9 +549,31 @@
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
-      <RequestMessageExampleView 
-        v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
-        v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col text-left">
+              <RequestMessageExampleView 
+              v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
+              v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+          </div>
+          <div class="col text-right">
+              <v-btn
+                size="x-small"
+                color="cyan"
+                @click="parseRequestMessage(newApiContext.requestTextContent)"
+                >
+              Parse
+              </v-btn>
+              <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle
+              </v-icon>
+              <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                mdi-close-circle
+              </v-icon>
+          </div>
+        </div>
+      </div>
+      
       
       <div style="height: 10px;"></div>
       <codemirror
@@ -587,7 +609,7 @@
 
     
 
-    <!-- delete confirmation -->
+    <!-- Dialog delete API Context confirmation -->
     <v-dialog
       v-model="showDeleteConfirmDialog"
       width="400"
@@ -607,6 +629,24 @@
           <v-spacer></v-spacer>
           <button class="btn btn-outline-info mr-3" @click="showDeleteConfirmDialog = false">Cancel</button>
           <button class="btn btn-outline-danger" @click="deleteApiFuzzContext">Delete</button>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog delete FuzzCaseSetRun confirmation -->
+    <v-dialog
+      v-model="showDeleteFuzzCaseSetRunConfirmDialog"
+      width="400"
+    >
+      <v-card>
+        <v-card-title class="text-h5 grey lighten-2">
+          Delete this Run?
+        </v-card-title>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <button class="btn btn-outline-info mr-3" @click="showDeleteFuzzCaseSetRunConfirmDialog = false">Cancel</button>
+          <button class="btn btn-outline-danger" @click="deleteApiFuzzCaseSetRun">Delete</button>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -648,7 +688,13 @@
 
     
         
-        <Tree :value="nodes" selectionMode="single" :expandedKeys="expandedNodeKeys" v-show="showTree" scrollHeight="320px" style="height: 320px" class=" border-0">
+        <Tree :value="nodes"
+        ref="tree"
+        selectionMode="single" 
+        :expandedKeys="expandedNodeKeys" 
+        v-show="showTree" 
+        scrollHeight="320px" 
+        style="height: 320px" class=" border-0">
           <template #default="slotProps" >
 
             <!--fuzz context-->
@@ -679,6 +725,20 @@
                     selectedCaseSetRunNode = slotProps.node.fuzzCaseSetRunsId)">
                 {{slotProps.node.label}}
               </b>
+              &nbsp;
+              <v-icon
+                  v-show="(isFuzzingInProgress() == false)"
+                  variant="flat"
+                  icon="mdi-delete"
+                  color="cyan darken-3"
+                  size="x-small"
+                  @click="(
+                    this.apiFuzzCaseSetRunToDelete = {
+                      Id: slotProps.node.fuzzCaseSetRunsId
+                    },
+                    this.showDeleteFuzzCaseSetRunConfirmDialog = true
+                  )">
+                  </v-icon>
             </small>
 
             <span v-if="slotProps.node.key != '-1' && slotProps.node.key != '-2' && slotProps.node.isFuzzCaseRun == false">
@@ -701,30 +761,6 @@
                   )">Delete</button></li>
                 </ul>
               </div>
-
-                
-
-
-                <!-- <v-icon
-                  variant="flat"
-                  icon="mdi-pencil"
-                  color="cyan darken-3"
-                  size="x-small"
-                  @click="(
-                    onEditFuzzContextClicked(slotProps.node.data)
-                  )" >
-                  </v-icon>
-
-                  &nbsp;
-
-                  <v-icon
-                  variant="flat"
-                  icon="mdi-delete"
-                  color="cyan darken-3"
-                  size="x-small"
-                  @click="(
-                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
-                  )"/> -->
 
                   &nbsp;
 
@@ -829,6 +865,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   expandedNodeKeys = {};
   showTree = this.nodes.length > 0 ? "true": "false";
   showDeleteConfirmDialog = false;
+  showDeleteFuzzCaseSetRunConfirmDialog = false;
   showFuzzConfirmDialog = false;
   showReqMsgCreateDialog = false;
   showReqMsgReadOnlyDialog = false;
@@ -837,6 +874,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   isGetFuzzContextFinish = true;
   createContextBtnDisable = false;
   apiContextToDelete: any = {};
+  apiFuzzCaseSetRunToDelete: any = {};
   apiContextIdToFuzz = '';
   inputRules= [
         //() => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid",
@@ -895,6 +933,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
+    this.eventemitter.on('onFuzzCaseSet_FuzzRun_Complete', this.onFuzzCaseSet_FuzzRun_Complete);
 
     this.getFuzzcontexts()
   }
@@ -954,6 +993,19 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
   }
 
+  async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
+
+    this.getFuzzcontexts();
+
+    await Utils.delay(200);
+
+    //
+    this.selectTreeNodeByKey(caseSetRunSummaryId);
+
+    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
+  }
+
   //#### websocket event ends ####
 
   onEditFuzzContextClicked(data) {
@@ -969,6 +1021,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.showDeleteConfirmDialog = true
   }
 
+
   onFuzzFuzzContextClicked(fuzzcontextId: string) {
     this.apiContextIdToFuzz = fuzzcontextId;
     this.showFuzzConfirmDialog = true
@@ -980,7 +1033,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, '');
   }
 
-  
   async getFuzzcontexts() {
 
     try {
@@ -1064,7 +1116,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
               fuzzcontextId: fcsr.fuzzcontextId,
               fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
-              label: dateformat(fcsr.startTime, "ddd, mmm dS, yy - h:MM:ss TT"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              label: dateformat(fcsr.startTime, "dS mmm, yy - H:MM:ss"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
               isFuzzCaseRun: true,
               hostname: fc.hostname,
@@ -1084,6 +1136,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     return nodes;
 
+  }
+
+  selectTreeNodeByKey(fuzzCaseSetRunID) {
+    const tree: any = this.$refs.tree;
+    tree.selectionKeys = {};
+    tree.selectionKeys[fuzzCaseSetRunID] = true;
   }
 
   async onDialogClose(rqMsg: string) {
@@ -1111,6 +1169,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.toastInfo(`initiatiated fuzzing on ${name}`);
 
     await this.webclient.fuzz(fuzzcontextId)
+
+    await Utils.delay(0.5);
+
+    this.getFuzzcontexts();
   }
 
   isFuzzingInProgress() {
@@ -1192,6 +1254,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
   }
 
+  
+
   async onRequestMessageFileChange(event) {
 
     const files = event.target.files;
@@ -1233,6 +1297,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     else
     {
       this.eventemitter.emit("onFuzzContextDelete", id);
+
       this.getFuzzcontexts();
 
       this.toastSuccess(`${this.apiContextToDelete.name} deleted successfully`, '');
@@ -1240,6 +1305,30 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.showDeleteConfirmDialog = false;
     this.apiContextToDelete = {};
+  }
+
+  async deleteApiFuzzCaseSetRun() {
+    if(!this.fuzzerConnected){
+          return;
+    }
+
+      const fuzzCaseSetRunId = this.apiFuzzCaseSetRunToDelete.Id;
+      const [ok, error] = await this.webclient.deleteApiFuzzCaseSetRun(fuzzCaseSetRunId);
+
+    if(!ok)
+    {
+      this.toastError(error, 'Delete Fuzz Run');
+    }
+    else
+    {
+
+      this.getFuzzcontexts();
+
+      this.toastSuccess(`deleted successfully`, '');
+    }
+
+    this.showDeleteFuzzCaseSetRunConfirmDialog = false;
+    this.apiFuzzCaseSetRunToDelete = {};
   }
 
   async updateApiContext() {
