@@ -100,7 +100,7 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 2500);
+      setInterval(this.checkFuzzerReady, 2000);
     }
 
     
@@ -155,20 +155,20 @@
     }
 
     // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
-    private onFuzzStart(data) {
-      this.$logger.info('fuzzing started');
-      this.eventemitter.emit('fuzz.start', data);
-    }
+    // private onFuzzStart(data) {
+    //   this.$logger.info('fuzzing started');
+    //   this.eventemitter.emit('fuzz.start', data);
+    // }
 
-    private onFuzzComplete(data) {
-      this.$logger.info('fuzzing is completed');
-      this.eventemitter.emit('fuzz.complete')
-    }
+    // private onFuzzComplete(data) {
+    //   this.$logger.info('fuzzing is completed');
+    //   this.eventemitter.emit('fuzz.complete')
+    // }
 
-    private onFuzzCancel(data) {
-      this.$logger.info('fuzzing is cancelled');
-      this.eventemitter.emit('fuzz.cancel')
-    }
+    // private onFuzzCancel(data) {
+    //   this.$logger.info('fuzzing is cancelled');
+    //   this.eventemitter.emit('fuzz.cancel')
+    // }
 
     private onUpdateCaseSetRunSummary(data) {
       this.eventemitter.emit('fuzz.update.casesetrunsummary', data)

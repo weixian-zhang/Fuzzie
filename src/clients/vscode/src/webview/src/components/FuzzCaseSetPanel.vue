@@ -144,7 +144,20 @@
             </td>
             
             <td>
-              <v-icon
+              <v-btn
+                  class="ma-2"
+                  variant="text"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="small"
+                  @click="(
+                    showReqMsgEditDialog = true,
+                    rqInEdit = item.requestMessage,
+                    rqInEditOriginal = item.requestMessage,
+                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
+                  )" ></v-btn>
+
+              <!-- <v-icon
                   variant="flat"
                   icon="mdi-pencil"
                   color="cyan darken-3"
@@ -155,19 +168,31 @@
                     rqInEditOriginal = item.requestMessage,
                     currentEditFuzzCaseSetId = item.fuzzCaseSetId
                   )" >
-                  </v-icon>
+                  </v-icon> -->
             </td>
 
             <td>
-              <v-icon
-                  variant="flat"
+                <v-btn
+                  class="ma-2"
+                  variant="text"
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
-                  size="x-small"
+                  size="small"
+                  :disabled="fuzzOnceDisabled"
                   @click="(
-                    onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
-                  )" >
-                  </v-icon>
+                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
+                      )" ></v-btn>
+
+                  <!-- <v-icon
+                      v-on="on" v-bind="attrs"
+                      icon="mdi-lightning-bolt"
+                      color="cyan darken-3"
+                      size="small"
+                      @click="(
+                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
+                      )" >
+                      </v-icon> -->
+             
             </td>
 
 
@@ -322,6 +347,11 @@ class Props {
   rowClickEnabled = true;
 
   isDataLoadingInProgress = false;
+
+  requestMsgHasError = false;
+  requestMsgErrorMessage = ''
+
+  fuzzOnceDisabled = true;
 
   beforeMount() {
       this.$logger = inject('$logger');   
@@ -491,6 +521,7 @@ class Props {
       }
      } 
      finally {
+        this.fuzzOnceDisabled = false;
         this.isDataLoadingInProgress = false;
      } 
   }
@@ -515,16 +546,18 @@ class Props {
 
     this.refreshHostnameDisplay();
 
-     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+    await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
   async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
     try {
-      
+
+      this.fuzzOnceDisabled = true;
+
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-      // get latest updated fuzzcontext
-      this.eventemitter.emit("onFuzzCaseSet_FuzzRun_Complete", fuzzcontextId, caseSetRunSummaryId);
+      this.fuzzContextId = fuzzcontextId;
+      this.fuzzCaseSetRunsId = caseSetRunSummaryId;
       
     } catch (error) {
         this.$logger.error(error);
@@ -553,8 +586,23 @@ class Props {
     
   }
 
+  async parseRequestMessage(rqMsg) {
+    if(rqMsg == ''){
+      return;
+    }
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
+
+    if(!ok) {
+      this.requestMsgHasError = true;
+      this.requestMsgErrorMessage = error;
+      this.toastError(error);
+      return;
+    }
+    this.requestMsgErrorMessage = '';
+    this.requestMsgHasError = false;
+  }
+
   async onDialogClose() {
-    //this.parseRequestMessage(this.rqInEdit);
     if (this.rqInEditOriginal != this.rqInEdit) {
       this.isTableDirty = true;
 

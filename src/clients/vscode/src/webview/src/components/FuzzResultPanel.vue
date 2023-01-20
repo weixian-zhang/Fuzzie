@@ -55,12 +55,17 @@
         </TabPanel>
 
         <TabPanel header="Fuzzing Files">
-          <v-table  density="compact" fixed-header height="430" hover="true" >          
+          <v-table class="border-0"  density="compact" fixed-header height="430" hover="true" >          
             <tbody>
-              <tr v-for="item in fuzzingUploadedFiles"
-              :key="item.Id">
-                <td>{{ item.fileName }}</td>
-                <td><a href="#" @click="downloadFuzzFile(item.Id, item.fileName)">download </a></td>
+              <tr v-for="file in fuzzingUploadedFiles"
+                :key="file.Id">
+                <td>
+                  <div > {{ file.fileName }}</div>
+                  <span style="color: blue;cursor: pointer; text-decoration: underline;" 
+                    @click="(downloadFuzzFile(file.Id, file.fileName))">
+                    download
+                  </span>
+                </td>
               </tr>
             </tbody>
           </v-table>
@@ -591,22 +596,46 @@ class Props {
       this.fuzzingUploadedFiles = fresult;
     }
 
-    async downloadFuzzFile(fuzzFileUploadId, fileName) {
+    async downloadFuzzFile(fileId, fileName) {
 
-      const content = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+      try {
+        if (Utils.isNothing(fileId)) {
+          this.$logger.error('File ID is not found when downloading fuzz-payloads')
+          return;
+        }
 
-      if(content == '') {
-        this.toastInfo('file content is empty');
+        var downloadedContent = await this.webclient.getFuzzFileContent(fileId);
+
+        if(Utils.isNothing(downloadedContent)) {
+          this.toastInfo('file content is empty');
+          return;
+        }
+
+        const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
+
+        const url = window.URL.createObjectURL(new Blob([byteArrContent]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = "fileDownloader"; //arbitrary name of iframe
+        link.setAttribute('download', `${fileName}`);
+        document.body.appendChild(link);
+        link.click(); 
       }
-
-      const url = window.URL.createObjectURL(new Blob([content]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = "fileDownloader"; //arbitrary name of iframe
-      link.setAttribute('download', `${fileName}`);
-      document.body.appendChild(link);
-      link.click(); 
+      catch(error) {
+        this.$logger.error(error);
+        this.toastError(error);
+      }
     }
+
+  stringToArrayBuffer(data) {
+    var binaryLen = data.length;
+    var bytes = new Uint8Array(binaryLen);
+    for (var i = 0; i < binaryLen; i++) {
+        var ascii = data.charCodeAt(i);
+        bytes[i] = ascii;
+    }
+    return bytes;
+  }
 
     settableRequestPathSideBar() {
 

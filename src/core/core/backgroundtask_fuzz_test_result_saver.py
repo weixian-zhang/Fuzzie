@@ -8,7 +8,7 @@ from db import insert_api_fuzzdatacase, update_casesetrun_summary, insert_api_fu
 import io
 eventstore = EventStore()
 from utils import Utils
-
+import base64
 
 class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
     
@@ -43,7 +43,7 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                             content = decoded
                         else:
                             content = ftResult.file.content
-
+                            
                         insert_api_fuzzrequest_fileupload(
                             Id=shortuuid.uuid(),
                             wordlist_type=wordlist_type,

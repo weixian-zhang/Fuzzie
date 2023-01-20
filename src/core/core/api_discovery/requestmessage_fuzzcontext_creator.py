@@ -11,6 +11,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
+import jsonpickle 
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
 from eventstore import EventStore
@@ -222,32 +223,45 @@ class RequestMessageFuzzContextCreator:
             # get body
             if len(multilineBlock) > 0:
                 
+                fileExpr, fileType  =self.get_file_type_in_body(multilineBlock)
+                
                 # myfile will be discovered later in "inject_eval_into_wordlist_expression"
-                body, fileExpr, fileType = self.get_body_and_file(multilineBlock)
+                body = self.get_body_as_str(multilineBlock)
                 
-                self.currentFuzzCaseSet.bodyNonTemplate = body
+                myfile = self.parse_myfile_in_body_if_any(body)
                 
-                bOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
-                if not bOK:
-                    return bOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
-                
-                # check for file, pdf, image wordlist type
-                if fileExpr != '' and fileType != '':
-                    fOK, fErr, evalFile = self.inject_eval_into_wordlist_expression(fileExpr)
-                    if not fOK:
-                        return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
+                if myfile != '':
+                    self.currentFuzzCaseSet.file = myfile
+                    self.currentFuzzCaseSet.fileDataTemplate = myfile.content
+                else:
+                    # check if body contains file, pdf, image wordlist type
+                    if fileExpr != '' and fileType != '':
+                        fOK, fErr, evalFile = self.inject_eval_into_wordlist_expression(fileExpr)
+                        if not fOK:
+                            return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
+                        
+                        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
+                        self.currentFuzzCaseSet.fileDataTemplate = evalFile
                     
-                    self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
-                    self.currentFuzzCaseSet.fileDataTemplate = evalFile
+                    # body has content
+                    else:
+                        bbOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
+                        if not bbOK:
+                            return bbOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
+                        
+                        self.currentFuzzCaseSet.bodyDataTemplate = evalBody
+                        self.currentFuzzCaseSet.bodyNonTemplate = body
+                
+                
                 
                 # currently, fuzzie only supports 1 file upload per request block.
                 # When there is 1 file detected, this file takes up whole request body.
                 # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
                 # check for myfile wordlist type
-                elif isinstance(self.currentFuzzCaseSet.file, FuzzCaseSetFile) and self.currentFuzzCaseSet.file.wordlist_type == WordlistType.myfile:
-                    self.currentFuzzCaseSet.bodyNonTemplate = ''
-                    self.currentFuzzCaseSet.bodyDataTemplate = ''  # myfile uses body can file content
-                    self.currentFuzzCaseSet.fileDataTemplate = evalBody                    
+                # elif isinstance(self.currentFuzzCaseSet.file, FuzzCaseSetFile) and self.currentFuzzCaseSet.file.wordlist_type == WordlistType.myfile:
+                #     self.currentFuzzCaseSet.bodyNonTemplate = ''
+                #     self.currentFuzzCaseSet.bodyDataTemplate = ''  # myfile uses body can file content
+                #     self.currentFuzzCaseSet.fileDataTemplate = evalBody                    
                    
 
             fcSets.append(self.currentFuzzCaseSet)
@@ -465,11 +479,9 @@ class RequestMessageFuzzContextCreator:
 
     # name=foo
     # &password=bar
-    def get_body_and_file(self, multilineBlock: list[str]) -> str:
+    def get_body_as_str(self, multilineBlock: list[str]) -> str:
         
         body = ''
-        fileExpr = ''
-        fileType = ''
         copiedMB = []
         
         # check lines for file wordlist type
@@ -482,21 +494,42 @@ class RequestMessageFuzzContextCreator:
                 copiedMB.append(line)
                 continue
             
-            # file, image and pdf for now
-            yes, fType = Utils.is_file_wordlist_type(line)
+            # check if body contains {{file}}, {{image}} or {{pdf}}
+            yes, _ = Utils.is_file_wordlist_type(line)
             
             if yes:
-                fileExpr = line # line will contain the curly braces e.g {{ file }}
-                fileType = fType
+                continue
             else:
-                copiedMB.append(line)
+                copiedMB.append(line)   # append lines without {{file}}, {{image}} or {{pdf}}
         
         # get body in original string as a whole including all whitespaces and breaklines
         for s in copiedMB:
             body = body + s + '\n'
         
-        return body, fileExpr, fileType
+        return body
+    
+    def get_file_type_in_body(self,  multilineBlock: list[str]):
+        
+        fileExpr = ''
+        fileType = ''
+        
+        # check lines for file wordlist type
+        for line in multilineBlock:
             
+            line = line.strip()
+            
+            # breakline marker for multipart/form-data
+            if line == '':
+                continue
+            
+            # check if body contains {{file}}, {{image}} or {{pdf}}
+            yes, fType = Utils.is_file_wordlist_type(line)
+            
+            if yes:
+                fileExpr = line         # line will contain the curly braces e.g {{ file }}
+                fileType = fType
+        
+        return fileExpr, fileType
     
     def removeProcessedLines(self, toIndex, list):
         
@@ -603,22 +636,53 @@ class RequestMessageFuzzContextCreator:
         
         return evalOutput
     
+    def parse_myfile_in_body_if_any(self, body) -> FuzzCaseSetFile:
+        
+        fileResult = '';
+        
+        tpl = self.env.from_string(body)
+        
+        output = tpl.render()
+        
+        if output != '':
+            jsonDecoded = jsonpickle.decode(output)
+            if isinstance(jsonDecoded, FuzzCaseSetFile):
+                fileResult = jsonpickle.decode(output)
+        
+        return fileResult
+            
+    
     def myfile_jinja_filter(self, content: str, filename: str):
         
-        output = self.render_standard_wordlist_types(content)
+        escapedContent = content.replace('"', '\\"')
         
-        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{output}", my_file_content_filename="{filename}") }}}}'
+        output = self.render_standard_wordlist_types(escapedContent)
+        
+        # disable jinja auto-escaping html special characters
+        jinjaTpl = f'''
+        {{% autoescape false %}}
+            {output}
+        {{% endautoescape %}}
+        '''
+        
+        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{filename}") }}}}'
         
         # used in corpora_context to find myfile_corpora to supply myfile data
         corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
         
+        # *create file object in current fuzzcaseset
         if self.currentFuzzCaseSet != None:
            self.currentFuzzCaseSet.file = FuzzCaseSetFile(
                    wordlist_type=corporaContextKeyName, #WordlistType.myfile,
                    filename = corporaContextKeyName,
                    content=evalOutput)
         
-        return evalOutput
+        return jsonpickle.encode(
+            FuzzCaseSetFile(
+                   wordlist_type=corporaContextKeyName, #WordlistType.myfile,
+                   filename = corporaContextKeyName,
+                   content=evalOutput)
+                                 )
     
     
     def render_standard_wordlist_types(self, expr):

@@ -829,6 +829,7 @@ import Utils from '../Utils';
 import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
+import moment from 'moment';
 
 class Props {
   // optional prop
@@ -933,7 +934,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
-    this.eventemitter.on('onFuzzCaseSet_FuzzRun_Complete', this.onFuzzCaseSet_FuzzRun_Complete);
 
     this.getFuzzcontexts()
   }
@@ -952,7 +952,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   //constantly receiving event
-  onFuzzStart(data) {
+  async onFuzzStart(data) {
 
     const fuzzContextId = data.fuzzContextId;
     const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
@@ -969,11 +969,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.getFuzzcontexts();
 
-    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-    this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
+    // //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+    // this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
 
     this.toastInfo('fuzzing started', '', 1000);
 
+    await Utils.delay(1500);
 
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
@@ -993,18 +994,20 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingCaseSetRunId = ''
   }
 
-  async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
+  // async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
 
-    this.getFuzzcontexts();
+  //   await this.getFuzzcontexts();
 
-    await Utils.delay(200);
+  //   // select/highlight the CaseSetRun tree node
+  //   //this.selectTreeNodeByKey(caseSetRunSummaryId);
 
-    //
-    this.selectTreeNodeByKey(caseSetRunSummaryId);
+  //   //await Utils.delay(4000);
 
-    //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-    this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
-  }
+  //   this.selectedContextNode = fuzzcontextId;
+  //   this.selectedCaseSetRunNode = caseSetRunSummaryId;
+  //   //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
+  //   //this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
+  // }
 
   //#### websocket event ends ####
 
@@ -1050,7 +1053,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
           this.nodes = [];
           this.nodes = this.createTreeNodesFromFuzzcontexts(fcs);
 
-          this.eventemitter.emit('onFuzzContextRefreshClicked');
+          //this.eventemitter.emit('onFuzzContextRefreshClicked');
           
         }
         else
@@ -1088,6 +1091,28 @@ export default class ApiDiscovery extends Vue.with(Props) {
     nodes.push(apiNode);
     nodes.push(msgApi);
 
+    //sort fuzz-context by datetime
+    fcs.sort(function(a: ApiFuzzContext,b: ApiFuzzContext) {
+
+      const l = new Date(a.datetime);
+      const r = new Date(b.datetime);
+      // Turn your strings into dates, and then subtract them
+      // to get a value that is either negative, positive, or zero.
+      return l.getTime() - r.getTime();
+    });
+    //sort fuzzcaseset by starttime
+    fcs.forEach(fc => {
+      fc.fuzzCaseSetRuns.sort(function(a,b) {
+
+      const l = new Date(a.startTime);
+      const r = new Date(b.startTime);
+      // Turn your strings into dates, and then subtract them
+      // to get a value that is either negative, positive, or zero.
+      return r.getTime() - l.getTime();
+    });
+    })
+    
+    //create node in Primevue Tree
     fcs.forEach(fc => {
 
         if(fc instanceof ApiFuzzContext)
@@ -1116,7 +1141,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
               fuzzcontextId: fcsr.fuzzcontextId,
               fuzzCaseSetRunsId: fcsr.fuzzCaseSetRunsId,
               isFuzzing: false,
-              label: dateformat(fcsr.startTime, "dS mmm, yy - H:MM:ss"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
+              label: moment(new Date(fcsr.startTime), 'YYYY-MM-DD hh:mm:ss').startOf('second').fromNow(),//dateformat(fcsr.startTime, "dS mmm, yy - H:MM:ss"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
               isFuzzCaseRun: true,
               hostname: fc.hostname,
@@ -1140,8 +1165,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   selectTreeNodeByKey(fuzzCaseSetRunID) {
     const tree: any = this.$refs.tree;
-    tree.selectionKeys = {};
-    tree.selectionKeys[fuzzCaseSetRunID] = true;
+    (this.$refs.tree as any).selectionKeys = {};
+    (this.$refs.tree as any).selectionKeys[fuzzCaseSetRunID] = true;
   }
 
   async onDialogClose(rqMsg: string) {
@@ -1170,7 +1195,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     await this.webclient.fuzz(fuzzcontextId)
 
-    await Utils.delay(0.5);
+    await Utils.delay(500);
 
     this.getFuzzcontexts();
   }

@@ -245,23 +245,10 @@ class WebApiFuzzer:
             try:
                 req = None                
                 
+                # post with body multipart-form, www-form-urlencoded
                 if file != None and reqBody != '':
-                    if contentType == 'application/x-www-form-urlencoded':
-                        
-                        # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
-                        # supporting the above data format is purely to support syntax from rest-client 
-                        
-                        wwwformurlencodedDict = self.create_dict_for_wwwformurlencoded(reqBody)
-                        
-                        req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
-                      
-                    # elif contentType == 'application/json':
-                    #     req = Request(fcs.verb, url, headers=headers, json=reqBody)
-                        
-                    # elif contentType == 'application/xml':
-                    #     req = Request(fcs.verb, url, headers=headers, data=reqBody)
-                    else:
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    
+                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
                 elif file != None:
                     
@@ -269,12 +256,8 @@ class WebApiFuzzer:
                     # fuzzie's goal is to upload file content as the "whole" POST body.
                     # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
                     # which fuzzie tries to avoid altering original file content
-                    if Utils.isNoneEmpty(file.content):
-                        self.eventstore.emitErr(Exception(f'fuzz data wordlist-type {file.wordlist_type} content is empty'))
-                    else:
-                        content = file.content
                 
-                    req = Request(fcs.verb, url, headers=headers, data=content)
+                    req = Request(fcs.verb, url, headers=headers, data=file.content)
                 else:
                     req = Request(fcs.verb, url, headers=headers)
                 
@@ -482,7 +465,7 @@ class WebApiFuzzer:
                 headers[k] = resp.headers[k]
                 headersMultilineText = headersMultilineText + f'{k}: {resp.headers[k]}\n'
                 
-            fuzzResp.headersJson = Utils.jsone(headers)
+            fuzzResp.headerJson = Utils.jsone(headers)
                 
             fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
             
@@ -588,6 +571,9 @@ class WebApiFuzzer:
                         filename = fn
                     
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
+                    
+                    if not ok:
+                        return [False, err, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
                     
                     decoded = self.try_decode_file_content(fileContent)
                     

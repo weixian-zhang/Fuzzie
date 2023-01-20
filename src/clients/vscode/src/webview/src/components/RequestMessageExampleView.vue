@@ -6,7 +6,7 @@
             <div class="col-6">
               <div class="btn-group">
                 <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                  examples
+                  samples
                 </button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="#" 
@@ -14,7 +14,23 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post'))">POST</a>
+                  @click="(loadExample('post-json'))">POST JSON</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-xml'))">POST XML</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
+                  </li>
+                  
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-pdf'))">POST a PDF</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-image'))">POST an Image</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
