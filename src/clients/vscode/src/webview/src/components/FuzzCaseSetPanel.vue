@@ -144,7 +144,20 @@
             </td>
             
             <td>
-              <v-icon
+              <v-btn
+                  class="ma-2"
+                  variant="text"
+                  icon="mdi-pencil"
+                  color="cyan darken-3"
+                  size="small"
+                  @click="(
+                    showReqMsgEditDialog = true,
+                    rqInEdit = item.requestMessage,
+                    rqInEditOriginal = item.requestMessage,
+                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
+                  )" ></v-btn>
+
+              <!-- <v-icon
                   variant="flat"
                   icon="mdi-pencil"
                   color="cyan darken-3"
@@ -155,19 +168,30 @@
                     rqInEditOriginal = item.requestMessage,
                     currentEditFuzzCaseSetId = item.fuzzCaseSetId
                   )" >
-                  </v-icon>
+                  </v-icon> -->
             </td>
 
             <td>
-              <v-icon
-                  variant="flat"
+                <v-btn
+                  class="ma-2"
+                  variant="text"
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
-                  size="x-small"
+                  size="small"
                   @click="(
-                    onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
-                  )" >
-                  </v-icon>
+                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
+                      )" ></v-btn>
+
+                  <!-- <v-icon
+                      v-on="on" v-bind="attrs"
+                      icon="mdi-lightning-bolt"
+                      color="cyan darken-3"
+                      size="small"
+                      @click="(
+                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
+                      )" >
+                      </v-icon> -->
+             
             </td>
 
 

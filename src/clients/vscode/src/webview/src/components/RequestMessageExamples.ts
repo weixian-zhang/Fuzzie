@@ -67,7 +67,7 @@ POST https://httpbin.org/post
     private post = {
         
         'post-json': `
-POST https://example.com/comments HTTP/1.1
+POST https://httobin.org/post HTTP/1.1
 Content-Type: application/json
 
 {
@@ -95,6 +95,17 @@ POST https://httpbin.org/post HTTP/1.1
 
 {{ image }}
 `,
+
+'post-xml':`
+POST https://httpbin.org/post HTTP/1.1
+Content-Type: application/xml
+Authorization: {{ string }}
+
+<request>
+    <name>{{ username }}</name>
+    <time>{{ datetime }}</time>
+</request>
+`
     }
 
     private get = {
@@ -149,29 +160,15 @@ CustomHeader-3: {{ username }}
 
     public loadExample(key = 'get'): string {
 
-        switch(key) {
-            case 'file-upload-myfile-batchfile':
-                return this.fileupload['file-upload-myfile-batchfile'];
-            case 'file-upload-myfile-wordlisttypes':
-                return this.fileupload['file-upload-myfile-wordlisttypes'];
-            case 'file-upload-myfile-json':
-                return this.fileupload['file-upload-myfile-json'];
-            case 'get':
-                return this.get['get'];
-            case 'post-json':
-                return this.post['post-json'];
-            case 'post-image':
-                 return this.post['post-image'];
-            case 'post-pdf':
-                return this.post['post-pdf'];
-            case 'post-xwwwformurlencoded':
-                    return this.post['post-xwwwformurlencoded'];
-            default:
-              // code block
-        }
+        const keyType = key.split('-')[0];
 
-        if (key == 'file-upload-file-myfile-batchfile') {
-            return this.fileupload['file-upload-file-myfile-batchfile'];
+        switch(keyType.toLowerCase()) {
+            case 'file':
+                return this.fileupload[key];
+            case 'get':
+                return this.get[key];
+            case 'post':
+                return this.post[key];
         }
 
         return '';
