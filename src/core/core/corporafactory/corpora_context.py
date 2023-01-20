@@ -96,7 +96,7 @@ class CorporaContext:
             
         except Exception as e:
             self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')
-            return False, e, ''
+            return False, Utils.errAsText(e), ''
         
     
     # get file content for wordlist-file-type

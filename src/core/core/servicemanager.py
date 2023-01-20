@@ -562,6 +562,7 @@ class ServiceManager:
         
         except Exception as e:
             self.eventstore.emitErr(e)
+            return False, Utils.errAsText(e)
             
         
         

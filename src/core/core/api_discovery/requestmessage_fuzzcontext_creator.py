@@ -654,9 +654,18 @@ class RequestMessageFuzzContextCreator:
     
     def myfile_jinja_filter(self, content: str, filename: str):
         
-        output = self.render_standard_wordlist_types(content)
+        escapedContent = content.replace('"', '\\"')
         
-        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{output}", my_file_content_filename="{filename}") }}}}'
+        output = self.render_standard_wordlist_types(escapedContent)
+        
+        # disable jinja auto-escaping html special characters
+        jinjaTpl = f'''
+        {{% autoescape false %}}
+            {output}
+        {{% endautoescape %}}
+        '''
+        
+        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{filename}") }}}}'
         
         # used in corpora_context to find myfile_corpora to supply myfile data
         corporaContextKeyName = f'{WordlistType.myfile}_{filename}'

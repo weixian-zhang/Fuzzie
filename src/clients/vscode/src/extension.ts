@@ -51,16 +51,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				}
 		)
 	);
-
-	context.subscriptions.push(   
-		vscode.commands.registerCommand(
-			'fuzzie.fuzzer.kill', () => 
-				{
-					killFuzzerProcess();
-				}
-		)
-	);
-
 	
 
 	stateManager = new StateManager(context);

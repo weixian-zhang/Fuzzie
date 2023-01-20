@@ -592,6 +592,9 @@ class WebApiFuzzer:
                     
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
                     
+                    if not ok:
+                        return [False, err, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
+                    
                     decoded = self.try_decode_file_content(fileContent)
                     
                     file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
