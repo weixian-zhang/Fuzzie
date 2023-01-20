@@ -8,6 +8,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+from utils import Utils
 import base64
 from sqlalchemy.orm import scoped_session
 from db import session_factory, SeclistPayloadTable
@@ -65,6 +66,9 @@ class SeclistPayloadCorpora:
             content = fileCor['content']
             content = self.removeExtraEncodedChars(content)
             content = base64.b64decode(content)
+            
+            if not Utils.isNoneEmpty(content):
+                content = content.decode('UTF-8')
             
             self.rowPointer += 1
             

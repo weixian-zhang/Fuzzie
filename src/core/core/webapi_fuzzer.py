@@ -245,23 +245,26 @@ class WebApiFuzzer:
             try:
                 req = None                
                 
+                # post with body multipart-form, www-form-urlencoded
                 if file != None and reqBody != '':
-                    if contentType == 'application/x-www-form-urlencoded':
+                    
+                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    # if contentType == 'application/x-www-form-urlencoded':
                         
-                        # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
-                        # supporting the above data format is purely to support syntax from rest-client 
+                    #     # need to covert 'aaa=1&bbb=2&ccc=yeah' to dict
+                    #     # supporting the above data format is purely to support syntax from rest-client 
                         
-                        wwwformurlencodedDict = self.create_dict_for_wwwformurlencoded(reqBody)
+                    #     wwwformurlencodedDict = self.create_dict_for_wwwformurlencoded(reqBody)
                         
-                        req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
+                    #     req = Request(fcs.verb, url, headers=headers, data=wwwformurlencodedDict)
                       
-                    # elif contentType == 'application/json':
-                    #     req = Request(fcs.verb, url, headers=headers, json=reqBody)
+                    # # elif contentType == 'application/json':
+                    # #     req = Request(fcs.verb, url, headers=headers, json=reqBody)
                         
-                    # elif contentType == 'application/xml':
+                    # # elif contentType == 'application/xml':
+                    # #     req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    # else:
                     #     req = Request(fcs.verb, url, headers=headers, data=reqBody)
-                    else:
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
                 elif file != None:
                     
