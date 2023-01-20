@@ -178,6 +178,7 @@
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="small"
+                  :disabled="fuzzOnceDisabled"
                   @click="(
                         onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
                       )" ></v-btn>
@@ -350,6 +351,8 @@ class Props {
   requestMsgHasError = false;
   requestMsgErrorMessage = ''
 
+  fuzzOnceDisabled = true;
+
   beforeMount() {
       this.$logger = inject('$logger');   
   }
@@ -518,6 +521,7 @@ class Props {
       }
      } 
      finally {
+        this.fuzzOnceDisabled = false;
         this.isDataLoadingInProgress = false;
      } 
   }
@@ -542,11 +546,13 @@ class Props {
 
     this.refreshHostnameDisplay();
 
-     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
+    await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
   
   async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
     try {
+
+      this.fuzzOnceDisabled = true;
 
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
