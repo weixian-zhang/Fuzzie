@@ -605,7 +605,8 @@ export default class FuzzerWebClient
         mutation fuzzOnce {
             fuzzOnce(fuzzcontextId:"${fuzzcontextId}", fuzzCaseSetId: "${fuzzCaseSetId}") {
                   ok,
-                  msg
+                  msg,
+                  caseSetRunSummaryId
             }
           }
         `;

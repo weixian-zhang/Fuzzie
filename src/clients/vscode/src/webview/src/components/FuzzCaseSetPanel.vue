@@ -523,11 +523,11 @@ class Props {
   
   async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
     try {
-      
+
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-      // get latest updated fuzzcontext
-      this.eventemitter.emit("onFuzzCaseSet_FuzzRun_Complete", fuzzcontextId, caseSetRunSummaryId);
+      this.fuzzContextId = fuzzcontextId;
+      this.fuzzCaseSetRunsId = caseSetRunSummaryId;
       
     } catch (error) {
         this.$logger.error(error);

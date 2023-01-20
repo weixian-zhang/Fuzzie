@@ -272,12 +272,12 @@ class WebApiFuzzer:
                     # fuzzie's goal is to upload file content as the "whole" POST body.
                     # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
                     # which fuzzie tries to avoid altering original file content
-                    if Utils.isNoneEmpty(file.content):
-                        self.eventstore.emitErr(Exception(f'fuzz data wordlist-type {file.wordlist_type} content is empty'))
-                    else:
-                        content = file.content
+                    # if Utils.isNoneEmpty(file.content):
+                    #     self.eventstore.emitErr(Exception(f'fuzz data wordlist-type {file.wordlist_type} content is empty'))
+                    # else:
+                    #     content = file.content
                 
-                    req = Request(fcs.verb, url, headers=headers, data=content)
+                    req = Request(fcs.verb, url, headers=headers, data=file.content)
                 else:
                     req = Request(fcs.verb, url, headers=headers)
                 

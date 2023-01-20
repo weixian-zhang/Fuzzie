@@ -55,12 +55,17 @@
         </TabPanel>
 
         <TabPanel header="Fuzzing Files">
-          <v-table  density="compact" fixed-header height="430" hover="true" >          
+          <v-table class="border-0"  density="compact" fixed-header height="430" hover="true" >          
             <tbody>
-              <tr v-for="item in fuzzingUploadedFiles"
-              :key="item.Id">
-                <td>{{ item.fileName }}</td>
-                <td><a href="#" @click="downloadFuzzFile(item.Id, item.fileName)">download </a></td>
+              <tr v-for="file in fuzzingUploadedFiles"
+                :key="file.Id">
+                <td>
+                  <div > {{ file.fileName }}</div>
+                  <span style="color: blue;cursor: pointer; text-decoration: underline;" 
+                    @click="(downloadFuzzFile(file.Id, file.fileName))">
+                    download
+                  </span>
+                </td>
               </tr>
             </tbody>
           </v-table>
@@ -591,10 +596,15 @@ class Props {
       this.fuzzingUploadedFiles = fresult;
     }
 
-    async downloadFuzzFile(fuzzFileUploadId, fileName) {
+    async downloadFuzzFile(fileId, fileName) {
 
       try {
-        var downloadedContent = await this.webclient.getFuzzFileContent(fuzzFileUploadId);
+        if (Utils.isNothing(fileId)) {
+          this.$logger.error('File ID is not found when downloading fuzz-payloads')
+          return;
+        }
+
+        var downloadedContent = await this.webclient.getFuzzFileContent(fileId);
 
         if(Utils.isNothing(downloadedContent)) {
           this.toastInfo('file content is empty');
@@ -602,14 +612,6 @@ class Props {
         }
 
         const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
-
-        //const fileExt = fileName.split('.').pop();
-        //if (fileExt == 'pdf') {
-        //  content =  this.stringToArrayBuffer(content);
-        //}
-        //else {
-        //  content = downloadedContent
-        //}
 
         const url = window.URL.createObjectURL(new Blob([byteArrContent]));
         const link = document.createElement('a');
