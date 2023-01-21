@@ -246,7 +246,7 @@ class ServiceManager:
             
             # FuzzCaseSet.requestMessage is update, now update the "whole" fuzzcontext.requestTextContent
             if len(allUpdatedRqMsgs) > 0:
-                newEntireRqMsg = '\n\n###\n\n'.join(allUpdatedRqMsgs)
+                newEntireRqMsg = '\n\n###\n\n'.join(map(str,allUpdatedRqMsgs))
                 update_rqmsg_in_fuzz_context(rqMsg=newEntireRqMsg, fuzzcontextId=fuzzcontextId)
                 
             return True, ''

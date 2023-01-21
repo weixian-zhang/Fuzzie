@@ -938,8 +938,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.getFuzzcontexts()
   }
 
-  // #### websocket events ####
-
   onFuzzStartReady() {
     this.fuzzerConnected = true;
     this.getFuzzcontexts();

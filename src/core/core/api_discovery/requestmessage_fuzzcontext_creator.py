@@ -338,7 +338,7 @@ class RequestMessageFuzzContextCreator:
         
         qsParts = [x.strip() for x in qsParts]   # remove all prefix/suffix spaces if any
         
-        querystring = '&'.join(qsParts)
+        querystring = '&'.join(map(str, qsParts))
 
         lineIndex = 0
         while self.is_next_line_querystring(multilineBlock, lineIndex, qsTokens):
@@ -585,7 +585,7 @@ class RequestMessageFuzzContextCreator:
         
         lines = rqMsg.splitlines()
         lines = [x for x in lines if not self.is_line_comment(x)]
-        return '\n'.join(lines)
+        return '\n'.join(map(str,lines))
     
     
     

@@ -431,11 +431,12 @@ class Props {
             return;
           }
 
-          if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined) {
-            this.pollFuzzResultHandler = setInterval( async()=> {
-               await this.getFuzzRequestResponses();
-            },1500)
-          }
+          //if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined) {
+          //  this.pollFuzzResultHandler = setInterval( async()=> {
+          //     await this.getFuzzRequestResponses();
+          //  },1500)
+          //  return;
+          //}
           
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
@@ -446,9 +447,8 @@ class Props {
 
           this.isDataLoadingInProgress = true;
 
-
-
           this.fuzzCaseSetId = fuzzCaseSetId;
+          
           this.fuzzCaseSetRunId = fuzzCaseSetRunId;
 
           await this.getFuzzRequestResponses();

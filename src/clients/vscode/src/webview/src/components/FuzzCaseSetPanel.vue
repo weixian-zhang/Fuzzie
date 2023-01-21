@@ -178,7 +178,7 @@
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="small"
-                  :disabled="fuzzOnceDisabled"
+                  :disabled="(fuzzOnceDisabled || isFuzzingInProgress())"
                   @click="(
                         onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
                       )" ></v-btn>
@@ -308,10 +308,6 @@ class Props {
 
   fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
 
-  //fuzzingfcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = [];
-
-  //dataCache = {};
-
   showReqMsgEditDialog = false;
   rqInEdit = '';
   rqInEditOriginal = '';
@@ -352,6 +348,13 @@ class Props {
   requestMsgErrorMessage = ''
 
   fuzzOnceDisabled = true;
+
+  pollFuzzResultHandler: any = undefined;
+  currentFuzzingContextId = '';
+  currentFuzzingCaseSetRunId = '';
+  selectedFuzzContextId = '';
+  selectedFuzzCaseSetId = '';
+  selectedFuzzCaseSetRunId = '';
 
   beforeMount() {
       this.$logger = inject('$logger');   
@@ -396,6 +399,8 @@ class Props {
 
   mounted(){
     //event from master
+    this.eventemitter.on('fuzz.start', this.onFuzzStart);
+    this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
 
@@ -410,10 +415,30 @@ class Props {
     this.eventemitter.on('fuzz.update.casesetrunsummary', this.onFuzzingUpdateRunSummary);
 
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
-
   }
 
-  // #### websocket events ####
+  async onFuzzStart(data) {
+
+    const fuzzContextId = data.fuzzContextId;
+    const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
+
+    if(this.currentFuzzingContextId != '' && this.currentFuzzingCaseSetRunId != ''){
+      return;
+    }
+
+    this.currentFuzzingContextId = fuzzContextId;
+    this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
+
+    this.intervalGetReqRespDataOnFuzz();
+  }
+
+  onFuzzStop() {
+
+    this.clearIntervalGetReqRespData();
+
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = ''
+  }
 
   onFuzzStartReady() {
     this.fuzzerConnected = true;
@@ -426,12 +451,32 @@ class Props {
     this.currentFuzzContextId = '';
   }
 
+  intervalGetReqRespDataOnFuzz() {
+    if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined && this.currentFuzzingContextId == this.selectedFuzzContextId) {
+        this.pollFuzzResultHandler = setInterval( async()=> {
+              if(this.selectedFuzzContextId == this.currentFuzzingContextId ) {
+                this.eventemitter.emit("onFuzzCaseSetSelected", this.selectedFuzzCaseSetId, this.currentFuzzingCaseSetRunId);
+              }
+              else{
+                this.clearIntervalGetReqRespData();
+              }
+              
+          },1500)
+    }
+  }
 
- 
+  clearIntervalGetReqRespData() {
+    if(this.pollFuzzResultHandler != undefined) {
+      clearInterval(this.pollFuzzResultHandler);
+      this.pollFuzzResultHandler = undefined;
+    }
+  }
+
+  // events from websocket
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
     this.fcsRunSums.map(x => {
-      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && runSummary.fuzzCaseSetRunId == this.fuzzCaseSetRunsId) {
+      if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && x.fuzzCaseSetRunId == runSummary.fuzzCaseSetRunId) {
         x.http2xx = runSummary.http2xx;
         x.http3xx = runSummary.http3xx;
         x.http4xx = runSummary.http4xx;
@@ -528,19 +573,24 @@ class Props {
 
   async onFuzzContextSelected(fuzzcontextId, hostname, port)
   {
-     this.fuzzContextId = fuzzcontextId;
+    this.selectedFuzzContextId = fuzzcontextId;
+    this.selectedFuzzCaseSetRunId = '';
+    this.selectedFuzzCaseSetId = '';
+
      this.hostname = hostname;
      this.port = port;
 
      this.refreshHostnameDisplay();
 
-     await this.getFuzzCaseSet_And_RunSummaries(this.fuzzContextId, '');
+     await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
   }
 
   async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
   {
-    this.fuzzContextId = fuzzcontextId;
-    this.fuzzCaseSetRunsId = fuzzCaseSetRunsId;
+    this.selectedFuzzContextId = fuzzcontextId;
+    this.selectedFuzzCaseSetRunId = fuzzCaseSetRunsId;
+    this.selectedFuzzCaseSetId = '';
+
     this.hostname = hostname;
     this.port = port;
 
@@ -556,8 +606,9 @@ class Props {
 
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-      this.fuzzContextId = fuzzcontextId;
-      this.fuzzCaseSetRunsId = caseSetRunSummaryId;
+    this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
+    this.selectedFuzzContextId = fuzzcontextId;
+    this.selectedFuzzCaseSetId = fuzzcasesetId;
       
     } catch (error) {
         this.$logger.error(error);
@@ -566,11 +617,23 @@ class Props {
 
   async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
 
+    this.selectedFuzzContextId = fcsrs.fuzzcontextId;
+    this.selectedFuzzCaseSetId = fcsrs.fuzzCaseSetId;
+    this.selectedFuzzCaseSetRunId = fcsrs.fuzzCaseSetRunId;
+
+
+    if(this.isFuzzingInProgress()) {
+      this.intervalGetReqRespDataOnFuzz();
+      return;
+    }
+
     if (!this.rowClickEnabled) {
         return;
-      }
+    }
 
       this.rowClickEnabled = false;
+
+      
 
       // send event to FuzzResult panel to display request and response
       this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
@@ -582,8 +645,8 @@ class Props {
       }
 
     await Utils.delay(2000);   // spam click prevention
+
     this.rowClickEnabled = true;
-    
   }
 
   async parseRequestMessage(rqMsg) {
@@ -630,12 +693,27 @@ class Props {
   }
 
   clearData() {
-      this.fcsRunSums = [];
-      this.hostname = '';
-      this.port = -1;
-      this.selectedRow = ''
+    this.clearIntervalGetReqRespData();
+    
+    this.currentFuzzingContextId = '';
+    this.currentFuzzingCaseSetRunId = '';
+    this.selectedFuzzContextId = '';
+    this.selectedFuzzCaseSetId = '';
+    this.selectedFuzzCaseSetRunId = '';
 
-      this.refreshHostnameDisplay();
+    this.fcsRunSums = [];
+    this.hostname = '';
+    this.port = -1;
+    this.selectedRow = ''
+
+    this.refreshHostnameDisplay();
+  }
+
+  isFuzzingInProgress() {
+    if(this.currentFuzzingContextId != '' &&  this.currentFuzzingCaseSetRunId != '') {
+      return true;
+    }
+    return false;
   }
 
  }
