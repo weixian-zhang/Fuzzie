@@ -1,6 +1,5 @@
 import os
 from azure.storage.blob import BlobPrefix, BlockBlobService
-from numpy import append
 
 class StorageManager:
     
