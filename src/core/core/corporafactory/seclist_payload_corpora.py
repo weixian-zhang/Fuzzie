@@ -63,7 +63,7 @@ class SeclistPayloadCorpora:
             
             fileCor = self.data[str(self.rowPointer)]
 
-            content = fileCor['content']
+            
             content = base64.b64decode(content)
             
             if not Utils.isNoneEmpty(content):
