@@ -64,11 +64,10 @@ class SeclistPayloadCorpora:
             fileCor = self.data[str(self.rowPointer)]
 
             content = fileCor['content']
-            content = self.removeExtraEncodedChars(content)
             content = base64.b64decode(content)
             
             if not Utils.isNoneEmpty(content):
-                content = content.decode('UTF-8')
+                content = Utils.try_decode_bytes_string(content)
             
             self.rowPointer += 1
             
@@ -76,17 +75,7 @@ class SeclistPayloadCorpora:
         
         except Exception as e:
             self.es.emitErr(e, 'SeclistPayloadCorpora.next_corpora')
-            
-    
-    def removeExtraEncodedChars(self, imgStr: str):
-        
-        if imgStr.startswith('b\''):
-            imgStr = imgStr.replace('b\'', '')
-            
-        if imgStr.endswith('\''):
-            imgStr = imgStr[:-1]
-            
-        return imgStr
+            return ''
         
         
         

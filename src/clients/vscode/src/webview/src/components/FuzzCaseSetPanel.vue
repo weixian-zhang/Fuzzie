@@ -158,18 +158,6 @@
                     currentEditFuzzCaseSetId = item.fuzzCaseSetId
                   )" ></v-btn>
 
-              <!-- <v-icon
-                  variant="flat"
-                  icon="mdi-pencil"
-                  color="cyan darken-3"
-                  size="x-small"
-                  @click="(
-                    showReqMsgEditDialog = true,
-                    rqInEdit = item.requestMessage,
-                    rqInEditOriginal = item.requestMessage,
-                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
-                  )" >
-                  </v-icon> -->
             </td>
 
             <td>
