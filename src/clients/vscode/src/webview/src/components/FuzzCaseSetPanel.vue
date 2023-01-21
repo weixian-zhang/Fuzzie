@@ -150,6 +150,7 @@
                   icon="mdi-pencil"
                   color="cyan darken-3"
                   size="small"
+                  :disabled="(isFuzzingInProgress())"
                   @click="(
                     showReqMsgEditDialog = true,
                     rqInEdit = item.requestMessage,
@@ -178,20 +179,10 @@
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="small"
-                  :disabled="(fuzzOnceDisabled || isFuzzingInProgress())"
+                  :disabled="(isFuzzingInProgress())"
                   @click="(
-                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
+                        onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
                       )" ></v-btn>
-
-                  <!-- <v-icon
-                      v-on="on" v-bind="attrs"
-                      icon="mdi-lightning-bolt"
-                      color="cyan darken-3"
-                      size="small"
-                      @click="(
-                        onFuzzOnce(fuzzContextId, item.fuzzCaseSetId)
-                      )" >
-                      </v-icon> -->
              
             </td>
 
