@@ -55,30 +55,29 @@ class SeclistPayloadCorpora:
             self.es.emitErr(e)
 
         
-    def next_corpora(self):
+    def next_corpora(self) -> str:
         
         try:
             if self.rowPointer > (len(self.data) - 1):
                 self.rowPointer = 1
             
             fileCor = self.data[str(self.rowPointer)]
-
-            content = fileCor['content']
-            content = self.removeExtraEncodedChars(content)
-            content = base64.b64decode(content)
             
-            if not Utils.isNoneEmpty(content):
-                content = content.decode('UTF-8')
+            payload = fileCor['content']
+            
+            b64d = base64.b64decode(payload)
+            
+            strContent = Utils.try_decode_bytes_string(b64d)
             
             self.rowPointer += 1
             
-            return content
+            return strContent
         
         except Exception as e:
             self.es.emitErr(e, 'SeclistPayloadCorpora.next_corpora')
-            
-    
-    def removeExtraEncodedChars(self, imgStr: str):
+            return ''
+        
+    def removeBPrefix(self, imgStr: str):
         
         if imgStr.startswith('b\''):
             imgStr = imgStr.replace('b\'', '')

@@ -634,6 +634,7 @@ def get_naughtystring_row_count():
 
 def delete_api_fuzz_context(fuzzcontextId: str):
     
+    uploadFileStmt = ApiFuzzRequestFileUploadTable.delete(ApiFuzzRequestFileUploadTable.c.fuzzcontextId == fuzzcontextId)
     apiRespStmt = ApiFuzzResponseTable.delete(ApiFuzzResponseTable.c.fuzzcontextId == fuzzcontextId)
     apiReqStmt = ApiFuzzRequestTable.delete(ApiFuzzRequestTable.c.fuzzcontextId == fuzzcontextId)
     apiDataCaseStmt = ApiFuzzDataCaseTable.delete(ApiFuzzDataCaseTable.c.fuzzcontextId == fuzzcontextId)

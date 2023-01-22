@@ -134,12 +134,14 @@ class Utils:
         except Exception as e:
             return False, expr
     
-    #remove all special characters punctuation and spaces
-    def remove_special_chars(text: str):
-        return ''.join(e for e in text if e.isalnum())
+
     
     # first decode by latin-1 then try utf-8
     def try_decode_bytes_string(content):
+        
+        if not isinstance(content, bytes):
+            return content
+        
         lok, latinContent = Utils.try_decode_latin1(content)
         if lok:
             return latinContent
@@ -147,7 +149,7 @@ class Utils:
             utfOK, utfContent = Utils.try_decode_utf8(content)
             if utfOK:
                 return utfContent
-        return content
+        return content.decode(errors='ignore')
     
     def try_decode_latin1(content):
         try:

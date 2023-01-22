@@ -285,7 +285,15 @@ class WebApiFuzzer:
                         contentLength=reqContentLength)
                 
                 httpSession = Session()
-                resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
+                
+                # handle client time-out error
+                try:
+                    resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
+                except Exception as e:
+                    fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, fuzzDataCase.Id)
+                    fuzzDataCase.response = fuzzResp
+                    return fuzzDataCase, file
+                
             
             except Exception as e:
                 err =  Utils.errAsText(e)
@@ -441,7 +449,17 @@ class WebApiFuzzer:
             ej = Utils.jsone(e)
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.create_fuzzrequest')
         
-            
+    def create_fuzz_timed_out_response(self, fuzzcontextId, fuzzDataCaseId) -> ApiFuzzResponse:
+        fuzzResp = ApiFuzzResponse()
+        fuzzResp.Id = shortuuid.uuid()
+        fuzzResp.datetime = datetime.now()
+        fuzzResp.fuzzDataCaseId = fuzzDataCaseId
+        fuzzResp.fuzzcontextId = fuzzcontextId 
+        fuzzResp.statusCode = 408
+        fuzzResp.reasonPharse = 'request timed out, Fuzzie has a short time-out of 4 seconds'
+        fuzzResp.responseDisplayText = ''
+        return fuzzResp
+     
     def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp: Response) -> ApiFuzzResponse:
         
         if resp is None:

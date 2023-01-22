@@ -1,10 +1,10 @@
-import pandas as pd
 import sqlite3
 from storagemanager import StorageManager
 import base64
 import os, sys
 import io
 from pathlib import Path
+
 dbModulePath = os.path.join(os.path.dirname(Path(__file__).parent), 'core')
 modelPath = os.path.join(os.path.dirname(Path(__file__).parent), 'core', 'models')
 sys.path.insert(0, dbModulePath)
@@ -16,7 +16,7 @@ import urllib.parse
 import urllib3
 from faker import Faker
 import base64
-
+from utils import Utils
 from db import metadata
 
 # create tables if not exist
@@ -39,17 +39,20 @@ def load_seclist_payload():
     if len(fileNamePaths.items) == 0:
         return []
     
-    df = pd.DataFrame()
-    
     try:
         for fp in fileNamePaths:
             
             content = sm.download_file_as_bytes(fp)
-            b64e = base64.b64encode(content)
+            
+            decodedStr = Utils.try_decode_bytes_string(content)
+            
+            b64Bytes = base64.b64encode(bytes(decodedStr, encoding='UTF-8'))
+            
+            b64Str = Utils.try_decode_bytes_string(b64Bytes)
             
             cursor.execute(f'''
                 insert into SeclistPayload (Filename, Content)
-                values ("{os.path.basename(fp)}", "{b64e}")
+                values ("{os.path.basename(fp)}", "{b64Str}")
                 ''')
         
         print('seclist payload completed')
@@ -256,11 +259,11 @@ def removeDoubleQuotes(content: str):
 
 if __name__ == '__main__':
     
-    load_image()
+    # load_image()
     
     # load_seclist_char()
     
-    #load_seclist_payload()
+    load_seclist_payload()
     
     # load_seclist_string()
     

@@ -356,9 +356,11 @@ class Props {
 
     contentLengthInputValue = 100;
     tableFilterSmallerLarger = '>=';
-    
-    currentFuzzingFuzzContextId = ''
-    currentFuzzingFuzzCaseSetRunId = ''
+
+    pollFuzzResultHandler: any = undefined;
+
+    fuzzCaseSetId = ''
+    fuzzCaseSetRunId = ''
 
     beforeMount() {
       this.$logger = inject('$logger');   
@@ -384,44 +386,28 @@ class Props {
 
     onFuzzStart(data) {
 
+      
+
       const fuzzContextId = data.fuzzContextId;
       const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
 
-      this.currentFuzzingFuzzContextId = fuzzContextId;
-      this.currentFuzzingFuzzCaseSetRunId = fuzzCaseSetRunId;
-
-  }
-
-    onFuzzStop(){
-      this.currentFuzzingFuzzContextId = '';
-      this.currentFuzzingFuzzCaseSetRunId = ''
-      //this.switchFuzzingDataBucketToOriginal();
+      this.fuzzCaseSetId = fuzzContextId;
+      this.fuzzCaseSetRunId = fuzzCaseSetRunId;
     }
 
-    //switchOriginalToFuzzingDataBucket(fuzzCaseSetId) {
-        //const fuzzingData: FuzzDataCase[] = this.fdcsFuzzing[fuzzCaseSetId];
-        //this.fdcsDataFiltered = fuzzingData;
-        //this.fdcsDataOriginal = [];
-    //}
-
-    // after fuzzing, move the fuzzing data array back to fdcsDataOriginal
-    //switchFuzzingDataBucketToOriginal() {
-      //this.fdcsDataOriginal = [...this.fdcsDataFiltered]
-      //this.fdcsFuzzing = {};  //empty fuzzing data
-    //} 
+    onFuzzStop(){
+      if (this.pollFuzzResultHandler != undefined){
+        clearInterval(this.pollFuzzResultHandler);
+        this.pollFuzzResultHandler = undefined;
+      }
+      this.fuzzCaseSetId = '';
+      this.fuzzCaseSetRunId = ''
+    }
 
     storeFuzzDataCase(fdcs:  Array<FuzzDataCase|any>) {
       this.fdcsDataOriginal = fdcs;
       this.fdcsDataFiltered = [...this.fdcsDataOriginal]; //clone array
     }
-
-    //onFuzzDataCaseReceived(fdc: FuzzDataCase) {
-      //const list = this.fdcsFuzzing[fdc.fuzzCaseSetId]
-      //if(list == undefined) {
-          //this.fdcsFuzzing[fdc.fuzzCaseSetId] = []
-      //}
-      //this.fdcsFuzzing[fdc.fuzzCaseSetId].push(fdc);
-   // }
 
    onStatusCodeFilterClicked(httpStatusCode) {
 
@@ -436,36 +422,6 @@ class Props {
       });
    }
 
-   //oncontentLengthInputChange(input) {
-   //   //const contentLengthToFilter = input.data;
-//
-   //   try {
-   //     if (this.fdcsDataOriginal == undefined || this.fdcsDataOriginal.length == 0) {
-   //       return;
-   //     }
-//
-   //     var operator = '>=';
-//
-   //     if (this.tableFilterSmallerLarger == '>=') {
-   //       this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
-   //         if(x != undefined && x.response.contentLength >= this.contentLengthInputValue) {
-   //           return x;
-   //         }
-   //       });
-   //     }
-   //     else {
-   //       this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
-   //         if(x != undefined && x.response.contentLength <= this.contentLengthInputValue) {
-   //           return x;
-   //         }
-   //       });
-   //     }
-   //   }
-   //   catch(error) {
-   //     this.$logger.error(error)
-   //   }
-  //
-   // }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 
@@ -474,13 +430,14 @@ class Props {
           if(this.isDataLoadingInProgress) {
             return;
           }
-          
-          //check if selected caseSetRunId is currently in fuzzing mode,
-          //if yes do not retrieve data as fuzzer is sending data over websocket
-          //if(this.isFuzzingInProgress() && this.currentFuzzingFuzzCaseSetRunId == fuzzCaseSetRunId) {
-            //this.switchOriginalToFuzzingDataBucket(fuzzCaseSetId);
-            //return;
+
+          //if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined) {
+          //  this.pollFuzzResultHandler = setInterval( async()=> {
+          //     await this.getFuzzRequestResponses();
+          //  },1500)
+          //  return;
           //}
+          
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
             //this.toast.add({severity:'error', summary: '', detail:'fuzzcontextId or fuzzCaseSetRunId is missing in FuzzResultPanel ', life: 5000})
@@ -490,33 +447,11 @@ class Props {
 
           this.isDataLoadingInProgress = true;
 
-          //this.clearSelectedReqResp();
+          this.fuzzCaseSetId = fuzzCaseSetId;
+          
+          this.fuzzCaseSetRunId = fuzzCaseSetRunId;
 
-          //const cacheKey = this.getCacheKey(fuzzCaseSetId, fuzzCaseSetRunId)
-
-          //check if cache has the data
-          //if (cacheKey in this.dataCache){
-            //const fcsd = this.dataCache[cacheKey];
-            //this.storeFuzzDataCase(fcsd);
-            //return;
-          //} 
-
-          const [ok, error, result] = await this.webclient.getFuzzRequestResponse(fuzzCaseSetId, fuzzCaseSetRunId)
-
-          if(!ok) {
-            this.toastError(error, 'Fuzz Result Panel');
-          }
-
-          if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
-            this.clearTableBindingData();
-            return;
-          }
-
-          this.storeFuzzDataCase(result);
-
-          //this.dataCache[cacheKey] = result;
-
-          this.buildStatusCodesDropDown();
+          await this.getFuzzRequestResponses();
       }
       catch(error) {
         this.$logger.error(error);
@@ -524,6 +459,28 @@ class Props {
       finally {
         this.isDataLoadingInProgress = false;
       }
+    }
+
+    async getFuzzRequestResponses() {
+      
+      if (this.fuzzCaseSetId == '' || this.fuzzCaseSetRunId == '' ) {
+        return;
+      }
+
+      const [ok, error, result] = await this.webclient.getFuzzRequestResponse(this.fuzzCaseSetId, this.fuzzCaseSetRunId)
+
+      if(!ok) {
+        this.toastError(error, 'Fuzz Result Panel');
+      }
+
+      if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
+        this.clearTableBindingData();
+        return;
+      }
+
+      this.storeFuzzDataCase(result);
+
+      this.buildStatusCodesDropDown();
     }
 
     onfullTextSearchValueChange(input) {
@@ -540,8 +497,6 @@ class Props {
       //});
 
     }
-
-    
 
     buildStatusCodesDropDown() {
 
@@ -794,6 +749,10 @@ class Props {
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
+
+      this.fuzzCaseSetId = '';
+      this.fuzzCaseSetRunId = ''
+
       this.tableRequestValueSideBar = '';
       this.tableRequestPathSideBar = '';
       this.tableRequestQSSideBar = '';
@@ -852,7 +811,7 @@ class Props {
     //}
 
     isFuzzingInProgress() {
-        if(!Utils.isNothing(this.currentFuzzingFuzzContextId)  && !Utils.isNothing(this.currentFuzzingFuzzContextId)) {
+        if(!Utils.isNothing(this.fuzzCaseSetId)  && !Utils.isNothing(this.fuzzCaseSetRunId)) {
           return true;
         }
         return false;
