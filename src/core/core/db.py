@@ -461,7 +461,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzResponseTable.columns.reasonPharse,
                                 ApiFuzzResponseTable.columns.setcookieHeader,
                                 ApiFuzzResponseTable.columns.headerJson,
-                                ApiFuzzResponseTable.columns.contentLength,
+                                ApiFuzzResponseTable.columns.contentLength
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)

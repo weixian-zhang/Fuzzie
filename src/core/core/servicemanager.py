@@ -339,18 +339,19 @@ class ServiceManager:
                 fdc.request.querystring = rowDict['querystring']
                 fdc.request.url = rowDict['url']
                 fdc.request.headers = rowDict['headers']
-                #fdc.request.body = rowDict['body']
+                # fdc.request.body = rowDict['body']
                 fdc.request.contentLength = rowDict['contentLength']
                 fdc.request.invalidRequestError = rowDict['invalidRequestError']
                 
                 fdc.response = FuzzResponse_ViewModel()
+                
                 fdc.response.Id = rowDict['fuzzResponseId']
                 fdc.response.datetime = row['responseDateTime']
                 fdc.response.statusCode = rowDict['statusCode']
                 fdc.response.reasonPharse = rowDict['reasonPharse']
                 fdc.response.setcookieHeader = rowDict['setcookieHeader']
                 fdc.response.headerJson = rowDict['headerJson']
-                #fdc.response.body = rowDict['body']
+                # fdc.response.body = rowDict['body']
                 fdc.response.contentLength = rowDict['contentLength']
                 
                 result.append(fdc)
