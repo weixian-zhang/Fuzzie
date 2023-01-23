@@ -62,6 +62,7 @@ SELECT (COUNT(*) *  -- The number of rows in the table
        128 )/ 1024) / 1024     -- The estimate of the average length of all string columns
 FROM SeclistXSS;
 
+-- delete from SeclistPDF;
 -- delete from RandomImage
 -- delete from SeclistChar;
 -- delete from SeclistBLNS;

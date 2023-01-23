@@ -18,6 +18,12 @@ from faker import Faker
 import base64
 from utils import Utils
 from db import metadata
+from fpdf import FPDF, HTMLMixin
+import datetime
+import jinja2
+
+class CustomFPDF(FPDF, HTMLMixin):
+    pass
 
 # create tables if not exist
 metadata.create_all()
@@ -31,7 +37,89 @@ cursor = sqliteconn.cursor()
 encoding = 'utf-8'
 sm = StorageManager()
 
-#*** prepare naughty files
+def load_pdf():
+    
+    try:
+        
+        faker = Faker()
+        
+        
+        for _ in range(1000):
+            
+            html = '''
+            <html>
+                <body>
+                    <H1 align="center">Fuzzie Report - User Info</H1>
+                    <p>{datetime.datetime.now()}</p>
+                    <table border="0" align="center" width="50%">
+                        <thead>
+                            <tr>
+                                <th width="50%">
+                                Name
+                                </th>
+                                <th width="50%">
+                                Address
+                                </th>
+                                <th width="50%">
+                                Job
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {%- for item in info %}
+                                <tr>
+                                    <td>
+                                        {{ item['name'] }}
+                                    </td>
+                                    <td>
+                                        {{ item['address'] }}
+                                    </td>
+                                    <td>
+                                        {{ item['job'] }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </body>
+            </html>
+            '''
+            
+            info = []
+            
+            for _ in range(10):
+                info.append({
+                    'name': faker.name(),
+                    'address': faker.address(),
+                    'job': faker.job(),
+                })
+                
+            
+            jinjaTpl = jinja2.Template(html)
+            output = jinjaTpl.render({
+                'info': info
+                })
+       
+            pdf = CustomFPDF()
+            pdf.add_page()
+            pdf.author = 'Fuzzie'
+            
+            pdf.write_html(output)
+            
+            htmlStr = pdf.output(dest='S').decode('latin-1')
+            
+            htmlBackToBytes = bytes(htmlStr, encoding='latin-1')   
+        
+            b64 = base64.b64encode(htmlBackToBytes).decode('latin-1')    # to remove b prefix
+            
+            cursor.execute(f'''
+                    insert into SeclistPDF (Content)
+                    values ("{b64}")
+                    ''')
+        
+    except Exception as e:
+        print(f'''{e}''')
+
 def load_seclist_payload():
     
     fileNamePaths = sm.get_file_names_of_directory('daniel-seclist/payload')
@@ -259,11 +347,13 @@ def removeDoubleQuotes(content: str):
 
 if __name__ == '__main__':
     
+    load_pdf()
+    
     # load_image()
     
     # load_seclist_char()
     
-    load_seclist_payload()
+    #load_seclist_payload()
     
     # load_seclist_string()
     

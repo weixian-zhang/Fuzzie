@@ -194,6 +194,11 @@ SeclistCharTable = Table('SeclistChar', metadata,
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Content', String)
                         )
+
+SeclistPDFTable = Table('SeclistPDF', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                        )
                             
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
