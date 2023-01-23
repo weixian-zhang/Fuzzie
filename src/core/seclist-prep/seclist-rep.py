@@ -37,6 +37,13 @@ cursor = sqliteconn.cursor()
 encoding = 'utf-8'
 sm = StorageManager()
 
+def shortenStr(text: str, length=20):
+    if len(text) > length:
+        newText = text[:(length-1)]
+        return newText + '...'
+    else:
+        return text
+    
 def load_pdf():
     
     try:
@@ -50,18 +57,15 @@ def load_pdf():
             <html>
                 <body>
                     <H1 align="center">Fuzzie Report - User Info</H1>
-                    <p>{datetime.datetime.now()}</p>
-                    <table border="0" align="center" width="50%">
+                    <p>{{ datetime }}</p>
+                    <table border="1" align="center" width="100%" style="table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th width="50%">
+                                <th width="40%">
                                 Name
                                 </th>
-                                <th width="50%">
+                                <th width="60%">
                                 Address
-                                </th>
-                                <th width="50%">
-                                Job
                                 </th>
                             </tr>
                         </thead>
@@ -73,9 +77,6 @@ def load_pdf():
                                     </td>
                                     <td>
                                         {{ item['address'] }}
-                                    </td>
-                                    <td>
-                                        {{ item['job'] }}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -90,14 +91,15 @@ def load_pdf():
             for _ in range(10):
                 info.append({
                     'name': faker.name(),
-                    'address': faker.address(),
-                    'job': faker.job(),
+                    'address': shortenStr(faker.address()),
+                    'job': shortenStr(faker.job()),
                 })
                 
             
             jinjaTpl = jinja2.Template(html)
             output = jinjaTpl.render({
-                'info': info
+                'info': info,
+                'datetime': datetime.datetime.now()
                 })
        
             pdf = CustomFPDF()

@@ -42,7 +42,10 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                             decoded = Utils.try_decode_bytes_string(byteVal)
                             content = decoded
                         else:
-                            content = ftResult.file.content
+                            if not isinstance(ftResult.file.content, str):
+                                content = Utils.try_decode_bytes_string(ftResult.file.content)
+                            else:
+                                content = ftResult.file.content
                             
                         insert_api_fuzzrequest_fileupload(
                             Id=shortuuid.uuid(),
