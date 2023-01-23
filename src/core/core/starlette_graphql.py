@@ -66,6 +66,11 @@ class Query(graphene.ObjectType):
     
     downloadFuzzFile = graphene.Field(FuzzRequestFileDownloadContentQueryResult, fuzzFileUploadId = graphene.Argument(graphene.String))
     
+    searchBody = graphene.Field(FuzzRequestResponseQueryResult,
+                                         searchText = graphene.Argument(graphene.String),
+                                         fuzzCaseSetId = graphene.Argument(graphene.String),
+                                         fuzzCaseSetRunId = graphene.Argument(graphene.String))
+    
     def resolve_fuzzerStatus(self, info):
         
         s = FuzzerStatus()
@@ -127,6 +132,20 @@ class Query(graphene.ObjectType):
         r.error = error
         r.result = result
         
+        return r
+    
+    def resolve_searchBody(self, info, searchText, fuzzCaseSetId, fuzzCaseSetRunId):
+        
+        sm = ServiceManager()
+        
+        ok , err, result = sm.search_body(searchText, fuzzCaseSetId, fuzzCaseSetRunId)
+        
+        r = FuzzRequestResponseQueryResult()
+          
+        r.ok = ok
+        r.error = err
+        r.result = result
+          
         return r
     
     def resolve_getUploadedFiles(self, info, requestId):

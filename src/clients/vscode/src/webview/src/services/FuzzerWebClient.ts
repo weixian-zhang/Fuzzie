@@ -330,6 +330,65 @@ export default class FuzzerWebClient
 
         return [false, '', []];
     }
+
+    public async deepSearchBody(searchText: string, fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+        const query = `
+        query {
+            searchBody(
+                searchText: "${searchText}"
+                fuzzCaseSetId: "${fuzzCaseSetId}",
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                ok,
+                error,
+                result {
+                    fuzzDataCaseId
+                    fuzzCaseSetId
+                    request {
+                        Id
+                        datetime
+                        hostname
+                        port
+                        verb
+                        path
+                        querystring
+                        url
+                        headers
+                        contentLength
+                        invalidRequestError
+                    }
+                    response {
+                        Id
+                        datetime
+                        statusCode
+                        reasonPharse
+                        setcookieHeader
+                        headerJson
+                        contentLength
+                    }
+                }
+            }
+        }
+    `
+
+        const response = await axios.post(this.gqlUrl, {query});
+
+        if(this.responseHasData(response))
+        {
+            const ok = response.data.data.searchBody.ok;
+            const error = response.data.data.searchBody.error;
+            const result = response.data.data.searchBody.result;
+            return [ok, error, result];
+        }
+
+        const [hasErr, err] = this.hasGraphqlErr(response);
+
+        if(hasErr)
+        {
+            return [!hasErr, err, []];
+        }
+
+        return [false, '', []];
+    }
     
     public async getFuzzContexts(): Promise<any> {
 

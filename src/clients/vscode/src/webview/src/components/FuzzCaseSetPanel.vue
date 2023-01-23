@@ -174,18 +174,16 @@
              
             </td>
 
-
-
             <td>{{ item.verb }}</td>
             
             <td>
               <span style="cursor: pointer"
-                v-tooltip.bottom="formatLongValueForTooltip(item.path)"
+                v-tooltip.bottom="formatLongValueForTooltip(item.path + item.querystringNonTemplate)"
                 @click="(
-                onTableValueNonJsonSeeInFullClicked(item.path),
+                onTableValueNonJsonSeeInFullClicked(item.path + item.querystringNonTemplate),
                 showFullValueSideBar = true
               )">
-                {{ shortenValueInTable(item.path) }}
+                {{ shortenValueInTable(item.path + item.querystringNonTemplate) }}
               </span>
             </td>
             

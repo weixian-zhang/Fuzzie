@@ -32,7 +32,8 @@ from db import  (get_fuzzcontext,
                  get_fuzz_request_response,
                  get_fuzz_request_response_messages,
                  get_uploaded_files,
-                 get_uploaded_file_content)
+                 get_uploaded_file_content,
+                 search_body)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -389,6 +390,68 @@ class ServiceManager:
         
         
         return True, '', rrMsg
+    
+    
+    def search_body(self, searchText: str, fuzzCaseSetId = '', fuzzCaseSetRunId = ''):
+             
+        try:
+            rows = search_body(searchText, fuzzCaseSetId, fuzzCaseSetRunId)
+            
+            if rows is None or len(rows) == 0:
+                return True, '', []
+            
+            result = []
+            
+            for row in rows:
+                
+                rowDict = row._asdict()
+                
+                reqBody: str = Utils.try_decode_bytes_string(base64.b64decode(rowDict['requestBody']))
+                respBody: str = Utils.try_decode_bytes_string(base64.b64decode(rowDict['responseBody']))
+                
+                searchText = searchText.lower()
+
+                if searchText in reqBody.lower() or searchText in respBody.lower():
+                    
+                    fdc = FuzzDataCase_ViewModel()
+                    fdc.fuzzDataCaseId = rowDict['fuzzDataCaseId']
+                    fdc.fuzzCaseSetId = fuzzCaseSetId
+                    
+                    fdc.request = FuzzRequest_ViewModel()
+                    fdc.request.Id = row['fuzzRequestId']
+                    fdc.request.datetime = row['requestDateTime']
+                    fdc.request.hostname
+                    fdc.request.port = rowDict['port']
+                    fdc.request.verb = rowDict['verb']
+                    fdc.request.path = rowDict['path']
+                    fdc.request.querystring = rowDict['querystring']
+                    fdc.request.url = rowDict['url']
+                    fdc.request.headers = rowDict['headers']
+                    fdc.request.contentLength = rowDict['contentLength']
+                    fdc.request.invalidRequestError = rowDict['invalidRequestError']
+                    
+                    fdc.response = FuzzResponse_ViewModel()
+                    
+                    fdc.response.Id = rowDict['fuzzResponseId']
+                    fdc.response.datetime = row['responseDateTime']
+                    fdc.response.statusCode = rowDict['statusCode']
+                    fdc.response.reasonPharse = rowDict['reasonPharse']
+                    fdc.response.setcookieHeader = rowDict['setcookieHeader']
+                    fdc.response.headerJson = rowDict['headerJson']
+                    fdc.response.contentLength = rowDict['contentLength']
+                    
+                    result.append(fdc)
+                
+                
+                
+                
+
+            return True, '', result
+            
+        except Exception as e:
+            return (False, Utils.errAsText(e), [])
+            
+        
         
         
     def get_fuzzContexts_and_runs(self) -> list[ApiFuzzContext_Runs_ViewModel]:

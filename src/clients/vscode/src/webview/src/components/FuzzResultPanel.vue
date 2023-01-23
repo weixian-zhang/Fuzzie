@@ -111,7 +111,7 @@
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
       <!-- <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search"
        v-model="quickSearchTextValue"
-        @input="onquickSearchTextValueChange" /> -->
+        @input="onQuickSearchTextValueChange" /> -->
 
         <v-text-field
         full-width
@@ -123,7 +123,7 @@
         clear-icon="mdi-close-circle"
         clearable
         v-model="quickSearchTextValue"
-        @input="onquickSearchTextValueChange"
+        @input="onQuickSearchTextValueChange"
         ></v-text-field>
 
       <v-spacer></v-spacer>
@@ -134,17 +134,17 @@
           full-width
           density="compact"
           variant="solo"
-          label="deep search: body"
+          label="deep search: request and response body"
           single-line
           hide-details
           clear-icon="mdi-close-circle"
           clearable
-          v-model="fullSearchTextValue"
-          @input="onFullkSearchTextValueChange"
+          v-model="deepSearchTextValue"
           ></v-text-field>
           <v-btn
               icon
               color="cyan"
+              @click="onDeepSearchClick"
             >
               <v-icon>mdi-magnify</v-icon>
             </v-btn>
@@ -380,12 +380,15 @@ class Props {
     tableResponseValueSizeBar = ''
 
     quickSearchTextValue = '';
-    fullSearchTextValue = '';
+    deepSearchTextValue = '';
 
     contentLengthInputValue = 100;
     tableFilterSmallerLarger = '>=';
 
     pollFuzzResultHandler: any = undefined;
+
+    currentFuzzingFuzzContext = ''
+    currentFuzzingFuzzCaseSetRun = ''
 
     fuzzCaseSetId = ''
     fuzzCaseSetRunId = ''
@@ -413,12 +416,8 @@ class Props {
     }
 
     onFuzzStart(data) {
-
-      const fuzzContextId = data.fuzzContextId;
-      const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
-
-      this.fuzzCaseSetId = fuzzContextId;
-      this.fuzzCaseSetRunId = fuzzCaseSetRunId;
+      this.currentFuzzingFuzzContext = data.fuzzContextId;
+      this.currentFuzzingFuzzCaseSetRun = data.fuzzCaseSetRunId;
     }
 
     onFuzzStop(){
@@ -426,8 +425,8 @@ class Props {
         clearInterval(this.pollFuzzResultHandler);
         this.pollFuzzResultHandler = undefined;
       }
-      this.fuzzCaseSetId = '';
-      this.fuzzCaseSetRunId = ''
+      this.currentFuzzingFuzzContext ='';
+      this.currentFuzzingFuzzCaseSetRun = '';
     }
 
     storeFuzzDataCase(fdcs:  Array<FuzzDataCase|any>) {
@@ -501,7 +500,40 @@ class Props {
       this.buildStatusCodesDropDown();
     }
 
-    onquickSearchTextValueChange(input) {
+    async onDeepSearchClick() {
+      
+      try{
+
+          if (this.isDataLoadingInProgress || this.isFuzzingInProgress()) {
+          this.toastInfo('Search is disabled when data loading or fuzzing is in progress');
+          return;
+          }
+
+          if (this.fuzzCaseSetId == '' || this.fuzzCaseSetRunId == '' ) {
+            return;
+          }
+
+          this.isDataLoadingInProgress = true;
+
+          const searchText = this.deepSearchTextValue;
+
+          if(searchText == null || this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length < 3) {
+            return;
+          }
+
+          const [ok, err, fdcList] = await this.webclient.deepSearchBody(searchText, this.fuzzCaseSetId, this.fuzzCaseSetRunId)
+
+          this.storeFuzzDataCase(fdcList);
+      }
+      catch(error) {
+        this.$logger.error(error)
+      }
+      finally {
+        this.isDataLoadingInProgress = false;
+      }
+    }
+
+    onQuickSearchTextValueChange(input) {
       if (this.isDataLoadingInProgress || this.isFuzzingInProgress()) {
         this.toastInfo('Search is disabled when data loading or fuzzing is in progress');
         return;
@@ -520,7 +552,9 @@ class Props {
         if(
           datacase.request.path?.toLowerCase().includes(this.quickSearchTextValue) ||
           datacase.request.querystring?.toLowerCase().includes(this.quickSearchTextValue) ||
-          datacase.request.headers?.toLowerCase().includes(this.quickSearchTextValue)
+          datacase.request.headers?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.response.headerJson?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.response.reasonPharse?.toLowerCase().includes(this.quickSearchTextValue)
           ) {
           return true;
         }
@@ -850,7 +884,7 @@ class Props {
     //}
 
     isFuzzingInProgress() {
-        if(!Utils.isNothing(this.fuzzCaseSetId)  && !Utils.isNothing(this.fuzzCaseSetRunId)) {
+        if(!Utils.isNothing(this.currentFuzzingFuzzContext)  && !Utils.isNothing(this.currentFuzzingFuzzContext)) {
           return true;
         }
         return false;

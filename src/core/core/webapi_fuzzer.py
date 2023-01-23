@@ -540,7 +540,7 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            file = None        #for openapi3 single file only
+            file = ''        #for openapi3 single file only
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
