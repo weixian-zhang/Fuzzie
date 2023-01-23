@@ -12,7 +12,7 @@ def load_corpora_background_done(future):
     pub.sendMessage(es.CorporaEventTopic, command='corpora_loaded', msgData='')
     es.emitInfo('data loading complete')
 
-# load data background
+# load data background on another thread
 def load_corpora_background():
     
     es.emitInfo('loading data')
