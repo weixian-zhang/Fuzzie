@@ -250,7 +250,7 @@ class WebApiFuzzer:
                     
                     req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
-                elif file != None:
+                elif not Utils.isNoneEmpty(file):
                     
                     # support single file only.
                     # fuzzie's goal is to upload file content as the "whole" POST body.
@@ -540,7 +540,7 @@ class WebApiFuzzer:
             querystringDT = fcs.querystringDataTemplate
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
-            file = None        #for openapi3 single file only
+            file = ''        #for openapi3 single file only
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:

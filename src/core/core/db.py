@@ -461,7 +461,7 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                                 ApiFuzzResponseTable.columns.reasonPharse,
                                 ApiFuzzResponseTable.columns.setcookieHeader,
                                 ApiFuzzResponseTable.columns.headerJson,
-                                ApiFuzzResponseTable.columns.contentLength,
+                                ApiFuzzResponseTable.columns.contentLength
                                 )
                     .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
@@ -631,6 +631,49 @@ def get_naughtystring_row_count():
     Session.close()
     
     return count
+
+def search_body(searchText: str, fuzzCaseSetId, fuzzCaseSetRunId):
+    
+    searchQuery = f'%{searchText}%'
+    
+    Session = scoped_session(session_factory)
+    
+    rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+                                ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
+                                ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
+                                ApiFuzzRequestTable.columns.hostname,
+                                ApiFuzzRequestTable.columns.port,
+                                ApiFuzzRequestTable.columns.hostnamePort,
+                                ApiFuzzRequestTable.columns.verb,
+                                ApiFuzzRequestTable.columns.path,
+                                ApiFuzzRequestTable.columns.querystring,
+                                ApiFuzzRequestTable.columns.url,
+                                ApiFuzzRequestTable.columns.headers,
+                                ApiFuzzRequestTable.columns.contentLength,
+                                ApiFuzzRequestTable.columns.invalidRequestError,
+                                ApiFuzzRequestTable.columns.body.label('requestBody'),
+                                
+                                ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
+                                ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
+                                ApiFuzzResponseTable.columns.statusCode,
+                                ApiFuzzResponseTable.columns.reasonPharse,
+                                ApiFuzzResponseTable.columns.setcookieHeader,
+                                ApiFuzzResponseTable.columns.headerJson,
+                                ApiFuzzResponseTable.columns.contentLength,
+                                ApiFuzzResponseTable.columns.body.label('responseBody')
+                                )
+                    .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+                            ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId
+                    )
+                    .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .all()
+                )
+    
+    Session.commit()
+    Session.close()
+    
+    return rows
 
 def delete_api_fuzz_context(fuzzcontextId: str):
     

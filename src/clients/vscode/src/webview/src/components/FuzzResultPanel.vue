@@ -107,18 +107,48 @@
     </Sidebar>
 
      
-     <v-toolbar color="#F6F6F6" flat dense height="30px" width="100px" density="compact">
+     <v-toolbar color="#F6F6F6" flat dense height="30px" width="300px" density="compact">
       <!-- <input class="form-control form-control-sm" type="text" style="width=30px;" aria-label=".form-control-sm example" /> -->
-      <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search"
-       v-model="fullTextSearchValue"
-        @input="onfullTextSearchValueChange" />
+      <!-- <input type="text" class="form-control form-control-sm" id="colFormLabelSm" placeholder="search"
+       v-model="quickSearchTextValue"
+        @input="onQuickSearchTextValueChange" /> -->
+
+        <v-text-field
+        full-width
+        density="compact"
+        variant="solo"
+        label="quick search: path, querystring and header"
+        single-line
+        hide-details
+        clear-icon="mdi-close-circle"
+        clearable
+        v-model="quickSearchTextValue"
+        @input="onQuickSearchTextValueChange"
+        ></v-text-field>
 
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
+
       <v-spacer></v-spacer>
-      <v-spacer></v-spacer>
-      <v-spacer></v-spacer>
-      <v-spacer></v-spacer>
+        <v-text-field
+          full-width
+          density="compact"
+          variant="solo"
+          label="deep search: request and response body"
+          single-line
+          hide-details
+          clear-icon="mdi-close-circle"
+          clearable
+          v-model="deepSearchTextValue"
+          ></v-text-field>
+          <v-btn
+              icon
+              color="cyan"
+              @click="onDeepSearchClick"
+            >
+              <v-icon>mdi-magnify</v-icon>
+            </v-btn>
+      
 
     </v-toolbar>
 
@@ -185,10 +215,9 @@
                   </v-progress-linear>
               </th>
             </tr>
-            
           </thead>
+
           <tbody>
-          
             <tr
               v-for="item in fdcsDataFiltered"
               :key="item.response.Id"
@@ -331,10 +360,8 @@ class Props {
     selectedRequest = ''
     selectedResponse = '';
 
-    //dataCache = {};
     fdcsDataOriginal: Array<FuzzDataCase|any> = [];
     fdcsDataFiltered: Array<FuzzDataCase|any> = [];
-    //fdcsFuzzing = {};
     unqStatusCodesFromFDCS: Array<string> = []
     fuzzingUploadedFiles: Array<FuzzRequestFileUpload_ViewModel> = []
     
@@ -352,12 +379,16 @@ class Props {
     showResponseValueSideBar = false;
     tableResponseValueSizeBar = ''
 
-    fullTextSearchValue = '';
+    quickSearchTextValue = '';
+    deepSearchTextValue = '';
 
     contentLengthInputValue = 100;
     tableFilterSmallerLarger = '>=';
 
     pollFuzzResultHandler: any = undefined;
+
+    currentFuzzingFuzzContext = ''
+    currentFuzzingFuzzCaseSetRun = ''
 
     fuzzCaseSetId = ''
     fuzzCaseSetRunId = ''
@@ -385,14 +416,8 @@ class Props {
     }
 
     onFuzzStart(data) {
-
-      
-
-      const fuzzContextId = data.fuzzContextId;
-      const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
-
-      this.fuzzCaseSetId = fuzzContextId;
-      this.fuzzCaseSetRunId = fuzzCaseSetRunId;
+      this.currentFuzzingFuzzContext = data.fuzzContextId;
+      this.currentFuzzingFuzzCaseSetRun = data.fuzzCaseSetRunId;
     }
 
     onFuzzStop(){
@@ -400,8 +425,8 @@ class Props {
         clearInterval(this.pollFuzzResultHandler);
         this.pollFuzzResultHandler = undefined;
       }
-      this.fuzzCaseSetId = '';
-      this.fuzzCaseSetRunId = ''
+      this.currentFuzzingFuzzContext ='';
+      this.currentFuzzingFuzzCaseSetRun = '';
     }
 
     storeFuzzDataCase(fdcs:  Array<FuzzDataCase|any>) {
@@ -430,14 +455,6 @@ class Props {
           if(this.isDataLoadingInProgress) {
             return;
           }
-
-          //if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined) {
-          //  this.pollFuzzResultHandler = setInterval( async()=> {
-          //     await this.getFuzzRequestResponses();
-          //  },1500)
-          //  return;
-          //}
-          
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
             //this.toast.add({severity:'error', summary: '', detail:'fuzzcontextId or fuzzCaseSetRunId is missing in FuzzResultPanel ', life: 5000})
@@ -477,18 +494,74 @@ class Props {
         this.clearTableBindingData();
         return;
       }
-
+      
       this.storeFuzzDataCase(result);
 
       this.buildStatusCodesDropDown();
     }
 
-    onfullTextSearchValueChange(input) {
-      const searchText = input.data;
+    async onDeepSearchClick() {
+      
+      try{
 
-      if(this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length <= 2) {
+          if (this.isDataLoadingInProgress || this.isFuzzingInProgress()) {
+          this.toastInfo('Search is disabled when data loading or fuzzing is in progress');
+          return;
+          }
+
+          if (this.fuzzCaseSetId == '' || this.fuzzCaseSetRunId == '' ) {
+            return;
+          }
+
+          this.isDataLoadingInProgress = true;
+
+          const searchText = this.deepSearchTextValue;
+
+          if(searchText == null || this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length < 3) {
+            return;
+          }
+
+          const [ok, err, fdcList] = await this.webclient.deepSearchBody(searchText, this.fuzzCaseSetId, this.fuzzCaseSetRunId)
+
+          this.storeFuzzDataCase(fdcList);
+      }
+      catch(error) {
+        this.$logger.error(error)
+      }
+      finally {
+        this.isDataLoadingInProgress = false;
+      }
+    }
+
+    onQuickSearchTextValueChange(input) {
+      if (this.isDataLoadingInProgress || this.isFuzzingInProgress()) {
+        this.toastInfo('Search is disabled when data loading or fuzzing is in progress');
         return;
       }
+
+      const searchText = this.quickSearchTextValue;
+
+      if(searchText == null || this.fdcsDataOriginal.length == 0 || searchText == '' || searchText.length < 3) {
+        this.fdcsDataFiltered = [...this.fdcsDataOriginal];
+        return;
+      }
+
+      this.fdcsDataFiltered = [...this.fdcsDataOriginal];
+
+      this.fdcsDataFiltered = this.fdcsDataFiltered.filter((datacase: FuzzDataCase) => {
+        if(
+          datacase.request.path?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.request.querystring?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.request.headers?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.response.headerJson?.toLowerCase().includes(this.quickSearchTextValue) ||
+          datacase.response.reasonPharse?.toLowerCase().includes(this.quickSearchTextValue)
+          ) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
 
       //this.fdcsDataFiltered = this.fdcsDataOriginal.map(fdc => {
 
@@ -811,7 +884,7 @@ class Props {
     //}
 
     isFuzzingInProgress() {
-        if(!Utils.isNothing(this.fuzzCaseSetId)  && !Utils.isNothing(this.fuzzCaseSetRunId)) {
+        if(!Utils.isNothing(this.currentFuzzingFuzzContext)  && !Utils.isNothing(this.currentFuzzingFuzzContext)) {
           return true;
         }
         return false;
