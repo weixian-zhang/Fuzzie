@@ -250,7 +250,7 @@ class WebApiFuzzer:
                     
                     req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
-                elif file != None:
+                elif not Utils.isNoneEmpty(file):
                     
                     # support single file only.
                     # fuzzie's goal is to upload file content as the "whole" POST body.
