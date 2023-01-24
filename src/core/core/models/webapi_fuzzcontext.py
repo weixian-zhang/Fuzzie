@@ -211,6 +211,7 @@ class WordlistType:
     myfile = 'myfile'
     string = 'string'
     xss = 'xss'
+    sqlinject = 'sqlinject'
     bool = 'bool'
     digit = 'digit'
     file = 'file'

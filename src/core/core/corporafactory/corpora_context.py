@@ -165,6 +165,10 @@ class CorporaContext:
                 if not 'xss' in self.context:
                     self.context['xss'] = self.cp.stringCorpora
                     return originalExpression
+            case 'sqlinject':
+                if not 'sqlinject' in self.context:
+                    self.context['sqlinject'] = self.cp.stringCorpora
+                    return originalExpression
             case 'bool':
                 if not 'bool' in self.context:
                     self.context['bool'] = self.cp.boolCorpora
@@ -240,6 +244,10 @@ class CorporaContext:
             elif wordlist_type == WordlistType.xss:
                 sc: StringCorpora = self.context[WordlistType.xss]
                 data = sc.next_xss_corpora()
+                return data
+            elif wordlist_type == WordlistType.sqlinject:
+                sc: StringCorpora = self.context[WordlistType.sqlinject]
+                data = sc.next_sqli_corpora()
                 return data
             else:
                 provider = self.context[wordlist_type] 
