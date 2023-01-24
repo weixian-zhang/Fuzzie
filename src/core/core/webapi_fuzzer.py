@@ -21,7 +21,9 @@ from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDa
                                        ApiFuzzRequest, ApiFuzzResponse, FuzzTestResult,
                                         FuzzMode, FuzzCaseSetFile, WordlistType)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
-import io
+
+import http.client
+import re
 
 from db import (insert_api_fuzzCaseSetRuns,
                 update_api_fuzzCaseSetRun_status,
@@ -222,6 +224,18 @@ class WebApiFuzzer:
     def http_call(self, fcs: ApiFuzzCaseSet) -> tuple([ApiFuzzDataCase, dict]):
         
         resp = None
+        ok = True
+        err = ''
+        hostname=''
+        port=443
+        hostnamePort=''
+        url=''
+        path=''
+        querystring=''
+        body=''
+        headers={}
+        file = ''
+        contentType = 0
         
         try:
             
@@ -262,8 +276,11 @@ class WebApiFuzzer:
                     req = Request(fcs.verb, url, headers=headers)
                 
                 
-                headers['User-Agent'] = 'fuzzie'
+                import requests.utils 
 
+                # override requests lib header check to allow any chars
+                # original regex is commented
+                requests.utils._CLEAN_HEADER_REGEX_STR = re.compile(r'(.*?)') #re.compile(r'^\S[^\r\n]*$|^$')
                 prepReq = req.prepare()
                 
                 reqContentLength =  0
@@ -288,14 +305,18 @@ class WebApiFuzzer:
                 
                 # handle client time-out error
                 try:
+                    
                     resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 except Exception as e:
-                    fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, fuzzDataCase.Id)
+                    fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, 
+                                                                   fuzzDataCase.Id, 
+                                                                   reason='request timed out, Fuzzie has a short time-out of 4 seconds')
                     fuzzDataCase.response = fuzzResp
                     return fuzzDataCase, file
                 
             
             except Exception as e:
+                self.eventstore.emitErr(e)
                 err =  Utils.errAsText(e)
                 fuzzDataCase.request = self.create_fuzzrequest(
                                         fuzzDataCaseId=fuzzDataCase.Id,
@@ -311,10 +332,13 @@ class WebApiFuzzer:
                                         body=reqBody,
                                         contentLength=0,
                                         invalidRequestError=err)
+                fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, 
+                                                                   fuzzDataCase.Id, 
+                                                                   reason=err)
+                fuzzDataCase.response = fuzzResp
+                #self.cancel_fuzzing(errorMsg=Utils.errAsText(e))
                 
-                self.cancel_fuzzing(errorMsg=Utils.errAsText(e))
-                
-                return fuzzDataCase, {}
+                return fuzzDataCase, ''
             
             
             try:
@@ -449,14 +473,14 @@ class WebApiFuzzer:
             ej = Utils.jsone(e)
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.create_fuzzrequest')
         
-    def create_fuzz_timed_out_response(self, fuzzcontextId, fuzzDataCaseId) -> ApiFuzzResponse:
+    def create_fuzz_timed_out_response(self, fuzzcontextId, fuzzDataCaseId, reason='') -> ApiFuzzResponse:
         fuzzResp = ApiFuzzResponse()
         fuzzResp.Id = shortuuid.uuid()
         fuzzResp.datetime = datetime.now()
         fuzzResp.fuzzDataCaseId = fuzzDataCaseId
         fuzzResp.fuzzcontextId = fuzzcontextId 
         fuzzResp.statusCode = 408
-        fuzzResp.reasonPharse = 'request timed out, Fuzzie has a short time-out of 4 seconds'
+        fuzzResp.reasonPharse = reason
         fuzzResp.responseDisplayText = ''
         return fuzzResp
      
@@ -570,7 +594,9 @@ class WebApiFuzzer:
                         continue
                     
                     headerDict[hk] = resolvedVal
-                
+            
+            # fuzzie custom header
+            headerDict['User-Agent'] = 'fuzzie'
                     
             # handle file upload with "proper" encoding,
             # without encoding requests will throw error as requests uses utf-8 by default

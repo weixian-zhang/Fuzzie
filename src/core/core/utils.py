@@ -163,6 +163,9 @@ class Utils:
         except Exception as e:
             return False, content
         
+    def try_escape_unicode_for_str(data: str):
+        return data.encode('utf-8').decode('unicode-escape')
+        
     
     
         

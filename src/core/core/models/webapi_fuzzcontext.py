@@ -104,8 +104,7 @@ class FuzzCaseSetFile:
         else:
             filename
             
-        
-        
+
 # each "fuzz data set" is one a unique verb + path
 class ApiFuzzCaseSet:
     
@@ -211,6 +210,7 @@ class WordlistType:
     my = 'my'
     myfile = 'myfile'
     string = 'string'
+    xss = 'xss'
     bool = 'bool'
     digit = 'digit'
     file = 'file'
