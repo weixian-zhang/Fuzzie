@@ -167,7 +167,7 @@
                   icon="mdi-lightning-bolt"
                   color="cyan darken-3"
                   size="small"
-                  :disabled="(isFuzzingInProgress())"
+                  :disabled="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
                   @click="(
                         onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
                       )" ></v-btn>
