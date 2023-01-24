@@ -972,7 +972,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     this.toastInfo('fuzzing started', '', 1000);
 
-    await Utils.delay(1500);
+    await Utils.delay(2000);
 
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs

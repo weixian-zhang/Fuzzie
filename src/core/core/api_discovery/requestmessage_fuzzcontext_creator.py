@@ -593,6 +593,7 @@ class RequestMessageFuzzContextCreator:
     def jinja_primitive_wordlist_types_render_dict(self) -> dict:
         return {
             'string': '{{ eval(wordlist_type=\'string\') }}',
+            'xss': '{{ eval(wordlist_type=\'xss\') }}',
             'bool':  '{{ eval(wordlist_type=\'bool\') }}',
             'digit': '{{ eval(wordlist_type=\'digit\') }}',
             'integer': '{{ eval(wordlist_type=\'integer\') }}',

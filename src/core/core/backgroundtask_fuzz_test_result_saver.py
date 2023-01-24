@@ -12,7 +12,6 @@ import base64
 
 class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
     
-    
     def run(self,*args,**kwargs):
         while True:
             try:
@@ -31,7 +30,8 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                                               caseSetRunSummaryId=ftResult.caseSetRunSummaryId)
                     
                     # save file content
-                    if not Utils.isNoneEmpty(ftResult.file):
+                    if Utils.isNoneEmpty(ftResult.file) == False:
+                        
                         wordlist_type = ftResult.file.wordlist_type
                         filename = ftResult.file.filename
                         content = ''
@@ -57,8 +57,6 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
                             fuzzRequestId=ftResult.fuzzDataCase.request.Id
                             )
                             
-                   
-                    
                 else:
                     time.sleep(1)
                 

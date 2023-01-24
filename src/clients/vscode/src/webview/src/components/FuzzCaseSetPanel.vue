@@ -63,7 +63,7 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title>API Operations</v-toolbar-title>
+      <v-toolbar-title>API to Fuzz</v-toolbar-title>
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
           @click="(
@@ -344,7 +344,6 @@ class Props {
     } catch (error) {
         this.tableValViewInSizeBar = jsonValue;
     }
-      
   }
 
   formatLongValueForTooltip(value) {
@@ -411,7 +410,13 @@ class Props {
 
   onFuzzStop() {
 
+    if(!this.isFuzzingInProgress()) {
+      return;
+    }
+
     this.clearIntervalGetReqRespData();
+
+    this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''

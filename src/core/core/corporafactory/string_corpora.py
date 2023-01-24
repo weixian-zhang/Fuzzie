@@ -7,6 +7,7 @@ sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
 
+from utils import Utils
 from sqlalchemy.orm import scoped_session
 from db import session_factory, SeclistXSSTable, SeclistSqlInjectionTable, SeclistBLNSTable
 import asyncio
@@ -135,6 +136,8 @@ class StringCorpora:
             
         data = datasource[self.rowPointer]
         
+        data = Utils.try_escape_unicode_for_str(data)
+        
         self.rowPointer += 1
         
         return data
@@ -145,6 +148,8 @@ class StringCorpora:
             self.xssRowPointer = 1
             
         data = self.xss[self.xssRowPointer]
+        
+        data = Utils.try_escape_unicode_for_str(data)
         
         self.xssRowPointer += 1
         
@@ -157,6 +162,8 @@ class StringCorpora:
             
         data = self.sqli[self.sqliRowPointer]
         
+        data = Utils.try_escape_unicode_for_str(data)
+        
         self.sqliRowPointer += 1
         
         return data
@@ -167,6 +174,8 @@ class StringCorpora:
             self.blnsRowPointer = 0
             
         data = self.blns[self.blnsRowPointer]
+        
+        data = Utils.try_escape_unicode_for_str(data)
         
         self.blnsRowPointer += 1
         

@@ -713,50 +713,53 @@ def delete_api_fuzz_context(fuzzcontextId: str):
 
 def delete_api_fuzzCaseSetRun(fuzzCaseSetRunId: str):
     
+    try:
+        Session = scoped_session(session_factory)
     
-    Session = scoped_session(session_factory)
-    
-    fuzzdatacaseIDs  = (
-        Session.query(ApiFuzzDataCaseTable.columns.Id).
-        filter(ApiFuzzDataCaseTable.columns.fuzzCaseSetRunId == fuzzCaseSetRunId)
-    )
-    
-    fuzzrequestUploadFileTsql = (
-        Session.query(ApiFuzzRequestFileUploadTable).
-        filter(ApiFuzzRequestFileUploadTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
-    )
-    
-    fuzzrequestUploadFileTsql.delete()
-    
-    fuzzrequestTsql = (
-        Session.query(ApiFuzzRequestTable).
-        filter(ApiFuzzRequestTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
-    )
-    
-    fuzzrequestTsql.delete()
-    
-    fuzzresponseTsql = (
-        Session.query(ApiFuzzResponseTable).
-        filter(ApiFuzzResponseTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
-    )
+        fuzzdatacaseIDs  = (
+            Session.query(ApiFuzzDataCaseTable.columns.Id).
+            filter(ApiFuzzDataCaseTable.columns.fuzzCaseSetRunId == fuzzCaseSetRunId)
+        )
+        
+        fuzzrequestUploadFileTsql = (
+            Session.query(ApiFuzzRequestFileUploadTable).
+            filter(ApiFuzzRequestFileUploadTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+        )
+        
+        fuzzrequestUploadFileTsql.delete()
+        
+        fuzzrequestTsql = (
+            Session.query(ApiFuzzRequestTable).
+            filter(ApiFuzzRequestTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+        )
+        
+        fuzzrequestTsql.delete()
+        
+        fuzzresponseTsql = (
+            Session.query(ApiFuzzResponseTable).
+            filter(ApiFuzzResponseTable.columns.fuzzDataCaseId.in_(fuzzdatacaseIDs.subquery()))
+        )
 
-    fuzzresponseTsql.delete()
+        fuzzresponseTsql.delete()
+        
+        apiDataCaseStmt = ApiFuzzDataCaseTable.delete(ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+        
+        runSumPerCaseSetStmt = ApiFuzzRunSummaryPerCaseSetTable.delete(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+        
+        caseSetRunsStmt = ApiFuzzCaseSetRunsTable.delete(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId)
+        
+        Session.execute(apiDataCaseStmt)
+        
+        Session.execute(runSumPerCaseSetStmt)
+        
+        Session.execute(caseSetRunsStmt)
+        
+        Session.commit()
+        
+        Session.close()
+    except Exception as e:
+        eventstore.emitErr(e)
     
-    apiDataCaseStmt = ApiFuzzDataCaseTable.delete(ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
-    
-    runSumPerCaseSetStmt = ApiFuzzRunSummaryPerCaseSetTable.delete(ApiFuzzRunSummaryPerCaseSetTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
-    
-    caseSetRunsStmt = ApiFuzzCaseSetRunsTable.delete(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId)
-    
-    Session.execute(apiDataCaseStmt)
-    
-    Session.execute(runSumPerCaseSetStmt)
-    
-    Session.execute(caseSetRunsStmt)
-    
-    Session.commit()
-    
-    Session.close()
 
 def save_updated_fuzzcasesets(fcsList: dict):
         
@@ -1188,6 +1191,12 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
                 .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId)
                 .first()
                )
+    
+    # user run-summary could have been deleted while fuzz-test-result is still inserting
+    # this check to prevent error
+    if Utils.isNoneEmpty(summary):
+        return
+    
     rowDict =  summary._asdict()
     existingHttp2xx = rowDict['http2xx']
     existingHttp3xx = rowDict['http3xx']

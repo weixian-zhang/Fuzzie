@@ -117,7 +117,7 @@
         full-width
         density="compact"
         variant="solo"
-        label="quick search: path, querystring and header"
+        label="search path, querystring and header"
         single-line
         hide-details
         clear-icon="mdi-close-circle"
@@ -128,13 +128,14 @@
 
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
+      <v-toolbar-title>Fuzz Result</v-toolbar-title>
 
       <v-spacer></v-spacer>
         <v-text-field
           full-width
           density="compact"
           variant="solo"
-          label="deep search: request and response body"
+          label="search request and response body"
           single-line
           hide-details
           clear-icon="mdi-close-circle"

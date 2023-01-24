@@ -161,6 +161,10 @@ class CorporaContext:
                 if not 'string' in self.context:
                     self.context['string'] = self.cp.stringCorpora
                     return originalExpression
+            case 'xss':
+                if not 'xss' in self.context:
+                    self.context['xss'] = self.cp.stringCorpora
+                    return originalExpression
             case 'bool':
                 if not 'bool' in self.context:
                     self.context['bool'] = self.cp.boolCorpora
@@ -169,10 +173,6 @@ class CorporaContext:
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
                     return originalExpression
-            # case 'integer':                         # openapi 3 integer type, using digit corpora
-            #     if not 'integer' in self.context:
-            #         self.context['integer'] = self.cp.digitCorpora
-            #         return originalExpression
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
@@ -237,6 +237,10 @@ class CorporaContext:
             if wordlist_type == 'myfile':
                 key = self.get_myfile_corporacontext_key(my_file_content_filename)
                 provider = self.context[key]
+            elif wordlist_type == WordlistType.xss:
+                sc: StringCorpora = self.context[WordlistType.xss]
+                data = sc.next_xss_corpora()
+                return data
             else:
                 provider = self.context[wordlist_type] 
             
