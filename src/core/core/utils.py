@@ -7,6 +7,7 @@ import xml.etree.ElementTree as elementTree
 import jinja2
 from jinja2 import environment
 import json
+import hashlib
 
 class Utils:
     
@@ -165,6 +166,9 @@ class Utils:
         
     def try_escape_unicode_for_str(data: str):
         return data.encode('utf-8').decode('unicode-escape')
+    
+    def sha256(value) -> str:
+        return hashlib.sha256(value.encode()).hexdigest()
         
     
     

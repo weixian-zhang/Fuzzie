@@ -228,8 +228,10 @@ class ServiceManager:
                     
                     if singleFCS.file != '':
                         parsedFCSs['file'] = singleFCS.file.wordlist_type
+                        parsedFCSs['fileName'] = singleFCS.file.filename
                     else:
                         parsedFCSs['file'] = ''
+                        parsedFCSs['fileName'] = ''
                         
                     parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
                     parsedFCSs['pathDataTemplate'] = singleFCS.pathDataTemplate

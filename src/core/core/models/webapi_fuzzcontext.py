@@ -123,6 +123,7 @@ class ApiFuzzCaseSet:
         self.headerNonTemplate = ''
         
         self.file = ''
+        self.fileName = ''
         self.fileDataTemplate = ''
         
         self.pathDataTemplate = ''
@@ -207,7 +208,7 @@ class FuzzTestResult:
         self.file = file
         
 class WordlistType:
-    my = 'my'
+    mutate = 'mutate'
     myfile = 'myfile'
     string = 'string'
     xss = 'xss'

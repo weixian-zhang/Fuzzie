@@ -3,7 +3,7 @@ from corpora_mutator import CorporaMutator
 import random
 
 # this corpora provider cannot be singleton as there can be more than one user-supplied expressions
-class UserSuppliedCorpora:
+class StringMutateCorpora:
     
     def __init__(self) -> None:
         

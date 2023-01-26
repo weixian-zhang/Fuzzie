@@ -16,7 +16,7 @@ x-ms-blob-type: BlockBlob
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}"
-| myfile("batchfile_1.log")
+| myfile("batchfile.log")
 }}
     
     `,
@@ -34,7 +34,7 @@ supports with multi breakline
     \\"age\\": \\"{{ digit }}\\"
 }
 
-" | myfile("a-file.log")
+" | myfile("filename.txt")
 }}
         `,
     
@@ -55,7 +55,7 @@ POST https://httpbin.org/post
 {{ username }}
 {{ password }}
 
-" | myfile("a-file.log")
+" | myfile("filename.txt")
 }}
             `,
     }
@@ -84,16 +84,22 @@ name=foo
 &password=bar
 `,
 
+'post-file': `
+POST https://httpbin.org/post HTTP/1.1
+
+{{ file('option-file-name.log') }}
+`,
+
 'post-pdf': `
 POST https://httpbin.org/post HTTP/1.1
 
-{{ pdf }}
+{{ pdf('option-file-name.log') }}
 `,
 
 'post-image': `
 POST https://httpbin.org/post HTTP/1.1
 
-{{ image }}
+{{ image('option-file-name.log') }}
 `,
 
 'post-xml':`
@@ -116,12 +122,12 @@ Authorization: {{ string }}
 //   -request-line = Verb(default GET) + (protocol + hostname) + path + querystring
 //   -each ### is a delimiter for a request-block and below has 4 request-blocks
 
-GET https://eovogku1ema9d9b.m.pipedream.net/user/id/{{ string }} HTTP/1.1
+GET https://httpbin.org/user/id/{{ string }} HTTP/1.1
 
 ###
 
 # GET is the default verb
-https://eovogku1ema9d9b.m.pipedream.net/comments/{{ digit }} 
+https://httpbin.org/comments/{{ digit }} 
 
 ###
 
@@ -130,7 +136,7 @@ https://httpbin.org/get
 
 ###
 
-GET https://eovogku1ema9d9b.m.pipedream.net
+GET https://httpbin.org/get
 ?name={{username}}
 &address={{string}}
 &order=5
@@ -140,7 +146,7 @@ GET https://eovogku1ema9d9b.m.pipedream.net
 
 // headers must be on a newline after "request-line"
 
-GET https://eovogku1ema9d9b.m.pipedream.net
+GET https://httpbin.org/get
 ?name={{username}}
 &address={{string}}
 &order=5
@@ -152,11 +158,21 @@ CustomHeader-2: {{ filename }}
 CustomHeader-3: {{ username }}
         `,
 
-
-
-    
-
     };
+
+    private mutate = {
+        
+        'mutate-post-json':
+`
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{
+    "name": "john doe",
+    "info": {{ 'this custom input will be mutated by fuzzie' | mutate }}
+}
+`
+    }
 
     public loadExample(key = 'get'): string {
 
@@ -169,6 +185,8 @@ CustomHeader-3: {{ username }}
                 return this.get[key];
             case 'post':
                 return this.post[key];
+            case 'mutate':
+                return this.mutate[key];
         }
 
         return '';

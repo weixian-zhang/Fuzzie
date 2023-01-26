@@ -26,6 +26,10 @@
                   </li>
                   
                   <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-file'))">POST a file with naughty content</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
                   @click="(loadExample('post-pdf'))">POST a PDF</a>
                   </li>
 
@@ -51,6 +55,10 @@
 
                   <li><a class="dropdown-item" href="#"
                   @click="(loadExample('graphql-mutate'))">GraphQL Mutate</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(loadExample('my-post-json'))">MY custom input - JSON</a>
                   </li>
                 </ul>
               </div>
