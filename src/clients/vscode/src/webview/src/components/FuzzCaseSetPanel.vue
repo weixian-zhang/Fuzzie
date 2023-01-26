@@ -208,7 +208,7 @@
               </span>
             </td>
             <td>
-              {{ item.file }}
+              {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
             </td>
             <td>
               <span :class="item.http2xx > 0 ? 'font-weight-bold': ''">
@@ -506,7 +506,9 @@ class Props {
         else
         {
           // get latest updated fuzzcontext
-          this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
+          //this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
+
+          await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
 
           this.isTableDirty = false;
           

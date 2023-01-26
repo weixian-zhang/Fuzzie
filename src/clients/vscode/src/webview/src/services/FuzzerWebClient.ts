@@ -247,6 +247,7 @@ export default class FuzzerWebClient
                         completedDataCaseRuns
                         totalDataCaseRunsToComplete
                         file
+                        fileName
                         requestMessage
                     }
                 }

@@ -58,7 +58,10 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('my-post-json'))">MY custom input - JSON</a>
+                  @click="(loadExample('mutate-post-json'))">Mutate your input - JSON</a>
+                  </li>
+                  <li><a class="dropdown-item" href="#"
+                  @click="(loadExample('mutate-post-xml'))">Mutate your input - XML</a>
                   </li>
                 </ul>
               </div>

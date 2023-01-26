@@ -778,6 +778,7 @@ def save_updated_fuzzcasesets(fcsList: dict):
                 bodyNonTemplate = bindparam('bodyNonTemplate'),
                 headerNonTemplate = bindparam('headerNonTemplate'),
                 file = bindparam('file'),
+                fileName = bindparam('fileName'),
                 fileDataTemplate = bindparam('fileDataTemplate'),
                 pathDataTemplate = bindparam('pathDataTemplate'),
                 querystringDataTemplate = bindparam('querystringDataTemplate'),

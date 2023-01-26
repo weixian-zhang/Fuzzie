@@ -235,6 +235,8 @@ class RequestMessageFuzzContextCreator:
                 # myfile will be discovered later in "inject_eval_func_primitive_wordlist"
                 body = self.get_body_as_one_str(multilineBlock)
                 
+                #body = body.replace("'", "\\'")
+                
                 # jinja wil execute all filters and file-functions bind to image, pdf, file
                 tpl = self.jinjaEnvBody.from_string(body)
                 bodyRendered = tpl.render()
@@ -245,51 +247,14 @@ class RequestMessageFuzzContextCreator:
                 # body contains file of kind myfile, file, image or pdf
                 # remove body
                 if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
-                    ok, err, bodyTpl = self.inject_eval_func_primitive_wordlist(bodyRendered)
+                    ok, err, bodyTpl = self.inject_eval_func_primitive_wordlist(body)
                     if ok:
                         self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
                         self.currentFuzzCaseSet.bodyNonTemplate = body
                 # no file in body
                 else:
                     self.currentFuzzCaseSet.bodyNonTemplate = ''
-                    self.currentFuzzCaseSet.bodyDataTemplate = ''
-            
-                
-                #myfile = self.parse_myfile_in_body_if_any(body)
-                
-                # if myfile != '':
-                #     self.currentFuzzCaseSet.file = myfile
-                #     self.currentFuzzCaseSet.fileDataTemplate = myfile.content
-                # else:
-                #     # check if body contains file, pdf, image wordlist type
-                #     if fileExpr != '' and fileType != '':
-                #         fOK, fErr, evalFile = self.inject_eval_func_primitive_wordlist(fileExpr)
-                #         if not fOK:
-                #             return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
-                        
-                #         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
-                #         self.currentFuzzCaseSet.fileDataTemplate = evalFile
-                    
-                #     # body has content
-                #     else:
-                #         bbOK, bErr, evalBody = self.inject_eval_func_primitive_wordlist(body)
-                #         if not bbOK:
-                #             return bbOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
-                        
-                #         self.currentFuzzCaseSet.bodyDataTemplate = evalBody
-                #         self.currentFuzzCaseSet.bodyNonTemplate = body
-                
-                
-                
-                # currently, fuzzie only supports 1 file upload per request block.
-                # When there is 1 file detected, this file takes up whole request body.
-                # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
-                # check for myfile wordlist type
-                # elif isinstance(self.currentFuzzCaseSet.file, FuzzCaseSetFile) and self.currentFuzzCaseSet.file.wordlist_type == WordlistType.myfile:
-                #     self.currentFuzzCaseSet.bodyNonTemplate = ''
-                #     self.currentFuzzCaseSet.bodyDataTemplate = ''  # myfile uses body can file content
-                #     self.currentFuzzCaseSet.fileDataTemplate = evalBody                    
-                   
+                    self.currentFuzzCaseSet.bodyDataTemplate = ''           
 
             fcSets.append(self.currentFuzzCaseSet)
             
@@ -612,23 +577,7 @@ class RequestMessageFuzzContextCreator:
         
         except Exception as e:
             return False, e,  expr
-    
-    
-    # def parse_myfile_in_body_if_any(self, body) -> FuzzCaseSetFile:
-            
-    #     fileResult = '';
-        
-    #     tpl = self.jinjaEnvPrimitive.from_string(body)
-        
-    #     output = tpl.render()
-        
-    #     if output != '':
-    #         jsonDecoded = jsonpickle.decode(output)
-    #         if isinstance(jsonDecoded, FuzzCaseSetFile):
-    #             fileResult = jsonpickle.decode(output)
-        
-    #     return fileResult
-    
+   
     
     # *** jinja filters and functions
     
