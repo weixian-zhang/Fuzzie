@@ -1,11 +1,11 @@
 import unittest
-from user_supplied_corpora import UserSuppliedCorpora
+from user_supplied_corpora import StringMutateCorpora
 
-class TestUserSuppliedCorpora(unittest.TestCase):
+class TestStringMutateCorpora(unittest.TestCase):
     
     def test_single_user_supplied_corpora(self):
         
-        g = UserSuppliedCorpora()
+        g = StringMutateCorpora()
         
         g.load_single('this is a very powerful fuzzer')
        
@@ -16,7 +16,7 @@ class TestUserSuppliedCorpora(unittest.TestCase):
             
     def test_list_ofuser_supplied_corpora(self):
         
-        g = UserSuppliedCorpora()
+        g = StringMutateCorpora()
         
         my = [
             'Disneyland: “The happiest place on Earth.',

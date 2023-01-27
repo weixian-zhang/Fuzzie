@@ -21,7 +21,6 @@ class PasswordCorpora:
         return cls.instance
     
     def __init__(self) -> None:
-        self.rowPointer = 0
         self.data = {}
         
         self.es = EventStore()
@@ -45,7 +44,7 @@ class PasswordCorpora:
     def next_corpora(self):
             
         if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 0
+            self.rowPointer = 1
         
         data = self.data[self.rowPointer][1]   # [1] is 'content'
         

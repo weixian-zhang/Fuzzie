@@ -228,8 +228,10 @@ class ServiceManager:
                     
                     if singleFCS.file != '':
                         parsedFCSs['file'] = singleFCS.file.wordlist_type
+                        parsedFCSs['fileName'] = singleFCS.file.filename
                     else:
                         parsedFCSs['file'] = ''
+                        parsedFCSs['fileName'] = ''
                         
                     parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
                     parsedFCSs['pathDataTemplate'] = singleFCS.pathDataTemplate
@@ -287,6 +289,7 @@ class ServiceManager:
                 fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
+                fcsSum.fileName = rowDict['fileName']
                 fcsSum.requestMessage = rowDict['requestMessage']
                 
                 if 'fuzzCaseSetRunId' in rowDict:

@@ -3,7 +3,7 @@ from corpora_mutator import CorporaMutator
 import random
 
 # this corpora provider cannot be singleton as there can be more than one user-supplied expressions
-class UserSuppliedCorpora:
+class StringMutateCorpora:
     
     def __init__(self) -> None:
         
@@ -28,10 +28,14 @@ class UserSuppliedCorpora:
         
     def next_corpora(self):
         
-        randIdx = random.randint(0, len(self.data) - 1)
+        try:
+            randIdx = random.randint(0, len(self.data) - 1)
         
-        data = self.data[randIdx]
+            data = self.data[randIdx]
+            
+            self.dataCursor = self.dataCursor + 1
+                            
+            return data
+        except Exception as e:
+            pass
         
-        self.dataCursor = self.dataCursor + 1
-                         
-        return data

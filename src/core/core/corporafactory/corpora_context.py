@@ -8,7 +8,7 @@ import jinja2
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, WordlistType)
 from corpora_provider import CorporaProvider
-from user_supplied_corpora import UserSuppliedCorpora
+from user_supplied_corpora import StringMutateCorpora
 from boolean_corpora import BoolCorpora
 from char_corpora import CharCorpora
 from datetime_corpora import DateTimeCorpora
@@ -90,7 +90,7 @@ class CorporaContext:
         try:
             
             template = jinja2.Template(reqMsg)
-            rendered = template.render({ 'eval': self.resolve_reqmsg_by_eval_func })
+            rendered = template.render({ 'eval': self.resolve_data_by_eval_func })
             
             return True, '', rendered
             
@@ -117,7 +117,7 @@ class CorporaContext:
             return False, Utils.errAsText(e), ''
         
     
-    def parse_reqmsg_by_eval_func(self, wordlist_type: str, my_value = '', my_uniquename='', my_file_content_value='', my_file_content_filename=''):
+    def parse_reqmsg_by_eval_func(self, wordlist_type: str, mutate_value = '', my_file_content_value='', my_file_content_filename=''):
         
         expression = wordlist_type
         
@@ -128,20 +128,15 @@ class CorporaContext:
             return originalExpression
         
         # "my"
-        if wordlist_type == 'my':
+        if wordlist_type == WordlistType.mutate:
             
-            inputVal = my_value
+            hashedVal = Utils.sha256(mutate_value)
             
-            userSuppliedOrStringCorpora = self.build_MY_expression(inputVal)
-            
-            key = 'my'
-            if my_uniquename != '':
-                key = f'{key}_{my_uniquename}'
+            userSuppliedOrStringCorpora = self.build_MY_expression(mutate_value)
                 
-            self.context[expression] = userSuppliedOrStringCorpora
+            self.context[hashedVal] = userSuppliedOrStringCorpora
             
             return
-            #return originalExpression
         
         # "myFile"
         if wordlist_type == WordlistType.myfile:
@@ -154,7 +149,6 @@ class CorporaContext:
             self.context[corporaContextKey] = myfileCorpora
             
             return
-            #return my_file_content_value
         
         match wordlist_type:
             case 'string':
@@ -228,8 +222,8 @@ class CorporaContext:
                 self.context[expression] = self.cp.stringCorpora
                 return originalExpression
     
-    def resolve_reqmsg_by_eval_func(self, wordlist_type, my_value = '', 
-                                     my_uniquename='', 
+    def resolve_data_by_eval_func(self, wordlist_type,
+                                     mutate_value = '', 
                                      my_file_content_value='', 
                                      my_file_content_filename='',
                                      jsonEscape=True):
@@ -238,13 +232,19 @@ class CorporaContext:
             
             data = ''
             
-            if wordlist_type == 'myfile':
+            if wordlist_type == WordlistType.mutate:
+                corporaContextKey = Utils.sha256(mutate_value)
+                provider: StringMutateCorpora = self.context[corporaContextKey]
+            
+            elif wordlist_type == WordlistType.myfile:
                 key = self.get_myfile_corporacontext_key(my_file_content_filename)
                 provider = self.context[key]
+                
             elif wordlist_type == WordlistType.xss:
                 sc: StringCorpora = self.context[WordlistType.xss]
                 data = sc.next_xss_corpora()
                 return data
+            
             elif wordlist_type == WordlistType.sqlinject:
                 sc: StringCorpora = self.context[WordlistType.sqlinject]
                 data = sc.next_sqli_corpora()
@@ -260,11 +260,11 @@ class CorporaContext:
                 return wordlist_type
             
         except Exception as e:
-            self.eventstore.emitErr(e, 'resolve_reqmsg_by_eval_func')
+            self.eventstore.emitErr(e, 'resolve_data_by_eval_func')
         
     
     # my wordlist type will have "=" sign e.g: my=
-    def build_MY_expression(self, expr: str) -> UserSuppliedCorpora:
+    def build_MY_expression(self, expr: str) -> StringMutateCorpora:
         
         try:
             
@@ -276,7 +276,7 @@ class CorporaContext:
                 return self.cp.stringCorpora
 
             
-            usc = UserSuppliedCorpora()
+            usc = StringMutateCorpora()
             
             usc.load_corpora(myInput)
             

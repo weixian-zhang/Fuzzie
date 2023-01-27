@@ -156,6 +156,7 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     headerNonTemplate = graphene.String()
     authnType = graphene.Field(SupportedAuthnType)
     file = graphene.String()
+    fileName = graphene.String()
     requestMessage = graphene.String()
     
     runSummaryId = graphene.String(default_value='')

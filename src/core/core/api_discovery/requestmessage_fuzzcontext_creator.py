@@ -11,6 +11,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
+import re
 import jsonpickle 
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
@@ -31,9 +32,15 @@ class RequestMessageFuzzContextCreator:
         # for now, used by only myfile filter
         self.currentFuzzCaseSet = None
         
-        self.env = jinja2.Environment()
-        self.env.filters[WordlistType.my] = self.my_jinja_filter
-        self.env.filters[WordlistType.myfile] = self.myfile_jinja_filter
+        self.jinjaEnvPrimitive = jinja2.Environment()
+        self.jinjaEnvPrimitive.filters[WordlistType.mutate] = self.mutate_jinja_filter
+        
+        self.jinjaEnvBody = jinja2.Environment()
+        self.jinjaEnvBody.filters[WordlistType.mutate] = self.mutate_jinja_filter
+        self.jinjaEnvBody.filters[WordlistType.myfile] = self.myfile_jinja_filter
+        self.jinjaEnvBody.globals['image'] = self.image_jinja_filter
+        self.jinjaEnvBody.globals['file'] = self.file_jinja_filter
+        self.jinjaEnvBody.globals['pdf'] = self.pdf_jinja_filter
 
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  
@@ -161,10 +168,10 @@ class RequestMessageFuzzContextCreator:
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
-            # verb
+            # parse verb
             self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
-            # path
+            # parse path
             ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
             if not ok:
                 # cannot find path, skip to next block
@@ -175,20 +182,20 @@ class RequestMessageFuzzContextCreator:
             self.currentFuzzCaseSet.port = port
             self.currentFuzzCaseSet.path = path
             
-            pathOK, pathErr, evalPath = self.inject_eval_into_wordlist_expression(path)
+            pathOK, pathErr, evalPath = self.inject_eval_func_primitive_wordlist(path)
             
             if not pathOK:
                 return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
             
             self.currentFuzzCaseSet.pathDataTemplate = evalPath
             
-            # get querystring
+            # parse querystring
             # lineIndex is the index of the multiline list when querystring ends at
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
             self.currentFuzzCaseSet.querystringNonTemplate = qs
             
-            qsOK, qsErr, evalQS = self.inject_eval_into_wordlist_expression(qs)
+            qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
             if not qsOK:
                 return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
             
@@ -197,7 +204,7 @@ class RequestMessageFuzzContextCreator:
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
                 
-            # get headers
+            # parse headers
             if len(multilineBlock) > 0:
                 lineIndex, headers = self.get_headers(multilineBlock)
                 
@@ -209,7 +216,7 @@ class RequestMessageFuzzContextCreator:
                     evalHeaderDict = {}
                     for key in headers.keys():
                         hVal = headers[key]
-                        hOK, hErr, evalHeader = self.inject_eval_into_wordlist_expression(hVal)
+                        hOK, hErr, evalHeader = self.inject_eval_func_primitive_wordlist(hVal)
                         if not hOK:
                             return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
                         
@@ -220,53 +227,30 @@ class RequestMessageFuzzContextCreator:
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
-            # get body
+            # parse body
             if len(multilineBlock) > 0:
                 
-                fileExpr, fileType  =self.get_file_type_in_body(multilineBlock)
+                body = self.get_body_as_one_str(multilineBlock)
                 
-                # myfile will be discovered later in "inject_eval_into_wordlist_expression"
-                body = self.get_body_as_str(multilineBlock)
+                # jinja wil execute all filters and file-functions bind to image, pdf, file
+                tpl = self.jinjaEnvBody.from_string(body)
+                bodyRendered = tpl.render(self.jinja_primitive_wordlist_types_dict())
                 
-                myfile = self.parse_myfile_in_body_if_any(body)
-                
-                if myfile != '':
-                    self.currentFuzzCaseSet.file = myfile
-                    self.currentFuzzCaseSet.fileDataTemplate = myfile.content
+                if self.is_rendered_body_has_func(bodyRendered):
+                    return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
+
+                # no file found in body
+                if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
+                    self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
+                    self.currentFuzzCaseSet.bodyNonTemplate = body
+                # has file in body containing file kind myfile, file, image or pdf
                 else:
-                    # check if body contains file, pdf, image wordlist type
-                    if fileExpr != '' and fileType != '':
-                        fOK, fErr, evalFile = self.inject_eval_into_wordlist_expression(fileExpr)
-                        if not fOK:
-                            return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
-                        
-                        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=fileType, filename=fileType)
-                        self.currentFuzzCaseSet.fileDataTemplate = evalFile
-                    
-                    # body has content
-                    else:
-                        bbOK, bErr, evalBody = self.inject_eval_into_wordlist_expression(body)
-                        if not bbOK:
-                            return bbOK, f'Body parsing error: {Utils.errAsText(bErr)}', []
-                        
-                        self.currentFuzzCaseSet.bodyDataTemplate = evalBody
-                        self.currentFuzzCaseSet.bodyNonTemplate = body
-                
-                
-                
-                # currently, fuzzie only supports 1 file upload per request block.
-                # When there is 1 file detected, this file takes up whole request body.
-                # which means for multipart-form, fuzzie uploads only a single file's content and not mix file and other data types together
-                # check for myfile wordlist type
-                # elif isinstance(self.currentFuzzCaseSet.file, FuzzCaseSetFile) and self.currentFuzzCaseSet.file.wordlist_type == WordlistType.myfile:
-                #     self.currentFuzzCaseSet.bodyNonTemplate = ''
-                #     self.currentFuzzCaseSet.bodyDataTemplate = ''  # myfile uses body can file content
-                #     self.currentFuzzCaseSet.fileDataTemplate = evalBody                    
-                   
+                    self.currentFuzzCaseSet.bodyNonTemplate = ''
+                    self.currentFuzzCaseSet.bodyDataTemplate = ''           
 
             fcSets.append(self.currentFuzzCaseSet)
             
-        return True, '', fcSets                
+        return True, '', fcSets                    
     
     
     def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
@@ -462,7 +446,7 @@ class RequestMessageFuzzContextCreator:
                 return False
             
             return True
-            
+            httpbin.org
         return False
     
     def remove_verb_if_exist(self, requestline: str):
@@ -479,34 +463,16 @@ class RequestMessageFuzzContextCreator:
 
     # name=foo
     # &password=bar
-    def get_body_as_str(self, multilineBlock: list[str]) -> str:
+    def get_body_as_one_str(self, multilineBlock: list[str]) -> str:
         
-        body = ''
-        copiedMB = []
+        newBody = []
         
-        # check lines for file wordlist type
         for line in multilineBlock:
-            
             line = line.strip()
-            
-            # breakline marker for multipart/form-data
-            if line == '':
-                copiedMB.append(line)
-                continue
-            
-            # check if body contains {{file}}, {{image}} or {{pdf}}
-            yes, _ = Utils.is_file_wordlist_type(line)
-            
-            if yes:
-                continue
-            else:
-                copiedMB.append(line)   # append lines without {{file}}, {{image}} or {{pdf}}
+            newBody.append(line)
         
-        # get body in original string as a whole including all whitespaces and breaklines
-        for s in copiedMB:
-            body = body + s + '\n'
-        
-        return body
+        return '\n'.join(newBody)
+
     
     def get_file_type_in_body(self,  multilineBlock: list[str]):
         
@@ -587,78 +553,66 @@ class RequestMessageFuzzContextCreator:
         lines = [x for x in lines if not self.is_line_comment(x)]
         return '\n'.join(map(str,lines))
     
-    
-    
-    # integer type is to support OpenApi3, but is same as digit
-    def jinja_primitive_wordlist_types_render_dict(self) -> dict:
-        return {
-            'string': '{{ eval(wordlist_type=\'string\') }}',
-            'xss': '{{ eval(wordlist_type=\'xss\') }}',
-            'sqlinject': '{{ eval(wordlist_type=\'sqlinject\') }}',
-            'bool':  '{{ eval(wordlist_type=\'bool\') }}',
-            'digit': '{{ eval(wordlist_type=\'digit\') }}',
-            'integer': '{{ eval(wordlist_type=\'integer\') }}',
-            'char': '{{ eval(wordlist_type=\'char\') }}',
-            'filename': '{{ eval(wordlist_type=\'filename\') }}',
-            'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
-            'date': '{{ eval(wordlist_type=\'date\') }}',
-            'time': '{{ eval(wordlist_type=\'time\') }}',
-            'username': '{{ eval(wordlist_type=\'username\') }}',
-            'password': '{{ eval(wordlist_type=\'password\') }}',
-            'image': '{{ eval(wordlist_type=\'image\') }}',
-            'pdf': '{{ eval(wordlist_type=\'pdf\') }}',
-            'file': '{{ eval(wordlist_type=\'file\') }}',
-        }
+
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
     # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
-    def inject_eval_into_wordlist_expression(self, expr: str) -> tuple([bool, str, str]):
+    def inject_eval_func_primitive_wordlist(self, expr: str) -> tuple([bool, str, str]):
         
         try:
         
-            tpl = self.env.from_string(expr)
+            tpl = self.jinjaEnvPrimitive.from_string(expr)
             
-            output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())                
+            output = tpl.render(self.jinja_primitive_wordlist_types_dict())                
                     
             return True, '', output
         
         except Exception as e:
             return False, e,  expr
+   
+    
+    # *** jinja filters and functions
+    
+    def image_jinja_filter(self, filename=''):
         
+        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.image, filename=filename)
+        self.currentFuzzCaseSet.fileName = filename
+        self.currentFuzzCaseSet.fileDataTemplate = '{{ eval(wordlist_type=\'image\') }}'
+        
+        return ''
+        
+    def pdf_jinja_filter(self, filename=''):
+        
+        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.pdf, filename=filename)
+        self.currentFuzzCaseSet.fileName = filename
+        self.currentFuzzCaseSet.fileDataTemplate = '{{ eval(wordlist_type=\'pdf\') }}'
+        
+        return ''
+        
+    def file_jinja_filter(self, filename=''):
+        
+        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.file, filename=filename)
+        self.currentFuzzCaseSet.fileName = filename
+        self.currentFuzzCaseSet.fileDataTemplate = '{{ eval(wordlist_type=\'file\') }}'
+        
+        return ''
+    
     # insert my wordlist type
-    def my_jinja_filter(self,value, my_uniquename = ''):
+    def mutate_jinja_filter(self, value):
         
         # escape single quote if any
-        output = output.replace("'", "\\'")
+        value = value.replace("'", "\\'")
         
-        evalOutput = f'{{{{ eval(wordlist_type=\'{WordlistType.my}\', my_value=\'{value}\', my_uniquename=\'{my_uniquename}\') }}}}'
-        
-        #escape single quotes if any
-        evalOutput = evalOutput.replace("'", "\\'")
-        
+        evalOutput = f'{{{{ eval(wordlist_type=\'mutate\', mutate_value=\'{value}\') }}}}' #, my_uniquename=\'{my_uniquename}\') }}}}'
+              
         return evalOutput
-    
-    def parse_myfile_in_body_if_any(self, body) -> FuzzCaseSetFile:
-        
-        fileResult = '';
-        
-        tpl = self.env.from_string(body)
-        
-        output = tpl.render()
-        
-        if output != '':
-            jsonDecoded = jsonpickle.decode(output)
-            if isinstance(jsonDecoded, FuzzCaseSetFile):
-                fileResult = jsonpickle.decode(output)
-        
-        return fileResult
             
     
     def myfile_jinja_filter(self, content: str, filename: str):
         
         escapedContent = content.replace('"', '\\"')
         
-        output = self.render_standard_wordlist_types(escapedContent)
+        output = self.inject_eval_func_primitive_wordlist(escapedContent)
         
         # disable jinja auto-escaping html special characters
         jinjaTpl = f'''
@@ -673,27 +627,41 @@ class RequestMessageFuzzContextCreator:
         corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
         
         # *create file object in current fuzzcaseset
-        if self.currentFuzzCaseSet != None:
-           self.currentFuzzCaseSet.file = FuzzCaseSetFile(
-                   wordlist_type=corporaContextKeyName, #WordlistType.myfile,
-                   filename = corporaContextKeyName,
-                   content=evalOutput)
-        
-        return jsonpickle.encode(
-            FuzzCaseSetFile(
-                   wordlist_type=corporaContextKeyName, #WordlistType.myfile,
-                   filename = corporaContextKeyName,
-                   content=evalOutput)
-                                 )
+        self.currentFuzzCaseSet.file = FuzzCaseSetFile(
+                   wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
+                   filename = filename, #corporaContextKeyName,
+                   content = evalOutput )
+        self.currentFuzzCaseSet.fileName = filename
+        self.currentFuzzCaseSet.fileDataTemplate = evalOutput
+            
+        return ''
+    
+    # check if user has forgotten to put parentheses for file wordlist
+    # 
+    def is_rendered_body_has_func(self, renderedBody: str):
+        if 'RequestMessageFuzzContextCreator' in renderedBody:
+            return True
+        return False
     
     
-    def render_standard_wordlist_types(self, expr):
-        
-        tpl = jinja2.Template(expr)
-        
-        output = tpl.render(self.jinja_primitive_wordlist_types_render_dict())  
-
-        return output
+    # integer type is to support OpenApi3, but is same as digit
+    def jinja_primitive_wordlist_types_dict(self) -> dict:
+        return {
+            'string': '{{ eval(wordlist_type=\'string\') }}',
+            'xss': '{{ eval(wordlist_type=\'xss\') }}',
+            'sqlinject': '{{ eval(wordlist_type=\'sqlinject\') }}',
+            'bool':  '{{ eval(wordlist_type=\'bool\') }}',
+            'digit': '{{ eval(wordlist_type=\'digit\') }}',
+            'integer': '{{ eval(wordlist_type=\'integer\') }}',
+            'char': '{{ eval(wordlist_type=\'char\') }}',
+            'filename': '{{ eval(wordlist_type=\'filename\') }}',
+            'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
+            'date': '{{ eval(wordlist_type=\'date\') }}',
+            'time': '{{ eval(wordlist_type=\'time\') }}',
+            'username': '{{ eval(wordlist_type=\'username\') }}',
+            'password': '{{ eval(wordlist_type=\'password\') }}'
+        }
+           
     
     
 

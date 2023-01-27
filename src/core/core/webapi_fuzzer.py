@@ -40,6 +40,7 @@ from enum import Enum
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+import requests.utils 
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -255,6 +256,9 @@ class WebApiFuzzer:
             
             reqBody = ''
             reqBody = self.try_decode_body(body)
+            
+            if url == '':
+                pass
 
             try:
                 req = None                
@@ -276,7 +280,7 @@ class WebApiFuzzer:
                     req = Request(fcs.verb, url, headers=headers)
                 
                 
-                import requests.utils 
+                
 
                 # override requests lib header check to allow any chars
                 # original regex is commented
@@ -308,7 +312,7 @@ class WebApiFuzzer:
                     
                     resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 except Exception as e:
-                    fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, 
+                    fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
                                                                    reason='request timed out, Fuzzie has a short time-out of 4 seconds')
                     fuzzDataCase.response = fuzzResp
@@ -332,7 +336,7 @@ class WebApiFuzzer:
                                         body=reqBody,
                                         contentLength=0,
                                         invalidRequestError=err)
-                fuzzResp = self.create_fuzz_timed_out_response(self.apifuzzcontext.Id, 
+                fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
                                                                    reason=err)
                 fuzzDataCase.response = fuzzResp
@@ -366,24 +370,25 @@ class WebApiFuzzer:
             fuzzDataCase.response = fr
             
         except Exception as e:
+            err = Utils.errAsText(e)
             
-            fr = ApiFuzzResponse()
-            fr.Id = shortuuid.uuid()
-            fr.datetime = datetime.now()
-            fr.fuzzcontextId = self.apifuzzcontext.Id
-            fr.fuzzDataCaseId = fuzzDataCase.Id
-            fr.responseDisplayText = ''
+            resp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
+                                                                   fuzzDataCase.Id, 
+                                                                   reason=err)
+            resp.statusCode = 400
+            
+            fuzzDataCase.response = resp
                 
-            if resp != None:
-                fr.statusCode = resp.status_code
-                fr.reasonPharse = resp.reason
-                fr.body = resp.text
-            else:  
-                err =  Utils.errAsText(e)
-                fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
-                fr.reasonPharse = f'{err}'
+            # if resp != None:
+            #     fr.statusCode = resp.status_code
+            #     fr.reasonPharse = resp.reason
+            #     fr.body = resp.text
+            # else:  
+            #     err =  Utils.errAsText(e)
+            #     fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
+            #     fr.reasonPharse = f'{err}'
             
-            fuzzDataCase.response = fr
+            # fuzzDataCase.response = fr
             
         return fuzzDataCase, file
 
@@ -473,7 +478,7 @@ class WebApiFuzzer:
             ej = Utils.jsone(e)
             self.eventstore.emitErr(f'Error when saving fuzzdatacase, fuzzrequest and fuzzresponse: {ej}', data='WebApiFuzzer.create_fuzzrequest')
         
-    def create_fuzz_timed_out_response(self, fuzzcontextId, fuzzDataCaseId, reason='') -> ApiFuzzResponse:
+    def create_fuzz_response_on_error(self, fuzzcontextId, fuzzDataCaseId, reason='') -> ApiFuzzResponse:
         fuzzResp = ApiFuzzResponse()
         fuzzResp.Id = shortuuid.uuid()
         fuzzResp.datetime = datetime.now()
@@ -557,6 +562,7 @@ class WebApiFuzzer:
             
         try:
             
+            url=''
             hostname = fcs.hostname
             port = fcs.port
             hostnamePort = f'{hostname}:{port}' #fc.get_hostname_port()
@@ -565,6 +571,11 @@ class WebApiFuzzer:
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
             file = ''        #for openapi3 single file only
+            resolvedPathDT = ''
+            resolvedQSDT = '' 
+            resolvedBodyDT = ''
+            headers = {}
+            file = ''
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
@@ -606,13 +617,13 @@ class WebApiFuzzer:
                 err = ''
                 fileContent = ''
                 fileWordlistType = fcs.file
-                filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
+                filename = ''
+                if not Utils.isNoneEmpty(fcs.fileName):
+                    filename = fcs.fileName
+                else:
+                    filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
                 
-                if FuzzCaseSetFile.is_myfile(fcs.file):
-                    
-                    fn = FuzzCaseSetFile.get_myfile_filename(fcs.file)
-                    if not Utils.isNoneEmpty(fn):
-                        filename = fn
+                if fileWordlistType == WordlistType.myfile: #FuzzCaseSetFile.is_myfile(fcs.file):
                     
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
                     

@@ -673,13 +673,13 @@
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
-      <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh fuzz contexts'"
+      <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh Fuzz Contexts'"
       :disabled="!isGetFuzzContextFinish"
         @click="getFuzzcontexts">
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create new API fuzz context'" icon  variant="plain" height="30px" plain 
+      <v-btn v-tooltip.bottom="'create a new API Fuzz Context'" icon  variant="plain" height="30px" plain 
          @click="(newContextSideBarVisible = true )">
         <v-icon color="cyan darken-3">mdi-api</v-icon>
       </v-btn>

@@ -10,7 +10,19 @@
                 </button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get'))">GET</a>
+                  @click="(loadExample('get-multiple-1'))">GET</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path'))">GET - Path</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path-qs'))">GET - Path & Querystring</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path-mutate-1'))">GET - Mutate Path</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
@@ -25,6 +37,10 @@
                   @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
                   </li>
                   
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('post-file'))">POST a file with naughty content</a>
+                  </li>
+
                   <li><a class="dropdown-item" href="#" 
                   @click="(loadExample('post-pdf'))">POST a PDF</a>
                   </li>
@@ -51,6 +67,13 @@
 
                   <li><a class="dropdown-item" href="#"
                   @click="(loadExample('graphql-mutate'))">GraphQL Mutate</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#"
+                  @click="(loadExample('mutate-post-json'))">Mutate your input - JSON</a>
+                  </li>
+                  <li><a class="dropdown-item" href="#"
+                  @click="(loadExample('mutate-post-xml'))">Mutate your input - XML</a>
                   </li>
                 </ul>
               </div>

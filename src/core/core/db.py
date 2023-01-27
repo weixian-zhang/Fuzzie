@@ -73,6 +73,7 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('headerDataTemplate', String, nullable=True),
                             Column('bodyDataTemplate', String, nullable=True),
                             Column('file', String),
+                            Column('fileName', String),
                             Column('fileDataTemplate', String),
                             Column('requestMessage', String),
                             Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
@@ -777,6 +778,7 @@ def save_updated_fuzzcasesets(fcsList: dict):
                 bodyNonTemplate = bindparam('bodyNonTemplate'),
                 headerNonTemplate = bindparam('headerNonTemplate'),
                 file = bindparam('file'),
+                fileName = bindparam('fileName'),
                 fileDataTemplate = bindparam('fileDataTemplate'),
                 pathDataTemplate = bindparam('pathDataTemplate'),
                 querystringDataTemplate = bindparam('querystringDataTemplate'),
@@ -874,8 +876,12 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
             for fcset in fuzzcontext.fuzzcaseSets:
                 
                 fileType= ''
-                if fcset.file != '':
-                    fileType = fcset.file.filename
+                fileName=''
+                fileDataTemplate=''
+                if not Utils.isNoneEmpty(fcset.file):
+                    fileType = fcset.file.wordlist_type
+                    fileName = fcset.file.filename
+                    fileDataTemplate = fcset.fileDataTemplate
                 
                 fcSetStmt = (
                     insert(ApiFuzzCaseSetTable).
@@ -894,7 +900,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  fcset.bodyDataTemplate,
                         file = fileType,
-                        fileDataTemplate = fcset.fileDataTemplate,
+                        fileName = fileName,
+                        fileDataTemplate =fileDataTemplate,
                         fuzzcontextId = fuzzcontext.Id,
                         requestMessage = fcset.requestMessage
                         )
@@ -1150,6 +1157,7 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.verb = rowDict['verb']
     
     fcs.file = rowDict['file']
+    fcs.fileName = rowDict['fileName']
     fcs.fileDataTemplate = rowDict['fileDataTemplate']
 
     return fcs
