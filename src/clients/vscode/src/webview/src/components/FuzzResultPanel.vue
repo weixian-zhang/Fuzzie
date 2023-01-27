@@ -441,6 +441,12 @@ class Props {
           return;
     }
 
+    // remove filter
+    if(httpStatusCode == 'All') {
+        this.fdcsDataFiltered = this.fdcsDataOriginal;
+        return;
+    }
+
       this.fdcsDataFiltered = this.fdcsDataOriginal.filter(x => {
         if(x != undefined && x.response != undefined  && x.response.statusCode == httpStatusCode) {
           return x;
@@ -584,7 +590,12 @@ class Props {
 
       const unqSC = allSC.filter(onlyUnique);
 
-      this.unqStatusCodesFromFDCS = unqSC;
+      this.unqStatusCodesFromFDCS = []
+      this.unqStatusCodesFromFDCS.push('All')
+      unqSC.forEach(x => {
+        this.unqStatusCodesFromFDCS.push(x)
+      })
+      
     }
 
     async onRowClick(fcs: FuzzDataCase) {
@@ -607,7 +618,6 @@ class Props {
       this.selectedReqRespMessage = result
       this.selectedReqRespMessage.responseBody = this.b64DecodeAndJsonPrettify(result.responseBody);
       this.selectedReqRespMessage.responseDisplayText = this.b64DecodeAndJsonPrettify(result.responseDisplayText);
-
 
       if(!Utils.isNothing(result.requestMessage)) {
         this.selectedRequest = this.b64DecodeAndJsonPrettify(result.requestMessage);

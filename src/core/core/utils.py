@@ -165,7 +165,11 @@ class Utils:
             return False, content
         
     def try_escape_unicode_for_str(data: str):
-        return data.encode('utf-8').decode('unicode-escape')
+        try:
+            return data.encode('utf-8').decode('unicode-escape')
+        except Exception as e:
+            return data.encode('utf-8')
+        
     
     def sha256(value) -> str:
         return hashlib.sha256(value.encode()).hexdigest()

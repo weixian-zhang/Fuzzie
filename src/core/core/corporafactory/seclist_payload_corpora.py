@@ -23,7 +23,6 @@ class SeclistPayloadCorpora:
         return cls.instance
     
     def __init__(self) -> None:
-        self.rowPointer = 1
         self.data = {}
         
         self.es = EventStore()

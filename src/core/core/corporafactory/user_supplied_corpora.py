@@ -28,10 +28,14 @@ class StringMutateCorpora:
         
     def next_corpora(self):
         
-        randIdx = random.randint(0, len(self.data) - 1)
+        try:
+            randIdx = random.randint(0, len(self.data) - 1)
         
-        data = self.data[randIdx]
+            data = self.data[randIdx]
+            
+            self.dataCursor = self.dataCursor + 1
+                            
+            return data
+        except Exception as e:
+            pass
         
-        self.dataCursor = self.dataCursor + 1
-                         
-        return data

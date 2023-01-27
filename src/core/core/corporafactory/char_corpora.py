@@ -50,7 +50,7 @@ class CharCorpora:
     def next_corpora(self):
             
         if self.rowPointer > (len(self.data) - 1):
-            self.rowPointer = 0
+            self.rowPointer = 1
             
         data = self.data[str(self.rowPointer)]
         

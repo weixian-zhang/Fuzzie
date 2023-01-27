@@ -608,7 +608,7 @@ class Props {
 
     if(this.isFuzzingInProgress()) {
       this.intervalGetReqRespDataOnFuzz();
-      return;
+      //return;
     }
 
     if (!this.rowClickEnabled) {

@@ -10,7 +10,19 @@
                 </button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get'))">GET</a>
+                  @click="(loadExample('get-multiple-1'))">GET</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path'))">GET - Path</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path-qs'))">GET - Path & Querystring</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-path-mutate-1'))">GET - Mutate Path</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 

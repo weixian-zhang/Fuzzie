@@ -40,12 +40,10 @@ class MyFileCorpora:
                  usernameCorpora,
                  filenameCorpora
                  ) -> None:
-        self.rowPointer = 0
+
         self.data = {}
         
         self.es = EventStore()
-        
-        self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
         
         self.myfileContentExpr = myfileContentExpr
         self.boolCorpora = boolCorpora
@@ -60,28 +58,12 @@ class MyFileCorpora:
     # exist as contract similar to all corpora class
     def load_corpora(self, myfileContentExpr: str):
         pass
-        #self.myfileContentExpr = myfileContentExpr  
         
     def next_corpora(self):
         
         try:
             tpl = jinja2.Template(self.myfileContentExpr)
             output = tpl.render({ 'eval': self.resolve_primitive_wordlist_types })
-            
-            # output = tpl.render(
-            #     {
-            #         'string': self.stringCorpora.next_corpora(),
-            #         'bool':  self.boolCorpora.next_corpora(),
-            #         'digit': self.corporaProvider.digitCorpora.next_corpora(),
-            #         'char':self.charCorpora.next_corpora(),
-            #         'filename': self.filenameCorpora.next_corpora(),
-            #         'datetime': self.datetimeCorpora.next_corpora(),
-            #         'date': self.datetimeCorpora.next_date_corpora(),
-            #         'time': self.datetimeCorpora.next_time_corpora(),
-            #         'username': self.usernameCorpora.next_corpora(),
-            #         'password': self.filenameCorpora.next_corpora()
-            #     })
-            
             return output
         
         except Exception as e:

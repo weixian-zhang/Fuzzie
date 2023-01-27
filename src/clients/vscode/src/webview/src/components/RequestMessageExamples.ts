@@ -116,7 +116,7 @@ Authorization: {{ string }}
 
     private get = {
 
-        'get': `
+        'get-multiple-1': `
 // this is a comment and comment can be mark as '#' or '//'
 // some definitions from 
 //   -request-line = Verb(default GET) + (protocol + hostname) + path + querystring
@@ -157,6 +157,29 @@ CustomHeader-1: {{ digit }}
 CustomHeader-2: {{ filename }}
 CustomHeader-3: {{ username }}
         `,
+    
+    'get-path':
+`
+GET https://httpbin.org/links/{{ string }}/{{ bool }}/{{ digit }}/{{ integer }}/{{ char }}/{{ filename }}/{{ datetime }}/{{ date }}/{{ time }}/{{ username }}/{{ password }}
+`,
+
+    'get-path-qs':
+`
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+`,
+    'get-path-mutate-1':
+`
+GET https://httpbin.org/links/orderid={{ '12315' | mutate }}
+`
 
     };
 

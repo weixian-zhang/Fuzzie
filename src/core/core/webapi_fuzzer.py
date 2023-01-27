@@ -40,6 +40,7 @@ from enum import Enum
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
 from requests_toolbelt.multipart.encoder import MultipartEncoder
+import requests.utils 
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -255,6 +256,9 @@ class WebApiFuzzer:
             
             reqBody = ''
             reqBody = self.try_decode_body(body)
+            
+            if url == '':
+                pass
 
             try:
                 req = None                
@@ -276,7 +280,7 @@ class WebApiFuzzer:
                     req = Request(fcs.verb, url, headers=headers)
                 
                 
-                import requests.utils 
+                
 
                 # override requests lib header check to allow any chars
                 # original regex is commented
@@ -558,6 +562,7 @@ class WebApiFuzzer:
             
         try:
             
+            url=''
             hostname = fcs.hostname
             port = fcs.port
             hostnamePort = f'{hostname}:{port}' #fc.get_hostname_port()
@@ -566,6 +571,11 @@ class WebApiFuzzer:
             bodyDT= fcs.bodyDataTemplate
             headerDT = fcs.headerDataTemplate
             file = ''        #for openapi3 single file only
+            resolvedPathDT = ''
+            resolvedQSDT = '' 
+            resolvedBodyDT = ''
+            headers = {}
+            file = ''
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:

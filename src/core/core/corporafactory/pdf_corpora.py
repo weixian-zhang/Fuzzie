@@ -37,8 +37,6 @@ class PDFCorpora():
         
         self.es = EventStore()
         
-        self.sqliRowPointer = 1
-        self.blnsRowPointer = 1
         self.pdfs = {}
         self.payloadCorpora = payloadCorpora
         
