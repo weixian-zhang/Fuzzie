@@ -597,7 +597,7 @@ class Props {
       //get request and response messages
       const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
 
-      if(!ok) {
+      if(!ok || Utils.isNothing(result)) {
         this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
         this.selectedRequest = '';
         this.selectedResponse = '';
@@ -605,13 +605,16 @@ class Props {
       }
 
       this.selectedReqRespMessage = result
+      this.selectedReqRespMessage.responseBody = this.b64DecodeAndJsonPrettify(result.responseBody);
+      this.selectedReqRespMessage.responseDisplayText = this.b64DecodeAndJsonPrettify(result.responseDisplayText);
+
 
       if(!Utils.isNothing(result.requestMessage)) {
-        this.selectedRequest = Utils.b64d(result.requestMessage);
+        this.selectedRequest = this.b64DecodeAndJsonPrettify(result.requestMessage);
       }
 
       if(!Utils.isNothing(result.responseDisplayText)) {
-        this.selectedResponse = Utils.b64d(result.responseDisplayText);
+        this.selectedResponse = this.b64DecodeAndJsonPrettify(result.responseDisplayText);
       }
 
       //get uploaded files
@@ -750,10 +753,10 @@ class Props {
 
         if(Utils.jsonTryParse(body)) {
             this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
-          }
-          else {
+        }
+        else {
             this.tableRequestBodySideBar = body;
-          }
+        }
       }
       catch(error) {
         this.$logger.error(error);
@@ -798,27 +801,14 @@ class Props {
         }
     }
 
-    setTableResponseBody(selectedRequest: FuzzRequest) {
+    setTableResponseBody() {
 
       if (this.selectedReqRespMessage == undefined) {
         return;
       }
 
-      var body = this.selectedReqRespMessage.responseBody;
+      this.tableResponseBody = this.selectedReqRespMessage.responseBody;
 
-      if (Utils.isNothing(body)) {
-        this.tableResponseBody = '';
-        return;
-      }
-
-      body = atob(body);
-
-      if(Utils.jsonTryParse(body)) {
-          this.tableResponseBody = JSON.stringify(JSON.parse(body), null, 2)
-        }
-        else {
-          this.tableResponseBody = body;
-        }
     }
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
@@ -889,6 +879,24 @@ class Props {
           return true;
         }
         return false;
+    }
+
+    b64DecodeAndJsonPrettify(body: string) {
+      var dBody = body;
+      try {
+        dBody = atob(body);
+      }
+      catch {
+        if(Utils.jsonTryParse(dBody)) {
+          dBody = JSON.stringify(JSON.parse(dBody), null, 2)
+          return dBody;
+        } 
+      }
+  
+      if(Utils.jsonTryParse(dBody)) {
+          dBody = JSON.stringify(JSON.parse(dBody), null, 2)
+      }
+      return dBody;
     }
  }
  

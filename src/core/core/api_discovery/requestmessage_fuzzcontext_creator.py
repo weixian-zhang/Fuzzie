@@ -168,10 +168,10 @@ class RequestMessageFuzzContextCreator:
             
             # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
             
-            # verb
+            # parse verb
             self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
-            # path
+            # parse path
             ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
             if not ok:
                 # cannot find path, skip to next block
@@ -189,7 +189,7 @@ class RequestMessageFuzzContextCreator:
             
             self.currentFuzzCaseSet.pathDataTemplate = evalPath
             
-            # get querystring
+            # parse querystring
             # lineIndex is the index of the multiline list when querystring ends at
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
@@ -204,7 +204,7 @@ class RequestMessageFuzzContextCreator:
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
                 
-            # get headers
+            # parse headers
             if len(multilineBlock) > 0:
                 lineIndex, headers = self.get_headers(multilineBlock)
                 
@@ -227,31 +227,23 @@ class RequestMessageFuzzContextCreator:
             
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
-            # get body
+            # parse body
             if len(multilineBlock) > 0:
                 
-                #fileExpr, fileType  =self.get_file_type_in_body(multilineBlock)
-                
-                # myfile will be discovered later in "inject_eval_func_primitive_wordlist"
                 body = self.get_body_as_one_str(multilineBlock)
-                
-                #body = body.replace("'", "\\'")
                 
                 # jinja wil execute all filters and file-functions bind to image, pdf, file
                 tpl = self.jinjaEnvBody.from_string(body)
-                bodyRendered = tpl.render()
+                bodyRendered = tpl.render(self.jinja_primitive_wordlist_types_dict())
                 
                 if self.is_rendered_body_has_func(bodyRendered):
                     return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
 
-                # body contains file of kind myfile, file, image or pdf
-                # remove body
+                # no file found in body
                 if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
-                    ok, err, bodyTpl = self.inject_eval_func_primitive_wordlist(body)
-                    if ok:
-                        self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
-                        self.currentFuzzCaseSet.bodyNonTemplate = body
-                # no file in body
+                    self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
+                    self.currentFuzzCaseSet.bodyNonTemplate = body
+                # has file in body containing file kind myfile, file, image or pdf
                 else:
                     self.currentFuzzCaseSet.bodyNonTemplate = ''
                     self.currentFuzzCaseSet.bodyDataTemplate = ''           
@@ -582,9 +574,6 @@ class RequestMessageFuzzContextCreator:
     # *** jinja filters and functions
     
     def image_jinja_filter(self, filename=''):
-        # fOK, fErr, evalFile = self.inject_eval_func_primitive_wordlist(WordlistType.image)
-        # if not fOK:
-        #     return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.image, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
@@ -593,9 +582,6 @@ class RequestMessageFuzzContextCreator:
         return ''
         
     def pdf_jinja_filter(self, filename=''):
-        # fOK, fErr, evalFile = self.inject_eval_func_primitive_wordlist(WordlistType.pdf)
-        # if not fOK:
-        #     return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.pdf, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
@@ -604,9 +590,6 @@ class RequestMessageFuzzContextCreator:
         return ''
         
     def file_jinja_filter(self, filename=''):
-        # fOK, fErr, evalFile = self.inject_eval_func_primitive_wordlist(WordlistType.file)
-        # if not fOK:
-        #     return fOK, f'File parsing error: {Utils.errAsText(fErr)}', []
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.file, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
@@ -629,7 +612,7 @@ class RequestMessageFuzzContextCreator:
         
         escapedContent = content.replace('"', '\\"')
         
-        output = self.render_primitive_wordlist_types(escapedContent)
+        output = self.inject_eval_func_primitive_wordlist(escapedContent)
         
         # disable jinja auto-escaping html special characters
         jinjaTpl = f'''
@@ -659,15 +642,6 @@ class RequestMessageFuzzContextCreator:
         if 'RequestMessageFuzzContextCreator' in renderedBody:
             return True
         return False
-    
-    
-    def render_primitive_wordlist_types(self, expr):
-        
-        tpl = jinja2.Template(expr)
-        
-        output = tpl.render(self.jinja_primitive_wordlist_types_dict())  
-
-        return output
     
     
     # integer type is to support OpenApi3, but is same as digit
