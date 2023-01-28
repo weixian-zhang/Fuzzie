@@ -752,15 +752,15 @@
                   size="x-small"
                   data-bs-toggle="dropdown">
                   </v-icon>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><button class="dropdown-item" type="button" @click="(
-                    onEditFuzzContextClicked(slotProps.node.data)
-                  )">Edit</button></li>
-                  <li><button class="dropdown-item" type="button" @click="(
-                    onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
-                  )">Delete</button></li>
-                </ul>
-              </div>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" type="button" @click="(
+                      onEditFuzzContextClicked(slotProps.node.data)
+                    )">Edit</button></li>
+                    <li><button class="dropdown-item" type="button" @click="(
+                      onDeleteFuzzContextClicked(slotProps.node.fuzzcontextId, slotProps.node.name)
+                    )">Delete</button></li>
+                  </ul>
+                </div>
 
                   &nbsp;
 

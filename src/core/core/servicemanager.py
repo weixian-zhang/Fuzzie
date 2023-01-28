@@ -291,6 +291,9 @@ class ServiceManager:
                 fcsSum.file = rowDict['file']
                 fcsSum.fileName = rowDict['fileName']
                 fcsSum.requestMessage = rowDict['requestMessage']
+                fcsSum.isGraphQL = rowDict['isGraphQL']
+                fcsSum.graphQLVariableNonTemplate = rowDict['graphQLVariableNonTemplate']
+                fcsSum.graphQLVariableDataTemplate = rowDict['graphQLVariableDataTemplate']
                 
                 if 'fuzzCaseSetRunId' in rowDict:
                     fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']

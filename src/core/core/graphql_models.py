@@ -158,6 +158,9 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     file = graphene.String()
     fileName = graphene.String()
     requestMessage = graphene.String()
+    isGraphQL = graphene.Boolean()
+    graphQLVariableNonTemplate = graphene.String()
+    graphQLVariableDataTemplate = graphene.String()
     
     runSummaryId = graphene.String(default_value='')
     http2xx = graphene.Int(default_value=0)

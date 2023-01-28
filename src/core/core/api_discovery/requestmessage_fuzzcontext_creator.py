@@ -229,30 +229,48 @@ class RequestMessageFuzzContextCreator:
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
             # parse body
+            lineIndex = 0
             body = ''
             graphqlVariable = ''
             if len(multilineBlock) > 0:
                 
+                self.remove_breaklines_until_char_detected(multilineBlock)
+                
                 if self.is_grapgql(headers):
-                   body, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
+                   ok, error, body, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
+                   
+                   if ok:
+                        bodyTpl = self.jinjaEnvPrimitive.from_string(body)
+                        bodyEval = bodyTpl.render(self.jinja_primitive_wordlist_types_dict())
+                        
+                        gqlVariableTpl = self.jinjaEnvPrimitive.from_string(graphqlVariable)
+                        graphqlVariableEval = gqlVariableTpl.render(self.jinja_primitive_wordlist_types_dict())
+                        
+                        self.currentFuzzCaseSet.isGraphQL = True
+                        self.currentFuzzCaseSet.graphQLVariableNonTemplate = graphqlVariable
+                        self.currentFuzzCaseSet.graphQLVariableDataTemplate = graphqlVariableEval
+                        self.currentFuzzCaseSet.bodyNonTemplate = body
+                        self.currentFuzzCaseSet.bodyDataTemplate = bodyEval
+                   else:
+                       return False, error, []
                 else:
-                   body = self.get_body_as_one_str(multilineBlock)
+                    body = self.get_body_as_one_str(multilineBlock)
                 
-                # jinja wil execute all filters and file-functions bind to image, pdf, file
-                tpl = self.jinjaEnvBody.from_string(body)
-                bodyRendered = tpl.render(self.jinja_primitive_wordlist_types_dict())
-                
-                if self.is_rendered_body_has_func(bodyRendered):
-                    return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
+                    # jinja wil execute all filters and file-functions bind to image, pdf, file
+                    tpl = self.jinjaEnvBody.from_string(body)
+                    bodyRendered = tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    
+                    if self.is_rendered_body_has_func(bodyRendered):
+                        return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
 
-                # no file found in body
-                if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
-                    self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
-                    self.currentFuzzCaseSet.bodyNonTemplate = body
-                # has file in body containing file kind myfile, file, image or pdf
-                else:
-                    self.currentFuzzCaseSet.bodyNonTemplate = ''
-                    self.currentFuzzCaseSet.bodyDataTemplate = ''           
+                    # no file found in body
+                    if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
+                        self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
+                        self.currentFuzzCaseSet.bodyNonTemplate = body
+                    # has file in body containing file kind myfile, file, image or pdf
+                    else:
+                        self.currentFuzzCaseSet.bodyNonTemplate = ''
+                        self.currentFuzzCaseSet.bodyDataTemplate = ''           
 
             fcSets.append(self.currentFuzzCaseSet)
             
@@ -480,32 +498,46 @@ class RequestMessageFuzzContextCreator:
 
     def graphql_get_body_and_variable(self, multilineBlock: list[str]) -> tuple([str, dict]):
         
-        body = []
-        variable = []
-        bodyStr = ''
-        variableJsonStr = ''
-        
-        gqlVariableSeparatorIndex = 0
-        for idx, line in enumerate(multilineBlock):
+        try:
+            body = []
+            variable = []
+            bodyStr = ''
+            variableJsonStr = ''
             
-            line = line.strip()
+            gqlVariableSeparatorIndex = 0
+            for idx, line in enumerate(multilineBlock):
+                line = line.strip()
+                # check for empty breakline that marks "separator" between body and variable
+                if line == '':
+                    gqlVariableSeparatorIndex = idx
+                    break
             
-            # check for empty breakline that marks "separator" between body and variable
-            if line == '':
-                gqlVariableSeparatorIndex = idx
-                break
+            # no variable block found
+            if gqlVariableSeparatorIndex == 0:
+                body = multilineBlock
+                bodyStr = '\n'.join(body)
                 
-        
-        body = multilineBlock[:gqlVariableSeparatorIndex]
-        variable = multilineBlock[gqlVariableSeparatorIndex:]
-        
-        bodyStr = '\n'.join(body)
-        
-        if len(variable) > 0:
-            variableDict = Utils.try_parse_json_to_object('\n'.join(variable))
-            variableJsonStr = json.dumps(variableDict)
+            # has variable
+            else:
+                body = multilineBlock[:gqlVariableSeparatorIndex]
             
-        return bodyStr, variableJsonStr
+                if gqlVariableSeparatorIndex + 1 <= (len(multilineBlock) - 1):
+                    gqlVariableSeparatorIndex = gqlVariableSeparatorIndex + 1
+                    
+                variable = multilineBlock[gqlVariableSeparatorIndex:]
+                
+                bodyStr = '\n'.join(body)
+                
+                if len(variable) > 0:
+                    gqlVariableStr = '\n'.join(variable)
+                    variableDict =json.loads(gqlVariableStr)
+                    variableJsonStr = json.dumps(variableDict)
+                
+            return True, '', bodyStr, variableJsonStr
+        
+        except Exception as e:
+            return False, Utils.errAsText(e), '', ''
+        
       
     
     def get_file_type_in_body(self,  multilineBlock: list[str]):
@@ -568,15 +600,20 @@ class RequestMessageFuzzContextCreator:
     
     
     def remove_breaklines_until_char_detected(self, lines: list[str]) -> list[str]:
+        
+        lineIndex = -1
+        
         for l in lines:
             
             ls = l.strip()
             
-            if ls != '':
-                return lines
-            
             if ls == '':
-                lines.remove(l)
+                lineIndex = lineIndex + 1
+            else:
+                break
+            
+        if lineIndex != -1:
+            self.removeProcessedLines(lineIndex, lines)
                 
         return lines
     
@@ -704,6 +741,8 @@ class RequestMessageFuzzContextCreator:
            return True
        
         return False
+    
+            
            
     
     

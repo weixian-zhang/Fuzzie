@@ -87,7 +87,7 @@
             <th class="text-left">
             </th>
             <th class="text-left">
-              Fuzz Once
+              Type
             </th>
             <th class="text-left">
               Verb
@@ -142,8 +142,29 @@
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
               </div>
             </td>
-            
+
+
             <td>
+              <div class="btn-group" style="cursor: pointer">
+                  <v-icon
+                  variant="flat"
+                  icon="mdi-cog-outline"
+                  color="cyan darken-3"
+                  size="x-small"
+                  data-bs-toggle="dropdown">
+                  </v-icon>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" type="button" >Edit</button></li>
+                    <li><button class="dropdown-item" type="button">Fuzz Once</button></li>
+                  </ul>
+                </div>
+            </td>
+
+            <td>
+              GraphQL
+            </td>
+
+            <!-- <td>
               <v-btn
                   class="ma-2"
                   variant="text"
@@ -172,7 +193,7 @@
                         onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
                       )" ></v-btn>
              
-            </td>
+            </td> -->
 
             <td>{{ item.verb }}</td>
             

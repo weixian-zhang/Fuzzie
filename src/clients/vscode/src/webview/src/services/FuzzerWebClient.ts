@@ -249,6 +249,9 @@ export default class FuzzerWebClient
                         file
                         fileName
                         requestMessage
+                        isGraphQL
+                        graphQLVariableNonTemplate
+                        graphQLVariableDataTemplate
                     }
                 }
             }
