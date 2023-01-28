@@ -205,6 +205,7 @@ class RequestMessageFuzzContextCreator:
             self.removeProcessedLines(lineIndex, multilineBlock)
                 
             # parse headers
+            headers = {}
             if len(multilineBlock) > 0:
                 lineIndex, headers = self.get_headers(multilineBlock)
                 
@@ -228,9 +229,14 @@ class RequestMessageFuzzContextCreator:
                 self.removeProcessedLines(lineIndex, multilineBlock)
             
             # parse body
+            body = ''
+            graphqlVariable = ''
             if len(multilineBlock) > 0:
                 
-                body = self.get_body_as_one_str(multilineBlock)
+                if self.is_grapgql(headers):
+                   body, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
+                else:
+                   body = self.get_body_as_one_str(multilineBlock)
                 
                 # jinja wil execute all filters and file-functions bind to image, pdf, file
                 tpl = self.jinjaEnvBody.from_string(body)
@@ -251,7 +257,6 @@ class RequestMessageFuzzContextCreator:
             fcSets.append(self.currentFuzzCaseSet)
             
         return True, '', fcSets                    
-    
     
     def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
         
@@ -473,6 +478,35 @@ class RequestMessageFuzzContextCreator:
         
         return '\n'.join(newBody)
 
+    def graphql_get_body_and_variable(self, multilineBlock: list[str]) -> tuple([str, dict]):
+        
+        body = []
+        variable = []
+        bodyStr = ''
+        variableJsonStr = ''
+        
+        gqlVariableSeparatorIndex = 0
+        for idx, line in enumerate(multilineBlock):
+            
+            line = line.strip()
+            
+            # check for empty breakline that marks "separator" between body and variable
+            if line == '':
+                gqlVariableSeparatorIndex = idx
+                break
+                
+        
+        body = multilineBlock[:gqlVariableSeparatorIndex]
+        variable = multilineBlock[gqlVariableSeparatorIndex:]
+        
+        bodyStr = '\n'.join(body)
+        
+        if len(variable) > 0:
+            variableDict = Utils.try_parse_json_to_object('\n'.join(variable))
+            variableJsonStr = json.dumps(variableDict)
+            
+        return bodyStr, variableJsonStr
+      
     
     def get_file_type_in_body(self,  multilineBlock: list[str]):
         
@@ -661,6 +695,15 @@ class RequestMessageFuzzContextCreator:
             'username': '{{ eval(wordlist_type=\'username\') }}',
             'password': '{{ eval(wordlist_type=\'password\') }}'
         }
+        
+    def is_grapgql(self, headers: dict):
+        if Utils.isNoneEmpty(headers) or len(headers) == 0:
+            return False
+        
+        if 'X-REQUEST-TYPE' in headers and headers['X-REQUEST-TYPE'] == 'GraphQL':
+           return True
+       
+        return False
            
     
     

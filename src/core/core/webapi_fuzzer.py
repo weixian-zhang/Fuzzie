@@ -257,8 +257,7 @@ class WebApiFuzzer:
             reqBody = ''
             reqBody = self.try_decode_body(body)
             
-            if url == '':
-                pass
+
 
             try:
                 req = None                
@@ -266,7 +265,10 @@ class WebApiFuzzer:
                 # post with body multipart-form, www-form-urlencoded
                 if file != None and reqBody != '':
                     
-                    req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                    if self.is_grapgql(headers):
+                        req = Request(fcs.verb, url, headers=headers, json={"query": reqBody})
+                    else:
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
 
                 elif not Utils.isNoneEmpty(file):
                     
@@ -709,6 +711,15 @@ class WebApiFuzzer:
         fdc.fuzzCaseSetId = fuzzcaseSetId
         fdc.fuzzcontextId = fuzzcontextId
         return fdc
+    
+    def is_grapgql(self, headers: dict):
+        if Utils.isNoneEmpty(headers) or len*(headers) == 0:
+            return False
+        
+        if 'X-Request-Type' in headers and headers['X-Request-Type'] == 'GraphQL':
+           return True
+       
+        return False
     
     def isDataTemplateEmpty(self, template):
         if template == '' or template == '{}':

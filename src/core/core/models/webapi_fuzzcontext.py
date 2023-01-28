@@ -126,6 +126,10 @@ class ApiFuzzCaseSet:
         self.fileName = ''
         self.fileDataTemplate = ''
         
+        self.isGraphQL = False
+        self.graphQLVariableNonTemplate = ''
+        self.graphQLVariableDataTemplate = ''
+        
         self.pathDataTemplate = ''
         self.querystringDataTemplate = ''
         self.bodyDataTemplate = ''
