@@ -232,7 +232,11 @@ class ServiceManager:
                     else:
                         parsedFCSs['file'] = ''
                         parsedFCSs['fileName'] = ''
-                        
+                    
+                    parsedFCSs['isGraphQL'] = singleFCS.isGraphQL
+                    parsedFCSs['graphQLVariableNonTemplate'] = singleFCS.graphQLVariableNonTemplate 
+                    parsedFCSs['graphQLVariableDataTemplate'] = singleFCS.graphQLVariableDataTemplate
+                    
                     parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
                     parsedFCSs['pathDataTemplate'] = singleFCS.pathDataTemplate
                     parsedFCSs['querystringDataTemplate'] = singleFCS.querystringDataTemplate
