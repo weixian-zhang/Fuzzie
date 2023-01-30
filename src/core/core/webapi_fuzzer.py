@@ -73,7 +73,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 4
+        self.httpTimeoutInSec = 5
         self.fuzzCaseSetRunId = shortuuid.uuid()
         
         self.totalRunsForAllCaseSets = 0
@@ -236,6 +236,7 @@ class WebApiFuzzer:
         body=''
         headers={}
         file = ''
+        gqlVars = {}
         contentType = 0
         
         try:
@@ -245,7 +246,19 @@ class WebApiFuzzer:
             
             # url already includes hostname, port, path and qs
             # files = list[tuple(wordlistType, filename, content)]
-            ok, err, hostname, port, hostnamePort, url, path, querystring, body, headers, file = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            (ok, 
+             err, 
+             hostname, 
+             port, 
+             hostnamePort, 
+             url, 
+             path, 
+             querystring,
+             body,
+             headers,
+             file,
+             gqlVars) = self.dataprep_fuzzcaseset( self.apifuzzcontext, fcs)
+            
             
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
@@ -258,7 +271,6 @@ class WebApiFuzzer:
             reqBody = self.try_decode_body(body)
             
 
-
             try:
                 req = None                
                 
@@ -266,9 +278,9 @@ class WebApiFuzzer:
                 if file != None and reqBody != '':
                     
                     if self.is_grapgql(headers):
-                        req = Request(fcs.verb, url, headers=headers, json={"query": reqBody})
+                        req = Request('POST', url, headers=headers, json={"query": reqBody, 'variables': gqlVars}) #, 'variables': gqlVars})
                     else:
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody)
+                        req = Request(fcs.verb, url, headers=headers, data=reqBody) 
 
                 elif not Utils.isNoneEmpty(file):
                     
@@ -282,9 +294,7 @@ class WebApiFuzzer:
                     req = Request(fcs.verb, url, headers=headers)
                 
                 
-                
-
-                # override requests lib header check to allow any chars
+                # override requests-library "legal header" check to allow any chars
                 # original regex is commented
                 requests.utils._CLEAN_HEADER_REGEX_STR = re.compile(r'(.*?)') #re.compile(r'^\S[^\r\n]*$|^$')
                 prepReq = req.prepare()
@@ -578,18 +588,19 @@ class WebApiFuzzer:
             resolvedBodyDT = ''
             headers = {}
             file = ''
+            gqlVars = {}
             
             okpath, errpath, resolvedPathDT = self.corporaContext.resolve_fuzzdata(pathDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not okpath:
-                return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errpath, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
             
             okqs, errqs, resolvedQSDT = self.corporaContext.resolve_fuzzdata(querystringDT) #self.inject_fuzzdata_in_datatemplate(querystringDT)
             if not okqs:
-                return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errqs, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
             
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
             if not okbody:
-                return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers]
+                return [False, errbody, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
             
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
@@ -630,7 +641,7 @@ class WebApiFuzzer:
                     ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
                     
                     if not ok:
-                        return [False, err, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
+                        return [False, err, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
                     
                     decoded = self.try_decode_file_content(fileContent)
                     
@@ -640,7 +651,13 @@ class WebApiFuzzer:
                     ok, err, fileContent = self.corporaContext.resolve_file(fcs.file)
                     
                     file = FuzzCaseSetFile(wordlist_type=fcs.file, filename=filename, content=fileContent)
-                    
+            
+            
+            #graphql support
+            if fcs.isGraphQL:
+                ok, err, gqlVariables = self.corporaContext.resolve_fuzzdata(fcs.graphQLVariableDataTemplate)
+                gqlVars = Utils.try_parse_json_to_object(gqlVariables)
+                
                     
             url = f'{hostnamePort}{resolvedPathDT}{resolvedQSDT}'
             
@@ -648,12 +665,12 @@ class WebApiFuzzer:
                     
             headers = {**authnHeader, **headerDict}     #merge 2 dicts
             
-            return [True, '', hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
+            return [True, '', hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
         
         except Exception as e:
             errText =  Utils.errAsText(e)
-            self.eventstore.emitErr(f'Error {errText}', data='WebApiFuzzer.dataprep_fuzzcaseset')
-            return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file]
+            self.eventstore.emitErr(e, data='WebApiFuzzer.dataprep_fuzzcaseset')
+            return [False, errText, hostname, port, hostnamePort, url, resolvedPathDT, resolvedQSDT, resolvedBodyDT, headers, file, gqlVars]
     
     
     def try_decode_file_content(self, content):
@@ -713,11 +730,14 @@ class WebApiFuzzer:
         return fdc
     
     def is_grapgql(self, headers: dict):
-        if Utils.isNoneEmpty(headers) or len*(headers) == 0:
+        if Utils.isNoneEmpty(headers) or len(headers) == 0:
             return False
         
-        if 'X-Request-Type' in headers and headers['X-Request-Type'] == 'GraphQL':
-           return True
+        xreqType = 'X-Request-Type'.lower()
+        
+        for k in headers.keys():
+            if xreqType == k.lower():
+                return True
        
         return False
     

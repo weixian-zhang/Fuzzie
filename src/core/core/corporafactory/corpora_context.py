@@ -57,6 +57,9 @@ class CorporaContext:
                 if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
                     self.build_data_context_from_req_msg(fcs.bodyDataTemplate)
                     
+                if not self.isDataTemplateEmpty(fcs.graphQLVariableDataTemplate):
+                    self.build_data_context_from_req_msg(fcs.graphQLVariableDataTemplate)
+                    
                 if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
                     self.build_data_context_from_req_msg(fcs.fileDataTemplate)
                     
@@ -232,6 +235,11 @@ class CorporaContext:
             
             data = ''
             
+            # if wordlist_type is not found in Context
+            if not self.is_wordlistType_in_context(wordlist_type):
+                self.eventstore.emitErr(Exception('Cannot find wordlist_type in CoorporaContext, could be not "registered" during "build-data-context"'), 'corpora_context.resolve_data_by_eval_func')
+                return self.cp.stringCorpora.next_corpora()
+            
             if wordlist_type == WordlistType.mutate:
                 corporaContextKey = Utils.sha256(mutate_value)
                 provider: StringMutateCorpora = self.context[corporaContextKey]
@@ -306,6 +314,11 @@ class CorporaContext:
         
     def isDataTemplateEmpty(self, template):
         if template == '' or template == '{}':
+            return True
+        return False
+    
+    def is_wordlistType_in_context(self, wordlist) -> bool:
+        if wordlist in self.context:
             return True
         return False
        

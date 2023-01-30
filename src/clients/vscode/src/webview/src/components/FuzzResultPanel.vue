@@ -96,6 +96,9 @@
                   readonly
                   v-model="tableResponseBody" />
         </TabPanel>
+        <TabPanel header="HTML View">            
+            <div v-html="tableResponseBody" />
+        </TabPanel>
         <TabPanel header="Reason">            
              <v-textarea auto-grow
                   outlined
@@ -154,8 +157,8 @@
     </v-toolbar>
 
     <Splitter  style="height: 100%" >
+      
       <SplitterPanel :size="50">
-
         <v-table density="compact" fixed-header height="430" hover="true" >          
           <thead>
             <tr>
@@ -258,43 +261,69 @@
           <SplitterPanel>
             <Splitter layout="vertical">
                 <SplitterPanel :size="50">
+                  
+                  <div v-show="isReqRespMessageDataLoading">
+                    <v-progress-linear
+                      indeterminate
+                      rounded
+                      color="cyan">
+                    </v-progress-linear>
+                  </div>
+
                   <v-btn
                     width="100%"
                     size="x-small"
                     color="cyan"
                     @click="(
-                      selectedRequest != '' ? (
-                    tableRequestValueSideBar=selectedRequest,
+                      selectedRequestMessage != '' ? (
+                    tableRequestValueSideBar=selectedRequestMessage,
                     settableRequestPathSideBar(),
                     setTableRequestQSSizeBar(),
                     setTableRequestHeadersSizeBar(),
                     setTableRequestBodySizeBar(),
                     showRequestValueSideBar = true) : ''
-                  )">
+                  )"
+                    >
                   Request
                   </v-btn>
                   <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
-                  :value="selectedRequest" />
+                  :value="(selectedRequestMessage)" />
                 </SplitterPanel>
 
                 <SplitterPanel :size="50">
+
+                  <div v-show="isReqRespMessageDataLoading">
+                    <v-progress-linear
+                      indeterminate
+                      rounded
+                      color="cyan">
+                    </v-progress-linear>
+                  </div>
+
                   <v-btn
                     width="100%"
                     size="x-small"
                     color="cyan"
                     @click="(
-                      selectedResponse != '' ?
-                    (tableResponseValueSizeBar=selectedResponse,
-                    setTableResponseHeader(),
-                    setTableResponseReasonPhrase(),
-                    setTableResponseBody(),
+                      selectedResponseDisplayText != '' ?
+                    (tableResponseValueSizeBar=selectedResponseDisplayText,
                     showResponseValueSideBar = true) : ''
-                  )">
+                    )"
+                    >
                   Response
                   </v-btn>
-                  <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
-                  :value="selectedResponse" />
+                  <!-- <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
+                  type="text" v-model="selectedResponseDisplayText"
+                   /> -->
+                   <pre style="height:100%; overflowY=scroll;resize: none;white-space: pre-line;">
+                    {{selectedResponseDisplayText}}
+                   </pre>
+
                 </SplitterPanel>
+            <!-- :value="selectedResponseDisplayText" -->
+                <!-- setTableResponseHeader(),
+                    setTableResponseReasonPhrase(),
+                    setTableResponseBody(), -->
 
             </Splitter>
           </SplitterPanel>
@@ -354,12 +383,13 @@ class Props {
 
     $logger: Logger|any;
     isDataLoadingInProgress = false;
+    isReqRespMessageDataLoading = false;
     selectedRow = '';
     showDropDownStatusCodeFilter = false;
 
     selectedReqRespMessage: FuzzRequestResponseMessage_ViewModel;
-    selectedRequest = ''
-    selectedResponse = '';
+    selectedRequestMessage = ''
+    selectedResponseDisplayText = '';
 
     fdcsDataOriginal: Array<FuzzDataCase|any> = [];
     fdcsDataFiltered: Array<FuzzDataCase|any> = [];
@@ -600,42 +630,58 @@ class Props {
 
     async onRowClick(fcs: FuzzDataCase) {
 
-      if (fcs.request.invalidRequestError != '') {
-        this.selectedRequest = fcs.request.invalidRequestError;
-        return;
+      try {
+
+        if (fcs.request.invalidRequestError != '') {
+          this.selectedRequestMessage = fcs.request.invalidRequestError;
+          return;
+        }
+
+        this.isReqRespMessageDataLoading = true;
+
+        //get request and response messages
+        const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
+
+        if(!ok || Utils.isNothing(result)) {
+          this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
+          this.selectedRequestMessage = '';
+          this.selectedResponseDisplayText = '';
+          return;
+        }
+
+        this.selectedReqRespMessage = result;
+        this.selectedRequestMessage = this.selectedReqRespMessage.requestMessage; //this.jsonPrettify(this.selectedReqRespMessage.requestMessage);
+        this.selectedResponseDisplayText = result.responseDisplayText; //this.jsonPrettify(result.responseDisplayText);
+
+        this.selectedReqRespMessage.responseBody = this.jsonPrettify(result.responseBody);
+
+        //this.selectedReqRespMessage.responseDisplayText = this.jsonPrettify(result.responseDisplayText);
+  //
+        //if(!Utils.isNothing(result.requestMessage)) {
+        //  this.selectedRequestMessage = this.jsonPrettify(result.requestMessage);
+        //}
+  //
+        //if(!Utils.isNothing(result.responseDisplayText)) {
+        //  this.selectedResponseDisplayText = this.jsonPrettify(result.responseDisplayText);
+        //}
+
+        //get uploaded files
+        const [fok, ferror, fresult] = await this.webclient.getFuzzingUploadedFiles(fcs.request.Id);
+
+        if(!fok) {
+          this.$logger.errorMsg(ferror);
+          return;
+        }
+
+        this.fuzzingUploadedFiles = fresult;
+
       }
-
-      //get request and response messages
-      const [ok, error, result] = await this.webclient.get_request_response_messages(fcs.request.Id, fcs.response.Id)
-
-      if(!ok || Utils.isNothing(result)) {
-        this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
-        this.selectedRequest = '';
-        this.selectedResponse = '';
-        return;
+      catch(error) {
+        this.$logger.error(error, 'FuzzResultPanel.onRowClick');
       }
-
-      this.selectedReqRespMessage = result
-      this.selectedReqRespMessage.responseBody = this.b64DecodeAndJsonPrettify(result.responseBody);
-      this.selectedReqRespMessage.responseDisplayText = this.b64DecodeAndJsonPrettify(result.responseDisplayText);
-
-      if(!Utils.isNothing(result.requestMessage)) {
-        this.selectedRequest = this.b64DecodeAndJsonPrettify(result.requestMessage);
+      finally {
+        this.isReqRespMessageDataLoading = false;
       }
-
-      if(!Utils.isNothing(result.responseDisplayText)) {
-        this.selectedResponse = this.b64DecodeAndJsonPrettify(result.responseDisplayText);
-      }
-
-      //get uploaded files
-      const [fok, ferror, fresult] = await this.webclient.getFuzzingUploadedFiles(fcs.request.Id);
-
-      if(!fok) {
-        this.$logger.errorMsg(ferror);
-        return;
-      }
-
-      this.fuzzingUploadedFiles = fresult;
     }
 
     async downloadFuzzFile(fileId, fileName) {
@@ -849,8 +895,8 @@ class Props {
 
     clearSelectedReqResp() {
       this.selectedReqRespMessage = new FuzzRequestResponseMessage_ViewModel();
-      this.selectedRequest = '';
-      this.selectedResponse = '';
+      this.selectedRequestMessage = '';
+      this.selectedResponseDisplayText = '';
     }
 
     shortenStringForDisplay(str: string) {
@@ -891,22 +937,36 @@ class Props {
         return false;
     }
 
-    b64DecodeAndJsonPrettify(body: string) {
-      var dBody = body;
-      try {
-        dBody = atob(body);
+    jsonPrettify(data: string) {
+
+      if (Utils.isNothing(data)) {
+        return '';
       }
-      catch {
-        if(Utils.jsonTryParse(dBody)) {
+
+      var dBody = data;
+
+      if(Utils.jsonTryParse(data)) {
           dBody = JSON.stringify(JSON.parse(dBody), null, 2)
           return dBody;
-        } 
       }
-  
-      if(Utils.jsonTryParse(dBody)) {
-          dBody = JSON.stringify(JSON.parse(dBody), null, 2)
-      }
+
       return dBody;
+
+      //var dBody = body;
+      //try {
+      //  dBody = atob(body);
+      //}
+      //catch {
+      //  if(Utils.jsonTryParse(dBody)) {
+      //    dBody = JSON.stringify(JSON.parse(dBody), null, 2)
+      //    return dBody;
+      //  } 
+      //}
+  //
+      //if(Utils.jsonTryParse(dBody)) {
+      //    dBody = JSON.stringify(JSON.parse(dBody), null, 2)
+      //}
+      
     }
  }
  

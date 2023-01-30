@@ -383,20 +383,33 @@ class ServiceManager:
         if not ok:
             return True, '', FuzzRequestResponseMessage_ViewModel()
         
+        requestMsg = reqDict['requestMessage']
+        responseMsg = respDict['responseDisplayText']
+        responseBody = respDict['responseBody']
+        
+        if requestMsg != '':
+            requestMsg = base64.b64decode(requestMsg).decode('utf-8')
+            
+        if responseMsg != '':
+            responseMsg = base64.b64decode(responseMsg).decode('utf-8')
+            
+        if responseBody != '':
+            responseBody = base64.b64decode(responseBody).decode('utf-8')
+        
         rrMsg = FuzzRequestResponseMessage_ViewModel()
         rrMsg.ok = True
         rrMsg.error = ''
         rrMsg.requestVerb = reqDict['verb']
-        rrMsg.requestMessage = reqDict['requestMessage']
+        rrMsg.requestMessage = requestMsg
         rrMsg.requestPath = reqDict['path']
         rrMsg.requestQuerystring = reqDict['querystring']
         rrMsg.requestHeader = reqDict['headers']
         rrMsg.requestBody = reqDict['body']
         
-        rrMsg.responseDisplayText = respDict['responseDisplayText']
+        rrMsg.responseDisplayText = responseMsg
         rrMsg.responseReasonPhrase = respDict['reasonPharse']
         rrMsg.responseHeader = respDict['headerJson']
-        rrMsg.responseBody= respDict['responseBody']
+        rrMsg.responseBody= responseBody
         
         
         return True, '', rrMsg

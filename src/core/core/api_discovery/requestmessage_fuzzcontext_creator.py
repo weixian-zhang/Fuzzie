@@ -529,9 +529,11 @@ class RequestMessageFuzzContextCreator:
                 bodyStr = '\n'.join(body)
                 
                 if len(variable) > 0:
+                    
                     gqlVariableStr = '\n'.join(variable)
-                    variableDict =json.loads(gqlVariableStr)
-                    variableJsonStr = json.dumps(variableDict)
+                    # variableDict =jsonpickle.decode(gqlVariableStr, safe=False)
+                    # variableJsonStr = json.dumps(variableDict)
+                    variableJsonStr = gqlVariableStr
                 
             return True, '', bodyStr, variableJsonStr
         
@@ -732,15 +734,27 @@ class RequestMessageFuzzContextCreator:
             'username': '{{ eval(wordlist_type=\'username\') }}',
             'password': '{{ eval(wordlist_type=\'password\') }}'
         }
-        
+    
     def is_grapgql(self, headers: dict):
         if Utils.isNoneEmpty(headers) or len(headers) == 0:
             return False
         
-        if 'X-REQUEST-TYPE' in headers and headers['X-REQUEST-TYPE'] == 'GraphQL':
-           return True
+        xreqType = 'X-Request-Type'.lower()
+        
+        for k in headers.keys():
+            if xreqType == k.lower():
+                return True
        
         return False
+    
+    # def is_grapgql(self, headers: dict):
+    #     if Utils.isNoneEmpty(headers) or len(headers) == 0:
+    #         return False
+        
+    #     if 'X-REQUEST-TYPE' in headers and headers['X-REQUEST-TYPE'] == 'GraphQL':
+    #        return True
+       
+    #     return False
     
             
            

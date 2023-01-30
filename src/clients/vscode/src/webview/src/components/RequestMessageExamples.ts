@@ -79,7 +79,7 @@ mutation (
 {
   "id": 1,
   "input": {
-    "body": "Some updated content."
+    "body": "{{ string }}"
   }
 }
 `,
