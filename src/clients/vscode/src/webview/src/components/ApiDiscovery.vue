@@ -688,10 +688,10 @@
 
     
         
-        <Tree :value="nodes"
+    <Tree :value="nodes"
         ref="tree"
         selectionMode="single" 
-        :expandedKeys="expandedNodeKeys" 
+        :expandedKeys="expandedNodeKeys"
         v-show="showTree" 
         scrollHeight="320px" 
         style="height: 320px" class=" border-0">
@@ -806,7 +806,7 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == true &&
-                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId)"
+                  (this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId))"
                 style="width:100%" />
 
           </template>
@@ -952,6 +952,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   //constantly receiving event
   async onFuzzStart(data) {
 
+    await this.getFuzzcontexts();
+
     const fuzzContextId = data.fuzzContextId;
     const fuzzCaseSetRunId = data.fuzzCaseSetRunId;
 
@@ -965,14 +967,13 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.selectedContextNode = fuzzContextId;
     this.selectedCaseSetRunNode =fuzzCaseSetRunId;
 
-    this.getFuzzcontexts();
+    await Utils.delay(1500);
 
-    // //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-    // this.eventemitter.emit("onFuzzContextSelected", fuzzContextId, fuzzCaseSetRunId);
+    
 
-    this.toastInfo('fuzzing started', '', 1000);
+    
 
-    await Utils.delay(2000);
+    //this.toastInfo('fuzzing started', '', 1000);
 
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
@@ -986,7 +987,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
     
   }
 
-  onFuzzStop() {
+  async onFuzzStop() {
+
+   
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -1159,12 +1162,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     return nodes;
 
-  }
-
-  selectTreeNodeByKey(fuzzCaseSetRunID) {
-    const tree: any = this.$refs.tree;
-    (this.$refs.tree as any).selectionKeys = {};
-    (this.$refs.tree as any).selectionKeys[fuzzCaseSetRunID] = true;
   }
 
   async onDialogClose(rqMsg: string) {
@@ -1499,7 +1496,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   clearData() {
-     this.fuzzcontexts = [];
+    this.fuzzcontexts = [];
     this.nodes = [];
     this.selectedContextNode = '';
     this.selectedCaseSetRunNode = '';

@@ -86,14 +86,25 @@ mutation (
 
     'gql-query-no-var-1':
 `
-POST https://beta.pokeapi.co/graphql/v1beta
+POST https://spacex-production.up.railway.app/
 X-REQUEST-TYPE: GraphQL
 
-query Query {
-    pokemon_v2_itemname {
-      name
+{
+    launchesPast(limit: 10) {
+      mission_name
+      launch_date_local
+      launch_site {
+        site_name_long
+      }
+      links {
+        article_link
+        video_link
+      }
+      rocket {
+        rocket_name
+      }
     }
-}
+  }
 `
     }
 

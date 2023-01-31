@@ -78,7 +78,7 @@
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
-            <th>
+            <th width="5px">
             </th>
 
             <th class="text-left">
@@ -138,22 +138,20 @@
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
               <td>
-              <v-icon
-                  :hidden="!(item.isGraphQL)"
-                  variant="flat"
-                  icon="mdi-graphql"
-                  color="purple darken-3"
-                  size="small"
-                  v-tooltip="'GraphQL'"
-                  >
-                  </v-icon>
-              <v-img
-                :hidden="(item.isGraphQL)"
-                height="50"
-                width="40"
-                v-tooltip="'REST'"
-                src="../assets/img/fuzzie-icon-rest-api.png"
-              ></v-img>
+                <v-icon
+                    :hidden="!(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-graphql"
+                    color="purple darken-3"
+                    size="small"
+                    >
+                    </v-icon>
+                <v-img
+                  :hidden="(item.isGraphQL)"
+                  height="50"
+                  width="40"
+                  src="../assets/img/fuzzie-icon-rest-api.png"
+                ></v-img>
             </td>
 
             <td>
@@ -183,7 +181,7 @@
                     )"
                     >Edit</button></li>
                     <li><button class="dropdown-item" type="button"
-                    :disabled="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
+                    :hidden="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
                     @click="(
                         onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
                       )"
@@ -191,37 +189,6 @@
                   </ul>
                 </div>
             </td>
-
-            <!-- <td>
-              <v-btn
-                  class="ma-2"
-                  variant="text"
-                  icon="mdi-pencil"
-                  color="cyan darken-3"
-                  size="small"
-                  :disabled="(isFuzzingInProgress())"
-                  @click="(
-                    showReqMsgEditDialog = true,
-                    rqInEdit = item.requestMessage,
-                    rqInEditOriginal = item.requestMessage,
-                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
-                  )" ></v-btn>
-
-            </td>
-
-            <td>
-                <v-btn
-                  class="ma-2"
-                  variant="text"
-                  icon="mdi-lightning-bolt"
-                  color="cyan darken-3"
-                  size="small"
-                  :disabled="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
-                  @click="(
-                        onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
-                      )" ></v-btn>
-             
-            </td> -->
 
             <td>{{ item.verb }}</td>
             
@@ -465,7 +432,7 @@ class Props {
 
     this.clearIntervalGetReqRespData();
 
-    this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
+    //this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -639,13 +606,15 @@ class Props {
 
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-    this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
-    this.selectedFuzzContextId = fuzzcontextId;
-    this.selectedFuzzCaseSetId = fuzzcasesetId;
-      
-    } catch (error) {
-        this.$logger.error(error);
-    }
+      this.eventemitter.emit('fuzz.start', {'fuzzContextId': fuzzcontextId, 'fuzzCaseSetRunId': caseSetRunSummaryId})
+
+      this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
+      this.selectedFuzzContextId = fuzzcontextId;
+      this.selectedFuzzCaseSetId = fuzzcasesetId;
+        
+      } catch (error) {
+          this.$logger.error(error);
+      }
   }
 
   async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {

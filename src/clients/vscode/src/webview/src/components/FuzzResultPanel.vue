@@ -201,7 +201,7 @@
                 Reason
               </th>
               <th class="text-left">
-                Content Length(response, bytes)
+                Content Length(response bytes)
               </th>
               <th class="text-left">
                 Duration(secs)

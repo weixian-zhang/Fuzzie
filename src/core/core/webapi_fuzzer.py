@@ -528,8 +528,7 @@ class WebApiFuzzer:
                 
             fuzzResp.setcookieHeader = self.try_get_setcookie_value(headers)
             
-            if 'Content-Length' in resp.headers:
-                fuzzResp.contentLength = resp.headers['Content-Length']
+            fuzzResp.contentLength = len(resp.content)
             
             respDT = f'{fuzzResp.statusCode} {fuzzResp.reasonPharse} ' \
                                         '\n' \
