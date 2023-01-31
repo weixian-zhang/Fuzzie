@@ -78,6 +78,9 @@
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
+            <th>
+            </th>
+
             <th class="text-left">
               <div class="form-check">
                 <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="" v-model="selectAll" density="compact" @change="(
@@ -85,9 +88,6 @@
               </div>
             </th>
             <th class="text-left">
-            </th>
-            <th class="text-left">
-            
             </th>
             <th class="text-left">
               Verb
@@ -137,6 +137,25 @@
             @click="onRowClick(item), selectedRow= item.fuzzCaseSetId"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
+              <td>
+              <v-icon
+                  :hidden="!(item.isGraphQL)"
+                  variant="flat"
+                  icon="mdi-graphql"
+                  color="purple darken-3"
+                  size="small"
+                  v-tooltip="'GraphQL'"
+                  >
+                  </v-icon>
+              <v-img
+                :hidden="(item.isGraphQL)"
+                height="50"
+                width="40"
+                v-tooltip="'REST'"
+                src="../assets/img/fuzzie-icon-rest-api.png"
+              ></v-img>
+            </td>
+
             <td>
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
@@ -171,23 +190,6 @@
                     >Fuzz Once</button></li>
                   </ul>
                 </div>
-            </td>
-
-            <td>
-              <v-icon
-                  :hidden="!(item.isGraphQL)"
-                  variant="flat"
-                  icon="mdi-graphql"
-                  color="purple darken-3"
-                  size="small"
-                  >
-                  </v-icon>
-              <v-img
-                :hidden="(item.isGraphQL)"
-                height="50"
-                width="40"
-                src="../assets/img/fuzzie-icon-rest-api.png"
-              ></v-img>
             </td>
 
             <!-- <td>

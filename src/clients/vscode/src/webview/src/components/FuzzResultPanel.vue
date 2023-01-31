@@ -11,46 +11,56 @@
       <TabView>
         <!--raw request message -->
         <TabPanel header="Message">
-          <v-textarea auto-grow
+          <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableRequestValueSideBar" />
         </TabPanel>
 
         <!--request path -->
         <TabPanel header="Path">
-          <v-textarea auto-grow
+          <textarea
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableRequestPathSideBar" />
         </TabPanel>
 
         <!--request querystring -->
         <TabPanel header="Querystring">
-          <v-textarea auto-grow
+          <textarea
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableRequestQSSideBar" />
         </TabPanel>
 
         <!--request headers -->
         <TabPanel header="Headers">
-          <v-textarea auto-grow
+          <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableRequestHeaderSideBar" />
         </TabPanel>
 
         <!--request body -->
         <TabPanel header="Body">
-          <v-textarea auto-grow
+          <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   v-model="tableRequestBodySideBar" />
         </TabPanel>
 
@@ -76,34 +86,42 @@
     <Sidebar v-model:visible="showResponseValueSideBar" position="right" style="width:700px;">
       <TabView>
         <TabPanel header="Message">
-          <v-textarea auto-grow
+          <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   v-model="tableResponseValueSizeBar" />
         </TabPanel>
         <TabPanel header="Header">            
-            <v-textarea auto-grow
+            <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableResponseHeader" />
         </TabPanel>
         <TabPanel header="Body">            
-            <v-textarea auto-grow
+            <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   v-model="tableResponseBody" />
         </TabPanel>
-        <TabPanel header="HTML View">            
+        <TabPanel header="WebPage View">            
             <div v-html="tableResponseBody" />
         </TabPanel>
         <TabPanel header="Reason">            
-             <v-textarea auto-grow
+             <textarea 
+                  style="height:100%; overflow=scroll;resize: none;" class="form-control"
                   outlined
-                  rows="1"
+                  rows="40"
                   readonly
+                  spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
                   v-model="tableResponseReasonPhrase" />
         </TabPanel>
       </TabView>      
@@ -127,6 +145,7 @@
         clearable
         v-model="quickSearchTextValue"
         @input="onQuickSearchTextValueChange"
+        @click:clear="(this.fdcsDataFiltered = [...this.fdcsDataOriginal])"
         ></v-text-field>
 
       <v-spacer></v-spacer>
@@ -183,28 +202,6 @@
               </th>
               <th class="text-left">
                 Content Length(response, bytes)
-                <!-- <div class="dropdown">
-                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Content Length(bytes)</button>
-                    <div class="dropdown-content">
-                      <v-radio-group inline v-model="tableFilterSmallerLarger" >
-                        <v-radio
-                          color="cyan"
-                          label=">="
-                          value=">="
-                        ></v-radio>
-                        <v-radio
-                          color="cyan"
-                          label="<="
-                          value="<="
-                        ></v-radio>
-                      </v-radio-group>
-                      <input type="number" id="typeNumber" class="form-control" @input="oncontentLengthInputChange"  step="20" v-model="contentLengthInputValue" />
-                    <button class="btn-sm btn-info btn-sm dropdown-toggle"
-                        @click="onContentLengthFilterClicked()">
-                        Filter
-                      </button> 
-                    </div>                 
-                  </div>-->
               </th>
               <th class="text-left">
                 Duration(secs)
@@ -286,7 +283,8 @@
                     >
                   Request
                   </v-btn>
-                  <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
+                  <textarea style="height:100%; overflow=scroll;resize: none;" readonly class="form-control" row="10" 
+                  spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   :value="(selectedRequestMessage)" />
                 </SplitterPanel>
 
@@ -306,24 +304,21 @@
                     color="cyan"
                     @click="(
                       selectedResponseDisplayText != '' ?
-                    (tableResponseValueSizeBar=selectedResponseDisplayText,
-                    showResponseValueSideBar = true) : ''
+                    showResponseValueSideBar = true : '',
+                    setResponseDisplayText(),
+                    setTableResponseHeader(),
+                    setTableResponseBody(),
+                    setTableResponseReasonPhrase()
                     )"
                     >
                   Response
                   </v-btn>
-                  <!-- <textarea style="height:100%; overflowY=scroll;resize: none;" readonly class="form-control"
+                  <textarea style="height:100%; overflow=scroll;resize: none;" readonly row="10" class="form-control"
+                  spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   type="text" v-model="selectedResponseDisplayText"
-                   /> -->
-                   <pre style="height:100%; overflowY=scroll;resize: none;white-space: pre-line;">
-                    {{selectedResponseDisplayText}}
-                   </pre>
+                   />
 
                 </SplitterPanel>
-            <!-- :value="selectedResponseDisplayText" -->
-                <!-- setTableResponseHeader(),
-                    setTableResponseReasonPhrase(),
-                    setTableResponseBody(), -->
 
             </Splitter>
           </SplitterPanel>
@@ -788,8 +783,8 @@ class Props {
       catch (error) {
           this.tableRequestHeaderSideBar = headersStr;
       }
-
     }
+
     setTableRequestBodySizeBar() {
 
       try {
@@ -807,12 +802,14 @@ class Props {
 
         body = atob(body);
 
-        if(Utils.jsonTryParse(body)) {
-            this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
-        }
-        else {
-            this.tableRequestBodySideBar = body;
-        }
+        this.tableRequestBodySideBar = this.jsonPrettify(body);
+
+        // if(Utils.jsonTryParse(body)) {
+        //    this.tableRequestBodySideBar = JSON.stringify(JSON.parse(body), null, 2)
+        //}
+        //else {
+        //    this.tableRequestBodySideBar = body;
+        //} 
       }
       catch(error) {
         this.$logger.error(error);
@@ -836,25 +833,21 @@ class Props {
       this.tableResponseReasonPhrase = reason;
     }
 
+    setResponseDisplayText() {
+      if (Utils.isNothing(this.selectedReqRespMessage)) {
+        return;
+      }
+
+      this.tableResponseValueSizeBar = this.jsonPrettify(this.selectedReqRespMessage.responseDisplayText);
+    }
+
     setTableResponseHeader() {
 
-      if (this.selectedReqRespMessage == undefined) {
+      if (Utils.isNothing(this.selectedReqRespMessage)) {
         return;
       }
 
-      const header = this.selectedReqRespMessage.responseHeader;
-
-      if (Utils.isNothing(header)) {
-        this.tableResponseHeader = '';
-        return;
-      }
-
-      if(Utils.jsonTryParse(header)) {
-          this.tableResponseHeader = JSON.stringify(JSON.parse(header), null, 2)
-        }
-        else {
-          this.tableResponseHeader = header;
-        }
+      this.tableResponseHeader = this.jsonPrettify(this.selectedReqRespMessage.responseHeader);
     }
 
     setTableResponseBody() {
@@ -863,7 +856,7 @@ class Props {
         return;
       }
 
-      this.tableResponseBody = this.selectedReqRespMessage.responseBody;
+      this.tableResponseBody = this.jsonPrettify(this.selectedReqRespMessage.responseBody);
 
     }
 
@@ -974,6 +967,12 @@ class Props {
  
  <!-- Add "scoped" attribute to limit CSS to this component only -->
  <style scoped>
+
+textarea
+{
+  width:100%;
+  height:100%;
+}
 
 table.dropdowns-opened tbody tr.non-dropdown th {
     z-index: 0;
