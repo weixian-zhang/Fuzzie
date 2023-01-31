@@ -61,7 +61,51 @@ POST https://httpbin.org/post
     }
     
     private graphql = {
+        'gql-mutation-var-1':
+`
+POST https://graphqlzero.almansi.me/api
+X-REQUEST-TYPE: GraphQL
 
+mutation (
+  $id: ID!,
+  $input: UpdatePostInput!
+) {
+  updatePost(id: $id, input: $input) {
+    id
+    body
+  }
+}
+
+{
+  "id": 1,
+  "input": {
+    "body": "{{ string }}"
+  }
+}
+`,
+
+    'gql-query-no-var-1':
+`
+POST https://spacex-production.up.railway.app/
+X-REQUEST-TYPE: GraphQL
+
+{
+    launchesPast(limit: 10) {
+      mission_name
+      launch_date_local
+      launch_site {
+        site_name_long
+      }
+      links {
+        article_link
+        video_link
+      }
+      rocket {
+        rocket_name
+      }
+    }
+  }
+`
     }
 
     private post = {
@@ -225,6 +269,8 @@ Content-Type: application/xml
                 return this.post[key];
             case 'mutate':
                 return this.mutate[key];
+            case 'gql':
+                return this.graphql[key];
         }
 
         return '';

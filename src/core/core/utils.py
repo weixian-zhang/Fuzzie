@@ -106,6 +106,7 @@ class Utils:
             if jsonStr == '':
                 return {}
             
+            #return jsonpickle.decode(jsonStr)
             return json.loads(jsonStr) 
         except Exception as e:
             return {}

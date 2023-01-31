@@ -77,11 +77,11 @@ app.use(VueCodemirror, {
               {label: "xss", type: "keyword", apply: "{{ xss }}", info:"primitive wordlist - cross site scripting strings from danielmiessler/seclist"},
               {label: "sqlinject", type: "keyword", apply: "{{ sqlinject }}", info:"primitive wordlist - sql inection strings from danielmiessler/seclist"},
 
-              {label: "GET", type: "keyword", apply: "GET", info:"GET HTTP verb"},
-              {label: "PUT", type: "keyword", apply: "PUT", info:"PUT HTTP verb"},
-              {label: "POST", type: "keyword", apply: "POST", info:"POST verb"},
-              {label: "DELETE", type: "keyword", apply: "DELETE", info:"DELETE verb"},
-              {label: "PATCH", type: "keyword", apply: "PATCH", info:"PATCH verb"},
+              {label: "GET", type: "keyword", apply: "GET ", info:"GET HTTP verb"},
+              {label: "PUT", type: "keyword", apply: "PUT ", info:"PUT HTTP verb"},
+              {label: "POST", type: "keyword", apply: "POST ", info:"POST verb"},
+              {label: "DELETE", type: "keyword", apply: "DELETE ", info:"DELETE verb"},
+              {label: "PATCH", type: "keyword", apply: "PATCH ", info:"PATCH verb"},
 
               {label: "http", type: "keyword", apply: "http://", info:""},
               {label: "https", type: "keyword", apply: "https://", info:""},
@@ -138,7 +138,7 @@ app.use(VueCodemirror, {
               {label: "X-Correlation-ID ", type: "keyword", apply: "X-Correlation-ID : ", info:""},
               {label: "Correlation-ID", type: "keyword", apply: "Correlation-ID: ", info:""},
 
-
+              {label: "X-REQUEST-TYPE", type: "keyword", apply: "X-REQUEST-TYPE: GraphQL", info:""},
               {label: "application/java-archive", type: "keyword", apply: "application/java-archive", info:""},
               {label: "application/EDI-X12", type: "keyword", apply: "application/EDI-X12", info:""},
               {label: "application/EDIFACT", type: "keyword", apply: "application/EDIFACT", info:""},

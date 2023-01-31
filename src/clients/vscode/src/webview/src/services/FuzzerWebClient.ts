@@ -7,6 +7,7 @@ import { ApiFuzzContext,
     FuzzRequestFileUpload_ViewModel } from "../Model";
 
 import axios, {  AxiosError, AxiosResponse, } from "axios";
+
 import {inject} from 'vue';
 import Utils from "../Utils";
 
@@ -249,6 +250,9 @@ export default class FuzzerWebClient
                         file
                         fileName
                         requestMessage
+                        isGraphQL
+                        graphQLVariableNonTemplate
+                        graphQLVariableDataTemplate
                     }
                 }
             }
@@ -526,8 +530,47 @@ export default class FuzzerWebClient
         `
         
         try {
+            
+            // fetch(this.gqlUrl, {
+            //     method: 'POST',
+            //     headers: {
+            //         "Content-Type": "application/json"
+            //       },
+            //     body: JSON.stringify({
+            //         query: query
+            //       })
+            //   })
+            //   .then(response => {
+            //     const data = response.json()
+            //     if(this.responseHasData(response))
+            //     {
+                    
+            //         // const ok = data.data.getUploadedFiles.ok;
+            //         // const error = data.data.getUploadedFiles.error;
+            //         // const result = data.data.getUploadedFiles.result;
+            //         //return [ok, error, result];
+            //     }
+            //   })
 
             const response = await axios.post(this.gqlUrl, {query});
+
+            // const response = await axios
+            //         .post(this.gqlUrl, {query})
+            //         .then(function (response) {
+            //             if(this.responseHasData(response))
+            //             {
+            //                 const ok = response.data.data.getUploadedFiles.ok;
+            //                 const error = response.data.data.getUploadedFiles.error;
+            //                 const result = response.data.data.getUploadedFiles.result;
+            //                 return [ok, error, result];
+            //             }
+            //         })
+            //         .catch(function (error) {
+            //         console.log(error);
+            //         })
+            //         .finally(function () {
+            //         // always executed
+            //         });
 
             if(this.responseHasData(response))
             {

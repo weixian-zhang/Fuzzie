@@ -65,6 +65,9 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('port', Integer),
                             Column('verb', String),
                             Column('path', String),
+                            Column('isGraphQL', Boolean),
+                            Column('graphQLVariableNonTemplate', String),
+                            Column('graphQLVariableDataTemplate', String),
                             Column('querystringNonTemplate', String),
                             Column('bodyNonTemplate', String),
                             Column('headerNonTemplate', String),
@@ -784,7 +787,10 @@ def save_updated_fuzzcasesets(fcsList: dict):
                 querystringDataTemplate = bindparam('querystringDataTemplate'),
                 bodyDataTemplate = bindparam('bodyDataTemplate'),
                 headerDataTemplate = bindparam('headerDataTemplate'),
-                requestMessage = bindparam('requestMessage')
+                requestMessage = bindparam('requestMessage'),
+                isGraphQL = bindparam('isGraphQL'),
+                graphQLVariableNonTemplate = bindparam('graphQLVariableNonTemplate'),
+                graphQLVariableDataTemplate = bindparam('graphQLVariableDataTemplate')
             )
     )
     
@@ -903,7 +909,10 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         fileName = fileName,
                         fileDataTemplate =fileDataTemplate,
                         fuzzcontextId = fuzzcontext.Id,
-                        requestMessage = fcset.requestMessage
+                        requestMessage = fcset.requestMessage,
+                        isGraphQL = fcset.isGraphQL,
+                        graphQLVariableNonTemplate = fcset.graphQLVariableNonTemplate,
+                        graphQLVariableDataTemplate = fcset.graphQLVariableDataTemplate
                         )
                 )
                 
@@ -1159,7 +1168,11 @@ def create_fuzzcaseset_from_dict(rowDict):
     fcs.file = rowDict['file']
     fcs.fileName = rowDict['fileName']
     fcs.fileDataTemplate = rowDict['fileDataTemplate']
-
+    
+    fcs.isGraphQL = rowDict['isGraphQL']
+    fcs.graphQLVariableNonTemplate = rowDict['graphQLVariableNonTemplate']
+    fcs.graphQLVariableDataTemplate = rowDict['graphQLVariableDataTemplate']
+    
     return fcs
 
 

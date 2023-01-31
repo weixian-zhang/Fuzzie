@@ -78,16 +78,16 @@
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
+            <th width="5px">
+            </th>
+
             <th class="text-left">
               <div class="form-check">
-                <v-checkbox color="cyan" id="flexCheckDefault" label="Fuzz All" v-model="selectAll" density="compact" @change="(
+                <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
             </th>
             <th class="text-left">
-            </th>
-            <th class="text-left">
-              Fuzz Once
             </th>
             <th class="text-left">
               Verb
@@ -137,41 +137,57 @@
             @click="onRowClick(item), selectedRow= item.fuzzCaseSetId"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
+              <td>
+                <v-icon
+                    :hidden="!(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-graphql"
+                    color="purple darken-3"
+                    size="small"
+                    >
+                    </v-icon>
+                <v-img
+                  :hidden="(item.isGraphQL)"
+                  height="50"
+                  width="40"
+                  src="../assets/img/fuzzie-icon-rest-api.png"
+                ></v-img>
+            </td>
+
             <td>
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
               </div>
             </td>
-            
-            <td>
-              <v-btn
-                  class="ma-2"
-                  variant="text"
-                  icon="mdi-pencil"
-                  color="cyan darken-3"
-                  size="small"
-                  :disabled="(isFuzzingInProgress())"
-                  @click="(
-                    showReqMsgEditDialog = true,
-                    rqInEdit = item.requestMessage,
-                    rqInEditOriginal = item.requestMessage,
-                    currentEditFuzzCaseSetId = item.fuzzCaseSetId
-                  )" ></v-btn>
 
-            </td>
 
             <td>
-                <v-btn
-                  class="ma-2"
-                  variant="text"
-                  icon="mdi-lightning-bolt"
+              <div class="btn-group" style="cursor: pointer">
+                  <v-icon
+                  variant="flat"
+                  icon="mdi-cog-outline"
                   color="cyan darken-3"
-                  size="small"
-                  :disabled="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
-                  @click="(
+                  size="x-small"
+                  data-bs-toggle="dropdown">
+                  </v-icon>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" type="button" 
+                    :disabled="(isFuzzingInProgress())"
+                    @click="(
+                      showReqMsgEditDialog = true,
+                      rqInEdit = item.requestMessage,
+                      rqInEditOriginal = item.requestMessage,
+                      currentEditFuzzCaseSetId = item.fuzzCaseSetId
+                    )"
+                    >Edit</button></li>
+                    <li><button class="dropdown-item" type="button"
+                    :hidden="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
+                    @click="(
                         onFuzzOnce(this.selectedFuzzContextId, item.fuzzCaseSetId)
-                      )" ></v-btn>
-             
+                      )"
+                    >Fuzz Once</button></li>
+                  </ul>
+                </div>
             </td>
 
             <td>{{ item.verb }}</td>
@@ -416,7 +432,7 @@ class Props {
 
     this.clearIntervalGetReqRespData();
 
-    this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
+    //this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -590,13 +606,15 @@ class Props {
 
       const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-    this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
-    this.selectedFuzzContextId = fuzzcontextId;
-    this.selectedFuzzCaseSetId = fuzzcasesetId;
-      
-    } catch (error) {
-        this.$logger.error(error);
-    }
+      this.eventemitter.emit('fuzz.start', {'fuzzContextId': fuzzcontextId, 'fuzzCaseSetRunId': caseSetRunSummaryId})
+
+      this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
+      this.selectedFuzzContextId = fuzzcontextId;
+      this.selectedFuzzCaseSetId = fuzzcasesetId;
+        
+      } catch (error) {
+          this.$logger.error(error);
+      }
   }
 
   async onRowClick(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
