@@ -16,21 +16,24 @@ import os
 import random
 import io
 from PIL import Image
+from seclist_payload_corpora import SeclistPayloadCorpora
 
 class ImageCorpora:
     
-    def __new__(cls):
+    def __new__(cls, payloadCorpora: SeclistPayloadCorpora):
         if not hasattr(cls, 'instance'):
             cls.instance = super(ImageCorpora, cls).__new__(cls)
         return cls.instance
     
-    def __init__(self) -> None:
+    def __init__(self, payloadCorpora: SeclistPayloadCorpora) -> None:
 
         self.data = {}
         
         self.es = EventStore()
         
         self.rowPointer = 1; #important as sqlitre autoincrement id starts from 1
+        
+        self.payloadCorpora = payloadCorpora
     
     def load_corpora(self):
         
@@ -51,8 +54,9 @@ class ImageCorpora:
                 content = rowDict['Content']
                 
                 imgStrCleansed = self.removeExtraEncodedChars(content)
+                
                 imgByte = base64.b64decode(imgStrCleansed)
-                #image_file = io.StringIO(imgByte)
+
                 self.data[str(rn)] = imgByte
                 
             rows = None
@@ -77,12 +81,27 @@ class ImageCorpora:
         if len(self.data) == 0:
             return None
         
-        randIdx = random.randint(0, len(self.data) - 1)
-        content = self.data[str(randIdx)]
+        randInt = random.randint(0, 10)
         
-        fBio= io.BytesIO(content)   # convert to file-like binary object
-        
-        fBio.seek(0)
+        if randInt <= 6:
+            randIdx = random.randint(0, len(self.data) - 1)
+            content = self.data[str(randIdx)]
+            
+            fBio= io.BytesIO(content)   # convert to file-like binary object
+            
+            fBio.seek(0)
 
-        return fBio
+            return fBio
+        else:
+            strPayload = self.payloadCorpora.next_corpora()
+            
+            fBio= io.BytesIO(bytes(strPayload, 'utf-8')) 
+            
+            fBio.seek(0)
+
+            return fBio
+                
+                
+        
+        
     

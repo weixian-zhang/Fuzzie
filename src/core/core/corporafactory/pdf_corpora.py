@@ -38,6 +38,7 @@ class PDFCorpora():
         self.es = EventStore()
         
         self.pdfs = {}
+        
         self.payloadCorpora = payloadCorpora
         
     def load_corpora(self):
