@@ -270,7 +270,7 @@ def load_image():
         resp = requests.post('https://api.openai.com/v1/images/generations',
                     headers= {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer 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'
+                        'Authorization': 'Bearer '
                     },
                     json={
                         "prompt": p,
