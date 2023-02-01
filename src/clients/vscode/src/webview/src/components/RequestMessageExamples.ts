@@ -137,7 +137,7 @@ POST https://httpbin.org/post HTTP/1.1
 'post-pdf': `
 POST https://httpbin.org/post HTTP/1.1
 
-{{ pdf('option-file-name.log') }}
+{{ pdf('option-file-name.pdf') }}
 `,
 
 'post-image': `

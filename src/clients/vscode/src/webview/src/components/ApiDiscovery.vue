@@ -746,6 +746,7 @@
 
                 <div class="btn-group">
                   <v-icon
+                  v-show="(isFuzzingInProgress() == false)"
                   variant="flat"
                   icon="mdi-cog-outline"
                   color="cyan darken-3"
