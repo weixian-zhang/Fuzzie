@@ -542,7 +542,7 @@
 
     <!--request message dialog-->
     <Dialog v-model:visible="showReqMsgCreateDialog" 
-      header="Request Message Editor" 
+      header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true" :closeOnEscape="false"
@@ -589,7 +589,7 @@
     </Dialog>
 
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
-      header="Request Message Editor" 
+      header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
       :dismissableMask="true">
@@ -679,9 +679,9 @@
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create a new API Fuzz Context'" icon  variant="plain" height="30px" plain 
+      <v-btn v-tooltip.bottom="'create new Fuzz Context for REST API & GraphQL'" icon  variant="plain" height="30px" plain 
          @click="(newContextSideBarVisible = true )">
-        <v-icon color="cyan darken-3">mdi-api</v-icon>
+        <v-icon color="cyan darken-3" icon="mdi-plus"></v-icon>
       </v-btn>
 
     </v-toolbar>

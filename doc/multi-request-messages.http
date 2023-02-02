@@ -1,0 +1,61 @@
+
+
+GET https://httpbin.org/get/user/{{ string }}/{{ bool }}/{{ digit }}/{{ integer }}/{{ char }}/{{ filename }}/{{ datetime }}/{{ date }}/{{ time }}/{{ username }}/{{ password }}/{{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | mutate }}
+
+###
+
+
+POST GET https://httpbin.org/post/user/{{ string }}/{{ bool }}/{{ digit }}/{{ integer }}/{{ char }}/{{ filename }}/{{ datetime }}/{{ date }}/{{ time }}/{{ username }}/{{ password }}/{{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | mutate }}
+?name={{ string }}
+        &gender={{ bool }}
+        &age={{ digit }}
+        &age={{ integer }}
+        &a={{ char }}
+        &a={{ filename }}
+        &a={{ datetime }}
+        &a={{ date }}
+        &a={{ time }}
+        &a={{ username }}
+        &a={{ password }}
+        &a={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
+        &b={{ string }}
+        &b={{ bool }}
+        &b={{ digit }}
+        &b={{ integer }}
+        &b={{ char }}
+        &b={{ filename }}
+        &b={{ datetime }}
+        &b={{ date }}
+        &b={{ time }}
+        &b={{ username }}
+        &b={{ password }}
+        &b={{ "this is a test to prove that I have a very long custom input and Fuzzie accepts it" | my }}
+        Content-Type: application/json
+        custom-header1: {{ string }}
+        custom-header2: {{ bool }}
+        custom-header3: {{ digit }}
+        custom-header4: {{ integer }}
+        custom-header5: {{ char }}
+        custom-header6: {{ filename }}
+        custom-header7: {{ datetime }}
+        custom-header8: {{ date }}
+        custom-header9: {{ time }}
+        custom-header10: {{ username }}
+        custom-header11: {{ password }}
+        custom-header12: {{ 'this is a test to prove that I have a very long custom input and Fuzzie accepts it' | mutate }}
+        
+        {
+                "string": "{{ string }}",
+                "bool": "{{ bool }}",
+                "digit": "{{ digit }}",
+                "integer": "{{ integer }}",
+                "char": "{{ char }}",
+                "filename": "{{ filename }}",
+                "datetime": "{{ datetime }}",
+                "date": "{{ date }}",
+                "time": "{{ time }}",
+                "username": "{{ username }}",
+                "password": "{{ password }}",
+                "custom-inputs": "{{ "a custom input to be mutated' | mutate }}"
+        }
+  

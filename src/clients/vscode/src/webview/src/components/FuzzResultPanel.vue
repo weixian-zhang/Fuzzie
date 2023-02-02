@@ -283,7 +283,7 @@
                     >
                   Request
                   </v-btn>
-                  <textarea style="height:100%; overflow=scroll;resize: none;" readonly class="form-control" row="10" 
+                  <textarea style="height:100%; overflow=scroll;resize: none;" readonly class="form-control" row="12" 
                   spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
                   :value="(selectedRequestMessage)" />
                 </SplitterPanel>
@@ -650,16 +650,6 @@ class Props {
 
         this.selectedReqRespMessage.responseBody = this.jsonPrettify(result.responseBody);
 
-        //this.selectedReqRespMessage.responseDisplayText = this.jsonPrettify(result.responseDisplayText);
-  //
-        //if(!Utils.isNothing(result.requestMessage)) {
-        //  this.selectedRequestMessage = this.jsonPrettify(result.requestMessage);
-        //}
-  //
-        //if(!Utils.isNothing(result.responseDisplayText)) {
-        //  this.selectedResponseDisplayText = this.jsonPrettify(result.responseDisplayText);
-        //}
-
         //get uploaded files
         const [fok, ferror, fresult] = await this.webclient.getFuzzingUploadedFiles(fcs.request.Id);
 
@@ -944,21 +934,6 @@ class Props {
       }
 
       return dBody;
-
-      //var dBody = body;
-      //try {
-      //  dBody = atob(body);
-      //}
-      //catch {
-      //  if(Utils.jsonTryParse(dBody)) {
-      //    dBody = JSON.stringify(JSON.parse(dBody), null, 2)
-      //    return dBody;
-      //  } 
-      //}
-  //
-      //if(Utils.jsonTryParse(dBody)) {
-      //    dBody = JSON.stringify(JSON.parse(dBody), null, 2)
-      //}
       
     }
  }

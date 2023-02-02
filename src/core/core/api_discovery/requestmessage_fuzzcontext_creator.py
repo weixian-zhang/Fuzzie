@@ -11,6 +11,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
+import validators
 import re
 import jsonpickle 
 from utils import Utils
@@ -176,7 +177,7 @@ class RequestMessageFuzzContextCreator:
             if not ok:
                 # cannot find path, skip to next block
                 self.eventstore.emitErr(error)
-                continue
+                return False, error, [] 
             
             self.currentFuzzCaseSet.hostname = hostname
             self.currentFuzzCaseSet.port = port
@@ -307,6 +308,9 @@ class RequestMessageFuzzContextCreator:
             
             hostname = f'{parseOutput.scheme}://{parseOutput.hostname}'
             
+            if not validators.url(hostname):
+                return False, f'Invalid hostname {hostname}', path, hostname, port
+            
             path = parseOutput.path.strip()
             
             return True, '', path, hostname, port
@@ -422,26 +426,54 @@ class RequestMessageFuzzContextCreator:
                 return lineIndex, headers
             
             #ignore invalid header format
-            if not self.is_header(line):
-                lineIndex = lineIndex + 1
-                continue                
+            # if not self.is_header(line):
+            #     lineIndex = lineIndex + 1
+            #     continue                
             
             lineIndex = lineIndex + 1
             
+            
             if Utils.isInString(':', line):
                 
-                sh = line.split(':')
+                semicolonIdx = line.find(':')
+                afterSemicolonIdx = semicolonIdx + 1
                 
-                if len(sh) != 2:
+                if afterSemicolonIdx > len(line):
+                    return False
+                
+                header = line[:semicolonIdx]
+                header = header.strip()
+                
+                value = line[afterSemicolonIdx:]
+                value = value.strip()
+                
+                if Utils.isNoneEmpty(header) or Utils.isNoneEmpty(value):
                     continue
                 
-                headerKey = sh[0].strip()
-                headerVal = sh[1].strip()
+                headers[header] = value
                 
-                if headerKey == '' or headerVal == '':
-                    continue
+                # splitted = line.split(':')
                 
-                headers[headerKey] = headerVal
+                # if len(splitted) != 2:
+                #     return False
+                
+                # key = header.strip() # splitted[0]
+                # val = value.strip() #splitted[1]
+            
+            # if Utils.isInString(':', line):
+                
+            #     sh = line.split(':')
+                
+            #     if len(sh) != 2:
+            #         continue
+                
+            #     headerKey = sh[0].strip()
+            #     headerVal = sh[1].strip()
+                
+            #     if headerKey == '' or headerVal == '':
+            #         continue
+                
+            #     headers[headerKey] = headerVal
                 
 
         # minus 1 to cater for zero-index in list
@@ -450,27 +482,36 @@ class RequestMessageFuzzContextCreator:
             
         return lineIndex, headers
     
-    def is_header(self, line: str) -> bool:
+    # def is_header(self, line: str) -> bool:
         
-        if line.strip() == '':
-            return False
+    #     if line.strip() == '':
+    #         return False
         
-        if Utils.isInString(':', line):
+    #     if Utils.isInString(':', line):
             
-            splitted = line.split(':')
+    #         semicolonIdx = line.find(':')
+    #         afterSemicolonIdx = semicolonIdx + 1
             
-            if len(splitted) != 2:
-                return False
+    #         if afterSemicolonIdx > len(line):
+    #             return False
             
-            key = splitted[0]
-            val = splitted[1]
+    #         header = line[:semicolonIdx]
+    #         value = line[afterSemicolonIdx:]
             
-            if key == '' or val == '':
-                return False
+    #         # splitted = line.split(':')
             
-            return True
-            httpbin.org
-        return False
+    #         # if len(splitted) != 2:
+    #         #     return False
+            
+    #         key = header.strip() # splitted[0]
+    #         val = value.strip() #splitted[1]
+            
+    #         if key == '' or val == '':
+    #             return False
+            
+    #         return True
+           
+    #     return False
     
     def remove_verb_if_exist(self, requestline: str):
             if requestline == '':
@@ -746,16 +787,6 @@ class RequestMessageFuzzContextCreator:
                 return True
        
         return False
-    
-    # def is_grapgql(self, headers: dict):
-    #     if Utils.isNoneEmpty(headers) or len(headers) == 0:
-    #         return False
-        
-    #     if 'X-REQUEST-TYPE' in headers and headers['X-REQUEST-TYPE'] == 'GraphQL':
-    #        return True
-       
-    #     return False
-    
             
            
     

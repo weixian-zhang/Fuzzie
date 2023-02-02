@@ -321,9 +321,9 @@ class WebApiFuzzer:
                 
                 # handle client time-out error
                 try:
-                    
                     resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 except Exception as e:
+                    
                     fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
                                                                    reason='request timed out, Fuzzie has a short time-out of 4 seconds')
@@ -390,20 +390,8 @@ class WebApiFuzzer:
             resp.statusCode = 400
             
             fuzzDataCase.response = resp
-                
-            # if resp != None:
-            #     fr.statusCode = resp.status_code
-            #     fr.reasonPharse = resp.reason
-            #     fr.body = resp.text
-            # else:  
-            #     err =  Utils.errAsText(e)
-            #     fr.statusCode = 400 if err.find('timed out') == -1 else 508 #400 client error
-            #     fr.reasonPharse = f'{err}'
-            
-            # fuzzDataCase.response = fr
             
         return fuzzDataCase, file
-
              
     def fuzzcaseset_done(self, runNumber):
         

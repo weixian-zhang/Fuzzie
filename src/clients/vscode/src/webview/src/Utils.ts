@@ -155,4 +155,21 @@ export default class Utils
         const decoded = atob(data);
         return decoded;
     }
+
+    public static jsonPrettify(data: string) {
+
+        if (Utils.isNothing(data)) {
+          return '';
+        }
+  
+        var dBody = data;
+  
+        if(Utils.jsonTryParse(data)) {
+            dBody = JSON.stringify(JSON.parse(dBody), null, 2)
+            return dBody;
+        }
+  
+        return dBody;
+        
+      }
 }
