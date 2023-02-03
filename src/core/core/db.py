@@ -19,7 +19,7 @@ from eventstore import EventStore
 
 eventstore = EventStore()
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data/fuzzie.sqlite')
-connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
+connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL&auto_vacuum=1'
 engine = create_engine(connStr)
 
 session_factory = sessionmaker(bind=engine)
@@ -395,9 +395,11 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     if fuzzCaseSetRunId == '':
         result = (
                         Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
-                                ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId")
+                                ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
+                                ApiFuzzContextTable.columns.fuzzcaseToExec
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                        .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
                         .all()
                      )
         
@@ -434,9 +436,11 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                                     runSummaryQuery.columns.http4xx,
                                     runSummaryQuery.columns.http5xx,
                                     runSummaryQuery.columns.completedDataCaseRuns,
-                                    runSummaryQuery.columns.totalDataCaseRunsToComplete
+                                    runSummaryQuery.columns.totalDataCaseRunsToComplete,
+                                    ApiFuzzContextTable.columns.fuzzcaseToExec
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
+                        .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
                         .outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == ApiFuzzCaseSetTable.c.Id )
                         .all()
                      )

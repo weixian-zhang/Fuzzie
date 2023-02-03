@@ -180,6 +180,7 @@
           <tr
             v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
+            @click="(selectedRow= item.fuzzCaseSetId)"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
             <td>

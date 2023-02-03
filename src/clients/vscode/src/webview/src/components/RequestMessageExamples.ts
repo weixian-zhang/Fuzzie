@@ -143,7 +143,7 @@ POST https://httpbin.org/post HTTP/1.1
 'post-image': `
 POST https://httpbin.org/post HTTP/1.1
 
-{{ image('option-file-name.log') }}
+{{ image('option-file-name.png') }}
 `,
 
 'post-xml':`
