@@ -980,9 +980,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
     this.fuzzcontexts.forEach(context => {
         if(context.Id == this.currentFuzzingContextId) {
-          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, 
-                this.currentFuzzingCaseSetRunId)
-                return;
+          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
+          return;
         }
     });
     
@@ -990,8 +989,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   async onFuzzStop() {
 
-   
-
+    this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
   }
