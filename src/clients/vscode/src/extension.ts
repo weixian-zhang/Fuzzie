@@ -43,14 +43,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	context.subscriptions.push(   
-		vscode.commands.registerCommand(
-			'fuzzie.fuzzer.reset', () => 
-				{
-					hardResetFuzzerIfExists();
-				}
-		)
-	);
+	// context.subscriptions.push(   
+	// 	vscode.commands.registerCommand(
+	// 		'fuzzie.fuzzer.reset', () => 
+	// 			{
+	// 				hardResetFuzzerIfExists();
+	// 			}
+	// 	)
+	// );
 	
 
 	stateManager = new StateManager(context);

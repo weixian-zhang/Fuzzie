@@ -29,8 +29,13 @@ export default class VSCodeMessager
         if (typeof acquireVsCodeApi === "function") {
             if(this._vscode != undefined) {
                 this._vscode = acquireVsCodeApi();
+
+                console.log(`VSCodeMessager, _vscode = acquireVsCodeApi`)
             }
-          }
+        }
+        else{
+            console.log(`VSCodeMessager, acquireVsCodeApi is not a function`)
+        }
     }
 
     public send(message: unknown)
@@ -44,5 +49,13 @@ export default class VSCodeMessager
         } catch (error) {
             console.error(error);
         }
+    }
+
+    public sendFile(filename: string, content: string) {
+        this._vscode?.postMessage({
+            command: 'save-file',
+            filename: filename,
+            content: content
+        })
     }
 }

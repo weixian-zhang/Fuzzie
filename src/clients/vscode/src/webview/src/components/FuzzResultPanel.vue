@@ -348,6 +348,7 @@ import { FuzzDataCase, FuzzRequestFileUpload_ViewModel, FuzzRequest, FuzzRequest
 import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import VSCodeMessager from '../services/VSCodeMessager';
 
 class Props {
   toastInfo: any = {};
@@ -375,6 +376,8 @@ class Props {
 
 
  export default class FuzzResultPanel extends Vue.with(Props) {
+
+    vscode = new VSCodeMessager();
 
     $logger: Logger|any;
     isDataLoadingInProgress = false;
@@ -684,15 +687,17 @@ class Props {
           return;
         }
 
-        const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
+        this.vscode.sendFile(fileName, downloadedContent);
 
-        const url = window.URL.createObjectURL(new Blob([byteArrContent]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = "fileDownloader"; //arbitrary name of iframe
-        link.setAttribute('download', `${fileName}`);
-        document.body.appendChild(link);
-        link.click(); 
+        //const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
+//
+        //const url = window.URL.createObjectURL(new Blob([byteArrContent]));
+        //const link = document.createElement('a');
+        //link.href = url;
+        //link.target = "fileDownloader"; //arbitrary name of iframe
+        //link.setAttribute('download', `${fileName}`);
+        //document.body.appendChild(link);
+        //link.click(); 
       }
       catch(error) {
         this.$logger.error(error);

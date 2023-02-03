@@ -66,18 +66,16 @@ export class VuejsPanel {
 			this._vuejsPanel.webview.onDidReceiveMessage(
 				message => {
 				  switch (message.command) {
-					case 'read-file-content':
+					case 'save-file':
 					  
-						const type = message.type;
+						const filename = message.filename;
 						const content = message.content;
 
 	
-						fs.readFile(content, 'utf8', function(err, data){
+						// fs.readFile(content, 'utf8', function(err, data){
 			
-							this._vuejsPanel.webview.postMessage({ command: 'file-content-result', type: type, content: data});
-						});
-					
-					  	return;
+						// 	this._vuejsPanel.webview.postMessage({ command: 'file-content-result', type: type, content: data});
+						// });
 				  }
 				},
 				undefined,
@@ -97,6 +95,20 @@ export class VuejsPanel {
 			VuejsPanel._eventlogger.log(`error when creating webview ${error}`);
 		}
     }
+
+	// public saveFile(messageText: string) {
+	// 	const dataUrl = messageText.split(',');
+	// 	if (dataUrl.length > 0) {
+	// 	  const u8arr = Base64.toUint8Array(dataUrl[1]);
+	// 	  const workspaceDirectory = getWorkspaceFolder();
+	// 	  const newFilePath = path.join(workspaceDirectory, 'VsCodeExtensionTest.png');
+
+	// 	  fs.writeFile()
+	// 	  writeFile(newFilePath, u8arr, () => {
+	// 		vscode.window.showInformationMessage(`The file ${newFilePath} has been created in the root of the workspace.`);      
+	// 	  });
+	// 	}
+	//   }
 
     public readFile(path: string) {
 		// Send a message to the webview webview.
@@ -141,7 +153,7 @@ export class VuejsPanel {
 		const vendorCSSWebviewUrl = this._vuejsPanel.webview.asWebviewUri(vendorCSSPathOnDisk);
 		// const vendorCSSUri = vendorCSSPathOnDisk.with({ scheme: 'vscode-resource' });
 		
-
+		
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
 
@@ -162,6 +174,49 @@ export class VuejsPanel {
 			<body>
 				<div id="app"></div>
 			</body>
+
+			<script>
+				let frame;
+				let vscode;
+				
+				vscodeMsg = {
+					command: 'save-file',
+					filename: 'a.txt',
+					content: 'aaaaaaa'
+				}
+				vscode = acquireVsCodeApi();
+				vscode.postMessage(vscodeMsg)
+		
+				window.addEventListener('vscode-message', (event) => {
+					
+					//https://www.javascripttutorial.net/javascript-dom/javascript-dispatchevent/
+					//https://www.javascripttutorial.net/javascript-dom/javascript-dispatchevent/
+					//https://stackoverflow.com/questions/71077130/vscode-extension-custom-editor-with-webview-both-on-typescript
+					//https://code.visualstudio.com/api/extension-guides/webview
+
+					const vscodeMsg = event.data;
+
+					switch(event.data.command) {
+						
+						 
+
+						case 'save-file':
+							return;
+						case 'message':
+							return;
+					}
+
+				});
+
+				// 	vscode = acquireVsCodeApi();
+
+				// 	// if (!frame) {
+				// 	// 	vscode = acquireVsCodeApi();
+				// 	// }
+		
+				// 	vscode.postMessage(event.data, "*")
+				// });
+			</script>
 		</html>`;
 	}
 }

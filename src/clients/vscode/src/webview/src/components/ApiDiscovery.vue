@@ -545,7 +545,7 @@
       header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true" :closeOnEscape="false"
+      :dismissableMask="false" :closeOnEscape="false"
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
@@ -592,7 +592,7 @@
       header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true">
+      :dismissableMask="false">
 
 
           <codemirror
@@ -993,21 +993,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
   }
-
-  // async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
-
-  //   await this.getFuzzcontexts();
-
-  //   // select/highlight the CaseSetRun tree node
-  //   //this.selectTreeNodeByKey(caseSetRunSummaryId);
-
-  //   //await Utils.delay(4000);
-
-  //   this.selectedContextNode = fuzzcontextId;
-  //   this.selectedCaseSetRunNode = caseSetRunSummaryId;
-  //   //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-  //   //this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
-  // }
 
   //#### websocket event ends ####
 

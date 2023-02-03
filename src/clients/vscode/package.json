@@ -24,10 +24,6 @@
       {
         "command": "fuzzie.openwebview",
         "title": "Fuzzie: Open"
-      },
-      {
-        "command": "fuzzie.fuzzer.reset",
-        "title": "Fuzzie: Reset fuzzer engine"
       }
     ]
   },
