@@ -81,15 +81,16 @@ POST https://httpbin.org/post
 The following are built-in wordlist-types available today, more will be added in future  
 | WordList Type | Description   |
 | ------------- |:-------------:| 
-| {{ "a quick brown fox" &#124; my }} | your custom input, Fuzzie will mutate input |
+| {{ 'a quick brown fox' &#124; mutate }} | your custom input, Fuzzie will mutate input |
 | {{ string }} | minimaxir/big-list-of-naughty-strings |
+| {{ xss }} | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
+| {{ sqlinject }} | sql-injection string from danielmiessle/seclist |
 | {{ bool }} | boolean values and something naughty |
 | {{ digit }} | Integers, floats and something naughty |
-| {{ digit:1:5000.9999 }} | User supplied integers and float range |
 | {{ char }} | naughty chars |
-| {{ image }} |  Images mix with other file types encode with 'latin1' |
-| {{ pdf }} |  PDF mix with other file types encode with 'latin1' |
-| {{ file }} |  danielmiessler seclist payload encode with 'latin1' |
+| {{ image }} |  DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ pdf }} |  Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ file }} |  naught payload from danielmiessle/seclist |
 | {{ datetime }} | date + time |
 | {{ date }} | date only |
 | {{ time }} | time only |
