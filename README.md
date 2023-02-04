@@ -3,7 +3,7 @@
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
 
-* fuzz tests made simple guided by an intuitive WebView in VSCode
+* fuzz tests guided by an intuitive WebView
 * the ability to fuzz test very early in the SDLC
 * Fuzzer in IDE allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
@@ -19,7 +19,7 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 
 #### Terms and Concepts
 
-* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered by writing Request Messages
+* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz, and API operations discovered by writing Request Messages
 * wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) and Fuzzie converts each Request Message into a http call.  Within Request Message, exact input format like JSON, XML, files, plain text or simply any format, with parameters can be described in Request Message.
 By replacing wordlist-type {{ wordlist type }} with parameter value, during fuzzing, Fuzzie will replace the parameter values with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
 example:  
@@ -81,8 +81,8 @@ POST https://httpbin.org/post
 The following are built-in wordlist-types available today, more will be added in future  
 | WordList Type | Description   |
 | ------------- |:-------------:| 
-| {{ 'a quick brown fox' &#124; mutate }} | your custom input, Fuzzie will mutate input |
-| {{ string }} | minimaxir/big-list-of-naughty-strings |
+| {{ 'a quick brown fox' &#124; mutate }} | your custom input, Fuzzie will mutate your input |
+| {{ string }} | naughty string from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
 | {{ xss }} | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
 | {{ sqlinject }} | sql-injection string from danielmiessle/seclist |
 | {{ bool }} | boolean values and something naughty |
