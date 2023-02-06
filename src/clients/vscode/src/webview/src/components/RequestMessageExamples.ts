@@ -26,12 +26,13 @@ string,username,password,filename,datetime
     `,
 
     'file-upload-myfile-json': `
+// this is a custom file content
+// supports with multi breakline
+
 POST https://httpbin.org/post
     
 {{
 '
-this is a custom file content
-supports with multi breakline
 
 {
     \\"name\\": \\"{{ string }}\\",
@@ -44,7 +45,7 @@ supports with multi breakline
     
     'file-upload-myfile-wordlisttypes': `
     
-// content also supports primitive wordlists
+// custom file content supports primitive wordlists
 
 POST https://httpbin.org/post
     

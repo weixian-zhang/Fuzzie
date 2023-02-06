@@ -727,7 +727,7 @@
               </b>
               &nbsp;
               <v-icon
-                  v-show="(isFuzzingInProgress() == false)"
+                  v-show="(fuzzingInProgress == false)"
                   variant="flat"
                   icon="mdi-delete"
                   color="cyan darken-3"
@@ -746,7 +746,7 @@
 
                 <div class="btn-group">
                   <v-icon
-                  v-show="(isFuzzingInProgress() == false)"
+                  v-show="(fuzzingInProgress == false)"
                   variant="flat"
                   icon="mdi-cog-outline"
                   color="cyan darken-3"
@@ -768,7 +768,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
-                      isFuzzingInProgress() == false && 
+                      fuzzingInProgress == false && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
@@ -782,7 +782,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="( isFuzzingInProgress() == true)"
+                  v-show="( fuzzingInProgress == true)"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -799,7 +799,8 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == false &&
-                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId &&
+                  fuzzingInProgress == true)"
                 style="width:100%" />
               
               <v-progress-linear
@@ -807,7 +808,8 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == true &&
-                  (this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId))"
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId &&
+                  fuzzingInProgress == true)"
                 style="width:100%" />
 
           </template>
@@ -891,6 +893,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   fuzzerConnected = false;
   currentFuzzingContextId = '';
   currentFuzzingCaseSetRunId = '';
+  fuzzingInProgress = false;
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -953,6 +956,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   //constantly receiving event
   async onFuzzStart(data) {
 
+    this.fuzzingInProgress = true;
+
     await this.getFuzzcontexts();
 
     const fuzzContextId = data.fuzzContextId;
@@ -970,12 +975,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     await Utils.delay(1500);
 
-    
-
-    
-
-    //this.toastInfo('fuzzing started', '', 1000);
-
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
     this.fuzzcontexts.forEach(context => {
@@ -988,7 +987,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onFuzzStop() {
-
+    this.fuzzingInProgress = false;
     this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -1177,13 +1176,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     await Utils.delay(500);
 
     this.getFuzzcontexts();
-  }
-
-  isFuzzingInProgress() {
-    if(this.currentFuzzingContextId != '' &&  this.currentFuzzingCaseSetRunId != '') {
-      return true;
-    }
-    return false;
   }
 
   async onCancelFuzzIconClicked() {

@@ -73,7 +73,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 5
+        self.httpTimeoutInSec = 4
         self.fuzzCaseSetRunId = shortuuid.uuid()
         
         self.totalRunsForAllCaseSets = 0
