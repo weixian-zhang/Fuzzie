@@ -10,6 +10,7 @@
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",
     "@mdi/font": "^5.9.55",
+    "@microsoft/applicationinsights-web": "^2.8.9",
     "@types/axios": "^0.14.0",
     "@types/dateformat": "^5.0.0",
     "@types/eventemitter3": "^2.0.2",
@@ -31,6 +32,7 @@
     "primevue": "^3.18.1",
     "reconnecting-websocket": "^4.4.0",
     "roboto-fontface": "*",
+    "source-map-loader": "^4.0.1",
     "styled-components": "^5.3.6",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
@@ -43,8 +45,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
-    "@types/vscode": "^1.68.1",
-    "@types/vscode-webview": "^1.57.0",
+    "@types/vscode-webview": "^1.57.1",
     "@types/webfontloader": "^1.0.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",

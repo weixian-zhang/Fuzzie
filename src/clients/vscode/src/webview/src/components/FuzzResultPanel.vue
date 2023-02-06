@@ -72,7 +72,7 @@
                 <td>
                   <div > {{ file.fileName }}</div>
                   <span style="color: blue;cursor: pointer; text-decoration: underline;" 
-                    @click="(downloadFuzzFile(file.Id, file.fileName))">
+                    @click="(downloadFuzzFile(file.Id, file.fileName))" >
                     download
                   </span>
                 </td>
@@ -82,7 +82,7 @@
         </TabPanel>
       </TabView>      
     </Sidebar>
-
+ <!-- downloadFuzzFile(file.Id, file.fileName))"> -->
     <Sidebar v-model:visible="showResponseValueSideBar" position="right" style="width:700px;">
       <TabView>
         <TabPanel header="Message">
@@ -335,6 +335,8 @@
 
 <script lang="ts">
 
+/* tslint:disable */ 
+
 import { inject } from 'vue';
 import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
@@ -348,7 +350,7 @@ import { FuzzDataCase, FuzzRequestFileUpload_ViewModel, FuzzRequest, FuzzRequest
 import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
-import VSCodeMessager from '../services/VSCodeMessager';
+import VSCode from  '../services/VSCode';
 
 class Props {
   toastInfo: any = {};
@@ -374,11 +376,9 @@ class Props {
 })
 
 
-
  export default class FuzzResultPanel extends Vue.with(Props) {
 
-    vscode = new VSCodeMessager();
-
+    vscode: VSCode;
     $logger: Logger|any;
     isDataLoadingInProgress = false;
     isReqRespMessageDataLoading = false;
@@ -423,10 +423,13 @@ class Props {
     fuzzCaseSetRunId = ''
 
     beforeMount() {
-      this.$logger = inject('$logger');   
+      this.$logger = inject('$logger');
     }
 
     mounted() {
+
+      this.vscode = new VSCode();
+
       //this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
       this.eventemitter.on('fuzzer.notready', this.onFuzzNotReady);
       this.eventemitter.on("onFuzzCaseSetSelected", this.onFuzzCaseSetSelected);
@@ -672,9 +675,12 @@ class Props {
       }
     }
 
+
     async downloadFuzzFile(fileId, fileName) {
 
       try {
+
+
         if (Utils.isNothing(fileId)) {
           this.$logger.error('File ID is not found when downloading fuzz-payloads')
           return;
@@ -687,17 +693,20 @@ class Props {
           return;
         }
 
-        this.vscode.sendFile(fileName, downloadedContent);
+        //vscode extension save file
+        this.vscode.saveFile(fileName, downloadedContent);
 
-        //const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
-//
-        //const url = window.URL.createObjectURL(new Blob([byteArrContent]));
-        //const link = document.createElement('a');
-        //link.href = url;
-        //link.target = "fileDownloader"; //arbitrary name of iframe
-        //link.setAttribute('download', `${fileName}`);
-        //document.body.appendChild(link);
-        //link.click(); 
+        //support browser testing
+        if(this.vscode.isVSCodeAPIUndefined()) {
+          const byteArrContent: any = this.stringToArrayBuffer(downloadedContent);
+          const url = window.URL.createObjectURL(new Blob([byteArrContent]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = "fileDownloader"; //arbitrary name of iframe
+          link.setAttribute('download', `${fileName}`);
+          document.body.appendChild(link);
+          link.click(); 
+        }
       }
       catch(error) {
         this.$logger.error(error);

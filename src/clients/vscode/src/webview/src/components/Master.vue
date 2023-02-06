@@ -70,6 +70,7 @@
     },
   })
 
+
   export default class Master extends Vue {
 
     eventemitter = new EventEmitter();

@@ -268,8 +268,11 @@ class RequestMessageFuzzContextCreator:
                     if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
                         self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
                         self.currentFuzzCaseSet.bodyNonTemplate = body
-                    # has file in body containing file kind myfile, file, image or pdf
+                    # *has file in body containing file kind myfile, file, image or pdf
                     else:
+                        if self.currentFuzzCaseSet.file == WordlistType.myfile and self.currentFuzzCaseSet.fileDataTemplate == '':
+                            return False, 'error when parsing file-content myfile wordlist,', []
+                            
                         self.currentFuzzCaseSet.bodyNonTemplate = ''
                         self.currentFuzzCaseSet.bodyDataTemplate = ''           
 
@@ -423,15 +426,9 @@ class RequestMessageFuzzContextCreator:
             
             # breakline marker that divides header and body
             if line == '':
-                return lineIndex, headers
-            
-            #ignore invalid header format
-            # if not self.is_header(line):
-            #     lineIndex = lineIndex + 1
-            #     continue                
+                return lineIndex, headers             
             
             lineIndex = lineIndex + 1
-            
             
             if Utils.isInString(':', line):
                 
@@ -452,29 +449,6 @@ class RequestMessageFuzzContextCreator:
                 
                 headers[header] = value
                 
-                # splitted = line.split(':')
-                
-                # if len(splitted) != 2:
-                #     return False
-                
-                # key = header.strip() # splitted[0]
-                # val = value.strip() #splitted[1]
-            
-            # if Utils.isInString(':', line):
-                
-            #     sh = line.split(':')
-                
-            #     if len(sh) != 2:
-            #         continue
-                
-            #     headerKey = sh[0].strip()
-            #     headerVal = sh[1].strip()
-                
-            #     if headerKey == '' or headerVal == '':
-            #         continue
-                
-            #     headers[headerKey] = headerVal
-                
 
         # minus 1 to cater for zero-index in list
         if lineIndex > 0:
@@ -482,36 +456,6 @@ class RequestMessageFuzzContextCreator:
             
         return lineIndex, headers
     
-    # def is_header(self, line: str) -> bool:
-        
-    #     if line.strip() == '':
-    #         return False
-        
-    #     if Utils.isInString(':', line):
-            
-    #         semicolonIdx = line.find(':')
-    #         afterSemicolonIdx = semicolonIdx + 1
-            
-    #         if afterSemicolonIdx > len(line):
-    #             return False
-            
-    #         header = line[:semicolonIdx]
-    #         value = line[afterSemicolonIdx:]
-            
-    #         # splitted = line.split(':')
-            
-    #         # if len(splitted) != 2:
-    #         #     return False
-            
-    #         key = header.strip() # splitted[0]
-    #         val = value.strip() #splitted[1]
-            
-    #         if key == '' or val == '':
-    #             return False
-            
-    #         return True
-           
-    #     return False
     
     def remove_verb_if_exist(self, requestline: str):
             if requestline == '':
@@ -724,31 +668,46 @@ class RequestMessageFuzzContextCreator:
     
     def myfile_jinja_filter(self, content: str, filename: str):
         
-        escapedContent = content.replace('"', '\\"')
+        try:
+            escapedContent = content.replace('"', '\\"')
         
-        output = self.inject_eval_func_primitive_wordlist(escapedContent)
-        
-        # disable jinja auto-escaping html special characters
-        jinjaTpl = f'''
-        {{% autoescape false %}}
-            {output}
-        {{% endautoescape %}}
-        '''
-        
-        evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{filename}") }}}}'
-        
-        # used in corpora_context to find myfile_corpora to supply myfile data
-        corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
-        
-        # *create file object in current fuzzcaseset
-        self.currentFuzzCaseSet.file = FuzzCaseSetFile(
-                   wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
-                   filename = filename, #corporaContextKeyName,
-                   content = evalOutput )
-        self.currentFuzzCaseSet.fileName = filename
-        self.currentFuzzCaseSet.fileDataTemplate = evalOutput
+            ok, err, output = self.inject_eval_func_primitive_wordlist(escapedContent)
             
-        return ''
+            if not ok:
+                self.eventstore.emitErr(err, data=f'source: requestmessage_fuzzcontext_creator.myfile_jinja_filter')
+                self.currentFuzzCaseSet.file = FuzzCaseSetFile(
+                    wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
+                    filename = filename, #corporaContextKeyName,
+                    content = '' )
+                self.currentFuzzCaseSet.fileName = filename
+                self.currentFuzzCaseSet.fileDataTemplate = ''
+                    
+                return ''
+            
+            output = output.strip()
+            
+            # disable jinja auto-escaping html special characters
+            jinjaTpl = f'{{% autoescape false %}}{output}{{% endautoescape %}}'
+            
+            jinjaTpl = jinjaTpl.strip()
+            
+            evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{filename}") }}}}'
+            
+            # used in corpora_context to find myfile_corpora to supply myfile data
+            corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
+            
+            # *create file object in current fuzzcaseset
+            self.currentFuzzCaseSet.file = FuzzCaseSetFile(
+                    wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
+                    filename = filename, #corporaContextKeyName,
+                    content = evalOutput )
+            self.currentFuzzCaseSet.fileName = filename
+            self.currentFuzzCaseSet.fileDataTemplate = evalOutput
+                
+            return ''
+        except Exception as e:
+            pass
+        
     
     # check if user has forgotten to put parentheses for file wordlist
     # 

@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
+import Vue from 'vue';
+
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import "@mdi/font/css/materialdesignicons.css";
@@ -25,11 +27,20 @@ import {EditorView, keymap} from "@codemirror/view"
 import {CompletionContext, autocompletion} from "@codemirror/autocomplete"
 import {indentWithTab,blockComment,blockUncomment} from "@codemirror/commands"
 
+
 const logger = new Logger();
 
 loadFonts()
 
 const app = createApp(App);
+
+//enable devtool in vue3
+app.config.performance = true
+
+//global error handling
+app.config.errorHandler = (err) => {
+  logger.error(err);
+};
 
 app.provide("$logger", logger); // global singleton instance of logger
 
@@ -203,3 +214,4 @@ app.use(VueCodemirror, {
 
 app.directive('tooltip', Tooltip);
 app.mount('#app')
+

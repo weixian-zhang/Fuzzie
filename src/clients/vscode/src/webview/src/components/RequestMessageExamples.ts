@@ -9,13 +9,17 @@ PUT https://httpbin.org/post
 x-ms-blob-type: BlockBlob
 
 {{
-"string,username,password,filename,datetime
+'
+
+string,username,password,filename,datetime
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-{{string}},{{username}},{{password}},{{filename}},{{datetime}}"
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+
+'
 | myfile("batchfile.log")
 }}
     
@@ -25,7 +29,7 @@ x-ms-blob-type: BlockBlob
 POST https://httpbin.org/post
     
 {{
-"
+'
 this is a custom file content
 supports with multi breakline
 
@@ -34,16 +38,23 @@ supports with multi breakline
     \\"age\\": \\"{{ digit }}\\"
 }
 
-" | myfile("filename.txt")
+' | myfile("filename.txt")
 }}
         `,
     
     'file-upload-myfile-wordlisttypes': `
+    
+// content also supports primitive wordlists
+
 POST https://httpbin.org/post
     
 {{
-"
+
+'
+
 {{ string }}
+{{ sqlinject }}
+{{ xss }}
 {{ bool }}
 {{ digit }}
 {{ integer }}
@@ -55,7 +66,9 @@ POST https://httpbin.org/post
 {{ username }}
 {{ password }}
 
-" | myfile("filename.txt")
+'
+
+| myfile("filename.txt")
 }}
             `,
     }

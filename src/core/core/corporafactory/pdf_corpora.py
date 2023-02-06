@@ -66,17 +66,24 @@ class PDFCorpora():
         if len(self.pdfs) == 0:
             return None
         
-        randInt = random.randint(0, 1)
+        randInt = random.randint(1, 10)
         
         data = None
         
-        match randInt:
-            case 0:
-                randDataIdx = random.randint(0, len(self.pdfs) - 1)
-                encoded = self.pdfs[randDataIdx]
-                data = base64.b64decode(encoded)
-            case 1:
-                data = self.payloadCorpora.next_corpora()
+        if randInt <= 7:
+            randDataIdx = random.randint(0, len(self.pdfs) - 1)
+            encoded = self.pdfs[randDataIdx]
+            data = base64.b64decode(encoded)
+        else:
+            data = self.payloadCorpora.next_corpora()
+            
+        # match randInt:
+        #     case 0:
+        #         randDataIdx = random.randint(0, len(self.pdfs) - 1)
+        #         encoded = self.pdfs[randDataIdx]
+        #         data = base64.b64decode(encoded)
+        #     case 1:
+        #         data = self.payloadCorpora.next_corpora()
         
 
         return data
