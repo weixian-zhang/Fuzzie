@@ -13,9 +13,20 @@ module.exports = defineConfig({
   publicPath: './',
   pluginOptions: {
     vuetify: new VuetifyPlugin()
-    // vuetify: {
-       
-		// 	// https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vuetify-loader
-		// }
+  },
+  configureWebpack: {
+    devtool: "source-map",
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          use: ['source-map-loader'],
+        },
+      ]
+    }
   }
 })
+
+
+

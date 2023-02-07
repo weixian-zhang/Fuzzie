@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "debug Fuzzer",
+			"name": "debug fuzzer",
 			"type": "python",
 			"request": "launch",
 			"program": "main.py",
@@ -31,7 +31,7 @@
 			"sourceMapPathOverrides": {
 				"webpack://?:*/*": "${workspaceFolder}/src/clients/vscode/*"
 			},
-			
+			"debugWebviews": true
 		}
 		// {
 		// 	"name": "debug flask openapi3 server",

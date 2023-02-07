@@ -542,10 +542,10 @@
 
     <!--request message dialog-->
     <Dialog v-model:visible="showReqMsgCreateDialog" 
-      header="Request Message Editor" 
+      header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true" :closeOnEscape="false"
+      :dismissableMask="false" :closeOnEscape="false"
       @hide="onDialogClose(newApiContext.requestTextContent)">
       <Message severity="info">Ctrl + space to show intellisense for Fuzzie worklist types</Message>
 
@@ -589,10 +589,10 @@
     </Dialog>
 
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
-      header="Request Message Editor" 
+      header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
-      :dismissableMask="true">
+      :dismissableMask="false">
 
 
           <codemirror
@@ -679,9 +679,9 @@
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create a new API Fuzz Context'" icon  variant="plain" height="30px" plain 
+      <v-btn v-tooltip.bottom="'create new Fuzz Context for REST API & GraphQL'" icon  variant="plain" height="30px" plain 
          @click="(newContextSideBarVisible = true )">
-        <v-icon color="cyan darken-3">mdi-api</v-icon>
+        <v-icon color="cyan darken-3" icon="mdi-plus"></v-icon>
       </v-btn>
 
     </v-toolbar>
@@ -727,7 +727,7 @@
               </b>
               &nbsp;
               <v-icon
-                  v-show="(isFuzzingInProgress() == false)"
+                  v-show="(fuzzingInProgress == false)"
                   variant="flat"
                   icon="mdi-delete"
                   color="cyan darken-3"
@@ -746,7 +746,7 @@
 
                 <div class="btn-group">
                   <v-icon
-                  v-show="(isFuzzingInProgress() == false)"
+                  v-show="(fuzzingInProgress == false)"
                   variant="flat"
                   icon="mdi-cog-outline"
                   color="cyan darken-3"
@@ -768,7 +768,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
-                      isFuzzingInProgress() == false && 
+                      fuzzingInProgress == false && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
@@ -782,7 +782,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="( isFuzzingInProgress() == true)"
+                  v-show="( fuzzingInProgress == true)"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -799,7 +799,8 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == false &&
-                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId)"
+                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId &&
+                  fuzzingInProgress == true)"
                 style="width:100%" />
               
               <v-progress-linear
@@ -807,7 +808,8 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == true &&
-                  (this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId))"
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId &&
+                  fuzzingInProgress == true)"
                 style="width:100%" />
 
           </template>
@@ -891,6 +893,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   fuzzerConnected = false;
   currentFuzzingContextId = '';
   currentFuzzingCaseSetRunId = '';
+  fuzzingInProgress = false;
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -953,6 +956,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   //constantly receiving event
   async onFuzzStart(data) {
 
+    this.fuzzingInProgress = true;
+
     await this.getFuzzcontexts();
 
     const fuzzContextId = data.fuzzContextId;
@@ -970,46 +975,23 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     await Utils.delay(1500);
 
-    
-
-    
-
-    //this.toastInfo('fuzzing started', '', 1000);
-
     // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
     // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
     this.fuzzcontexts.forEach(context => {
         if(context.Id == this.currentFuzzingContextId) {
-          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, 
-                this.currentFuzzingCaseSetRunId)
-                return;
+          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
+          return;
         }
     });
     
   }
 
   async onFuzzStop() {
-
-   
-
+    this.fuzzingInProgress = false;
+    this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
   }
-
-  // async onFuzzCaseSet_FuzzRun_Complete(fuzzcontextId, caseSetRunSummaryId) {
-
-  //   await this.getFuzzcontexts();
-
-  //   // select/highlight the CaseSetRun tree node
-  //   //this.selectTreeNodeByKey(caseSetRunSummaryId);
-
-  //   //await Utils.delay(4000);
-
-  //   this.selectedContextNode = fuzzcontextId;
-  //   this.selectedCaseSetRunNode = caseSetRunSummaryId;
-  //   //send event to FuzzCaseSet pane to show fuzzcaseset-run-summaries for current fuzzCaseSetRun that is fuzzing
-  //   //this.onFuzzCaseSetRunSelected(fuzzcontextId, caseSetRunSummaryId);
-  // }
 
   //#### websocket event ends ####
 
@@ -1194,13 +1176,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     await Utils.delay(500);
 
     this.getFuzzcontexts();
-  }
-
-  isFuzzingInProgress() {
-    if(this.currentFuzzingContextId != '' &&  this.currentFuzzingCaseSetRunId != '') {
-      return true;
-    }
-    return false;
   }
 
   async onCancelFuzzIconClicked() {

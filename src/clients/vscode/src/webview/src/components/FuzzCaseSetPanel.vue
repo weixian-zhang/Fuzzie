@@ -54,12 +54,55 @@
         />
     </Dialog>
 
-  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:500px;" :modal="true" :dismissable="true">
-    <v-textarea auto-grow
-          outlined
-          rows="1"
-          readonly
-          v-model="tableValViewInSizeBar" />
+  <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:700px;" :modal="true" :dismissable="true">
+    <v-card
+    color="white"
+    outlined
+    style="display: flex; flex-flow: column; height: 100%;">
+      
+      <div class="container-fluid" style="overflow-y:scroll">
+        <div class="row">
+          <div>
+            URL
+          </div>
+          <div>
+            <textarea :value="fuzzcasesetViewInSideBar.url" rows="6"
+            style="height:100%; overflow=scroll;resize: none;" class="form-control"
+            spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
+            />
+          </div>
+        </div>
+
+        <div class="row">&nbsp;</div>
+
+        <div class="row">
+          <div>
+            Header
+          </div>
+          <div>
+            <textarea :value="fuzzcasesetViewInSideBar.header" rows="6"
+            style="height:100%; overflow=scroll;resize: none;" class="form-control"
+            spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
+            />
+          </div>
+        </div>
+
+        <div class="row">&nbsp;</div>
+
+        <div class="row">
+          <div>
+            Body
+          </div>
+          <div>
+            <textarea :value="fuzzcasesetViewInSideBar.body" rows="15"
+            style="height:100%; overflow=scroll;resize: none;" class="form-control"
+            spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
+            />
+          </div>
+        </div>
+        <div class="row">&nbsp;</div>
+      </div>
+    </v-card>
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
@@ -78,15 +121,18 @@
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
-            <th width="5px">
-            </th>
-
             <th class="text-left">
               <div class="form-check">
-                <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="" v-model="selectAll" density="compact" @change="(
+                <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
             </th>
+            
+            <!-- <th>
+            </th> -->
+            <th>
+            </th>
+
             <th class="text-left">
             </th>
             <th class="text-left">
@@ -134,10 +180,16 @@
           <tr
             v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
-            @click="onRowClick(item), selectedRow= item.fuzzCaseSetId"
+            @click="(selectedRow= item.fuzzCaseSetId)"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
-              <td>
+            <td>
+              <div class="form-check">
+                <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected" density="compact" @click="isTableDirty=true"  hide-details />
+              </div>
+            </td>
+
+            <!-- <td>
                 <v-icon
                     :hidden="!(item.isGraphQL)"
                     variant="flat"
@@ -152,14 +204,22 @@
                   width="40"
                   src="../assets/img/fuzzie-icon-rest-api.png"
                 ></v-img>
-            </td>
+
+            </td> -->
 
             <td>
-              <div class="form-check">
-                <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected"  density="compact" @click="isTableDirty=true"  hide-details />
-              </div>
+              <v-icon
+                  v-show="item.fuzzCaseSetRunId != ''"
+                  style="cursor:pointer"
+                  icon = "mdi-eye"
+                  color="cyan"
+                  v-tooltip="'view fuzz result'"
+                  @click="(onRowClick(item), selectedRow= item.fuzzCaseSetId)"
+                >
+                </v-icon>
             </td>
 
+            
 
             <td>
               <div class="btn-group" style="cursor: pointer">
@@ -172,6 +232,12 @@
                   </v-icon>
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li><button class="dropdown-item" type="button" 
+                    @click="(
+                      showFuzzCaseSetInSideBar(item)
+                    )"
+                    >View Full</button></li>
+
+                    <li><button class="dropdown-item" type="button" 
                     :disabled="(isFuzzingInProgress())"
                     @click="(
                       showReqMsgEditDialog = true,
@@ -180,6 +246,7 @@
                       currentEditFuzzCaseSetId = item.fuzzCaseSetId
                     )"
                     >Edit</button></li>
+
                     <li><button class="dropdown-item" type="button"
                     :hidden="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
                     @click="(
@@ -192,37 +259,42 @@
 
             <td>{{ item.verb }}</td>
             
+
+            <!-- v-tooltip.bottom="formatLongValueForTooltip(item.path + item.querystringNonTemplate)" -->
             <td>
-              <span style="cursor: pointer"
-                v-tooltip.bottom="formatLongValueForTooltip(item.path + item.querystringNonTemplate)"
-                @click="(
-                onTableValueNonJsonSeeInFullClicked(item.path + item.querystringNonTemplate),
-                showFullValueSideBar = true
-              )">
+              <span>
+                <v-tooltip
+                :text="(item.path + item.querystringNonTemplate)"
+                activator="parent"
+                max-width="500"
+                max-height="500" />
                 {{ shortenValueInTable(item.path + item.querystringNonTemplate) }}
               </span>
             </td>
             
             <td>
-              <span style="cursor: pointer"
-               v-tooltip.bottom="formatLongValueForTooltip(item.headerNonTemplate)"
-                @click="(
-                onTableValueSeeInFullClicked(item.headerNonTemplate),
-                showFullValueSideBar = true
-              )">
-                {{ shortenValueInTable(item.headerNonTemplate, 40) }} 
+              <span>
+                <v-tooltip
+                :text="(item.headerNonTemplate)"
+                activator="parent"
+                max-width="500"
+                max-height="500" />
+                {{ shortenValueInTable(item.headerNonTemplate, 20) }} 
               </span>
             </td>
+
             <td>
-              <span style="cursor: pointer" 
-                v-tooltip.bottom="formatLongValueForTooltip(item.bodyNonTemplate)"
-                @click="(
-                onTableValueSeeInFullClicked(item.bodyNonTemplate),
-                showFullValueSideBar = true
-              )"> 
-              {{ shortenValueInTable(item.bodyNonTemplate, 40) }} 
+              <span >
+                <v-tooltip
+                :text="(item.bodyNonTemplate)"
+                activator="parent"
+                max-width="500"
+                max-height="500"
+                />
+              {{ shortenValueInTable(item.bodyNonTemplate, 20) }} 
               </span>
             </td>
+
             <td>
               {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
             </td>
@@ -320,7 +392,11 @@ class Props {
 
   isTableDirty = false;
 
-  tableValViewInSizeBar = '';
+ fuzzcasesetViewInSideBar = {
+                        url: '',
+                        header: '',
+                        body: ''
+                      };
 
   fuzzerConnected = false;
 
@@ -354,12 +430,13 @@ class Props {
   }
 
   onTableValueSeeInFullClicked(jsonValue) {
-    try {
-      // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
-      this.tableValViewInSizeBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
-    } catch (error) {
-        this.tableValViewInSizeBar = jsonValue;
-    }
+    return;
+    // try {
+    //   // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
+    //   this.fuzzcasesetViewInSideBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
+    // } catch (error) {
+    //     this.fuzzcasesetViewInSideBar = jsonValue;
+    // }
   }
 
   formatLongValueForTooltip(value) {
@@ -372,7 +449,7 @@ class Props {
   }
 
   onTableValueNonJsonSeeInFullClicked(val) {
-    this.tableValViewInSizeBar = val
+    this.fuzzcasesetViewInSideBar = val
   }
 
   refreshHostnameDisplay() {
@@ -667,6 +744,15 @@ class Props {
     this.requestMsgHasError = false;
   }
 
+  showFuzzCaseSetInSideBar(item: ApiFuzzCaseSetsWithRunSummaries) {
+    this.fuzzcasesetViewInSideBar = {
+                        url: item.hostname + item.path + item.querystringNonTemplate,
+                        header: Utils.jsonPrettify(item.headerNonTemplate),
+                        body: Utils.jsonPrettify(item.bodyNonTemplate)
+                      },
+    this.showFullValueSideBar = true
+  }
+
   async onDialogClose() {
     if (this.rqInEditOriginal != this.rqInEdit) {
       this.isTableDirty = true;
@@ -724,6 +810,10 @@ class Props {
  
  <!-- Add "scoped" attribute to limit CSS to this component only -->
  <style scoped>
+
+.v-tooltip__content.menuable__content__active {
+  opacity: 1!important;
+}
 
 .custom-highlight-row{
    background-color: pink

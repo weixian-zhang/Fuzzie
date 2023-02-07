@@ -9,41 +9,53 @@ PUT https://httpbin.org/post
 x-ms-blob-type: BlockBlob
 
 {{
-"string,username,password,filename,datetime
+'
+
+string,username,password,filename,datetime
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
 {{string}},{{username}},{{password}},{{filename}},{{datetime}}
-{{string}},{{username}},{{password}},{{filename}},{{datetime}}"
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+
+'
 | myfile("batchfile.log")
 }}
     
     `,
 
     'file-upload-myfile-json': `
+// this is a custom file content
+// supports with multi breakline
+
 POST https://httpbin.org/post
     
 {{
-"
-this is a custom file content
-supports with multi breakline
+'
 
 {
     \\"name\\": \\"{{ string }}\\",
     \\"age\\": \\"{{ digit }}\\"
 }
 
-" | myfile("filename.txt")
+' | myfile("filename.txt")
 }}
         `,
     
     'file-upload-myfile-wordlisttypes': `
+    
+// custom file content supports primitive wordlists
+
 POST https://httpbin.org/post
     
 {{
-"
+
+'
+
 {{ string }}
+{{ sqlinject }}
+{{ xss }}
 {{ bool }}
 {{ digit }}
 {{ integer }}
@@ -55,7 +67,9 @@ POST https://httpbin.org/post
 {{ username }}
 {{ password }}
 
-" | myfile("filename.txt")
+'
+
+| myfile("filename.txt")
 }}
             `,
     }
@@ -143,7 +157,7 @@ POST https://httpbin.org/post HTTP/1.1
 'post-image': `
 POST https://httpbin.org/post HTTP/1.1
 
-{{ image('option-file-name.log') }}
+{{ image('option-file-name.png') }}
 `,
 
 'post-xml':`

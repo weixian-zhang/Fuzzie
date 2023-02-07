@@ -24,12 +24,18 @@
       "bootstrap",
       "nodes"
     ],
+    "typeRoots": [
+      "./global.types.d.ts"
+    ],
     "paths": {
       "@/*": [
-        "src/*"
+        "src/*",
+        "./*"
       ]
     },
     "lib": [
+      "es6",
+      "es2016",
       "esnext",
       "dom",
       "dom.iterable",
@@ -43,7 +49,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx"
-  ],
+, "../../global.d.ts"  ],
   "exclude": [
     "node_modules"
   ]

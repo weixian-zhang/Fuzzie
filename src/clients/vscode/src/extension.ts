@@ -5,7 +5,7 @@ import * as cp from "child_process";
 import {AppContext} from './AppContext';
 import * as path from 'path';
 import { VuejsPanel } from './VuejsPanel';
-import {VSCEventLogger, FuzzerEventLogger} from './Logger';
+import {VSCExtensionHostLogger, VSCWebViewLogger} from './Logger';
 import StateManager from './StateManager';
 import axios from "axios";
 import { FuzzerStatus } from './Model';
@@ -21,8 +21,8 @@ enum FuzzerStartState {
 
 var appcontext : AppContext;
 
-var vscEventLogger = new VSCEventLogger();
-var fuzzerEventLogger = new VSCEventLogger();
+var _vscEHLogger = new VSCExtensionHostLogger();
+var _webviewLogger = new VSCWebViewLogger();
 
 var stateManager:  StateManager;
 
@@ -38,38 +38,40 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand(
 			'fuzzie.openwebview', () => 
 				{
-					VuejsPanel.createOrShow(context, fuzzerEventLogger, context.extensionUri.path);
+					VuejsPanel.createOrShow(context,_vscEHLogger, _webviewLogger, context.extensionUri.path);
 				}
 		)
 	);
 
-	context.subscriptions.push(   
-		vscode.commands.registerCommand(
-			'fuzzie.fuzzer.reset', () => 
-				{
-					hardResetFuzzerIfExists();
-				}
-		)
-	);
+
+
+	// context.subscriptions.push(   
+	// 	vscode.commands.registerCommand(
+	// 		'fuzzie.fuzzer.reset', () => 
+	// 			{
+	// 				hardResetFuzzerIfExists();
+	// 			}
+	// 	)
+	// );
 	
 
 	stateManager = new StateManager(context);
 	
-	vscEventLogger.log('Fuzzie is initializing');
+	_vscEHLogger.log('Fuzzie is initializing');
 
 	appcontext = new AppContext();
 
 	initFuzzerPYZPath(context);
 
-	vscEventLogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+	_vscEHLogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
-	vscEventLogger.log('checking if fuzzer running');
+	_vscEHLogger.log('checking if fuzzer running');
 
 	setInterval(monitorFuzzerReadiness, 2000);
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {
-	vscEventLogger.log('Fuzzie webview is deactivated and fuzzer engine is shut down');
+	_vscEHLogger.log('Fuzzie webview is deactivated and fuzzer engine is shut down');
 }
 
 async function monitorFuzzerReadiness() {
@@ -104,7 +106,7 @@ async function monitorFuzzerReadiness() {
 			fuzzerStartState = FuzzerStartState.Starting;
 			startFuzzer();
 
-			vscEventLogger.log('fuzzer is either not started yet or was shut down, starting fuzzer now. \n This may take a while if you are using Fuzzie the first time.');
+			_vscEHLogger.log('fuzzer is either not started yet or was shut down, starting fuzzer now. \n This may take a while if you are using Fuzzie the first time.');
 		}
 		
 		return;
@@ -124,7 +126,7 @@ async function startFuzzer() {
 
 			if(_pythonProcess == undefined)
 			{
-				vscEventLogger.log('spawning fuzzer child process', 'VSC');
+				_vscEHLogger.log('spawning fuzzer child process', 'VSC');
 
 				_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPYZFilePath, "webserver", "start"], spawnOptions);
 
@@ -132,22 +134,22 @@ async function startFuzzer() {
 
 				stateManager.set('python-process-id', pid.toString());
 
-				vscEventLogger.log(`fuzzer child process spawned with process id ${pid}`, 'VSC');
+				_vscEHLogger.log(`fuzzer child process spawned with process id ${pid}`, 'VSC');
 
-				vscEventLogger.log(`Fuzzer process spawned with process id ${pid.toString()}`);
+				_vscEHLogger.log(`Fuzzer process spawned with process id ${pid.toString()}`);
 			}
 				
 			if(_pythonProcess != undefined) {
 
 				process.on('SIGTERM', function () {
-					vscEventLogger.log('SIGTERM');
+					_vscEHLogger.log('SIGTERM');
 				  });
 
 				_pythonProcess.stderr?.on('data', (data: Uint8Array) => {
-					vscEventLogger.log(`${data}`, 'Fuzzer');
+					_vscEHLogger.log(`${data}`, 'Fuzzer');
 				});
 				_pythonProcess.stdout?.on('data', (data: Uint8Array) => {
-					vscEventLogger.log(`${data}`, 'Fuzzer');
+					_vscEHLogger.log(`${data}`, 'Fuzzer');
 				});
 				_pythonProcess.on('SIGINT', onFuzzerExit);
 				_pythonProcess.on('close', onFuzzerExit);
@@ -155,14 +157,14 @@ async function startFuzzer() {
 		} catch (error) {
 			
 			//TODO: logging
-			vscEventLogger.log(`error when starting fuzzer ${error}`);
+			_vscEHLogger.log(`error when starting fuzzer ${error}`);
 			return;
 		}
 	
 }
 
 async function onFuzzerExit() {
-	vscEventLogger.log('fuzzer process shutting down', 'VSC');
+	_vscEHLogger.log('fuzzer process shutting down', 'VSC');
 	stateManager.set('fuzzer.processid', undefined);
 }
 
@@ -175,14 +177,14 @@ async function killFuzzerProcess() {
 
 	const pid = stateManager.get('fuzzer.processid');
 	
-	vscEventLogger.log(`killing fuzzer process id ${pid}`, 'VSC')
+	_vscEHLogger.log(`killing fuzzer process id ${pid}`, 'VSC')
 
 	if(pid != undefined) {
-		vscEventLogger.log(`taskkill fuzzer process id ${pid}`, 'VSC')
+		_vscEHLogger.log(`taskkill fuzzer process id ${pid}`, 'VSC')
 
 		cp.spawn("taskkill", ["/pid", pid.toString(), '/f', '/t']);		 //on Windows
 
-		vscEventLogger.log(`process.kill fuzzer process id ${pid}`, 'VSC')
+		_vscEHLogger.log(`process.kill fuzzer process id ${pid}`, 'VSC')
 
 		process.kill(+pid);  		// on linux platform
 												

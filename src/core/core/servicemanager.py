@@ -298,6 +298,7 @@ class ServiceManager:
                 fcsSum.isGraphQL = rowDict['isGraphQL']
                 fcsSum.graphQLVariableNonTemplate = rowDict['graphQLVariableNonTemplate']
                 fcsSum.graphQLVariableDataTemplate = rowDict['graphQLVariableDataTemplate']
+                fcsSum.totalDataCaseRunsToComplete = rowDict['fuzzcaseToExec']
                 
                 if 'fuzzCaseSetRunId' in rowDict:
                     fcsSum.fuzzCaseSetRunId = rowDict['fuzzCaseSetRunId']

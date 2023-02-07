@@ -130,14 +130,14 @@ class CorporaContext:
             self.context[''] = self.cp.stringCorpora
             return originalExpression
         
-        # "my"
+        # "mutate"
         if wordlist_type == WordlistType.mutate:
             
-            hashedVal = Utils.sha256(mutate_value)
+            mutateKey = self.get_context_key_for_mutate(mutate_value)
             
             userSuppliedOrStringCorpora = self.build_MY_expression(mutate_value)
                 
-            self.context[hashedVal] = userSuppliedOrStringCorpora
+            self.context[mutateKey] = userSuppliedOrStringCorpora
             
             return
         
@@ -235,13 +235,8 @@ class CorporaContext:
             
             data = ''
             
-            # if wordlist_type is not found in Context
-            if not self.is_wordlistType_in_context(wordlist_type):
-                self.eventstore.emitErr(Exception('Cannot find wordlist_type in CoorporaContext, could be not "registered" during "build-data-context"'), 'corpora_context.resolve_data_by_eval_func')
-                return self.cp.stringCorpora.next_corpora()
-            
             if wordlist_type == WordlistType.mutate:
-                corporaContextKey = Utils.sha256(mutate_value)
+                corporaContextKey = self.get_context_key_for_mutate(mutate_value)
                 provider: StringMutateCorpora = self.context[corporaContextKey]
             
             elif wordlist_type == WordlistType.myfile:
@@ -258,6 +253,11 @@ class CorporaContext:
                 data = sc.next_sqli_corpora()
                 return data
             else:
+                # if wordlist_type is not found in Context
+                if not self.is_wordlistType_in_context(wordlist_type):
+                    self.eventstore.emitErr(Exception('Cannot find wordlist_type in CoorporaContext, could be not "registered" during "build-data-context"'), 'corpora_context.resolve_data_by_eval_func')
+                    return self.cp.stringCorpora.next_corpora()
+            
                 provider = self.context[wordlist_type] 
             
             if provider != None:
@@ -321,5 +321,8 @@ class CorporaContext:
         if wordlist in self.context:
             return True
         return False
+    
+    def get_context_key_for_mutate(self, mutate_value):
+       return f'{WordlistType.mutate}_{Utils.sha256(mutate_value)}' 
        
         

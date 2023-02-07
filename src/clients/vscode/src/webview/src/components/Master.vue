@@ -70,6 +70,7 @@
     },
   })
 
+
   export default class Master extends Vue {
 
     eventemitter = new EventEmitter();
@@ -78,6 +79,7 @@
     toast = useToast();
     fuzzerConnected = false;
     $logger;
+    isFuzzInProgress = false;
 
 
     public beforeMount() {
@@ -100,7 +102,7 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 2000);
+      setInterval(this.checkFuzzerReady, 1500);
     }
 
     
@@ -117,9 +119,13 @@
          }
 
         if(status.webapiFuzzerInfo.isFuzzing) {
+          this.isFuzzInProgress = true;
           this.eventemitter.emit('fuzz.start', status.webapiFuzzerInfo);
         }
-        else {
+        //fuzzing status from server says fuzzing stopped, while local tracking variable is true.
+        // this means fuzzing just stopped
+        else if (status.webapiFuzzerInfo.isFuzzing == false && this.isFuzzInProgress == true) {
+            this.isFuzzInProgress = false;
             this.eventemitter.emit('fuzz.stop');
         }
 
@@ -154,22 +160,6 @@
         this.eventemitter.emit('fuzzer.ready')
     }
 
-    // data schema: {'fuzzCaseSetRunId': '', 'fuzzcontextId': ''}
-    // private onFuzzStart(data) {
-    //   this.$logger.info('fuzzing started');
-    //   this.eventemitter.emit('fuzz.start', data);
-    // }
-
-    // private onFuzzComplete(data) {
-    //   this.$logger.info('fuzzing is completed');
-    //   this.eventemitter.emit('fuzz.complete')
-    // }
-
-    // private onFuzzCancel(data) {
-    //   this.$logger.info('fuzzing is cancelled');
-    //   this.eventemitter.emit('fuzz.cancel')
-    // }
-
     private onUpdateCaseSetRunSummary(data) {
       this.eventemitter.emit('fuzz.update.casesetrunsummary', data)
     }
@@ -178,7 +168,7 @@
       this.eventemitter.emit('fuzz.update.fuzzdatacase', data)
     }
     
-    toastInfo (msg: string, title = '', duration=4000)  {
+    toastInfo (msg: string, title = '', duration=2000)  {
         this.$toast.add({severity:'info', summary: title, detail: msg, life: duration});
     }
 
@@ -186,7 +176,7 @@
         this.$toast.add({severity:'error', summary: title, detail: msg, life: duration});
     }
 
-    toastSuccess (msg: string, title = '', duration=4000) {
+    toastSuccess (msg: string, title = '', duration=1000) {
         this.$toast.add({severity:'success', summary: title, detail: msg, life: duration});
     }
   }

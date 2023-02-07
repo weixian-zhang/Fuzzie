@@ -2,23 +2,38 @@
 from eventstore import EventStore
 from corporafactory.corpora_provider import CorporaProvider
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait
 from pubsub import pub
-import eventstore
+import datetime
 
 es = EventStore()
 corporaProvider = CorporaProvider()
 
 def load_corpora_background_done(future):
+    
+    print(f'data loading completed at {datetime.datetime.now()}')
+    
     pub.sendMessage(es.CorporaEventTopic, command='corpora_loaded', msgData='')
+    
     es.emitInfo('data loading complete')
 
 # load data background on another thread
 def load_corpora_background():
     
-    es.emitInfo('loading data')
-        
-    executor = ThreadPoolExecutor()
+    corporaProvider.vacuumSqlite()
     
-    future = executor.submit(corporaProvider.load_all)
-                    
-    future.add_done_callback(load_corpora_background_done)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        
+        executor.submit(corporaProvider.load_password_corpora) 
+        
+        executor.submit(corporaProvider.load_files_corpora)
+        
+        executor.submit(corporaProvider.load_username_corpora)
+        
+        executor.submit(corporaProvider.load_string_corpora)
+        
+        executor.submit(corporaProvider.load_all)
+    
+    es.emitInfo('data loading complete')
+    
+    pub.sendMessage(es.CorporaEventTopic, command='corpora_loaded', msgData='')
