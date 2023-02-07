@@ -42,7 +42,7 @@
 		
 		//shiv bundle and copy fuzzie-fuzzer.pyz tasks
 		{
-			"label": "package fuzzie-fuzzer.pyz",
+			"label": "package fuzzer.pyz",
 			"type": "shell",
 			"command": "copy fuzzie-fuzzer.pyz ${workspaceFolder}/src/clients/vscode/dist/fuzzer/fuzzie-fuzzer.pyz",
 			"options": {
@@ -53,7 +53,7 @@
 		{
 			"label": "python shiv fuzzer",
 			"type": "shell",
-			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core --compressed  -e core.main:startup --root . .",
+			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core --compressed --compile-pyc  -e core.main:startup --root . .",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core"
 			},
