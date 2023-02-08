@@ -39,7 +39,6 @@ from multiprocessing import Lock
 from enum import Enum 
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
-from requests_toolbelt.multipart.encoder import MultipartEncoder
 import requests.utils 
 
 class FuzzingStatus(Enum):

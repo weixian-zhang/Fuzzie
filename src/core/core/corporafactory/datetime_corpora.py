@@ -1,7 +1,5 @@
-from dateutil import parser
 import time as tTime
 from datetime import date, time, datetime
-from dateutil import parser
 import datetime
 from corpora_mutator import CorporaMutator
 import random

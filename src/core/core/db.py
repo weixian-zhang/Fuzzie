@@ -18,8 +18,8 @@ from utils import Utils
 from eventstore import EventStore
 
 eventstore = EventStore()
-dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory/data/fuzzie.sqlite')
-connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL&auto_vacuum=1'
+dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory\\data\\fuzzie.sqlite')
+connStr = f'sqlite:///{dbPath}?check_same_thread=False&_journal_mode=WAL'
 engine = create_engine(connStr)
 
 session_factory = sessionmaker(bind=engine)

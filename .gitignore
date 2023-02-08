@@ -9,6 +9,8 @@ lerna-debug.log*
 core/build/*
 Fuzzie.egg-info
 
+.venv/
+
 core/__pycache__
 *.py[cod]
 

@@ -10,7 +10,6 @@ Usage:
 # https://github.com/graphql-python/graphql-ws/blob/master/examples/flask_gevent/app.py
 
 from multiprocessing import Event
-from time import sleep
 from docopt import docopt
 
 from eventstore import EventStore
@@ -21,9 +20,7 @@ from starlette_graphql import schema
 import asyncio
 import uvicorn
 from uvicorn.main import Server
-import asyncio
 from utils import Utils
-from pubsub import pub
 from threading import Thread
 from starlette.middleware.cors import CORSMiddleware 
 from starlette.applications import Starlette
@@ -95,7 +92,7 @@ webserverPort = 50001
 # runs when program exits
 import atexit
 def on_exit():
-    asyncio.run(eventstore.emitInfo("fuzzer shutting down"))
+    eventstore.emitInfo("fuzzer shutting down")
 atexit.register(on_exit)
 
 
@@ -116,7 +113,7 @@ def is_port_in_use(port):
         
 
 #main entry point and startup
-def start_webserver():
+def start():
     
     try:
         args = docopt(__doc__)
@@ -132,24 +129,24 @@ def start_webserver():
                         # ssl_certfile=".\certs\localhost+2.pem"
                         )
             
-            asyncio.run(eventstore.emitInfo("GraphQL server shutting down"))
+            eventstore.emitInfo("GraphQL server shutting down")
         else:
-            asyncio.run(eventstore.emitInfo('fuzzer started'))
+            eventstore.emitInfo('fuzzer started')
             
     except Exception as e:
-        asyncio.run(eventstore.emitErr(e))
+        eventstore.emitErr(e)
     
     
 
     
-if __name__ == "__main__" or __name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
+if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
         # check if there is existing fuzzer process already running
         if not is_port_in_use(webserverPort):
             
             load_corpora_background()
             
-            start_webserver()
+            start()
         else:
             asyncio.run(eventstore.emitInfo('detected new fuzzer process while existing is running, shutting down new fuzzer'))
         

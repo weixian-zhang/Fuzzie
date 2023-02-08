@@ -3,7 +3,6 @@ from datetime import datetime
 from pubsub import pub
 from servicemanager import ServiceManager
 from eventstore import EventStore
-from rx import Observable
 from graphql_models import ( ApiFuzzCaseSetUpdate, 
                             FuzzContextRunQueryResult, 
                             FuzzRequestResponseQueryResult, 
