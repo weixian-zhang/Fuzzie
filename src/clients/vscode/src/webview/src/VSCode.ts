@@ -13,8 +13,6 @@ export default class VSCode
     {
         try {
 
-            console.log(`this.vscode: ${this.vscode}`);
-
             if(this.vscode == undefined) {
                 return;
             }

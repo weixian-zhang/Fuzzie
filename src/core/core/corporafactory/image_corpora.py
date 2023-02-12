@@ -15,7 +15,6 @@ from eventstore import EventStore
 import os
 import random
 import io
-from PIL import Image
 from seclist_payload_corpora import SeclistPayloadCorpora
 
 class ImageCorpora:

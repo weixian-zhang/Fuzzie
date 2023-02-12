@@ -350,7 +350,7 @@ import { FuzzDataCase, FuzzRequestFileUpload_ViewModel, FuzzRequest, FuzzRequest
 import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
-import VSCode from  '../services/VSCode';
+import VSCode from  '../VSCode';
 
 class Props {
   toastInfo: any = {};

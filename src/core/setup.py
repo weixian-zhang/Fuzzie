@@ -1,5 +1,3 @@
-
-
 from setuptools import setup, find_packages
 
 import os
@@ -41,14 +39,11 @@ setup(
            "dist",
            ".git",
            ".gitignore",
-           "Fuzzie.egg-info"
+           "Fuzzie.egg-info",
+           "__pycache__"
            ]
        
     ),  #same as name
    install_requires=required_modules #required  #external packages as dependencies
    
 )
-
-
-
-    

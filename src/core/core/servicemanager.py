@@ -1,8 +1,8 @@
 # act as a Application Layer to coordinate other operations like FuzzContextCreator, Sqlalchemy CRUDs
 
-from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
-from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
-from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
+# from api_discovery.openapi3_discoverer import OpenApi3ApiDiscover
+# from api_discovery.openapi3_fuzzcontext_creator import OpenApi3FuzzContextCreator
+# from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
 from models.webapi_fuzzcontext import FuzzMode, ApiFuzzContext, FuzzCaseSetFile
 from graphql_models import (ApiFuzzContext_Runs_ViewModel, 
                             ApiFuzzContextUpdate, 
@@ -115,40 +115,41 @@ class ServiceManager:
             
             if apiDiscoveryMethod == 'openapi3':
                 
-                if openapi3Content == '':
-                    return False, 'OpenApi3 spec content is empty'
+                pass
+                # if openapi3Content == '':
+                #     return False, 'OpenApi3 spec content is empty'
                 
-                openapi3Dis = OpenApi3ApiDiscover()
+                # openapi3Dis = OpenApi3ApiDiscover()
                 
-                openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
+                # openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
                 
-                isApiDisOK, error, apicontext = openapi3Dis.create_apicontext(openapi3Str)
+                # isApiDisOK, error, apicontext = openapi3Dis.create_apicontext(openapi3Str)
                 
-                if not isApiDisOK:
-                    return False, error
+                # if not isApiDisOK:
+                #     return False, error
                 
-                fcc = OpenApi3FuzzContextCreator()
+                # fcc = OpenApi3FuzzContextCreator()
                 
-                fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
-                                                    apicontext=apicontext,
-                                                    name=name,
-                                                    hostname=hostname,
-                                                    port=port,
-                                                    requestTextContent = requestTextContent,
-                                                    requestTextFilePath = requestTextFilePath,
-                                                    openapi3FilePath = openapi3FilePath,
-                                                    openapi3Url = openapi3Url,
-                                                    openapi3Content = openapi3Content,
-                                                    fuzzcaseToExec=fuzzcaseToExec,
-                                                    authnType=authnType,
-                                                    basicUsername=basicUsername,
-                                                    basicPassword=basicPassword,
-                                                    bearerTokenHeader=bearerTokenHeader,
-                                                    bearerToken=bearerToken,
-                                                    apikeyHeader=apikeyHeader,
-                                                    apikey=apikey)
+                # fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
+                #                                     apicontext=apicontext,
+                #                                     name=name,
+                #                                     hostname=hostname,
+                #                                     port=port,
+                #                                     requestTextContent = requestTextContent,
+                #                                     requestTextFilePath = requestTextFilePath,
+                #                                     openapi3FilePath = openapi3FilePath,
+                #                                     openapi3Url = openapi3Url,
+                #                                     openapi3Content = openapi3Content,
+                #                                     fuzzcaseToExec=fuzzcaseToExec,
+                #                                     authnType=authnType,
+                #                                     basicUsername=basicUsername,
+                #                                     basicPassword=basicPassword,
+                #                                     bearerTokenHeader=bearerTokenHeader,
+                #                                     bearerToken=bearerToken,
+                #                                     apikeyHeader=apikeyHeader,
+                #                                     apikey=apikey)
                 
-                insert_db_fuzzcontext(fuzzcontext)
+                # insert_db_fuzzcontext(fuzzcontext)
                 
             elif apiDiscoveryMethod == 'request_message':
                 

@@ -34,7 +34,7 @@
 		{
 			"label": "run fuzzie-fuzzer.pyz",
 			"type": "shell",
-			"command": "python fuzzie-fuzzer.pyz",
+			"command": "python fuzzie-fuzzer.pyz webserver  start",
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/dist"
 			}
@@ -50,10 +50,10 @@
 			},
 			"dependsOn": ["python shiv fuzzer"]
 		},
-		{
+		{  // --python ${command:python.interpreterPath} ${workspaceFolder}\\.venv\\Lib\\site-packages
 			"label": "python shiv fuzzer",
 			"type": "shell",
-			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --site-packages core --compressed --compile-pyc  -e core.main:startup --root . .",
+			"command": "shiv -o ./dist/fuzzie-fuzzer.pyz --compile --site-packages core -e main.start  --root . .", //-e core.main:startup last dot(.) means setup.py location
 			"options": {
 				"cwd": "${workspaceFolder}/src/core"
 			},
@@ -67,7 +67,8 @@
 		{
 			"label": "dependency- pip freeze",
 			"type": "shell",
-			"command": " py -3.10 -m pip freeze > requirements.txt",
+			"command": "${command:python.interpreterPath}",
+			"args": ["-m", "pip", "freeze", ">", "requirements.txt"],
 			"options": {
 				"cwd": "${workspaceFolder}/src/core/core"
 			}
@@ -142,6 +143,14 @@
 			}
 		},
 		{
+			"label": "npm build extension host",
+			"type": "shell",
+			"command": "npm run compile",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/"
+			}
+		},
+		{
 			"label": "sqlite clear fuzzer tables",
 			"type": "shell",
 			"command": "sqlite3 ${workspaceFolder}\\src\\core\\core\\corporafactory\\data\\fuzzie.sqlite  ${workspaceFolder}\\src\\core\\seclist-prep\\clear_fuzzer_tables.sql",
@@ -165,7 +174,8 @@
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			},
 			"dependsOn":[
-				"package fuzzie-fuzzer.pyz",
+				"npm build extension host",
+				// "package fuzzer.pyz",
 				"package webview dist"
 			]
 		}

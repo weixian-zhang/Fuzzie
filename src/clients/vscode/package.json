@@ -1,5 +1,5 @@
 {
-  "name": "wxz-fuzzie",
+  "name": "fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie",
   "publisher": "WeixianZhang",
@@ -7,7 +7,7 @@
   "repository": "https://github.com/weixian-zhang/Fuzzie",
   "license": "MIT",
   "icon": "dist/fuzzie-vscode-logo.png",
-  "version": "0.0.1",
+  "version": "1.0.0-alpha",
   "engines": {
     "vscode": "^1.68.0"
   },
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^16.18.10",
+    "@types/node": "^16.18.12",
     "@types/vscode": "^1.68.0",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
@@ -59,13 +59,20 @@
     "@types/applicationinsights": "^0.20.0",
     "@types/axios": "^0.14.0",
     "@types/bootstrap": "^5.2.6",
+    "@types/decompress": "^4.2.4",
+    "@types/jszip": "^3.4.1",
     "@types/set-interval-async": "^1.0.0",
+    "@types/unzip": "^0.1.1",
     "@types/ws": "^8.5.3",
     "applicationinsights": "^2.4.1",
     "axios": "^1.2.1",
+    "decompress": "^4.2.1",
     "https": "^1.0.0",
+    "jszip": "^3.10.1",
     "node-fetch": "^3.3.0",
     "set-interval-async": "^3.0.3",
+    "unzip": "^0.1.11",
+    "unzip-stream": "^0.3.1",
     "ws": "^8.10.0"
   }
 }

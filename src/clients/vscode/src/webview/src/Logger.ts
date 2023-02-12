@@ -1,9 +1,8 @@
 //https://github.com/winstonjs/winston/issues/287
 
 import Utils from "./Utils";
-import VSCode from "./services/VSCode";
+import VSCode from "./VSCode";
 import { ApplicationInsights } from '@microsoft/applicationinsights-web'
-
 
 export default class Logger {
 
