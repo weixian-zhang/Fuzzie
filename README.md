@@ -1,4 +1,4 @@
-## Fuzzie (coming soon)  
+## Fuzzie 
 
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
