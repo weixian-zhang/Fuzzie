@@ -67,6 +67,10 @@ The following are built-in wordlist-types, more will be added in future
 Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
 "Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  
 
+* GraphQL request message has to include a special header: X-REQUEST-TYPE: GraphQL
+* comments: // or #
+* \#\#\# use for dividing request messages
+
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
 
 ##### GET
@@ -120,7 +124,7 @@ POST https://httpbin.org/post HTTP/1.1
 {{ file('option-file-name.log') }}
 ```
 
-POST your custom content for example a CSV file
+POST <b>your custom file content</b> for example a CSV file
 
 ```
 POST https://httpbin.org/post
@@ -140,7 +144,60 @@ string,username,password,filename,datetime
 '
 | myfile("batchfile.log")
 }}
+```  
+
+##### POST XML
+
 ```
+POST https://httpbin.org/post
+Content-Type: application/xml
+
+{
+<note>
+    <to>{{ username }}</to>
+    <from>{{ username }}</from>
+    <heading>{{ 'Reminder' | mutate }}</heading>
+    <body>{{ 'Don't forget me this weekend!' | mutate }}</body>
+</note>
+}
+```
+
+##### POST JSON  
+
+```
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{
+    "name": "john doe",
+    "info": {{ 'this custom input will be mutated by fuzzie' | mutate }}
+}
+```  
+
+##### GraphQL  
+
+```
+POST https://spacex-production.up.railway.app/
+X-REQUEST-TYPE: GraphQL
+
+{
+    launchesPast(limit: 10) {
+      mission_name
+      launch_date_local
+      launch_site {
+        site_name_long
+      }
+      links {
+        article_link
+        video_link
+      }
+      rocket {
+        rocket_name
+      }
+    }
+  }
+```
+
 
 
 
