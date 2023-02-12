@@ -61,7 +61,9 @@ The following are built-in wordlist-types, more will be added in future
 | {{ password }} | yes | hacked password from danielmiessler seclist |
 | {{ filename }} | yes | random file name and extensions |  
 
-![Alt text]([https://github.com/weixian-zhang/Fuzzie/blob/main/doc/how%20to%20launch%20fuzzie.png](https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png))
+#### HTTP Request Message Syntax
+
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />
 
 
 
