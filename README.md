@@ -9,8 +9,9 @@ The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings ab
 
 ### Prerequisites    
 
-* Fuzzie requires Python 3.10 and above
-* Fuzzie 
+* requires Python 3.10 and above
+* uses port 50001  
+  fuzzer engine listens on http://localhost:50001 serving requests from webview
 
 ### Launching Fuzzie  
 
@@ -61,9 +62,85 @@ The following are built-in wordlist-types, more will be added in future
 | {{ password }} | yes | hacked password from danielmiessler seclist |
 | {{ filename }} | yes | random file name and extensions |  
 
-#### HTTP Request Message Syntax
+#### HTTP Request Message Syntax  
 
-<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />
+Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
+"Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  
+
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
+
+##### GET
+
+```
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+
+```
+
+##### GET with headers  
+```
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+```
+
+##### Upload files  
+
+POST image
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ image('option-file-name.png') }}
+```
+
+POST PDF
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ pdf('option-file-name.pdf') }}
+```  
+
+POST [naughty payloads](https://github.com/danielmiessler/SecLists/tree/master/Payloads)
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ file('option-file-name.log') }}
+```
+
+POST your custom content for example a CSV file
+
+```
+POST https://httpbin.org/post
+x-ms-blob-type: BlockBlob
+
+{{
+'
+
+string,username,password,filename,datetime
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+
+'
+| myfile("batchfile.log")
+}}
+```
 
 
 
