@@ -9,6 +9,15 @@ The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brin
 
 <br />
 
+### Prerequisites    
+
+Fuzzie requires Python 3.10 and above
+
+### Launching Fuzzie  
+
+Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"
+
+
 ### How Fuzzie Works  
 
 Fuzzie VSCode extension comes with a webview, everything from API and GraphQL discovery to fuzzing and analyzing test result can be done in webview.  
