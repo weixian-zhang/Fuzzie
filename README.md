@@ -15,7 +15,7 @@ The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings ab
 ### Launching Fuzzie  
 
 Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"  
-![Alt text](https://github.com/weixian-zhang/Fuzzie/blob/main/doc/how%20to%20launch%20fuzzie.png)
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/how%20to%20launch%20fuzzie.png" />
 
 
 ### Using Fuzzie 
@@ -34,7 +34,7 @@ Each test case contains HTTP verb, domain name, port, path, querystring, headers
 #### How to write HTTP Request Messages  
 
 Your REST and GraphQL endpoint schemas/contracts are described by writing Request Messages.  
-The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text)
+The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 Within a request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
 By replacing wordlist {{ wordlist type }} with parameter, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.
 example:  
