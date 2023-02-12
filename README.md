@@ -1,4 +1,4 @@
-## What is Fuzzie 
+## Fuzzie 
 
 Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
 The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
@@ -8,6 +8,15 @@ The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brin
 * Fuzzer in IDE allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
 <br />
+
+### Prerequisites    
+
+Fuzzie requires Python 3.10 and above
+
+### Launching Fuzzie  
+
+Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"
+
 
 ### How Fuzzie Works  
 
