@@ -33,23 +33,5 @@
 			},
 			"debugWebviews": true
 		}
-		// {
-		// 	"name": "debug flask openapi3 server",
-		// 	"type": "python",
-		// 	"request": "launch",
-		// 	"module": "flask",
-		// 	"env": {
-		// 		"FLASK_APP": "openapi3_server",
-		// 		"FLASK_ENV": "development"
-		// 	},
-		// 	"args": [
-		// 		"run",
-		// 		"--no-debugger"
-		// 	],
-		// 	"jinja": true,
-		// 	"justMyCode": true,
-		// 	"cwd": "${workspaceFolder}/src/tests/core"
-		// },
-		
 	]
 }

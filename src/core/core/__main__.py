@@ -148,7 +148,7 @@ if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name
             
             start()
         else:
-            asyncio.run(eventstore.emitInfo('detected new fuzzer process while existing is running, shutting down new fuzzer'))
+            eventstore.emitInfo('detected new fuzzer process spawned, shutting down new fuzzer')
         
     except Exception as e:
         asyncio.run(eventstore.emitErr(e))

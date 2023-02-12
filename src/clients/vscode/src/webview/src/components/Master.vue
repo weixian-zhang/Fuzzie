@@ -84,7 +84,6 @@
 
     public beforeMount() {
 
-
       this.$logger = inject('$logger'); 
 
       this.$logger.info('Webview - initializing Master pane and sub-panes');
@@ -114,7 +113,7 @@
             //stop any fuzzing activity
             this.fuzzerConnected = false;
             this.notifyFuzzerIsNotReady();
-            this.toastError('fuzzer is not ready, retrying...', '', 1000);
+            this.toastInfo('fuzzer engine starting up, can take up to 15 secs on first launch', '', 1500);
             return;
          }
 
@@ -130,12 +129,12 @@
         }
 
          if (!status.isDataLoaded) {
-            this.toastInfo('connected to fuzzer, loading fuzz-data, this may take a moment')
+            this.toastInfo('connected to fuzzer at http://localhost:50001, loading data...')
             return;
          } else {
             if(!this.fuzzerConnected) {
               this.notifyFuzzerReady();
-              this.toastSuccess('fuzzer is ready');
+              this.toastSuccess('fuzzer is ready at http://localhost:50001');
               this.fuzzerConnected = true;
             }
          }

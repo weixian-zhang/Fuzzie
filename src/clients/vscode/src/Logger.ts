@@ -20,6 +20,9 @@ export class VSCExtensionHostLogger
     }
 
     public error(err: any) {
+        
+        this._outputWindow.appendLine(`\n${JSON.stringify(new EventLog(err, ''))}`);
+
         if(typeof err === 'string') {
             this.telemetryClient.trackException({exception: new Error(err)});
         }
