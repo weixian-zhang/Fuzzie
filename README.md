@@ -59,7 +59,12 @@ The following are built-in wordlist-types, more will be added in future
 | {{ time }} | yes | time only |
 | {{ username }} | yes | hacked usernames from danielmiessler seclist |
 | {{ password }} | yes | hacked password from danielmiessler seclist |
-| {{ filename }} | yes | random file name and extensions |
+| {{ filename }} | yes | random file name and extensions |  
+
+![Alt text]([https://github.com/weixian-zhang/Fuzzie/blob/main/doc/how%20to%20launch%20fuzzie.png](https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png))
+
+
+
 
 
     
