@@ -17,7 +17,7 @@ The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings ab
 ### Launching Fuzzie  
 
 Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"  
-<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/how%20to%20launch%20fuzzie.png" />
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/how%20to%20launch%20fuzzie.png" />
 
 
 ### Using Fuzzie 
@@ -28,14 +28,14 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 
 <br />  
 
-#### Create a New API Fuzz Context
+#### 1. Create a New API Fuzz Context
 
 A Fuzz Context contains a list of cohesive "fuzz test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
 Each test case contains HTTP verb, domain name, port, path, querystring, headers and body and Fuzzie make HTTP requests against all test cases in a Fuzz Context.  
 
-#### How to write HTTP Request Messages  
+#### 2. Write HTTP Request Messages  
 
-Your REST and GraphQL endpoint schemas/contracts are described by writing Request Messages.  
+Your REST and GraphQL contracts are described by writing Request Messages.  
 The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 Within a request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
 By replacing wordlist {{ wordlist type }} with parameter, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.
@@ -63,7 +63,7 @@ The following are built-in wordlist-types, more will be added in future
 | {{ password }} | yes | hacked password from danielmiessler seclist |
 | {{ filename }} | yes | random file name and extensions |  
 
-#### HTTP Request Message Syntax  
+#### 2.1 HTTP Request Message Syntax  
 
 Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
 "Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  
@@ -198,6 +198,8 @@ X-REQUEST-TYPE: GraphQL
     }
   }
 ```
+
+#### 3. Fuzz Cases
 
 
 
