@@ -1,4 +1,4 @@
-## Fuzzie  
+## Fuzzie
 <img src="https://badgen.net/badge/version/1.0.0-alpha/green" />
 
 Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for fuzz testing REST API and GraphQL.  
@@ -11,7 +11,7 @@ The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings ab
 ### Prerequisites    
 
 * requires Python 3.10 and above
-* uses port 50001  
+* Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
 
 ### Launching Fuzzie  
