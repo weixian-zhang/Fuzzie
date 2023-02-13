@@ -199,7 +199,9 @@ X-REQUEST-TYPE: GraphQL
   }
 ```
 
-#### 3. Fuzz Cases
+#### 3. Fuzz Case & Fuzz Result Panels  
+
+
 
 
 
