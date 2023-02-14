@@ -1,15 +1,26 @@
-## Fuzzie (coming soon)  
+## Fuzzie
+<img src="https://badgen.net/badge/version/1.0.0-alpha/green" />
 
-Fuzzie is a simple Rest API and GraphQL fuzzing tool available as VSCode extension.  
-The ability to fuzz test your Web APIs and GraphQL APIs directly in the IDE brings about several advantages:
+Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for fuzz testing REST API and GraphQL.  
+The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings about several advantages:
 
-* fuzz tests made simple guided by an intuitive WebView in VSCode
-* the ability to fuzz test very early in the SDLC
-* Fuzzer in IDE allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
+* fuzz tests guided by an intuitive WebView
+* the ability to fuzz test very early during software development
+* Being available in VSCode allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
-<br />
+### Prerequisites    
 
-### How Fuzzie Works  
+* requires Python 3.10 and above
+* Fuzzie uses port 50001  
+  fuzzer engine listens on http://localhost:50001 serving requests from webview
+
+### Launching Fuzzie  
+
+Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"  
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/how%20to%20launch%20fuzzie.png" />
+
+
+### Using Fuzzie 
 
 Fuzzie VSCode extension comes with a webview, everything from API and GraphQL discovery to fuzzing and analyzing test result can be done in webview.  
 
@@ -17,194 +28,184 @@ Fuzzie VSCode extension comes with a webview, everything from API and GraphQL di
 
 <br />  
 
-#### Terms and Concepts
+#### 1. Create a New API Fuzz Context
 
-* Fuzz Context - fuzz context contains hostname, port, number of test cases to fuzz and API operations discovered by writing Request Messages
-* wordlist-type - the real potential of Fuzzie is allowing user to write [Request Messages](#api-discovery) and Fuzzie converts each Request Message into a http call.  Within Request Message, exact input format like JSON, XML, files, plain text or simply any format, with parameters can be described in Request Message.
-By replacing wordlist-type {{ wordlist type }} with parameter value, during fuzzing, Fuzzie will replace the parameter values with fuzz data, thus, performing a Grey-Box testing on your REST and GraphQL APIs.  
+A Fuzz Context contains a list of cohesive "fuzz test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
+Each test case contains HTTP verb, domain name, port, path, querystring, headers and body and Fuzzie make HTTP requests against all test cases in a Fuzz Context.  
+
+#### 2. Write HTTP Request Messages  
+
+Your REST and GraphQL contracts are described by writing Request Messages.  
+The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
+Within a request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
+By replacing wordlist {{ wordlist type }} with parameter, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.
 example:  
 
+#### Wordlist Types
+The following are built-in wordlist-types, more will be added in future  
+| WordList Type | Is Primitive wordlist type | Description   |
+| ------------- |:-------------:| ------------- |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | your custom input that Fuzzie mutates |
+| {{ string }} |  yes | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
+| {{ xss }} | yes | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
+| {{ sqlinject }} | yes | sql-injection strings from danielmiessle/seclist |
+| {{ bool }} | yes | boolean values and something naughty |
+| {{ digit }} | yes | Integers, floats and something naughty |
+| {{ char }} | yes | naughty chars |
+| {{ image }} |  no | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ pdf }} |  no | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ file }} |  no | naught payload from danielmiessle/seclist |
+| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
+| {{ datetime }} | yes | date + time |
+| {{ date }} | yes | date only |
+| {{ time }} | yes | time only |
+| {{ username }} | yes | hacked usernames from danielmiessler seclist |
+| {{ password }} | yes | hacked password from danielmiessler seclist |
+| {{ filename }} | yes | random file name and extensions |  
+
+#### 2.1 HTTP Request Message Syntax  
+
+Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
+"Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  
+
+* GraphQL request message has to include a special header: X-REQUEST-TYPE: GraphQL
+* comments: // or #
+* \#\#\# use for dividing request messages
+
+<img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
+
+##### GET
+
 ```
-POST https://httpbin.org/post  
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+
+```
+
+##### GET with headers  
+```
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+```
+
+##### Upload files  
+
+POST image
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ image('option-file-name.png') }}
+```
+
+POST PDF
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ pdf('option-file-name.pdf') }}
+```  
+
+POST [naughty payloads](https://github.com/danielmiessler/SecLists/tree/master/Payloads)
+
+```
+POST https://httpbin.org/post HTTP/1.1
+
+{{ file('option-file-name.log') }}
+```
+
+POST <b>your custom file content</b> for example a CSV file
+
+```
+POST https://httpbin.org/post
+x-ms-blob-type: BlockBlob
+
+{{
+'
+
+string,username,password,filename,datetime
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+{{string}},{{username}},{{password}},{{filename}},{{datetime}}
+
+'
+| myfile("batchfile.log")
+}}
+```  
+
+##### POST XML
+
+```
+POST https://httpbin.org/post
+Content-Type: application/xml
 
 {
-    "glossary": {
-        "title": "example glossary",
-		"GlossDiv": {
-            "title": "S",
-			"GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-					"SortAs": "SGML",
-					"GlossTerm": "Standard Generalized Markup Language",
-					"Acronym": "SGML",
-					"Abbrev": "ISO 8879:1986",
-					"GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-						"GlossSeeAlso": ["GML", "XML"]
-                    },
-					"GlossSee": "markup"
-                }
-            }
-        }
-    }
+<note>
+    <to>{{ username }}</to>
+    <from>{{ username }}</from>
+    <heading>{{ 'Reminder' | mutate }}</heading>
+    <body>{{ 'Don't forget me this weekend!' | mutate }}</body>
+</note>
+}
+```
+
+##### POST JSON  
+
+```
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{
+    "name": "john doe",
+    "info": {{ 'this custom input will be mutated by fuzzie' | mutate }}
 }
 ```  
 
+##### GraphQL  
+
 ```
-POST https://httpbin.org/post 
+POST https://spacex-production.up.railway.app/
+X-REQUEST-TYPE: GraphQL
 
 {
-    "glossary": {
-        "title": "{{ string }}",
-		"GlossDiv": {
-            "title": "{{ string }}",
-			"GlossList": {
-                "GlossEntry": {
-                    "ID": "{{ digit }}",
-					"SortAs": "{{ string }}",
-					"GlossTerm": "{{ "Standard Generalized Markup Language" | my }}",
-					"Acronym": "{{ string }}",
-					"Abbrev": "ISO {{ digit }}:{{ digit }}",
-					"GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-						"GlossSeeAlso": ["{{ "GML" | my }}", "{{ "XML" | my }}"]
-                    },
-					"GlossSee": "{{ string }}"
-                }
-            }
-        }
+    launchesPast(limit: 10) {
+      mission_name
+      launch_date_local
+      launch_site {
+        site_name_long
+      }
+      links {
+        article_link
+        video_link
+      }
+      rocket {
+        rocket_name
+      }
     }
-}
-```  
+  }
+```
 
-The following are built-in wordlist-types available today, more will be added in future  
-| WordList Type | Description   |
-| ------------- |:-------------:| 
-| {{ "a quick brown fox" &#124; my }} | your custom input, Fuzzie will mutate input |
-| {{ string }} | minimaxir/big-list-of-naughty-strings |
-| {{ bool }} | boolean values and something naughty |
-| {{ digit }} | Integers, floats and something naughty |
-| {{ digit:1:5000.9999 }} | User supplied integers and float range |
-| {{ char }} | naughty chars |
-| {{ image }} |  Images mix with other file types encode with 'latin1' |
-| {{ pdf }} |  PDF mix with other file types encode with 'latin1' |
-| {{ file }} |  danielmiessler seclist payload encode with 'latin1' |
-| {{ datetime }} | date + time |
-| {{ date }} | date only |
-| {{ time }} | time only |
-| {{ username }} | hacked usernames from danielmiessler seclist |
-| {{ password }} | hacked password from danielmiessler seclist |
-| {{ filename }} | random file name and extensions |
+#### 3. Fuzz Case & Fuzz Result Panels  
 
 
-</ br>
-#### API Discovery  
-
-Fuzzie needs to know your API or GraphQL "schema", this is achieved by Request Messages (concept inspired by [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) by Huachao Mao)
-
-  * write Request Message(s) in webview while creating a new Fuzz Context
-  * Fuzzie takes in text files that contains Request-Messages with file extension .http, .rest or .fuzzie
- 
- Request Message can be written and validated in webview provided by Fuzzie  
- 
- ![image](https://user-images.githubusercontent.com/43234101/210977019-4b671b68-99e1-455b-bc8b-8fc147440140.png)  
- 
- <br />
- 
- ![image](https://user-images.githubusercontent.com/43234101/210977575-54ce66aa-2e0b-4b9a-b914-d47e0995c701.png)
 
 
-    
-  <br/>
-  Examples: 
-  <br/>
- 
-  * Post Request-Message, OAuth bearer token and Json body
-    ```
-    POST https://example.com/comments HTTP/1.1
-    content-type: application/json
-    Authorization: Bearer AbCdEf123456
-    
-    {
-        "name": {{string}},
-        "time": {{datetime}}
-    }
-    ```
-  
-  * GET Request-Message, fuzzing querystring parameters, username and password
-  
-    ```
-    GET https://httpbin.org/get
-     ?name={{string}}
-     &startDate={{datetime}}
-     &endDate={{datetime}}
-     
-    content-type: application/json
-    Authorization: Basic base64|{{username}}:{{password}}
-    ```
-  * GET Request-Message, fuzzing path parameters, username and password
-  
-    ```
-    GET https://httpbin.org/get/{{string}}/{{datetime}}/{{datetime}}
-     
-    content-type: application/json
-    Authorization: Basic base64|{{username}}:{{password}}
-    ```
-    
-  * POST multipart-form from example HTML
-    ```
-    <!DOCTYPE html>
-     <html lang="en">
-     <head>
-       <meta charset="utf-8"/>
-       <title>upload</title>
-     </head>
-     <body>
-     <form action="http://localhost:8000" method="post" enctype="multipart/form-data">
-       <p><input type="text" name="text1" value="text default">
-       <p><input type="text" name="text2" value="a&#x03C9;b">
-       <p><input type="file" name="file1">
-       <p><input type="file" name="file2">
-       <p><input type="file" name="file3">
-       <p><button type="submit">Submit</button>
-     </form>
-     </body>
-     </html>     
-    ```  
-    ```
-    POST https://api.contoso.com/order/upload
-    Content-Type: multipart/form-data; boundary=---------------------------735323031399963166993862150
-    Content-Length: 834
 
-    -----------------------------735323031399963166993862150
-    Content-Disposition: form-data; name="text1"
 
-    {{string}}
-    -----------------------------735323031399963166993862150
-    Content-Disposition: form-data; name="text2"
 
-    {{string}}
-    -----------------------------735323031399963166993862150
-    Content-Disposition: form-data; name="file1"; filename="a.txt"
-    Content-Type: text/plain
 
-    {{payload}}
-
-    -----------------------------735323031399963166993862150
-    Content-Disposition: form-data; name="file2"; filename="a.html"
-    Content-Type: text/html
-
-    {{payload}}
-
-    -----------------------------735323031399963166993862150
-    Content-Disposition: form-data; name="file3"; filename="binary"
-    Content-Type: application/octet-stream
-
-    {{payload}}
-    ```
-    
-    ### Software Architecture Design  
-*subjected to change, diagram from another hobby project [Azure Workbench](https://www.azureworkbench.com/?id=IsxyrPUWclTXMoDPuAtK)
-![image](https://user-images.githubusercontent.com/43234101/188535919-0fb971e1-b68e-47de-8a8a-5c2a461ea1cc.png)  
     

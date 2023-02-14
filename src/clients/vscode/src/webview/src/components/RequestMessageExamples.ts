@@ -125,7 +125,7 @@ X-REQUEST-TYPE: GraphQL
     private post = {
         
         'post-json': `
-POST https://httobin.org/post HTTP/1.1
+POST https://httpbin.org/post HTTP/1.1
 Content-Type: application/json
 
 {

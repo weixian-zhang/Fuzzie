@@ -674,12 +674,13 @@
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
       <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh Fuzz Contexts'"
-      :disabled="!isGetFuzzContextFinish"
+      :disabled="(!isGetFuzzContextFinish || !fuzzerConnected)"
         @click="getFuzzcontexts">
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
       <v-btn v-tooltip.bottom="'create new Fuzz Context for REST API & GraphQL'" icon  variant="plain" height="30px" plain 
+         :disabled="(!fuzzerConnected)"
          @click="(newContextSideBarVisible = true )">
         <v-icon color="cyan darken-3" icon="mdi-plus"></v-icon>
       </v-btn>
@@ -727,7 +728,7 @@
               </b>
               &nbsp;
               <v-icon
-                  v-show="(fuzzingInProgress == false)"
+                  v-show="(!isFuzzingInProgress())"
                   variant="flat"
                   icon="mdi-delete"
                   color="cyan darken-3"
@@ -746,7 +747,7 @@
 
                 <div class="btn-group">
                   <v-icon
-                  v-show="(fuzzingInProgress == false)"
+                  v-show="(!isFuzzingInProgress())"
                   variant="flat"
                   icon="mdi-cog-outline"
                   color="cyan darken-3"
@@ -768,7 +769,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
-                      fuzzingInProgress == false && 
+                      !isFuzzingInProgress() && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
@@ -782,7 +783,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="( fuzzingInProgress == true)"
+                  v-show="( isFuzzingInProgress() )"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -799,8 +800,7 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == false &&
-                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId &&
-                  fuzzingInProgress == true)"
+                  this.currentFuzzingContextId == slotProps.node.fuzzcontextId)"
                 style="width:100%" />
               
               <v-progress-linear
@@ -808,8 +808,7 @@
                 color="cyan"
                 v-show="(
                   slotProps.node.isFuzzCaseRun == true &&
-                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId &&
-                  fuzzingInProgress == true)"
+                  this.currentFuzzingCaseSetRunId == slotProps.node.fuzzCaseSetRunsId)"
                 style="width:100%" />
 
           </template>
@@ -881,7 +880,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   apiFuzzCaseSetRunToDelete: any = {};
   apiContextIdToFuzz = '';
   inputRules= [
-        //() => !!Utils.isValidHttpUrl(this.newApiContext.openapi3Url) || "URL is not valid",
         v => v.length <= 40 || 'Max 40 characters'
   ];
   requestMsgHasError = false;
@@ -893,7 +891,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   fuzzerConnected = false;
   currentFuzzingContextId = '';
   currentFuzzingCaseSetRunId = '';
-  fuzzingInProgress = false;
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -948,6 +945,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   onFuzzerNotReady() {
+    this.clearData();
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -955,8 +953,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   //constantly receiving event
   async onFuzzStart(data) {
-
-    this.fuzzingInProgress = true;
 
     await this.getFuzzcontexts();
 
@@ -987,7 +983,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onFuzzStop() {
-    this.fuzzingInProgress = false;
     this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -1436,6 +1431,12 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
   }
 
+  isFuzzingInProgress() {
+    if(this.currentFuzzingCaseSetRunId != '' && this.currentFuzzingContextId != '') {
+      return true;
+    }
+    return false;
+  }
 
   // Anonymous
   // Basic
