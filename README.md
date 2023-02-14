@@ -48,25 +48,25 @@ By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie
 
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
-| WordList Type | Is Primitive wordlist type | Description   |
-| ------------- |:-------------:| ------------- |
-| {{ 'a quick brown fox' &#124; mutate }} | yes | your custom input that Fuzzie mutates |
-| {{ string }} |  yes | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
-| {{ xss }} | yes | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
-| {{ sqlinject }} | yes | sql-injection strings from danielmiessle/seclist |
-| {{ bool }} | yes | boolean values and something naughty |
-| {{ digit }} | yes | Integers, floats and something naughty |
-| {{ char }} | yes | naughty chars |
-| {{ image }} |  no | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
-| {{ pdf }} |  no | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
-| {{ file }} |  no | naught payload from danielmiessle/seclist |
-| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
-| {{ datetime }} | yes | date + time |
-| {{ date }} | yes | date only |
-| {{ time }} | yes | time only |
-| {{ username }} | yes | hacked usernames from danielmiessler seclist |
-| {{ password }} | yes | hacked password from danielmiessler seclist |
-| {{ filename }} | yes | random file name and extensions |  
+| WordList Type | Is Primitive wordlist type | file upload | Description   |
+| ------------- |-------------| -------------| ------------- |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates |
+| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
+| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
+| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist |
+| {{ bool }} | yes | no | boolean values and something naughty |
+| {{ digit }} | yes | no | Integers, floats and something naughty |
+| {{ char }} | yes | no | naughty chars |
+| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ file }} |  no | yes | naught payload from danielmiessle/seclist |
+| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
+| {{ datetime }} | yes | no | date + time |
+| {{ date }} | yes | no | date only |
+| {{ time }} | yes | no | time only |
+| {{ username }} | yes | no | hacked usernames from danielmiessler seclist |
+| {{ password }} | yes | no | hacked password from danielmiessler seclist |
+| {{ filename }} | yes | no | random file name and extensions |  
 
 #### 2.1 Request Message Syntax  
 
@@ -76,6 +76,7 @@ Request message syntax follows [VSCode Rest Client](https://marketplace.visualst
 * GraphQL request message has to include a special header: X-REQUEST-TYPE: GraphQL
 * comments: // or #
 * \#\#\# use for dividing request messages
+* for myfile and mutate wordlists, your text must be within single quotes ' your string here'
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
 
@@ -204,7 +205,9 @@ X-REQUEST-TYPE: GraphQL
   }
 ```
 
-#### 3. Fuzz Case & Fuzz Result Panels  
+#### 3. Misc Webview Navigation  
+
+<img src ="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/tutorial-fuzzie-webview.png" />
 
 
 
