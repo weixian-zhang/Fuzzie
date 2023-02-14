@@ -5,7 +5,7 @@ export default class RequestMessageExamples {
         'file-upload-myfile-batchfile': `
 // content align to left with no trailing spaces between "" so that file content will not have trailing whitespaces either
 
-PUT https://httpbin.org/post
+POST https://httpbin.org/post
 x-ms-blob-type: BlockBlob
 
 {{

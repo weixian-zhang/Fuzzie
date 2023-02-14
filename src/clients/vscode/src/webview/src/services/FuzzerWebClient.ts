@@ -13,7 +13,7 @@ import Utils from "../Utils";
 
 export default class FuzzerWebClient
 {
-    private gqlUrl = 'http://localhost:50001/graphql';
+    private gqlUrl = 'http://localhost:50001/graphql/';
     private wsUrl = 'ws://localhost:50001';
     private _ws;
     private fuzzerEventSubscribers = {};  // dict with value as list  

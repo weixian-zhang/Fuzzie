@@ -38,15 +38,15 @@
                   </li>
                   
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-file'))">POST a file with naughty content</a>
+                  @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-pdf'))">POST a PDF</a>
+                  @click="(loadExample('post-pdf'))">Upload File: PDF</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-image'))">POST an Image</a>
+                  @click="(loadExample('post-image'))">Upload File: Image</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"

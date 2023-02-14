@@ -1,5 +1,6 @@
 '''Fuzzie EventStore'''
-
+import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 from utils import Utils
 from enum import Enum
 from multiprocessing import Event
@@ -14,6 +15,8 @@ import time
 from starlette_graphene3 import WebSocket, WebSocketState
 
 nest_asyncio.apply()
+
+
 
 class MessageLevel:
     INFO = "INFO"
@@ -56,7 +59,6 @@ class EventStore:
     FuzzCompleteWSTopic = 'fuzz.complete'
     InfoWSTopic = 'event.info'
     
-    
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(EventStore, cls).__new__(cls)
@@ -66,7 +68,12 @@ class EventStore:
         
         self.pub = pub
         self.genlogs = []
-        self.fuzzProgress = []       
+        self.fuzzProgress = []
+        
+        self.logger = logging.getLogger('')
+        self.logger.addHandler(AzureLogHandler(
+            connection_string='InstrumentationKey=df5dcfcf-b50b-46af-a396-e9554aaa6539;IngestionEndpoint=https://eastasia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://eastasia.livediagnostics.monitor.azure.com/')
+        )  
         
         
     def emitInfo(self, message: str, data = "", alsoToClient=True) -> None:
@@ -78,11 +85,7 @@ class EventStore:
             data
             )
         
-        # TODO: log to Application Insights
         print(m.json())
-        
-        # if alsoToClient:        
-        #     self.feedback_client(self.InfoWSTopic, message)
 
     
     def emitErr(self, err , data = "") -> None:
@@ -125,7 +128,9 @@ class EventStore:
             return
         
         # TODO: log to Application Insights
-        print(m.json())
+        #print(m.json())
+        
+        self.logger.exception(m.json(), extra={'source': 'fuzzer'})
         
         # may not need to send events over websocket as fuzzer run as child_process,
         # all stdout/stderr will be received by nodejs process module

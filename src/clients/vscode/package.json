@@ -2,8 +2,8 @@
   "name": "fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie",
-  "publisher": "WeixianZhang",
-  "author": "WeixianZhang",
+  "publisher": "Weixian Zhang",
+  "author": "Weixian Zhang",
   "repository": "https://github.com/weixian-zhang/Fuzzie",
   "license": "MIT",
   "icon": "dist/fuzzie-vscode-logo.png",
@@ -16,8 +16,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onCommand:fuzzie.openwebview",
-    "onCommand:fuzzie.fuzzer.reset"
+    "onCommand:fuzzie.openwebview"
   ],
   "contributes": {
     "commands": [

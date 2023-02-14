@@ -554,7 +554,7 @@
           <div class="col text-left">
               <RequestMessageExampleView 
               v-bind:rqmsg:loadexample="newApiContext.requestTextContent"
-              v-on:rqmsg:loadexample="newApiContext.requestTextContent = $event" />
+              v-on:rqmsg:loadexample="newApiContext.requestTextContent = (newApiContext.requestTextContent == '' ? $event : newApiContext.requestTextContent + '\n###\n' + $event)" />
           </div>
           <div class="col text-right">
               <v-btn

@@ -118,7 +118,7 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			}
-		},		
+		},
 		{
 			"label": "package webview dist",
 			"type": "shell",
