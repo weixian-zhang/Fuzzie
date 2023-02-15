@@ -933,6 +933,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
+    this.eventemitter.on('fuzz.once.stop', this.onFuzzOnceStop);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
 
@@ -969,17 +970,21 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.selectedContextNode = fuzzContextId;
     this.selectedCaseSetRunNode =fuzzCaseSetRunId;
 
-    await Utils.delay(1500);
+    // await Utils.delay(1500);
 
-    // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
-    // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
-    this.fuzzcontexts.forEach(context => {
-        if(context.Id == this.currentFuzzingContextId) {
-          this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
-          return;
-        }
-    });
+    // // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
+    // // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
+    // this.fuzzcontexts.forEach(context => {
+    //     if(context.Id == this.currentFuzzingContextId) {
+    //       this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
+    //       return;
+    //     }
+    // });
     
+  }
+
+  async onFuzzOnceStop() {
+    await this.getFuzzcontexts();
   }
 
   async onFuzzStop() {

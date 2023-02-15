@@ -634,12 +634,12 @@ class ServiceManager:
             reqMsgFuzzCaseSetCreator = RequestMessageFuzzContextCreator()
             cp = CorporaContext()
             
-            fcsOK, fcsErr, _ = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
+            fcsOK, fcsErr, fuzzCaseSets = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
             
             if not fcsOK:
                 return False, fcsErr
             
-            ok, error = cp.try_build_context(rqMsg)
+            ok, error = cp.try_build_context(fuzzCaseSets) #cp.try_build_context(rqMsg)
             
             if not ok:
                 return False, error

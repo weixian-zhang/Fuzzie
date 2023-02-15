@@ -33,9 +33,9 @@ class CorporaContext:
         self.myfile_wordlist_type = 'myfile'
     
     # try_build_context is used only for parsing request messages from webview
-    def try_build_context(self, dataTemplate: str) -> tuple([bool, str]):
+    def try_build_context(self, fcss: list[ApiFuzzCaseSet]) -> tuple([bool, str]):
         try:
-            self.build_data_context_from_req_msg(dataTemplate)
+            self.build_context(fcss)
             return True, ''
         except Exception as e:
             return False, ''

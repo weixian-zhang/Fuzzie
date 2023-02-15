@@ -677,13 +677,16 @@ class Props {
   }
   
   async onFuzzOnce(fuzzcontextId, fuzzcasesetId) {
+
+    let caseSetRunSummaryId = '';
+
     try {
 
       this.fuzzOnceDisabled = true;
 
-      const [ok, error, caseSetRunSummaryId] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
+      const [ok, error, csrSummary] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
 
-      this.eventemitter.emit('fuzz.start', {'fuzzContextId': fuzzcontextId, 'fuzzCaseSetRunId': caseSetRunSummaryId})
+      caseSetRunSummaryId = csrSummary;
 
       this.selectedFuzzCaseSetRunId = caseSetRunSummaryId;
       this.selectedFuzzContextId = fuzzcontextId;
@@ -691,6 +694,10 @@ class Props {
         
       } catch (error) {
           this.$logger.error(error);
+      }
+      finally {
+        await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, caseSetRunSummaryId);
+        this.eventemitter.emit('fuzz.once.stop', {})
       }
   }
 
