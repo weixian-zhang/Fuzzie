@@ -673,13 +673,13 @@
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
 
-      <v-btn color="accent" variant="plain" height="30px" plain icon v-tooltip.right="'refresh Fuzz Contexts'"
+      <v-btn color="accent" variant="plain" height="30px" plain icon
       :disabled="(!isGetFuzzContextFinish || !fuzzerConnected)"
         @click="getFuzzcontexts">
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn v-tooltip.bottom="'create new Fuzz Context for REST API & GraphQL'" icon  variant="plain" height="30px" plain 
+      <v-btn icon  variant="plain" height="30px" plain 
          :disabled="(!fuzzerConnected)"
          @click="(newContextSideBarVisible = true )">
         <v-icon color="cyan darken-3" icon="mdi-plus"></v-icon>
@@ -769,7 +769,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
-                      !isFuzzingInProgress() && 
+                      (currentFuzzingContextId == '' && currentFuzzingCaseSetRunId == '') && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
                   icon="mdi-lightning-bolt"
@@ -783,7 +783,7 @@
 
                   <v-icon
                   v-tooltip="'cancel fuzzing'"
-                  v-show="( isFuzzingInProgress() )"
+                  v-show="( (currentFuzzingContextId != '' && currentFuzzingCaseSetRunId != '') )"
                   variant="flat"
                   icon="mdi-cancel"
                   color="cyan darken-3"
@@ -934,6 +934,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.once.stop', this.onFuzzOnceStop);
+    
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
 
@@ -970,18 +971,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.selectedContextNode = fuzzContextId;
     this.selectedCaseSetRunNode =fuzzCaseSetRunId;
 
-    // await Utils.delay(1500);
-
-    // // programmatically "click" the fuzzCaseSetRun to trigger a select so that FuzzCaseSet pane can display
-    // // the current fuzzing run, rather then user manually clicking the run which may not be obvious when there are many runs
-    // this.fuzzcontexts.forEach(context => {
-    //     if(context.Id == this.currentFuzzingContextId) {
-    //       this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
-    //       return;
-    //     }
-    // });
-    
   }
+
 
   async onFuzzOnceStop() {
     await this.getFuzzcontexts();
@@ -1426,6 +1417,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
           this.requestTextFileInputFileVModel = [];
           this.newApiContext = new ApiFuzzContext();
           this.requestMsgHasError = false;
+          this.securityBtnVisibility.anonymous = true,
+          this.securityBtnVisibility.basic=false,
+          this.securityBtnVisibility.bearer=false,
+          this.securityBtnVisibility.apikey=false
         }
 
     } catch (error) {

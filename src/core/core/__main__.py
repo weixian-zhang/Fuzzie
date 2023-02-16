@@ -137,8 +137,6 @@ def start():
         eventstore.emitErr(e)
     
     
-
-    
 if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
         # check if there is existing fuzzer process already running

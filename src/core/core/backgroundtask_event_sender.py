@@ -3,6 +3,10 @@ import time
 import asyncio
 from eventstore import EventStore, WebSocketState
 
+import nest_asyncio
+
+nest_asyncio.apply()
+
 class BackgroundTask_WS_EventSender(threading.Thread):
     def run(self,*args,**kwargs):
         while True:

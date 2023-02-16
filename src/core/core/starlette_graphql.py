@@ -51,7 +51,10 @@ class Query(graphene.ObjectType):
     
     fuzzRequestResponse = graphene.Field(FuzzRequestResponseQueryResult,
                                          fuzzCaseSetId = graphene.Argument(graphene.String),
-                                         fuzzCaseSetRunId = graphene.Argument(graphene.String))
+                                         fuzzCaseSetRunId = graphene.Argument(graphene.String),
+                                         pageSize=graphene.Argument(graphene.Int), 
+                                         page=graphene.Argument(graphene.Int)
+                                         )
     
     
     fuzzRequestResponseMessage = graphene.Field(FuzzRequestResponseMessage_QueryResult,
@@ -107,15 +110,16 @@ class Query(graphene.ObjectType):
         return r
     
     
-    def resolve_fuzzRequestResponse(self, info, fuzzCaseSetId, fuzzCaseSetRunId):
+    def resolve_fuzzRequestResponse(self, info, fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1):
         sm = ServiceManager()
         
-        ok , err, result = sm.get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId)
+        ok , err, totalPages, result = sm.get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize, page)
         
         r = FuzzRequestResponseQueryResult()
           
         r.ok = ok
         r.error = err
+        r.totalPages = totalPages
         r.result = result
           
         return r
@@ -374,14 +378,14 @@ class FuzzOnce(graphene.Mutation):
     msg = graphene.String()
     caseSetRunSummaryId = graphene.String()
     
-    async def mutate(self, info, fuzzcontextId, fuzzCaseSetId):
+    def mutate(self, info, fuzzcontextId, fuzzCaseSetId):
         
         ok = True
         msg = ''
         
         sm = ServiceManager()
         
-        ok, msg, caseSetRunSummaryId = await sm.fuzz_once(fuzzcontextId, fuzzCaseSetId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
+        ok, msg, caseSetRunSummaryId = sm.fuzz_once(fuzzcontextId, fuzzCaseSetId) #, basicUsername, basicPassword, bearerTokenHeader, bearerToken, apikeyHeader, apikey)
 
         return FuzzOnce(ok=ok, msg=msg, caseSetRunSummaryId=caseSetRunSummaryId)
     

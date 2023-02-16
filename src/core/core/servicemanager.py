@@ -33,7 +33,8 @@ from db import  (get_fuzzcontext,
                  get_fuzz_request_response_messages,
                  get_uploaded_files,
                  get_uploaded_file_content,
-                 search_body)
+                 search_body,
+                 get_request_response_total_pages)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -324,15 +325,17 @@ class ServiceManager:
             return (False, Utils.errAsText(e), [])
         
             
-    def get_fuzz_request_response(self, fuzzCaseSetId, fuzzCaseSetRunId) -> tuple[bool, str, list[FuzzDataCase_ViewModel]]:
+    def get_fuzz_request_response(self, fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1) -> tuple[bool, str, int, list[FuzzDataCase_ViewModel]]:
         
         try:
-            rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId)
+            rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize, page)
             
             if rows is None or len(rows) == 0:
                 return True, '', []
             
             result = []
+            
+            totalPages = get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId)
             
             for row in rows:
                 
@@ -369,7 +372,7 @@ class ServiceManager:
                 
                 result.append(fdc)
 
-            return True, '', result
+            return True, '', totalPages, result
             
         except Exception as e:
             return (False, Utils.errAsText(e), [])
@@ -496,7 +499,7 @@ class ServiceManager:
             self.eventstore.emitErr(e, 'ServiceManager.cancel_fuzz')
             return False
     
-    async def fuzz_once(self, fuzzcontextId, fuzzcasesetId) -> tuple([bool, str, str]):
+    def fuzz_once(self, fuzzcontextId, fuzzcasesetId) -> tuple([bool, str, str]):
         try:
             fuzzcontext = self.get_fuzzcontext(fuzzcontextId)
             
@@ -514,7 +517,7 @@ class ServiceManager:
             
             if ServiceManager.webapiFuzzer is None or ServiceManager.webapiFuzzer.fuzzingStatus == FuzzingStatus.Stop:
                 ServiceManager.webapiFuzzer = WebApiFuzzer(fuzzcontext)
-                caseSetRunSummaryId = await ServiceManager.webapiFuzzer.fuzz_once()
+                caseSetRunSummaryId = ServiceManager.webapiFuzzer.fuzz_once(fuzzcasesetId)
             else:
                 return False, 'fuzzing in progress'
                 
@@ -540,6 +543,7 @@ class ServiceManager:
             return True, ''
         
         except Exception as e:
+            ServiceManager.webapiFuzzer = None
             self.eventstore.emitErr(e)
             
     

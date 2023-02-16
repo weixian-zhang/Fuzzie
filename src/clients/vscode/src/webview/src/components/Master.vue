@@ -129,7 +129,7 @@
         }
 
          if (!status.isDataLoaded) {
-            this.toastInfo('connected to fuzzer at http://localhost:50001, loading data...')
+            this.toastInfo('connected to fuzzer at http://localhost:50001, loading data...', '', 3000)
             return;
          } else {
             if(!this.fuzzerConnected) {

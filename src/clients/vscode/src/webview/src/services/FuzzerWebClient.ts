@@ -277,14 +277,18 @@ export default class FuzzerWebClient
         return [false, '', []];
     }
 
-    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string, pageSize = 500, page=1): Promise<[boolean, string, number, Array<FuzzDataCase>]> {
         const query = `
         query {
             fuzzRequestResponse(
                 fuzzCaseSetId: "${fuzzCaseSetId}",
-                fuzzCaseSetRunId: "${fuzzCaseSetRunId}") {
+                fuzzCaseSetRunId: "${fuzzCaseSetRunId}",
+                pageSize: ${pageSize},
+                page: ${page})
+                {
                 ok,
                 error,
+                totalPages,
                 result {
                     fuzzDataCaseId
                     fuzzCaseSetId
@@ -321,18 +325,19 @@ export default class FuzzerWebClient
         {
             const ok = response.data.data.fuzzRequestResponse.ok;
             const error = response.data.data.fuzzRequestResponse.error;
+            const totalPages = response.data.data.fuzzRequestResponse.totalPages;
             const result = response.data.data.fuzzRequestResponse.result;
-            return [ok, error, result];
+            return [ok, error, totalPages, result];
         }
 
         const [hasErr, err] = this.hasGraphqlErr(response);
 
         if(hasErr)
         {
-            return [!hasErr, err, []];
+            return [!hasErr, err, 1, []];
         }
 
-        return [false, '', []];
+        return [false, '', 1, []];
     }
 
     public async deepSearchBody(searchText: string, fuzzCaseSetId: string, fuzzCaseSetRunId: string): Promise<[boolean, string, Array<FuzzDataCase>]> {

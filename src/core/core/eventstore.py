@@ -6,15 +6,15 @@ from enum import Enum
 from multiprocessing import Event
 import jsonpickle
 from  datetime import datetime
-import asyncio
-import nest_asyncio
+# import asyncio
+# import nest_asyncio
 from pubsub import pub
 from collections import deque
 from threading import Thread
 import time
 from starlette_graphene3 import WebSocket, WebSocketState
 
-nest_asyncio.apply()
+# nest_asyncio.apply()
 
 
 
@@ -145,11 +145,15 @@ class EventStore:
             del self.websocketClients[portId]
     
     # data must be json format
-    def feedback_client(self, topic: str, data: str = ''):
-        asyncio.run(self.feedback_client_async(topic, data))
+    # def feedback_client(self, topic: str, data: str = ''):
+    #     try:
+    #         asyncio.run(self.feedback_client_async(topic, data))
+    #     except Exception as e:
+    #         self.emitErr(e);
+        
     
     # send to websocket clients
-    async def feedback_client_async(self, topic: str, data: str):
+    def feedback_client(self, topic: str, data: str = ''): #feedback_client_async(self, topic: str, data: str):
         
         try:
                    
@@ -157,21 +161,7 @@ class EventStore:
             
             mj = m.json()
             
-            self.wsMsgQueue.appendleft(mj)
-            
-            # if len(self.websocketClients) > 0:
-            #     for portid in self.websocketClients:
-                    
-            #         wsClient = self.websocketClients[portid]
-                    
-            #         while len(self.wsMsgQueue) > 0:
-                        
-            #             msg = self.wsMsgQueue.pop()
-            #             await wsClient.send_text(msg)
-                        
-            #         await wsClient.send_text(mj)
-            # else:
-            #     self.wsMsgQueue.append(mj)
+            self.wsMsgQueue.append(mj) #.appendleft(mj)
                 
         except Exception as e:
             self.emitErr(e)

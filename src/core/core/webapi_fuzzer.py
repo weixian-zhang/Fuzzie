@@ -9,7 +9,6 @@ from urllib.error import HTTPError
 from requests import Request, Response, Session
 import requests
 from pubsub import pub
-import asyncio
 from http import cookiejar
 from types import MappingProxyType
 import shortuuid
@@ -40,6 +39,7 @@ from enum import Enum
 from corporafactory.corpora_context import CorporaContext
 from utils import Utils
 import requests.utils 
+import traceback
 
 class FuzzingStatus(Enum):
     Fuzzing = 1
@@ -94,6 +94,10 @@ class WebApiFuzzer:
         #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
         
     def __del__(self):
+        
+        tb = traceback.format_exc()
+        print(tb)
+    
         self.eventstore.emitInfo('WebApi Fuzzer shutting down')
 
             
@@ -112,7 +116,7 @@ class WebApiFuzzer:
         except Exception as e:
             self.eventstore.emitErr(e)
     
-    async def fuzz_once(self):
+    async def fuzz_once(self, fuzzcasesetId):
         try:
             
             self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
@@ -134,24 +138,29 @@ class WebApiFuzzer:
             runNumber = 0
             
             for fcs in self.apifuzzcontext.fuzzcaseSets:
-                 
-                create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
-                                          fuzzCaseSetId=  fcs.Id,
-                                          fuzzCaseSetRunId = self.fuzzCaseSetRunId,
-                                          fuzzcontextId = self.apifuzzcontext.Id,
-                                          totalRunsToComplete = self.totaRunsPerCaseSet)
                 
-                for _ in range(self.apifuzzcontext.fuzzcaseToExec):
+                if fcs.Id == fuzzcasesetId:
+                 
+                    create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
+                                            fuzzCaseSetId=  fcs.Id,
+                                            fuzzCaseSetRunId = self.fuzzCaseSetRunId,
+                                            fuzzcontextId = self.apifuzzcontext.Id,
+                                            totalRunsToComplete = self.totaRunsPerCaseSet)
+                
+                    self.fuzz_each_fuzzcaseset(caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber=1)
                     
-                    runNumber = runNumber + 1
+                    break
+                
                     
-                    self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
-                    
-            
-            return caseSetRunSummaryId
+            return self.fuzzCaseSetRunId #caseSetRunSummaryId
                     
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
+        finally:
+                       
+            self.totaRunsPerCaseSet = 0
+            
+            self.fuzzingStatus = FuzzingStatus.Stop
         
     async def fuzz(self):
         
@@ -180,6 +189,8 @@ class WebApiFuzzer:
             self.totaRunsPerCaseSet = self.apifuzzcontext.fuzzcaseToExec
             self.totalRunsForAllCaseSets = fcsLen * self.totaRunsPerCaseSet
             
+            
+            
             runNumber = 0
             for fcs in self.apifuzzcontext.fuzzcaseSets:
                 
@@ -197,8 +208,31 @@ class WebApiFuzzer:
                     
                     self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
                     
+
+            self.executor.submit(self.fuzz_completion_monitor)
+                    
         except Exception as e:
             self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
+            
+    
+    def fuzz_completion_monitor(self):
+        
+        while len(FuzzTestResultQueue.resultQueue) > 0:
+            time.sleep(1)
+        
+        self.fuzzingStatus = FuzzingStatus.Stop
+        
+        update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
+                
+        self.multithreadEventSet.set()
+    
+        self.executor.shutdown(wait=False, cancel_futures=True)
+        
+        self.totaRunsPerCaseSet = 0
+        
+        
+        
+        
             
     def fuzz_each_fuzzcaseset(self, caseSetRunSummaryId, fcs: ApiFuzzCaseSet, multithreadEventSet: Event, runNumber: int):
         
@@ -208,13 +242,16 @@ class WebApiFuzzer:
             
             fuzzDataCase, file = self.http_call(fcs)
             
-            summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, file)
-            
-            # update run status
-            self.fuzzcaseset_done(runNumber)
+            # to uncomment
+            #summaryViewModel = self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, file)
                 
-            if summaryViewModel is not None:
-                self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            # if summaryViewModel is not None:
+            #     self.eventstore.feedback_client('fuzz.update.casesetrunsummary', summaryViewModel)
+            
+            self.enqueue_fuzz_result_for_persistent(caseSetRunSummaryId, fuzzDataCase, file)
+                
+            # update run status
+            #self.fuzzcaseset_done(runNumber)
             
         except Exception as e:
             errMsg = Utils.errAsText(e)
@@ -401,6 +438,12 @@ class WebApiFuzzer:
                 
                 update_api_fuzzCaseSetRun_status(self.fuzzCaseSetRunId)
                 
+                self.multithreadEventSet.set()
+            
+                self.executor.shutdown(wait=False, cancel_futures=True)
+                
+                self.totaRunsPerCaseSet = 0
+                
                 self.fuzzingStatus = FuzzingStatus.Stop
                 
         except Exception as e:
@@ -422,7 +465,7 @@ class WebApiFuzzer:
             
             FuzzTestResultQueue.enqueue(fuzztestResult)
             
-            # background task result saver is upadting run-statistics
+            # background task result saver is updating "run-statistics"
             runSummaryStatistics = get_fuzzcaseset_run_statistics(fuzzcontextId=fdc.fuzzcontextId,
                                            caseSetRunSummaryId=caseSetRunSummaryId,
                                            fuzzCaseSetId=fdc.fuzzCaseSetId,

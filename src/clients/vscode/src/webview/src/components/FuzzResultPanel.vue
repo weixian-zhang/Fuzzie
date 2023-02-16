@@ -148,9 +148,16 @@
         @click:clear="(this.fdcsDataFiltered = [...this.fdcsDataOriginal])"
         ></v-text-field>
 
-      <v-spacer></v-spacer>
-      <v-spacer></v-spacer>
-      <v-toolbar-title>Fuzz Result</v-toolbar-title>
+    
+      <v-pagination
+              v-show="(fdcsDataFiltered.length > 0)"
+              v-model="paginationCurrentPage"
+              :length="paginationTotalPages"
+              :total-visible="7"
+            ></v-pagination>
+    
+      
+      <!-- <v-toolbar-title>Fuzz Result</v-toolbar-title> -->
 
       <v-spacer></v-spacer>
         <v-text-field
@@ -178,79 +185,82 @@
     <Splitter  style="height: 100%" >
       
       <SplitterPanel :size="50">
-        <v-table density="compact" fixed-header height="430" hover="true" >          
-          <thead>
-            <tr>
-              <th class="text-left">
-                  <div class="dropdown">
-                    <button class="btn-sm btn-info btn-sm dropdown-toggle">Status Code</button>
-                    <div class="dropdown-content">
-                      <a href="#" 
-                      v-for="item in unqStatusCodesFromFDCS"
-                      :key="item"
-                      @click="onStatusCodeFilterClicked(item)">
-                        {{ item }}
-                      </a>
-                    </div>
-                  </div>
-              </th>
-              <th class="text-left">
-                Path
-              </th>
-              <th class="text-left">
-                Reason
-              </th>
-              <th class="text-left">
-                Content Length(response bytes)
-              </th>
-              <th class="text-left">
-                Duration(secs)
-              </th>
-            </tr>
-            <tr v-show="isDataLoadingInProgress">
-              <th colspan="6">
-              <v-progress-linear
-                    indeterminate
-                    rounded
-                    color="cyan">
-                  </v-progress-linear>
-              </th>
-            </tr>
-          </thead>
+        <div>
+            <v-table density="compact" fixed-header height="430" hover="true" >          
+              <thead>
+                <tr>
+                  <th class="text-left">
+                      <div class="dropdown">
+                        <button class="btn-sm btn-info btn-sm dropdown-toggle">Status Code</button>
+                        <div class="dropdown-content">
+                          <a href="#" 
+                          v-for="item in unqStatusCodesFromFDCS"
+                          :key="item"
+                          @click="onStatusCodeFilterClicked(item)">
+                            {{ item }}
+                          </a>
+                        </div>
+                      </div>
+                  </th>
+                  <th class="text-left">
+                    Path
+                  </th>
+                  <th class="text-left">
+                    Reason
+                  </th>
+                  <th class="text-left">
+                    Content Length(response bytes)
+                  </th>
+                  <th class="text-left">
+                    Duration(secs)
+                  </th>
+                </tr>
+                <tr v-show="isDataLoadingInProgress">
+                  <th colspan="6">
+                  <v-progress-linear
+                        indeterminate
+                        rounded
+                        color="cyan">
+                      </v-progress-linear>
+                  </th>
+                </tr>
+              </thead>
 
-          <tbody>
-            <tr
-              v-for="item in fdcsDataFiltered"
-              :key="item.response.Id"
-              @click="(onRowClick(item), selectedRow= item.request.Id)"
-              :style="item.request.Id === selectedRow ? 'background-color:lightgrey;' : ''">
+              <tbody>
+                <tr
+                  v-for="item in fdcsDataFiltered"
+                  :key="item.response.Id"
+                  @click="(onRowClick(item), selectedRow= item.request.Id)"
+                  :style="item.request.Id === selectedRow ? 'background-color:lightgrey;' : ''">
 
 
-              <td>{{ item.response.statusCode }}</td>
-              
-              <td>
-                <span>
-                  {{ shortenValueInTable(item.request.path, 15) }}
-                </span>
-              </td>
-              
-              <td>
-                <span v-tooltip="item.response.reasonPharse">
-                {{shortenValueInTable(item.response.reasonPharse, 15) }}
-                </span>
-              </td>
+                  <td>{{ item.response.statusCode }}</td>
+                  
+                  <td>
+                    <span>
+                      {{ shortenValueInTable(item.request.path, 15) }}
+                    </span>
+                  </td>
+                  
+                  <td>
+                    <span v-tooltip="item.response.reasonPharse">
+                    {{shortenValueInTable(item.response.reasonPharse, 15) }}
+                    </span>
+                  </td>
 
-              <td>
-                {{ item.response.contentLength }}
-              </td>
+                  <td>
+                    {{ item.response.contentLength }}
+                  </td>
 
-              <td>
-                {{ getTimeDiff(item.request.datetime, item.response.datetime) }}
-              </td>
+                  <td>
+                    {{ getTimeDiff(item.request.datetime, item.response.datetime) }}
+                  </td>
 
-            </tr>
-          </tbody>
-      </v-table>
+                </tr>
+              </tbody>
+            </v-table>
+            
+        </div>
       </SplitterPanel>
 
       <SplitterPanel :size="50">
@@ -419,6 +429,10 @@ class Props {
     currentFuzzingFuzzContext = ''
     currentFuzzingFuzzCaseSetRun = ''
 
+    paginationPageSize = 500;
+    paginationCurrentPage = 1;
+    paginationTotalPages = 1;
+
     fuzzCaseSetId = ''
     fuzzCaseSetRunId = ''
 
@@ -522,7 +536,11 @@ class Props {
         return;
       }
 
-      const [ok, error, result] = await this.webclient.getFuzzRequestResponse(this.fuzzCaseSetId, this.fuzzCaseSetRunId)
+      const [ok, error, totalPages, result] = await this.webclient.getFuzzRequestResponse(
+        this.fuzzCaseSetId, 
+        this.fuzzCaseSetRunId, 
+        this.paginationPageSize, 
+        this.paginationCurrentPage)
 
       if(!ok) {
         this.toastError(error, 'Fuzz Result Panel');
@@ -532,6 +550,8 @@ class Props {
         this.clearTableBindingData();
         return;
       }
+
+      this.paginationTotalPages = totalPages;
       
       this.storeFuzzDataCase(result);
 

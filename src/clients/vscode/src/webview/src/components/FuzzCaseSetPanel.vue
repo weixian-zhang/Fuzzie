@@ -346,6 +346,7 @@ import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import InputText from 'primevue/inputtext';
 import RequestMessageExampleView from './RequestMessageExampleView.vue';
+import { Util } from '@microsoft/applicationinsights-common';
 
 class Props {
   toastInfo: any = {};
@@ -684,7 +685,7 @@ class Props {
 
       this.fuzzOnceDisabled = true;
 
-      const [ok, error, csrSummary] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId)
+      const [ok, error, csrSummary] = await this.webclient.fuzzOnce(fuzzcontextId, fuzzcasesetId);
 
       caseSetRunSummaryId = csrSummary;
 
@@ -696,8 +697,8 @@ class Props {
           this.$logger.error(error);
       }
       finally {
+        this.eventemitter.emit('fuzz.once.stop');
         await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, caseSetRunSummaryId);
-        this.eventemitter.emit('fuzz.once.stop', {})
       }
   }
 

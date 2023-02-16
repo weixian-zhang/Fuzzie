@@ -271,6 +271,7 @@ class FuzzRequestResponseMessage_QueryResult(graphene.ObjectType):
 class FuzzRequestResponseQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
+    totalPages = graphene.Int()
     result = graphene.List(FuzzDataCase_ViewModel)
     
 class FuzzReqRespMessageQueryResult(graphene.ObjectType):

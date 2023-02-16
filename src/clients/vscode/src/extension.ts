@@ -36,11 +36,15 @@ var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
 const fuzzerPackageName = "fuzzie-fuzzer.zip";
 
-// this method is called when your extension is activated
+
+// this method is called when VSCode starts
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
+	//during vscode startup this function already activated
+	
 	context.subscriptions.push(   
+
 		vscode.commands.registerCommand(
 			'fuzzie.openwebview', () => 
 				{
@@ -49,17 +53,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		)
 	);
 
-	// context.subscriptions.push(   
-	// 	vscode.commands.registerCommand(
-	// 		'fuzzie.fuzzer.reset', () => 
-	// 			{
-	// 				hardResetFuzzerIfExists();
-	// 			}
-	// 	)
-	// );
-	
 	stateManager = new StateManager(context);
-	
+
 	_vscEHLogger.log('Fuzzie is initializing');
 
 	appcontext = new AppContext();
@@ -68,11 +63,44 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	startFuzzer();
 
-	//await unzipAndRunFuzzer();
-
 	_vscEHLogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
 
 	_vscEHLogger.log(`starting fuzzer`);
+	
+
+		// const commands = await vscode.commands.getCommands(true);
+
+		// if (commands.indexOf('fuzzie.openwebview') == -1)
+		// {
+		// 	context.subscriptions.push(   
+
+		// 		vscode.commands.registerCommand(
+		// 			'fuzzie.openwebview', () => 
+		// 				{
+		// 					VuejsPanel.createOrShow(context,_vscEHLogger, _webviewLogger, context.extensionUri.path);
+		// 				}
+		// 		)
+		// 	);
+
+		// 	stateManager = new StateManager(context);
+		
+		// 	_vscEHLogger.log('Fuzzie is initializing');
+		
+		// 	appcontext = new AppContext();
+		
+		// 	initFuzzerPYZPath(context);
+		
+		// 	startFuzzer();
+		
+		// 	_vscEHLogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
+		
+		// 	_vscEHLogger.log(`starting fuzzer`);
+		// }
+		
+		
+		
+	
+	
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {

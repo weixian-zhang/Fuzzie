@@ -16,6 +16,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
 
 from utils import Utils
 from eventstore import EventStore
+import math
 
 eventstore = EventStore()
 dbPath = os.path.join(os.path.dirname(Path(__file__)), 'corporafactory\\data\\fuzzie.sqlite')
@@ -400,6 +401,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
                         .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
+                        
                         .all()
                      )
         
@@ -409,7 +411,8 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     else:
         
         runSummaryQuery = (
-                        Session.query(ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
+                        Session.query(
+                                    ApiFuzzRunSummaryPerCaseSetTable.columns.http2xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http3xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http4xx,
                                     ApiFuzzRunSummaryPerCaseSetTable.columns.http5xx,
@@ -442,6 +445,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
                         .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
                         .outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == ApiFuzzCaseSetTable.c.Id )
+                        #.outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                         .all()
                      )
         
@@ -450,7 +454,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     
     return result
 
-def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
+def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1):
     
     Session = scoped_session(session_factory)
     
@@ -480,6 +484,8 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    # implement pagination
+                    .limit(pageSize).offset(page * pageSize)
                     .all()
                 )
     
@@ -487,6 +493,33 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId):
     Session.close()
     
     return rows
+
+def get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500):
+    
+    Session = scoped_session(session_factory)
+    
+    totalPages = 1
+    
+    rowCount = (Session.query(
+                ApiFuzzDataCaseTable, 
+                ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+                ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
+                )
+                    .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+                            ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+                    .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                    .count()
+                )
+    
+    if rowCount > 0:
+         totalPages = math.ceil(rowCount / pageSize)
+    
+    
+    return totalPages
+    
+    
+                    
 
 def get_uploaded_files(requestId):
     
@@ -967,7 +1000,9 @@ def insert_api_fuzzrequest_fileupload(Id, wordlist_type, fileName,fileContent, f
     Session.close()
     
 def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed', message='') -> None:
-    stmt = (
+    
+    try:
+        stmt = (
             update(ApiFuzzCaseSetRunsTable).
             where(ApiFuzzCaseSetRunsTable.c.Id == fuzzCaseSetRunId).
             values(
@@ -977,12 +1012,15 @@ def update_api_fuzzCaseSetRun_status(fuzzCaseSetRunId, status = 'completed', mes
                    )
             )
     
-    Session = scoped_session(session_factory)
+        Session = scoped_session(session_factory)
+            
+        Session.execute(stmt)
         
-    Session.execute(stmt)
+        Session.commit()
+        Session.close()
+    except Exception as e:
+        eventstore.emitErr(e)
     
-    Session.commit()
-    Session.close()
                 
 def insert_api_fuzzdatacase(fuzzCaseSetRunId, fdc: ApiFuzzDataCase) -> None:
     
@@ -1232,6 +1270,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
     
     if httpCode >= 200 and httpCode <= 299:
         existingHttp2xx = existingHttp2xx + 1
+        rowDict['http2xx'] = existingHttp2xx
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
             where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
@@ -1245,6 +1284,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
     
     elif httpCode >= 300 and httpCode <= 399:
         existingHttp3xx = existingHttp3xx + 1
+        rowDict['http3xx'] = existingHttp3xx
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
             where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
@@ -1258,6 +1298,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
     
     elif httpCode >= 400 and httpCode <= 499:
         existingHttp4xx = existingHttp4xx + 1
+        rowDict['http4xx'] = existingHttp4xx
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
             where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
@@ -1271,6 +1312,7 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
         
     elif httpCode >= 500 and httpCode <= 599:
         existingHttp5xx = existingHttp5xx + 1
+        rowDict['http5xx'] = existingHttp5xx
         stmt = (
             update(ApiFuzzRunSummaryPerCaseSetTable).
             where(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId).
@@ -1294,6 +1336,10 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
     Session.execute(stmt)
     Session.commit()
     Session.close()
+    
+    # runSummaryPerCaseSetRow
+    rowDict['completedDataCaseRuns'] = existingCompletedDataCaseRuns
+    return rowDict
 
 
 def get_fuzzcaseset_run_statistics(caseSetRunSummaryId, fuzzCaseSetId, fuzzCaseSetRunId, fuzzcontextId):
