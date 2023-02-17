@@ -4,14 +4,6 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "fuzzer - run graphql ws",
-			"type": "shell",
-			"command": "python main.py webserver start",
-			"options": {
-				"cwd": "${workspaceFolder}/src/core/core"
-			}
-		},
-		{
 			"label": "npm run serve webview",
 			"type": "shell",
 			"command": "npm run serve",
@@ -132,7 +124,16 @@
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			},
-			"dependsOn": ["npm run build Vuejs"]
+			"dependsOn": ["delete webview dist", "npm run build Vuejs"]
+		},
+		{
+			"label": "delete webview dist",
+			"type": "shell",
+			"command": "del",
+			"args": [ "-Recurse", "-Force", "${workspaceFolder}/src/clients/vscode/dist/webview/*"],
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode/dist/webview"
+			}
 		},
 		{
 			"label": "npm run build Vuejs",

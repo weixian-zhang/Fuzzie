@@ -507,8 +507,6 @@ class Props {
       return;
     }
 
-    this.clearIntervalGetReqRespData();
-
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
   }
@@ -522,13 +520,6 @@ class Props {
     this.fuzzerConnected = false;
 
     this.currentFuzzContextId = '';
-  }
-
-  clearIntervalGetReqRespData() {
-    if(this.pollFuzzResultHandler != undefined) {
-      clearInterval(this.pollFuzzResultHandler);
-      this.pollFuzzResultHandler = undefined;
-    }
   }
 
   // events from websocket
@@ -772,7 +763,6 @@ class Props {
   }
 
   clearData() {
-    this.clearIntervalGetReqRespData();
     
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = '';
