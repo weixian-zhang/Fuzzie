@@ -31,7 +31,11 @@ Fuzzie VSCode extension provides a webview for you to perform everything from AP
 
 <br />  
 
-#### 1. Start by creating a  new API Fuzz Context
+#### 1. Webview Navigation  
+
+<img src ="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/tutorial-fuzzie-webview.png" />
+
+#### 2. Start by creating a  new API Fuzz Context
 
 A Fuzz Context contains a list of cohesive "fuzz test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
 Each test case contains HTTP verb, domain name, port, path, querystring, headers and body and Fuzzie make HTTP requests against all test cases in a Fuzz Context. 
@@ -77,6 +81,16 @@ Request message syntax follows [VSCode Rest Client](https://marketplace.visualst
 * comments: // or #
 * \#\#\# use for dividing request messages
 * for myfile and mutate wordlists, your text must be within single quotes ' your string here'
+  * single quotes within your custom string needs to be escaped with \.  
+  For example below: **Don\\'t**
+  ```
+  <note>
+    <to>{{ username }}</to>
+    <from>{{ username }}</from>
+    <heading>{{ 'Reminder' | mutate }}</heading>
+    <body>{{ 'Don't forget me this weekend!' | mutate }}</body>
+  </note>
+  ```
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
 
@@ -204,10 +218,6 @@ X-REQUEST-TYPE: GraphQL
     }
   }
 ```
-
-#### 3. Misc Webview Navigation  
-
-<img src ="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/tutorial-fuzzie-webview.png" />
 
 
 
