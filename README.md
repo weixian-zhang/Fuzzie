@@ -81,6 +81,16 @@ Request message syntax follows [VSCode Rest Client](https://marketplace.visualst
 * comments: // or #
 * \#\#\# use for dividing request messages
 * for myfile and mutate wordlists, your text must be within single quotes ' your string here'
+  * single quotes within your custom string needs to be escaped with \.  
+  For example below: **Don\\'t**
+  ```
+  <note>
+    <to>{{ username }}</to>
+    <from>{{ username }}</from>
+    <heading>{{ 'Reminder' | mutate }}</heading>
+    <body>{{ 'Don't forget me this weekend!' | mutate }}</body>
+  </note>
+  ```
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/request-message-syntax-1.png" />  
 
