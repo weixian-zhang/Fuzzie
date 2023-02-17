@@ -1160,13 +1160,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
 
-    this.toastInfo(`initiatiated fuzzing on ${name}`);
-
     await this.webclient.fuzz(fuzzcontextId)
 
-    await Utils.delay(500);
+    this.toastInfo(`initiatiated fuzzing on ${name}`);
 
-    this.getFuzzcontexts();
   }
 
   async onCancelFuzzIconClicked() {
@@ -1301,6 +1298,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
       const fuzzCaseSetRunId = this.apiFuzzCaseSetRunToDelete.Id;
       const [ok, error] = await this.webclient.deleteApiFuzzCaseSetRun(fuzzCaseSetRunId);
+
+      this.eventemitter.emit("onFuzzCaseRunDeleted", fuzzCaseSetRunId);
 
     if(!ok)
     {

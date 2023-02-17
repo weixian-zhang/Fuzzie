@@ -71,7 +71,7 @@ class PDFCorpora():
         data = None
         
         if randInt <= 7:
-            randDataIdx = random.randint(0, len(self.pdfs) - 1)
+            randDataIdx = random.randint(1, len(self.pdfs) - 1)
             encoded = self.pdfs[randDataIdx]
             data = base64.b64decode(encoded)
         else:

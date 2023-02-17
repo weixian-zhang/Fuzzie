@@ -492,7 +492,7 @@ class Props {
       this.eventemitter.on("onFuzzContextSelected", this.clearData);
       this.eventemitter.on("onFuzzCaseSetRunSelected", this.clearData);
       this.eventemitter.on("onFuzzContextRefreshClicked", this.clearData)
-
+      this.eventemitter.on("onFuzzCaseRunDeleted", this.onFuzzCaseRunDeleted)
       //fuzzing data event stream
       this.eventemitter.on('fuzz.start', this.onFuzzStart);
       this.eventemitter.on('fuzz.stop', this.onFuzzStop);
@@ -541,14 +541,19 @@ class Props {
       });
    }
 
+    onFuzzCaseRunDeleted(fuzzCaseSetRunId) {
+      if (fuzzCaseSetRunId == this.fuzzCaseSetRunId) {
+        this.clearData();
+      }
+    }
 
     async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
 
       try {
 
-          //if(this.isDataLoadingInProgress) {
-          //  return;
-          //}
+          if(this.isDataLoadingInProgress) {
+            return;
+          }
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
             //this.toast.add({severity:'error', summary: '', detail:'fuzzcontextId or fuzzCaseSetRunId is missing in FuzzResultPanel ', life: 5000})

@@ -186,10 +186,20 @@ class WebApiFuzzer:
                 self.eventstore.emitErr(f"no fuzz case detected for fuzz-context {self.apifuzzcontext.name}, fuzzing stopped")
                 return
             
+            self.executor.submit(self.begin_fuzzing_in_worker_thread)
+                    
+        except Exception as e:
+            self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
+            
+    def begin_fuzzing_in_worker_thread(self):
+        
+        try:
+            
+            fcsLen = len(self.apifuzzcontext.fuzzcaseSets)
+        
             self.totaRunsPerCaseSet = self.apifuzzcontext.fuzzcaseToExec
+                
             self.totalRunsForAllCaseSets = fcsLen * self.totaRunsPerCaseSet
-            
-            
             
             runNumber = 0
             for fcs in self.apifuzzcontext.fuzzcaseSets:
@@ -197,10 +207,10 @@ class WebApiFuzzer:
                 caseSetRunSummaryId = shortuuid.uuid()
                 
                 create_runsummary_per_fuzzcaseset(Id = caseSetRunSummaryId,
-                                          fuzzCaseSetId=  fcs.Id,
-                                          fuzzCaseSetRunId = self.fuzzCaseSetRunId,
-                                          fuzzcontextId = self.apifuzzcontext.Id,
-                                          totalRunsToComplete = self.totaRunsPerCaseSet)
+                                            fuzzCaseSetId=  fcs.Id,
+                                            fuzzCaseSetRunId = self.fuzzCaseSetRunId,
+                                            fuzzcontextId = self.apifuzzcontext.Id,
+                                            totalRunsToComplete = self.totaRunsPerCaseSet)
                 
                 for _ in range(self.apifuzzcontext.fuzzcaseToExec):
                     
@@ -208,13 +218,12 @@ class WebApiFuzzer:
                     
                     self.executor.submit(self.fuzz_each_fuzzcaseset, caseSetRunSummaryId, fcs, self.multithreadEventSet, runNumber)
                     
-
             self.executor.submit(self.fuzz_completion_monitor)
-                    
-        except Exception as e:
-            self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing')
             
-    
+        except Exception as e:
+            self.eventstore.emitErr(e, data='WebApiFuzzer.begin_fuzzing_in_worker_thread')
+            
+        
     def fuzz_completion_monitor(self):
         
         while len(FuzzTestResultQueue.resultQueue) > 0:

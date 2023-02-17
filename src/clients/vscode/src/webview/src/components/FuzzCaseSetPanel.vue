@@ -477,6 +477,7 @@ class Props {
     // listen to ApiDiscovery Tree item select event
     this.eventemitter.on("onFuzzContextSelected", this.onFuzzContextSelected);
     this.eventemitter.on("onFuzzCaseSetRunSelected", this.onFuzzCaseSetRunSelected);
+    this.eventemitter.on("onFuzzCaseRunDeleted", this.onFuzzCaseRunDeleted);
     
     this.eventemitter.on("onFuzzContextDelete", this.onFuzzContextDeleted);
     this.eventemitter.on("onFuzzContextRefreshClicked", this.onFuzzContextRefreshClicked);
@@ -498,8 +499,6 @@ class Props {
 
     this.currentFuzzingContextId = fuzzContextId;
     this.currentFuzzingCaseSetRunId = fuzzCaseSetRunId;
-
-    this.intervalGetReqRespDataOnFuzz();
   }
 
   onFuzzStop() {
@@ -509,8 +508,6 @@ class Props {
     }
 
     this.clearIntervalGetReqRespData();
-
-    //this.getFuzzCaseSet_And_RunSummaries(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
 
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
@@ -525,20 +522,6 @@ class Props {
     this.fuzzerConnected = false;
 
     this.currentFuzzContextId = '';
-  }
-
-  intervalGetReqRespDataOnFuzz() {
-    if(this.isFuzzingInProgress() && this.pollFuzzResultHandler == undefined && this.currentFuzzingContextId == this.selectedFuzzContextId) {
-        this.pollFuzzResultHandler = setInterval( async()=> {
-              if(this.selectedFuzzContextId == this.currentFuzzingContextId ) {
-                this.eventemitter.emit("onFuzzCaseSetSelected", this.selectedFuzzCaseSetId, this.currentFuzzingCaseSetRunId);
-              }
-              else{
-                this.clearIntervalGetReqRespData();
-              }
-              
-          },1500)
-    }
   }
 
   clearIntervalGetReqRespData() {
@@ -663,6 +646,12 @@ class Props {
      await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
   }
 
+  onFuzzCaseRunDeleted(fuzzCaseSetRunId) {
+      if (fuzzCaseSetRunId == this.selectedFuzzCaseSetRunId) {
+        this.clearData();
+      }
+    }
+
   async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
   {
     this.selectedFuzzContextId = fuzzcontextId;
@@ -707,12 +696,6 @@ class Props {
     this.selectedFuzzContextId = fcsrs.fuzzcontextId;
     this.selectedFuzzCaseSetId = fcsrs.fuzzCaseSetId;
     this.selectedFuzzCaseSetRunId = fcsrs.fuzzCaseSetRunId;
-
-
-    // if(this.isFuzzingInProgress()) {
-    //   this.intervalGetReqRespDataOnFuzz();
-    //   //return;
-    // }
 
     if (!this.rowClickEnabled) {
         return;

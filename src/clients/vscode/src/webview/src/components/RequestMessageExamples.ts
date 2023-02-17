@@ -259,14 +259,13 @@ Content-Type: application/json
 POST https://httpbin.org/post
 Content-Type: application/xml
 
-{
 <note>
     <to>{{ username }}</to>
     <from>{{ username }}</from>
     <heading>{{ 'Reminder' | mutate }}</heading>
-    <body>{{ 'Don't forget me this weekend!' | mutate }}</body>
+    <body>{{ 'Don\\'t forget me this weekend!' | mutate }}</body>
 </note>
-}
+
 `
     }
 

@@ -331,7 +331,7 @@ class ServiceManager:
             rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize, page)
             
             if rows is None or len(rows) == 0:
-                return True, '', []
+                return True, '', 0, []
             
             result = []
             

@@ -101,7 +101,7 @@
 
       this.wc.connectWS();
 
-      setInterval(this.checkFuzzerReady, 1500);
+      setInterval(this.checkFuzzerReady, 1000);
     }
 
     
@@ -117,7 +117,8 @@
             return;
          }
 
-        if(status.webapiFuzzerInfo.isFuzzing) {
+        // make sure send 1 time
+        if(status.webapiFuzzerInfo.isFuzzing && this.isFuzzInProgress == false) {
           this.isFuzzInProgress = true;
           this.eventemitter.emit('fuzz.start', status.webapiFuzzerInfo);
         }

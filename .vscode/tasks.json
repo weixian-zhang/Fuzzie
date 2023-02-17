@@ -169,7 +169,7 @@
 		{
 			"label": "vsce package",
 			"type": "shell",
-			"command": "vsce package -o ./dist",
+			"command": "vsce package --allow-star-activation -o ./dist",
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode"
 			},
