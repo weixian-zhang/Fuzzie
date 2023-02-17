@@ -275,7 +275,7 @@
                 :items="paginationTotalPagesArray"
                 :disabled="isDataLoadingInProgress"
                 density="compact"
-                label="pages"
+                label="select page"
               ></v-combobox>
               <!-- <div class="btn-group" style="width: 100px; position: static;"
                v-show="(fdcsDataFiltered.length > 0 && paginationTotalPages > 8)">
@@ -611,6 +611,9 @@ class Props {
         }
 
         this.paginationTotalPages = totalPages;
+
+        this.paginationTotalPagesArray = [];
+
         if (totalPages > 8) {
           for(var i = 1; i <= totalPages; i++){
             this.paginationTotalPagesArray.push(i);
@@ -635,7 +638,7 @@ class Props {
       try{
 
           if (this.isDataLoadingInProgress || this.isFuzzingInProgress()) {
-          this.toastInfo('Search is disabled when data loading or fuzzing is in progress');
+          this.toastInfo('Deep search is disabled when data loading or fuzzing is in progress');
           return;
           }
 

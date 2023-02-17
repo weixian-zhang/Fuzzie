@@ -2,16 +2,19 @@
   "name": "fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie is a simple grey-box fuzz testing tool for testing REST API and GraphQL",
-  "publisher": "wxz",
+  "publisher": "WeixianZhang",
   "author": "Weixian Zhang",
   "repository": {
     "type": "git",
-    "url": "https://github.com/weixian-zhang/Fuzzie"
+    "url": "https://github.com/weixian-zhang/Fuzzie.git"
+  },
+  "bugs": {
+    "url": "https://github.com/weixian-zhang/Fuzzie/issues"
   },
   "homepage": "https://github.com/weixian-zhang/Fuzzie",
   "license": "MIT",
-  "icon": "dist/fuzzie-vscode-logo.png",
-  "version": "1.0.0-alpha",
+  "icon": "dist/fuzzie-logo-2.png",
+  "version": "0.9.0",
   "preview": true,
   "engines": {
     "vscode": "^1.68.0"

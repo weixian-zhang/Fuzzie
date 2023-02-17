@@ -675,7 +675,7 @@
 
       <v-btn color="accent" variant="plain" height="30px" plain icon
       :disabled="(!isGetFuzzContextFinish || !fuzzerConnected)"
-        @click="getFuzzcontexts">
+        @click="(getFuzzcontexts)">
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
@@ -896,6 +896,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
   showCancelFuzzIcon = false;
   showFuzzProgressBar = false;
 
+  isDataLoading = false;
+
   securityBtnVisibility = {
     anonymous: true,
     basic: false,
@@ -1015,9 +1017,11 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
     try {
 
-        if(!this.fuzzerConnected){
+        if(!this.fuzzerConnected || this.isDataLoading) {
           return;
         }
+
+        this.isDataLoading = true;
 
         this.isGetFuzzContextFinish = false;
         const [OK, err, fcs] = await this.fuzzermanager.getFuzzcontexts()    
@@ -1041,6 +1045,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
     } catch (error) {
         //TODO: log
         console.log(error)
+    }
+    finally{
+      this.isDataLoading = false;
     }
   }
 
