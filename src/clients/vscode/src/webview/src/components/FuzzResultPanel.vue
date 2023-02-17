@@ -4,7 +4,7 @@
       color="white"
       outlined
       style="display: flex; flex-flow: column; height: 100%;"
-      class="mt-2 border-1">
+      class="">
      
      <!--view text in full Side Bar-->
      <Sidebar v-model:visible="showRequestValueSideBar" position="right" style="width:700px;">
@@ -148,16 +148,11 @@
         @click:clear="(this.fdcsDataFiltered = [...this.fdcsDataOriginal])"
         ></v-text-field>
 
-    
-      <v-pagination
-              v-show="(fdcsDataFiltered.length > 0)"
-              v-model="paginationCurrentPage"
-              :length="paginationTotalPages"
-              :total-visible="7"
-            ></v-pagination>
-    
-      
-      <!-- <v-toolbar-title>Fuzz Result</v-toolbar-title> -->
+      <!-- <v-spacer />
+
+      <v-toolbar-title>Fuzz Result</v-toolbar-title>
+
+      <v-spacer /> -->
 
       <v-spacer></v-spacer>
         <v-text-field
@@ -185,7 +180,8 @@
     <Splitter  style="height: 100%" >
       
       <SplitterPanel :size="50">
-        <div>
+        <div class="container-fluid">
+          <div class="row">
             <v-table density="compact" fixed-header height="430" hover="true" >          
               <thead>
                 <tr>
@@ -259,7 +255,45 @@
                 </tr>
               </tbody>
             </v-table>
-            
+          </div>
+          <div class="row">
+            <div class="col-8">
+              <v-pagination
+                density="compact"
+                variant="flat"
+                v-show="(fdcsDataFiltered.length > 0 && paginationTotalPages > 1)"
+                v-model="paginationCurrentPage"
+                :length="paginationTotalPages"
+                :total-visible="8"
+                :disabled="isDataLoadingInProgress"
+              ></v-pagination>
+              </div>
+            <div class="col-4">
+              <v-combobox
+                v-show="(fdcsDataFiltered.length > 0 && paginationTotalPages > 8)"
+                v-model="paginationCurrentPage"
+                :items="paginationTotalPagesArray"
+                :disabled="isDataLoadingInProgress"
+                density="compact"
+                label="pages"
+              ></v-combobox>
+              <!-- <div class="btn-group" style="width: 100px; position: static;"
+               v-show="(fdcsDataFiltered.length > 0 && paginationTotalPages > 8)">
+                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  Page
+                </button>
+                <ul class="dropdown-menu">
+                  <li 
+                  v-for="p in paginationTotalPagesArray"
+                  :key="p">
+                    <a  class="dropdown-item" href="#"
+                    @click="(getFuzzRequestResponse())"
+                    >{{ p }}</a>
+                  </li>
+                </ul>
+              </div> -->
+            </div>
+          </div>
         </div>
       </SplitterPanel>
 
@@ -347,7 +381,7 @@
 
 /* tslint:disable */ 
 
-import { inject } from 'vue';
+import { inject, watch } from 'vue';
 import Logger from '../Logger';
 import { Options, Vue  } from 'vue-class-component';
 import Splitter from 'primevue/splitter';
@@ -361,6 +395,7 @@ import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import VSCode from  '../VSCode';
+import { Watch } from 'vue-property-decorator'
 
 class Props {
   toastInfo: any = {};
@@ -430,17 +465,24 @@ class Props {
     currentFuzzingFuzzCaseSetRun = ''
 
     paginationPageSize = 500;
-    paginationCurrentPage = 1;
+    paginationCurrentPage = 0;
     paginationTotalPages = 1;
+    paginationTotalPagesArray: Array<number> = [];
 
     fuzzCaseSetId = ''
     fuzzCaseSetRunId = ''
+
+    
 
     beforeMount() {
       this.$logger = inject('$logger');
     }
 
     mounted() {
+
+      watch(() => this.paginationCurrentPage, async (newVal, oldVal) => {
+        await this,this.getFuzzRequestResponses();
+      });
 
       this.vscode = new VSCode();
 
@@ -504,9 +546,9 @@ class Props {
 
       try {
 
-          if(this.isDataLoadingInProgress) {
-            return;
-          }
+          //if(this.isDataLoadingInProgress) {
+          //  return;
+          //}
 
           if(Utils.isNothing(fuzzCaseSetId) || Utils.isNothing(fuzzCaseSetRunId)) {
             //this.toast.add({severity:'error', summary: '', detail:'fuzzcontextId or fuzzCaseSetRunId is missing in FuzzResultPanel ', life: 5000})
@@ -514,7 +556,11 @@ class Props {
             return;
           }
 
-          this.isDataLoadingInProgress = true;
+          this.paginationCurrentPage = 0;
+
+          this.paginationTotalPages = 1;
+
+          this.paginationTotalPagesArray = [];
 
           this.fuzzCaseSetId = fuzzCaseSetId;
           
@@ -525,37 +571,58 @@ class Props {
       catch(error) {
         this.$logger.error(error);
       }
-      finally {
-        this.isDataLoadingInProgress = false;
-      }
+      //finally {
+      //  this.isDataLoadingInProgress = false;
+      //}
     }
 
     async getFuzzRequestResponses() {
       
-      if (this.fuzzCaseSetId == '' || this.fuzzCaseSetRunId == '' ) {
+      try
+      {
+        if (this.fuzzCaseSetId == '' || this.fuzzCaseSetRunId == '' ) {
+          return;
+        }
+
+        if(this.isDataLoadingInProgress) {
+          return;
+        }
+
+        this.isDataLoadingInProgress = true;
+
+        const [ok, error, totalPages, result] = await this.webclient.getFuzzRequestResponse(
+          this.fuzzCaseSetId, 
+          this.fuzzCaseSetRunId, 
+          this.paginationPageSize, 
+          this.paginationCurrentPage)
+
+        if(!ok) {
+          this.toastError(error, 'Fuzz Result Panel');
+        }
+
+        if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
+          this.clearTableBindingData();
+          return;
+        }
+
+        this.paginationTotalPages = totalPages;
+        if (totalPages > 8) {
+          for(var i = 1; i <= totalPages; i++){
+            this.paginationTotalPagesArray.push(i);
+          }
+        }
+        
+        this.storeFuzzDataCase(result);
+
+        this.buildStatusCodesDropDown();
+      }
+      catch(error){
+        this.$logger.error(error);
         return;
       }
-
-      const [ok, error, totalPages, result] = await this.webclient.getFuzzRequestResponse(
-        this.fuzzCaseSetId, 
-        this.fuzzCaseSetRunId, 
-        this.paginationPageSize, 
-        this.paginationCurrentPage)
-
-      if(!ok) {
-        this.toastError(error, 'Fuzz Result Panel');
+      finally {
+        this.isDataLoadingInProgress = false;
       }
-
-      if (!ok || Utils.isNothing(result) || Utils.isLenZero(result)) {
-        this.clearTableBindingData();
-        return;
-      }
-
-      this.paginationTotalPages = totalPages;
-      
-      this.storeFuzzDataCase(result);
-
-      this.buildStatusCodesDropDown();
     }
 
     async onDeepSearchClick() {
@@ -588,6 +655,16 @@ class Props {
       }
       finally {
         this.isDataLoadingInProgress = false;
+      }
+    }
+
+    async onPaginationPageChange(page) {
+      try
+      {
+        await this.getFuzzRequestResponses();
+      }
+      catch (error) {
+        this.$logger.error(error)
       }
     }
 

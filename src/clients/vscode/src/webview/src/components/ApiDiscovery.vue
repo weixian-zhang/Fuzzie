@@ -6,7 +6,7 @@
     <v-card
     color="white"
     outlined
-    style="display: flex; flex-flow: column; height: 100%;">
+    style="display: flex; flex-flow: column; height: 97%;">
 
      <!-- new context -->
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">

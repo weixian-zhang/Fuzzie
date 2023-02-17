@@ -5,7 +5,7 @@
   <v-card
     color="white"
     outlined
-    style="display: flex; flex-flow: column; height: 100%;">
+    style="display: flex; flex-flow: column; height: 97%;">
   
   <Dialog v-model:visible="showReqMsgEditDialog" 
       header="Request Message Editor" 
@@ -709,10 +709,10 @@ class Props {
     this.selectedFuzzCaseSetRunId = fcsrs.fuzzCaseSetRunId;
 
 
-    if(this.isFuzzingInProgress()) {
-      this.intervalGetReqRespDataOnFuzz();
-      //return;
-    }
+    // if(this.isFuzzingInProgress()) {
+    //   this.intervalGetReqRespDataOnFuzz();
+    //   //return;
+    // }
 
     if (!this.rowClickEnabled) {
         return;

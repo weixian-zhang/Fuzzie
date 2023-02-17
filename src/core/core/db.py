@@ -454,11 +454,14 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     
     return result
 
-def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1):
+def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=0):
     
     Session = scoped_session(session_factory)
     
-    rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+    rows = []
+    
+    if page == 0:
+        rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
                                 ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
                                 ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
                                 ApiFuzzRequestTable.columns.hostname,
@@ -485,9 +488,40 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, pag
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     # implement pagination
-                    .limit(pageSize).offset(page * pageSize)
+                    .limit(pageSize)
                     .all()
                 )
+    else:
+        rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+                                    ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
+                                    ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
+                                    ApiFuzzRequestTable.columns.hostname,
+                                    ApiFuzzRequestTable.columns.port,
+                                    ApiFuzzRequestTable.columns.hostnamePort,
+                                    ApiFuzzRequestTable.columns.verb,
+                                    ApiFuzzRequestTable.columns.path,
+                                    ApiFuzzRequestTable.columns.querystring,
+                                    ApiFuzzRequestTable.columns.url,
+                                    ApiFuzzRequestTable.columns.headers,
+                                    ApiFuzzRequestTable.columns.contentLength,
+                                    ApiFuzzRequestTable.columns.invalidRequestError,
+                                    
+                                    ApiFuzzResponseTable.columns.Id.label('fuzzResponseId'),
+                                    ApiFuzzResponseTable.columns.datetime.label('responseDateTime'),
+                                    ApiFuzzResponseTable.columns.statusCode,
+                                    ApiFuzzResponseTable.columns.reasonPharse,
+                                    ApiFuzzResponseTable.columns.setcookieHeader,
+                                    ApiFuzzResponseTable.columns.headerJson,
+                                    ApiFuzzResponseTable.columns.contentLength
+                                    )
+                        .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+                                ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+                        .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                        .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                        # implement pagination
+                        .limit(pageSize).offset(page * pageSize)
+                        .all()
+                    )
     
     Session.commit()
     Session.close()

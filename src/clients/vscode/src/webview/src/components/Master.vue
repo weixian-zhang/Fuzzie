@@ -2,10 +2,10 @@
   <div class="container-fluid h-100 d-flex flex-column">
     <Toast />
     <Splitter style="height: 100%" >
-      <SplitterPanel :size="100">
+      <SplitterPanel :size="100" >
         <Splitter layout="vertical" gutterSize="0" >
-          <SplitterPanel :size="40" >
-            <Splitter gutterSize="8" >
+          <SplitterPanel :size="30" >
+            <Splitter gutterSize="5" >
               <SplitterPanel class="flex align-items-center justify-content-center" :size="25" >
                 <ApiDiscovery
                   :toastInfo="toastInfo" 
@@ -28,7 +28,7 @@
             </Splitter>
           </SplitterPanel>
 
-          <SplitterPanel class="flex align-items-center justify-content-center" :size="60" mt="3" >
+          <SplitterPanel class="flex align-items-center justify-content-center" :size="70"  >
             <FuzzResultPanel  :toast="toast"  
               :toastInfo="toastInfo" 
               :toastError="toastError"
