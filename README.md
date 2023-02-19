@@ -10,6 +10,7 @@ The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings ab
 
 ### *Things to Note    
 
+* Depending on [wordlist type](#2-write-http-request-messages), Fuzzie can send malicious strings from [SecList](https://github.com/danielmiessler/SecLists), recommend to use Fuzzie in test environments only
 * requires Python 3.10 and above
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
