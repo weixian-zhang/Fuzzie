@@ -204,6 +204,22 @@ SeclistPDFTable = Table('SeclistPDF', metadata,
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Content', String)
                         )
+
+### create indexes
+
+index_ApiFuzzDataCaseTable_fuzzCaseSetId = Index('index_ApiFuzzDataCaseTable_fuzzCaseSetId', ApiFuzzDataCaseTable.c.fuzzCaseSetId)
+Index('index_ApiFuzzDataCaseTable_fuzzcontextId', ApiFuzzDataCaseTable.c.fuzzcontextId)
+Index('index_ApiFuzzDataCaseTable_fuzzCaseSetRunId', ApiFuzzDataCaseTable.c.fuzzCaseSetRunId)
+Index('index_ApiFuzzRequestTable_Id', ApiFuzzRequestTable.c.Id)
+Index('index_ApiFuzzResponseTable_Id', ApiFuzzResponseTable.c.Id)
+Index('index_ApiFuzzRequestTable_fuzzDataCaseId', ApiFuzzRequestTable.c.fuzzDataCaseId)
+Index('index_ApiFuzzResponseTable_fuzzDataCaseId', ApiFuzzResponseTable.c.fuzzDataCaseId)
+
+# https://stackoverflow.com/questions/14419299/adding-indexes-to-sqlalchemy-models-after-table-creation
+# https://stackoverflow.com/questions/55921584/create-an-ordered-index-in-sqlite-db-using-sqlalchemy
+# https://stackoverflow.com/questions/61827723/how-to-speed-up-a-4-way-sqlite-inner-join-that-is-slow-despite-covering-indexes
+
+### indexes end
                             
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:

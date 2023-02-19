@@ -1,8 +1,8 @@
 {
-  "name": "fuzzie",
+  "name": "wxz-fuzzie",
   "displayName": "Fuzzie",
   "description": "Fuzzie is a simple grey-box fuzz testing tool for testing REST API and GraphQL",
-  "publisher": "WeixianZhang",
+  "publisher": "wxz",
   "author": "Weixian Zhang",
   "repository": {
     "type": "git",
