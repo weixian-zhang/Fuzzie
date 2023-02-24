@@ -2,10 +2,11 @@
 <img src="https://badgen.net/badge/version/1.0.0-alpha/green" />
 
 Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for fuzz testing REST API and GraphQL.  
-The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings about several advantages:
+The ability to fuzz test right in VSCode brings about several benefits:
 
+* As early as while debugging APIs in VSCode running on localhost, you can concurrently use Fuzzie to fuzz test your APIs.  
+  As Fuzzie also sends random unpredictable data, you can catch common bugs like unhandled input parameters early in development.
 * fuzz tests guided by an intuitive WebView
-* the ability to fuzz test very early during software development
 * Being available in VSCode allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
 ### *Things to Note    
