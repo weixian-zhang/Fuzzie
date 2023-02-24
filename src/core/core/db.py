@@ -80,7 +80,8 @@ ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('fileName', String),
                             Column('fileDataTemplate', String),
                             Column('requestMessage', String),
-                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id') ),
+                            Index('ApiFuzzCaseSetTable_fuzzcontextId', 'fuzzcontextId')
                             )
 
 # track number of runs for each FuzzContext
@@ -91,7 +92,8 @@ ApiFuzzCaseSetRunsTable= Table(apifuzzCaseSetRuns_TableName, metadata,
                             Column('endTime', DateTime),
                             Column('status', String),
                             Column('message', String),
-                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{apifuzzcontext_TableName}.Id')),
+                            Index('ApiFuzzCaseSetRunsTable.fuzzcontextId', 'fuzzcontextId')
                             )
 
 ApiFuzzRunSummaryPerCaseSetTable = Table(apifuzzRunSummaryPerCaseSet_TableName, metadata,
@@ -104,16 +106,22 @@ ApiFuzzRunSummaryPerCaseSetTable = Table(apifuzzRunSummaryPerCaseSet_TableName, 
                             Column('totalDataCaseRunsToComplete', Integer, default=0),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzCaseSetRunId', String, ForeignKey(f'{ApiFuzzCaseSetRunsTable}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
+                            Index('ApiFuzzRunSummaryPerCaseSetTable.fuzzcontextId', 'fuzzcontextId'),
+                            Index('ApiFuzzRunSummaryPerCaseSetTable.fuzzCaseSetRunId', 'fuzzCaseSetRunId'),
+                            Index('ApiFuzzRunSummaryPerCaseSetTable.fuzzCaseSetId', 'fuzzCaseSetId')
                             )
 
 # RowNumber for pagination
 ApiFuzzDataCaseTable = Table(apifuzzDataCase_TableName, metadata,
                             Column('RowNumber', Integer, primary_key=True),
-                            Column('Id', String),
+                            Column('Id', String, index=True),
                             Column('fuzzCaseSetId', String, ForeignKey(f'{ApiFuzzCaseSetTable}.Id')),
                             Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
-                            Column('fuzzCaseSetRunId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id'))
+                            Column('fuzzCaseSetRunId', String, ForeignKey(f'{apifuzzCaseSetRuns_TableName}.Id')),
+                            Index('ApiFuzzDataCaseTable.fuzzCaseSetRunId', 'fuzzCaseSetRunId'),
+                            Index('ApiFuzzDataCaseTable.fuzzcontextId', 'fuzzcontextId'),
+                            Index('ApiFuzzDataCaseTable.fuzzCaseSetId', 'fuzzCaseSetId')
                             )
 
 # RowNumber for pagination
@@ -134,7 +142,9 @@ ApiFuzzRequestTable = Table(apifuzzRequest_TableName, metadata,
                             Column('requestMessage', String),
                             Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
+                            Index('ApiFuzzRequestTable.fuzzDataCaseId', 'fuzzDataCaseId'),
+                            Index('ApiFuzzRequestTable.fuzzcontextId', 'fuzzcontextId')
                             )
 
 # RowNumber for pagination
@@ -150,7 +160,9 @@ ApiFuzzResponseTable = Table(apifuzzResponse_TableName, metadata,
                             Column('body', String),
                             Column('contentLength', Integer),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{apifuzzResponse_TableName}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id'))
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
+                            Index('ApiFuzzResponseTable.fuzzDataCaseId', 'fuzzDataCaseId'),
+                            Index('ApiFuzzResponseTable.fuzzcontextId', 'fuzzcontextId')
                             )
 
 # RowNumber for pagination
@@ -163,7 +175,11 @@ ApiFuzzRequestFileUploadTable = Table(apifuzzRequestFileUpload_TableName, metada
                             Column('fileContent', String),
                             Column('fuzzRequestId', String, ForeignKey(f'{ApiFuzzRequestTable}.Id')),
                             Column('fuzzDataCaseId', String, ForeignKey(f'{ApiFuzzDataCaseTable}.Id')),
-                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')))
+                            Column('fuzzcontextId', String, ForeignKey(f'{ApiFuzzContextTable}.Id')),
+                            Index('ApiFuzzRequestFileUploadTable.fuzzcontextId', 'fuzzcontextId'),
+                            Index('ApiFuzzRequestFileUploadTable.fuzzDataCaseId', 'fuzzDataCaseId'),
+                            Index('ApiFuzzRequestFileUploadTable.fuzzRequestId', 'fuzzRequestId')
+                            )
 
 
 RandomImageTable = Table('RandomImage', metadata,
@@ -204,6 +220,22 @@ SeclistPDFTable = Table('SeclistPDF', metadata,
                             Column('RowNumber', Integer, primary_key=True),
                             Column('Content', String)
                         )
+
+### create indexes
+
+# index_ApiFuzzDataCaseTable_fuzzCaseSetId = Index('index_ApiFuzzDataCaseTable_fuzzCaseSetId', ApiFuzzDataCaseTable.c.fuzzCaseSetId)
+# index_ApiFuzzDataCaseTable_fuzzcontextId = Index('index_ApiFuzzDataCaseTable_fuzzcontextId', ApiFuzzDataCaseTable.c.fuzzcontextId)
+# index_ApiFuzzDataCaseTable_fuzzCaseSetRunId = Index('index_ApiFuzzDataCaseTable_fuzzCaseSetRunId', ApiFuzzDataCaseTable.c.fuzzCaseSetRunId)
+# index_ApiFuzzRequestTable_Id = Index('index_ApiFuzzRequestTable_Id', ApiFuzzRequestTable.c.Id)
+# Index('index_ApiFuzzResponseTable_Id', ApiFuzzResponseTable.c.Id)
+# Index('index_ApiFuzzRequestTable_fuzzDataCaseId', ApiFuzzRequestTable.c.fuzzDataCaseId)
+# Index('index_ApiFuzzResponseTable_fuzzDataCaseId', ApiFuzzResponseTable.c.fuzzDataCaseId)
+
+# https://stackoverflow.com/questions/14419299/adding-indexes-to-sqlalchemy-models-after-table-creation
+# https://stackoverflow.com/questions/55921584/create-an-ordered-index-in-sqlite-db-using-sqlalchemy
+# https://stackoverflow.com/questions/61827723/how-to-speed-up-a-4-way-sqlite-inner-join-that-is-slow-despite-covering-indexes
+
+### indexes end
                             
 
 def get_fuzzcontexts() -> list[ApiFuzzContext]:
