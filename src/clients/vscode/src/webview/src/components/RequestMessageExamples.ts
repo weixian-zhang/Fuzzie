@@ -169,6 +169,16 @@ Authorization: {{ string }}
     <name>{{ username }}</name>
     <time>{{ datetime }}</time>
 </request>
+`,
+
+'post-html-xss':`
+POST https://httpbin.org/post HTTP/1.1
+
+<html>
+ <body>
+  <div>Welcome <p> <script>{{ xss }}</script> </p></div>
+ </body>
+</html>
 `
     }
 
