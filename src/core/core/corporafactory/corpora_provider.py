@@ -20,6 +20,7 @@ from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 from filename_corpora import FileNameCorpora
 from myfile_corpora_provider import MyFileCorpora
+from auto_num_increment_corpora import NumberRangeCorpora
 
 from pubsub import pub
 
@@ -51,6 +52,7 @@ class CorporaProvider:
         self._stringCorpora = StringCorpora()
         self._usernameCorpora = UsernameCorpora()
         self._filenameCorpora = FileNameCorpora()
+        self._numrange = NumberRangeCorpora()
     
     def load_files_corpora(self):
         #self.es.emitInfo('CorporaProvider: loading payload corpora')
@@ -159,12 +161,12 @@ class CorporaProvider:
         return myfilec
         
 
-    # @property
-    # def myfileCorpora(self):
-    #     return self._myfileCorpora
-    # @myfileCorpora.setter
-    # def x(self, value):
-    #     self._myfileCorpora = value
+    @property
+    def numrangeCorpora(self):
+        return self._numrange
+    @numrangeCorpora.setter
+    def x(self, value):
+        self._numrange = value
         
     @property
     def fileNameCorpora(self):

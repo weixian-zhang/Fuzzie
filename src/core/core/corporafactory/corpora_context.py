@@ -20,6 +20,7 @@ from seclist_payload_corpora import SeclistPayloadCorpora
 from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 from eventstore import EventStore
+from auto_num_increment_corpora import NumberRangeCorpora
 
 from backgroundtask_corpora_loader import corporaProvider
 
@@ -29,18 +30,22 @@ class CorporaContext:
         self.eventstore = EventStore()
         self.cp = corporaProvider     # CorporaProvider is singleton and already loaded with data during fuzzer startup
         self.context = {}
-        
+        self.tryBuild = False
         self.myfile_wordlist_type = 'myfile'
     
     # try_build_context is used only for parsing request messages from webview
     def try_build_context(self, fcss: list[ApiFuzzCaseSet]) -> tuple([bool, str]):
         try:
-            self.build_context(fcss)
+            self.build_context(fcss, tryBuild=True)
             return True, ''
         except Exception as e:
             return False, ''
     
-    def build_context(self, fcss: list[ApiFuzzCaseSet]):
+    # tryBuild flag is to prevent unnecessary wordlist-type/corpora data loading.
+    # Especially type like "numrange" which require user input to generate data on the fly when fuzzing starts
+    def build_context(self, fcss: list[ApiFuzzCaseSet], tryBuild=False):
+        
+        self.tryBuild = tryBuild
         
         try:
             for fcs in fcss:
@@ -80,7 +85,7 @@ class CorporaContext:
                                     
             if isinstance(reqMsg, str):
                 tpl = jinja2.Template(reqMsg)
-                tpl.render({ 'eval': self.parse_reqmsg_by_eval_func })
+                tpl.render({ 'eval': self.parse_wordlist_type_by_eval_func })
                 
             return True, ''
                 
@@ -120,7 +125,12 @@ class CorporaContext:
             return False, Utils.errAsText(e), ''
         
     
-    def parse_reqmsg_by_eval_func(self, wordlist_type: str, mutate_value = '', my_file_content_value='', my_file_content_filename=''):
+    def parse_wordlist_type_by_eval_func(self, wordlist_type: str, 
+                                         mutate_value = '', 
+                                         my_file_content_value='', 
+                                         my_file_content_filename='',
+                                         autonumStart=1,
+                                         autonumEnd=80000):
         
         expression = wordlist_type
         
@@ -153,11 +163,26 @@ class CorporaContext:
             
             return
         
+        # "numrange"
+        if wordlist_type == WordlistType.numrange:
+            
+            corporaContextKey =f'{wordlist_type}_{autonumStart}_{autonumEnd}'
+            
+            nic = NumberRangeCorpora(autonumStart, autonumEnd)
+            
+            if not self.tryBuild:   #load data if this is not parsing requets message
+                nic.load_corpora()
+            
+            self.context[corporaContextKey] = nic
+            
+            return
+        
         match wordlist_type:
             case 'string':
                 if not 'string' in self.context:
                     self.context['string'] = self.cp.stringCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'xss':
                 if not 'xss' in self.context:
                     self.context['xss'] = self.cp.stringCorpora
@@ -165,71 +190,87 @@ class CorporaContext:
             case 'sqlinject':
                 if not 'sqlinject' in self.context:
                     self.context['sqlinject'] = self.cp.stringCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'bool':
                 if not 'bool' in self.context:
                     self.context['bool'] = self.cp.boolCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'digit':
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'filename':
                 if not 'filename' in self.context:
                     self.context['filename'] = self.cp.fileNameCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'datetime':
                 if not 'datetime' in self.context:
                     self.context['datetime'] = self.cp.datetimeCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'date':
                 if not 'date' in self.context:
                     self.context['date'] = self.cp.datetimeCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'time':
                 if not 'time' in self.context:
                     self.context['time'] = self.cp.datetimeCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'username':
                if not 'username' in self.context:
                     self.context['username'] = self.cp.usernameCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             case 'password':
                 if not 'password' in self.context:
                     self.context['password'] = self.cp.passwordCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
                 
             # image
             case WordlistType.image:
                 if not 'image' in self.context:
                     self.context[WordlistType.image] = self.cp.imageCorpora
-                    return originalExpression
+                    return
+                    #return originalExpression
             # pdf          
             case WordlistType.pdf:
                 if not WordlistType.pdf in self.context:
                     self.context[WordlistType.pdf] = self.cp.pdfCorpora
-                    return True
+                    return
+                    #return True
             
             # file  
             case WordlistType.file:
                 if not WordlistType.file in self.context:
                     self.context[WordlistType.file] = self.cp.seclistPayloadCorpora
-                    return True
+                    return
+                    #return True
             
             # no wordlist-type match     
             case _:
                 self.context[expression] = self.cp.stringCorpora
-                return originalExpression
+                return
+                #return originalExpression
     
     def resolve_data_by_eval_func(self, wordlist_type,
                                      mutate_value = '', 
                                      my_file_content_value='', 
                                      my_file_content_filename='',
-                                     jsonEscape=True):
+                                     autonumStart=1,
+                                     autonumEnd=100000):
+                                     #jsonEscape=True):
         
         try:
             
@@ -251,6 +292,12 @@ class CorporaContext:
             elif wordlist_type == WordlistType.sqlinject:
                 sc: StringCorpora = self.context[WordlistType.sqlinject]
                 data = sc.next_sqli_corpora()
+                return data
+            
+            elif wordlist_type == WordlistType.numrange:
+                corporaContextKey = f'{WordlistType.numrange}_{autonumStart}_{autonumEnd}'
+                ni: NumberRangeCorpora = self.context[corporaContextKey]
+                data = ni.next_corpora()
                 return data
             else:
                 # if wordlist_type is not found in Context
