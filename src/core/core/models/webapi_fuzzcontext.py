@@ -227,3 +227,4 @@ class WordlistType:
     username = 'username'
     password = 'password'
     filename = 'filename'
+    numrange = 'numrange'

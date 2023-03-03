@@ -2,22 +2,21 @@ import os,sys
 from pathlib import Path
 import shortuuid
 from datetime import datetime
-import jinja2
 from urllib.parse import urlparse
 import json
 from urllib.parse import urlparse
+
+from api_discovery.wordlist_type_helper import WordlistTypeHelper
 
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
 import validators
-import re
-import jsonpickle 
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
 from eventstore import EventStore
-from jinja2 import Environment
+
     
 class RequestMessageFuzzContextCreator:
 
@@ -33,15 +32,27 @@ class RequestMessageFuzzContextCreator:
         # for now, used by only myfile filter
         self.currentFuzzCaseSet = None
         
-        self.jinjaEnvPrimitive = jinja2.Environment()
-        self.jinjaEnvPrimitive.filters[WordlistType.mutate] = self.mutate_jinja_filter
+        # self.jinjaEnvPrimitive = jinja2.Environment()
+        # self.jinjaEnvPrimitive.filters[WordlistType.mutate] = self.mutate_jinja_filter
         
-        self.jinjaEnvBody = jinja2.Environment()
-        self.jinjaEnvBody.filters[WordlistType.mutate] = self.mutate_jinja_filter
-        self.jinjaEnvBody.filters[WordlistType.myfile] = self.myfile_jinja_filter
-        self.jinjaEnvBody.globals['image'] = self.image_jinja_filter
-        self.jinjaEnvBody.globals['file'] = self.file_jinja_filter
-        self.jinjaEnvBody.globals['pdf'] = self.pdf_jinja_filter
+        self.jinjaEnvPrimitive  = WordlistTypeHelper.create_jinja_primitive_env(
+            mutate_jinja_filter=self.mutate_jinja_filter,
+            jinja_numrange_func=self.jinja_numrange_func)
+        
+        self.jinjaEnvBody = WordlistTypeHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
+                                                                     myfile_jinja_filter=self.myfile_jinja_filter,
+                                                                     jinja_file_func=self.jinja_file_func,
+                                                                     jinja_image_func=self.jinja_image_func,
+                                                                     jinja_pdf_func=self.jinja_pdf_func,
+                                                                     jinja_numrange_func=self.jinja_numrange_func)
+        
+        # self.jinjaEnvBody = jinja2.Environment()
+        # self.jinjaEnvBody.filters[WordlistType.mutate] = self.mutate_jinja_filter
+        # self.jinjaEnvBody.filters[WordlistType.myfile] = self.myfile_jinja_filter
+        # self.jinjaEnvBody.globals['image'] = self.jinja_image_func
+        # self.jinjaEnvBody.globals['file'] = self.jinja_file_func
+        # self.jinjaEnvBody.globals['pdf'] = self.jinja_pdf_func
+        
 
     def new_fuzzcontext(self,
                  apiDiscoveryMethod,  
@@ -242,10 +253,10 @@ class RequestMessageFuzzContextCreator:
                    
                    if ok:
                         bodyTpl = self.jinjaEnvPrimitive.from_string(body)
-                        bodyEval = bodyTpl.render(self.jinja_primitive_wordlist_types_dict())
+                        bodyEval = bodyTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #bodyTpl.render(self.jinja_primitive_wordlist_types_dict())
                         
                         gqlVariableTpl = self.jinjaEnvPrimitive.from_string(graphqlVariable)
-                        graphqlVariableEval = gqlVariableTpl.render(self.jinja_primitive_wordlist_types_dict())
+                        graphqlVariableEval = gqlVariableTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #gqlVariableTpl.render(self.jinja_primitive_wordlist_types_dict())
                         
                         self.currentFuzzCaseSet.isGraphQL = True
                         self.currentFuzzCaseSet.graphQLVariableNonTemplate = graphqlVariable
@@ -259,7 +270,7 @@ class RequestMessageFuzzContextCreator:
                 
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
                     tpl = self.jinjaEnvBody.from_string(body)
-                    bodyRendered = tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    bodyRendered = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
                     if self.is_rendered_body_has_func(bodyRendered):
                         return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
@@ -391,7 +402,6 @@ class RequestMessageFuzzContextCreator:
     
     def get_verb(self, multilineBlock: list[str]) -> tuple([bool, str, str]):
         
-        
         verb = 'GET'
         
         if len(multilineBlock) >= 1:
@@ -404,7 +414,7 @@ class RequestMessageFuzzContextCreator:
                 t = tokens[0]
                 
                 for v in self.verbs:
-                    if v == t:
+                    if v == t.upper():
                         verb = v
                         return verb
         
@@ -621,7 +631,7 @@ class RequestMessageFuzzContextCreator:
         
             tpl = self.jinjaEnvPrimitive.from_string(expr)
             
-            output = tpl.render(self.jinja_primitive_wordlist_types_dict())                
+            output = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
                     
             return True, '', output
         
@@ -631,7 +641,7 @@ class RequestMessageFuzzContextCreator:
     
     # *** jinja filters and functions
     
-    def image_jinja_filter(self, filename=''):
+    def jinja_image_func(self, filename=''):
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.image, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
@@ -639,7 +649,7 @@ class RequestMessageFuzzContextCreator:
         
         return ''
         
-    def pdf_jinja_filter(self, filename=''):
+    def jinja_pdf_func(self, filename=''):
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.pdf, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
@@ -647,13 +657,16 @@ class RequestMessageFuzzContextCreator:
         
         return ''
         
-    def file_jinja_filter(self, filename=''):
+    def jinja_file_func(self, filename=''):
         
         self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.file, filename=filename)
         self.currentFuzzCaseSet.fileName = filename
         self.currentFuzzCaseSet.fileDataTemplate = '{{ eval(wordlist_type=\'file\') }}'
         
         return ''
+    
+    def jinja_numrange_func(self, start=1, end=100000):
+        return  f'{{{{ eval(wordlist_type=\'numrange\', autonumStart={start}, autonumEnd={end}) }}}}'
     
     # insert my wordlist type
     def mutate_jinja_filter(self, value):
@@ -716,24 +729,24 @@ class RequestMessageFuzzContextCreator:
             return True
         return False
     
-    
+    #refactored, move to "wordlist_type_helper.py"
     # integer type is to support OpenApi3, but is same as digit
-    def jinja_primitive_wordlist_types_dict(self) -> dict:
-        return {
-            'string': '{{ eval(wordlist_type=\'string\') }}',
-            'xss': '{{ eval(wordlist_type=\'xss\') }}',
-            'sqlinject': '{{ eval(wordlist_type=\'sqlinject\') }}',
-            'bool':  '{{ eval(wordlist_type=\'bool\') }}',
-            'digit': '{{ eval(wordlist_type=\'digit\') }}',
-            'integer': '{{ eval(wordlist_type=\'integer\') }}',
-            'char': '{{ eval(wordlist_type=\'char\') }}',
-            'filename': '{{ eval(wordlist_type=\'filename\') }}',
-            'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
-            'date': '{{ eval(wordlist_type=\'date\') }}',
-            'time': '{{ eval(wordlist_type=\'time\') }}',
-            'username': '{{ eval(wordlist_type=\'username\') }}',
-            'password': '{{ eval(wordlist_type=\'password\') }}'
-        }
+    # def jinja_primitive_wordlist_types_dict(self) -> dict:
+    #     return {
+    #         'string': '{{ eval(wordlist_type=\'string\') }}',
+    #         'xss': '{{ eval(wordlist_type=\'xss\') }}',
+    #         'sqlinject': '{{ eval(wordlist_type=\'sqlinject\') }}',
+    #         'bool':  '{{ eval(wordlist_type=\'bool\') }}',
+    #         'digit': '{{ eval(wordlist_type=\'digit\') }}',
+    #         'integer': '{{ eval(wordlist_type=\'integer\') }}',
+    #         'char': '{{ eval(wordlist_type=\'char\') }}',
+    #         'filename': '{{ eval(wordlist_type=\'filename\') }}',
+    #         'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
+    #         'date': '{{ eval(wordlist_type=\'date\') }}',
+    #         'time': '{{ eval(wordlist_type=\'time\') }}',
+    #         'username': '{{ eval(wordlist_type=\'username\') }}',
+    #         'password': '{{ eval(wordlist_type=\'password\') }}'
+    #     }
     
     def is_grapgql(self, headers: dict):
         if Utils.isNoneEmpty(headers) or len(headers) == 0:

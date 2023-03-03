@@ -26,55 +26,61 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-json'))">POST JSON</a>
+                    @click="(loadExample('post-json'))">POST JSON</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-xml'))">POST XML</a>
+                    @click="(loadExample('post-xml'))">POST XML</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
+                    @click="(loadExample('post-html-xss'))">POST HTML with XSS</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                    @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
                   </li>
                   
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
+                    @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-pdf'))">Upload File: PDF</a>
+                    @click="(loadExample('post-pdf'))">Upload File: PDF</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('post-image'))">Upload File: Image</a>
+                    @click="(loadExample('post-image'))">Upload File: Image</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                    @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
+                    @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                    @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('gql-query-no-var-1'))">GraphQL Query</a>
+                    @click="(loadExample('gql-query-no-var-1'))">GraphQL Query</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('gql-mutation-var-1'))">GraphQL Mutate with Variables</a>
+                    @click="(loadExample('gql-mutation-var-1'))">GraphQL Mutate with Variables</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('mutate-post-json'))">Mutate your input - JSON</a>
+                    @click="(loadExample('mutate-post-json'))">Mutate your input - JSON</a>
                   </li>
+
                   <li><a class="dropdown-item" href="#"
-                  @click="(loadExample('mutate-post-xml'))">Mutate your input - XML</a>
+                    @click="(loadExample('mutate-post-xml'))">Mutate your input - XML</a>
                   </li>
+
                 </ul>
               </div>
               
