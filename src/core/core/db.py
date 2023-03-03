@@ -221,6 +221,12 @@ SeclistPDFTable = Table('SeclistPDF', metadata,
                             Column('Content', String)
                         )
 
+DiscoveryWebPathTable = Table('DiscoveryWebPath', metadata,
+                            Column('RowNumber', Integer, primary_key=True),
+                            Column('Content', String)
+                        )
+
+
 ### create indexes
 
 # index_ApiFuzzDataCaseTable_fuzzCaseSetId = Index('index_ApiFuzzDataCaseTable_fuzzCaseSetId', ApiFuzzDataCaseTable.c.fuzzCaseSetId)

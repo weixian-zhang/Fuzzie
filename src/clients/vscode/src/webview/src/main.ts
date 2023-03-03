@@ -87,7 +87,8 @@ app.use(VueCodemirror, {
               {label: "string", type: "keyword", apply: "{{ string }}", info:"primitive wordlist - A mix of big-list-of-naughty strings, and  xss and sqlinjection strings from danielmiessle/seclist"},
               {label: "xss", type: "keyword", apply: "{{ xss }}", info:"primitive wordlist - cross site scripting strings from danielmiessler/seclist"},
               {label: "sqlinject", type: "keyword", apply: "{{ sqlinject }}", info:"primitive wordlist - sql inection strings from danielmiessler/seclist"},
-              {label: "numrange", type: "keyword", apply: "{{ numrange(1,50000) }}", info:"primitive wordlist - sql inection strings from danielmiessler/seclist"},
+              {label: "numrange", type: "keyword", apply: "{{ numrange(1,50000) }}", info:"increments \"start\" param by 1 and stops when at \"end\". Negative values accepted"},
+              {label: "httppath", type: "keyword", apply: "{{ httppath }}", info:"http path discovery, use to discover directories and files. From danielmiessler/seclist and https://wordlists.assetnote.io"},
 
               {label: "GET", type: "keyword", apply: "GET ", info:"GET HTTP verb"},
               {label: "PUT", type: "keyword", apply: "PUT ", info:"PUT HTTP verb"},
