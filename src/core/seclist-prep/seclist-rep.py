@@ -274,7 +274,7 @@ def load_image():
                     },
                     json={
                         "prompt": p,
-                        "n": 2,
+                        "n": 2, # generate x number
                         "size": size[randSizeIdx]
                     })
         
@@ -507,7 +507,7 @@ if __name__ == '__main__':
     
     # load_pdf()
     
-    load_image()
+    #load_image()
     
     # load_seclist_char()
     
@@ -519,7 +519,7 @@ if __name__ == '__main__':
     
     #load_seclist_password()
     
-    #load_seclist_xss()
+    load_seclist_xss()
     
     #load_seclist_sqlinjection()
 
