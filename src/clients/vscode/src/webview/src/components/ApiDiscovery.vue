@@ -251,7 +251,7 @@
                   thumb-color="cyan"
                   thumb-label="always"
                   min=1
-                  max=1000000
+                  max=500000
                   step="1"
                 ></v-slider>
                 <InputNumber
@@ -260,7 +260,7 @@
                             showButtons
                             buttonLayout="horizontal"
                             :step="1"
-                            :min="1" :max="1000000"
+                            :min="1" :max="500000"
                             decrementButtonClass="p-button-outlined p-button-plain"
                             incrementButtonClass="p-button-outlined p-button-plain"
                             incrementButtonIcon="pi pi-plus"

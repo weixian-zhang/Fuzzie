@@ -21,7 +21,7 @@ from username_corpora import UsernameCorpora
 from filename_corpora import FileNameCorpora
 from myfile_corpora_provider import MyFileCorpora
 from auto_num_increment_corpora import NumberRangeCorpora
-
+from http_path_corpora import HttpPathCorpora
 from pubsub import pub
 
 from utils import Utils
@@ -53,6 +53,7 @@ class CorporaProvider:
         self._usernameCorpora = UsernameCorpora()
         self._filenameCorpora = FileNameCorpora()
         self._numrange = NumberRangeCorpora()
+        self._httppath = HttpPathCorpora()
     
     def load_files_corpora(self):
         #self.es.emitInfo('CorporaProvider: loading payload corpora')
@@ -74,6 +75,10 @@ class CorporaProvider:
     def load_password_corpora(self):
         self._passwordCorpora.load_corpora()
         self.es.emitInfo('CorporaProvider: password corpora loaded')
+        
+    def load_http_path_corpora(self):
+        self._httppath.load_corpora()
+        self.es.emitInfo('CorporaProvider: http path corpora loaded')
         
     def load_string_corpora(self):
         self._stringCorpora.load_corpora()
@@ -110,29 +115,9 @@ class CorporaProvider:
             self._digitCorpora.load_corpora()
             self.es.emitInfo('CorporaProvider: digit corpora loaded')
             
-            #self.es.emitInfo('CorporaProvider: loading image corpora')
-            # self._imageCorpora.load_corpora()
-            # self.es.emitInfo('CorporaProvider: image corpora loaded')
-            
-            #self.es.emitInfo('CorporaProvider: loading password corpora')
-            # self._passwordCorpora.load_corpora()
-            # self.es.emitInfo('CorporaProvider: password corpora loaded')
-            
-            # #self.es.emitInfo('CorporaProvider: loading pdf corpora')
-            # self._pdfCorpora.load_corpora()
-            # self.es.emitInfo('CorporaProvider: pdf corpora loaded')
-            
-            # #self.es.emitInfo('CorporaProvider: loading payload corpora')
-            # self._seclistPayloadCorpora.load_corpora()
-            # self.es.emitInfo('CorporaProvider: payload corpora loaded')
-            
             #self.es.emitInfo('CorporaProvider: loading string corpora')
             self._stringCorpora.load_corpora()
             self.es.emitInfo('CorporaProvider: string corpora loaded')
-            
-            #self.es.emitInfo('CorporaProvider: loading username corpora')
-            # self._usernameCorpora.load_corpora()
-            # self.es.emitInfo('CorporaProvider: username corpora loaded')
             
             #self.es.emitInfo('CorporaProvider: loading file corpora')
             self._filenameCorpora.load_corpora()
@@ -159,7 +144,13 @@ class CorporaProvider:
                                 usernameCorpora = self._usernameCorpora,
                                 filenameCorpora = self._filenameCorpora)
         return myfilec
-        
+    
+    @property
+    def httpPathCorpora(self):
+        return self._httppath
+    @httpPathCorpora.setter
+    def x(self, value):
+        self._httppath = value    
 
     @property
     def numrangeCorpora(self):

@@ -32,6 +32,8 @@ def load_corpora_background():
         
         executor.submit(corporaProvider.load_string_corpora)
         
+        executor.submit(corporaProvider.load_http_path_corpora)
+        
         executor.submit(corporaProvider.load_all)
     
     es.emitInfo('data loading complete')
