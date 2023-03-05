@@ -22,6 +22,10 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-discovery-path-qs'))">Discovery directories & files</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
                   @click="(loadExample('get-path-mutate-1'))">GET - Mutate Path</a>
                   </li>
 

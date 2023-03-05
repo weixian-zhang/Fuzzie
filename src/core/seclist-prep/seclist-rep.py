@@ -162,6 +162,7 @@ passwordPath = os.path.join(dataPath, 'seclist', 'password')
 sqlinjPath = os.path.join(dataPath, 'seclist', 'sql-injection')
 xssPath = os.path.join(dataPath, 'seclist', 'xss')
 charPath = os.path.join(dataPath, 'seclist', 'char')
+discoveryWebPath = charPath = os.path.join(dataPath, 'seclist', 'discovery-web-path')
 
 
 def load_image():
@@ -442,6 +443,44 @@ def load_seclist_password():
                         ''')
     print('seclist password completed')
     
+def load_discovery_web_path():
+    
+    try:
+        for dirpath, _, filenames in os.walk(discoveryWebPath):
+            for filename in filenames:
+                ffPath = os.path.join(dirpath, filename)
+                
+                f = io.open(ffPath, mode="r", encoding="utf-8")
+                content = f.readlines()
+                
+                for p in content:
+                    
+                    if p.startswith('#'):
+                        continue     
+                    
+                    p = p.replace('"', '')
+                    p = p.replace('\n', '')
+                    p = p.replace('\r\n', '')
+                    
+                    if p == '':
+                        continue
+                    
+                    if p.startswith('/'):
+                        p = p.replace('/', '', 1)
+                    
+                    # check if querystring, avoid prepend '/' if querystring
+                    # if not p.startswith('?') and not p.startswith('/'):
+                    #     p = '/' + p
+                    
+                    cursor.execute(f'''
+                            insert into DiscoveryWebPath (Content)
+                            values ("{p}")
+                            ''')
+        print('seclist web path completed')
+    except Exception as e:
+        print(e)
+    
+    
 def load_seclist_xss():
     for dirpath, _, filenames in os.walk(xssPath):
         for filename in filenames:
@@ -519,9 +558,11 @@ if __name__ == '__main__':
     
     #load_seclist_password()
     
-    load_seclist_xss()
+    #load_seclist_xss()
     
     #load_seclist_sqlinjection()
+    
+    load_discovery_web_path()
 
     sqliteconn.close()
     

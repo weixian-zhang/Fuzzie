@@ -228,3 +228,4 @@ class WordlistType:
     password = 'password'
     filename = 'filename'
     numrange = 'numrange'
+    httppath = 'httppath'
