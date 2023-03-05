@@ -54,25 +54,29 @@ By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie
 
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
-| WordList Type | Is Primitive wordlist type | file upload | Description   |
-| ------------- |-------------| -------------| ------------- |
-| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates |
-| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
-| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
-| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist |
-| {{ bool }} | yes | no | boolean values and something naughty |
-| {{ digit }} | yes | no | Integers, floats and something naughty |
-| {{ char }} | yes | no | naughty chars |
-| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
-| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+Type = wordlist provides data  
+Type = function acts on your provided custom data
+| WordList Type | Is Primitive wordlist type | file upload | Description | Type |
+| ------------- |-------------| -------------| ------------- | ------------- |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
+| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | wordlist |
+| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) | wordlist |
+| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist | wordlist |
+| {{ bool }} | yes | no | boolean values and something naughty | wordlist |
+| {{ digit }} | yes | no | Integers, floats and something naughty | wordlist |
+| {{ char }} | yes | no | naughty chars | wordlist |
+| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
+| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
 | {{ file }} |  no | yes | naught payload from danielmiessle/seclist |
-| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
-| {{ datetime }} | yes | no | date + time |
-| {{ date }} | yes | no | date only |
-| {{ time }} | yes | no | time only |
-| {{ username }} | yes | no | hacked usernames from danielmiessler seclist |
-| {{ password }} | yes | no | hacked password from danielmiessler seclist |
-| {{ filename }} | yes | no | random file name and extensions |  
+| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  | wordlist |
+| {{ datetime }} | yes | no | date + time | wordlist |
+| {{ date }} | yes | no | date only | wordlist |
+| {{ time }} | yes | no | time only | wordlist |
+| {{ username }} | yes | no | hacked usernames from danielmiessler seclist | wordlist |
+| {{ password }} | yes | no | hacked password from danielmiessler seclist | wordlist |
+| {{ filename }} | yes | no | random file name and extensions |  wordlist |
+| {{ httppath }} | yes | no | discover directories and files |  wordlist |
+| {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. Example numrange(1, 5000) | function |
 
 #### 2.1 Request Message Syntax  
 
