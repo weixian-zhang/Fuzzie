@@ -21,6 +21,7 @@ from string_corpora import StringCorpora
 from username_corpora import UsernameCorpora
 from eventstore import EventStore
 from auto_num_increment_corpora import NumberRangeCorpora
+from randomize_items_corpora import RandomItemsCorpora
 
 from backgroundtask_corpora_loader import corporaProvider
 
@@ -130,7 +131,8 @@ class CorporaContext:
                                          my_file_content_value='', 
                                          my_file_content_filename='',
                                          autonumStart=1,
-                                         autonumEnd=80000):
+                                         autonumEnd=80000,
+                                         randomItemsStr = '',):
         
         expression = wordlist_type
         
@@ -176,6 +178,20 @@ class CorporaContext:
             self.context[corporaContextKey] = nic
             
             return
+        
+        # randomize item
+        if wordlist_type == WordlistType.random:
+            
+            corporaContextKey = randomItemsStr
+            
+            itemArr = randomItemsStr.split(',')
+            
+            corpora = RandomItemsCorpora(items=itemArr)
+            
+            self.context[corporaContextKey] = corpora
+            
+            return
+        
         
         match wordlist_type:
             case 'string':
@@ -274,7 +290,8 @@ class CorporaContext:
                                      my_file_content_value='', 
                                      my_file_content_filename='',
                                      autonumStart=1,
-                                     autonumEnd=100000):
+                                     autonumEnd=100000,
+                                     randomItemsStr = ''):
                                      #jsonEscape=True):
         
         try:
@@ -301,9 +318,16 @@ class CorporaContext:
             
             elif wordlist_type == WordlistType.numrange:
                 corporaContextKey = f'{WordlistType.numrange}_{autonumStart}_{autonumEnd}'
-                ni: NumberRangeCorpora = self.context[corporaContextKey]
-                data = ni.next_corpora()
+                corpora: NumberRangeCorpora = self.context[corporaContextKey]
+                data = corpora.next_corpora()
                 return data
+            
+            elif wordlist_type == WordlistType.random:
+                corporaContextKey = randomItemsStr
+                corpora = self.context[corporaContextKey]
+                data = corpora.next_corpora()
+                return data
+            
             else:
                 # if wordlist_type is not found in Context
                 if not self.is_wordlistType_in_context(wordlist_type):

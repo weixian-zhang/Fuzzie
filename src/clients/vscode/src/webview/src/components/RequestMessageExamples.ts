@@ -252,6 +252,14 @@ GET https://httpbin.org/links?orderid={{ '12315' | mutate }}
 'get-discovery-path-qs':
 `
 GET https://httpbin.org/{{ httppath }}
+`,
+
+'get-with-random-qs-1':
+`
+GET https://httpbin.org/get
+?name={{ ['James', 'Bobby', 'Keigo', 'Hans'] | random }}
+&address={{ ['never', 'give' , 'up', 'never', 'stop', 'believing'] | random }}
+&order={{ [1, 3 ,100, 32, 13, 22, 55, 'and', 'some', 'mix', 'of some words'] | random }}
 `
 
     };

@@ -14,11 +14,11 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path'))">GET - Path</a>
+                  @click="(loadExample('get-path'))">Path</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path-qs'))">GET - Path & Querystring</a>
+                  @click="(loadExample('get-path-qs'))">Path & Querystring</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
@@ -26,7 +26,11 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path-mutate-1'))">GET - Mutate Path</a>
+                  @click="(loadExample('get-path-mutate-1'))">Mutate Path</a>
+                  </li>
+
+                  <li><a class="dropdown-item" href="#" 
+                  @click="(loadExample('get-with-random-qs-1'))">Randomized items in Querystring</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
