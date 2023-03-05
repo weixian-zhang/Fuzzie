@@ -58,7 +58,6 @@ Type = wordlist provides data
 Type = function acts on your provided custom data
 | WordList Type | Is Primitive wordlist type | file upload | Description | Type |
 | ------------- |-------------| -------------| ------------- | ------------- |
-| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
 | {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | wordlist |
 | {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) | wordlist |
 | {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist | wordlist |
@@ -77,6 +76,7 @@ Type = function acts on your provided custom data
 | {{ filename }} | yes | no | random file name and extensions |  wordlist |
 | {{ httppath }} | yes | no | discover directories and files |  wordlist |
 | {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. Example numrange(1, 5000) | function |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
 
 #### 2.1 Request Message Syntax  
 
