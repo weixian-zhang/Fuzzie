@@ -251,7 +251,7 @@ GET https://httpbin.org/links?orderid={{ '12315' | mutate }}
 
 'get-discovery-path-qs':
 `
-GET https://httpbin.org/links{{ httppath }}
+GET https://httpbin.org/{{ httppath }}
 `
 
     };

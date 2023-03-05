@@ -465,9 +465,12 @@ def load_discovery_web_path():
                     if p == '':
                         continue
                     
+                    if p.startswith('/'):
+                        p = p.replace('/', '', 1)
+                    
                     # check if querystring, avoid prepend '/' if querystring
-                    if not p.startswith('?') and not p.startswith('/'):
-                        p = '/' + p
+                    # if not p.startswith('?') and not p.startswith('/'):
+                    #     p = '/' + p
                     
                     cursor.execute(f'''
                             insert into DiscoveryWebPath (Content)

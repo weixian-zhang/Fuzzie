@@ -237,6 +237,11 @@ class CorporaContext:
                     self.context['password'] = self.cp.passwordCorpora
                     return
                     #return originalExpression
+            case WordlistType.httppath:
+                if not WordlistType.httppath in self.context:
+                    self.context[WordlistType.httppath] = self.cp.httpPathCorpora
+                    return
+                    #return originalExpression
                 
             # image
             case WordlistType.image:

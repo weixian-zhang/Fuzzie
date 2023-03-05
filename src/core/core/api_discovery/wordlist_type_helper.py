@@ -25,7 +25,8 @@ class WordlistTypeHelper:
             'date': '{{ eval(wordlist_type=\'date\') }}',
             'time': '{{ eval(wordlist_type=\'time\') }}',
             'username': '{{ eval(wordlist_type=\'username\') }}',
-            'password': '{{ eval(wordlist_type=\'password\') }}'
+            'password': '{{ eval(wordlist_type=\'password\') }}',
+            'httppath': '{{ eval(wordlist_type=\'httppath\') }}'
         }
         
     def create_jinja_primitive_env(mutate_jinja_filter, jinja_numrange_func):

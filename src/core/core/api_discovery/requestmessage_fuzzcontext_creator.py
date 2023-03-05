@@ -12,6 +12,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
+import re
 import validators
 from utils import Utils
 from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
@@ -470,9 +471,13 @@ class RequestMessageFuzzContextCreator:
     def remove_verb_if_exist(self, requestline: str):
             if requestline == '':
                 return requestline
+            
+            rlu = requestline.upper()
             for v in self.verbs:
-                if requestline.upper().startswith(v):
-                    requestline = requestline.removeprefix(v)
+                if rlu.startswith(v):
+                    requestline = re.sub(f'^{v}', '', requestline, count=1, flags=re.IGNORECASE)
+                    requestline = requestline.strip()
+                    break
             return requestline
     
     #example:
