@@ -75,7 +75,7 @@ Type = function acts on your provided custom data
 | {{ password }} | yes | no | hacked password from danielmiessler seclist | wordlist |
 | {{ filename }} | yes | no | random file name and extensions |  wordlist |
 | {{ httppath }} | yes | no | discover directories and files |  wordlist |
-| {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. Example numrange(1, 5000) | function |
+| {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 | function |
 | {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
 
 #### 2.1 Request Message Syntax  
