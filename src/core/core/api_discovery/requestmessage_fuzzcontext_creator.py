@@ -39,7 +39,9 @@ class RequestMessageFuzzContextCreator:
         self.jinjaEnvPrimitive  = WordlistTypeHelper.create_jinja_primitive_env(
             mutate_jinja_filter=self.mutate_jinja_filter,
             jinja_randomize_items_filter=self.jinja_randomize_items_filter,
-            jinja_numrange_func=self.jinja_numrange_func)
+            jinja_numrange_func=self.jinja_numrange_func,
+            jinja_base64e_filter=self.jinja_base64e_filter,
+            jinja_base64d_filter=self.jinja_base64d_filter)
         
         self.jinjaEnvBody = WordlistTypeHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
                                                                      myfile_jinja_filter=self.myfile_jinja_filter,
@@ -47,7 +49,9 @@ class RequestMessageFuzzContextCreator:
                                                                      jinja_file_func=self.jinja_file_func,
                                                                      jinja_image_func=self.jinja_image_func,
                                                                      jinja_pdf_func=self.jinja_pdf_func,
-                                                                     jinja_numrange_func=self.jinja_numrange_func)
+                                                                     jinja_numrange_func=self.jinja_numrange_func,
+                                                                     jinja_base64e_filter=self.jinja_base64e_filter,
+                                                                     jinja_base64d_filter=self.jinja_base64d_filter)
         
         # self.jinjaEnvBody = jinja2.Environment()
         # self.jinjaEnvBody.filters[WordlistType.mutate] = self.mutate_jinja_filter
@@ -674,6 +678,15 @@ class RequestMessageFuzzContextCreator:
     
     def jinja_numrange_func(self, start=1, end=100000):
         return  f'{{{{ eval(wordlist_type=\'numrange\', autonumStart={start}, autonumEnd={end}) }}}}'
+    
+    def jinja_base64e_filter(self, value):
+        
+        cVal = str(value)
+        return  f'{{{{ eval(wordlist_type=\'base64e\', base64eValue=\'{cVal}\') }}}}'
+    
+    def jinja_base64d_filter(self, value):
+        cVal = str(value)
+        return  f'{{{{ eval(wordlist_type=\'base64d\', base64dValue=\'{cVal}\') }}}}'
     
     # insert my wordlist type
     def mutate_jinja_filter(self, value):

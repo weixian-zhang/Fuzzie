@@ -29,13 +29,18 @@ class WordlistTypeHelper:
             'httppath': '{{ eval(wordlist_type=\'httppath\') }}'
         }
         
-    def create_jinja_primitive_env(mutate_jinja_filter, jinja_numrange_func, jinja_randomize_items_filter):
+    def create_jinja_primitive_env(mutate_jinja_filter, 
+                                   jinja_numrange_func, 
+                                   jinja_randomize_items_filter,
+                                   jinja_base64e_filter,
+                                   jinja_base64d_filter):
         env = jinja2.Environment()
         env.filters[WordlistType.mutate] = mutate_jinja_filter
         env.filters[WordlistType.random] = jinja_randomize_items_filter
+        env.filters[WordlistType.base64e] = jinja_base64e_filter
+        env.filters[WordlistType.base64d] = jinja_base64d_filter
         
         env.globals[WordlistType.numrange] = jinja_numrange_func
-        
         
         return env
     
@@ -45,12 +50,16 @@ class WordlistTypeHelper:
                               jinja_file_func, 
                               jinja_pdf_func,
                               jinja_numrange_func,
-                              jinja_randomize_items_filter):
+                              jinja_randomize_items_filter,
+                              jinja_base64e_filter,
+                              jinja_base64d_filter):
         
         env = jinja2.Environment()
         env.filters[WordlistType.mutate] = mutate_jinja_filter
         env.filters[WordlistType.myfile] = myfile_jinja_filter
         env.filters[WordlistType.random] = jinja_randomize_items_filter
+        env.filters[WordlistType.base64e] = jinja_base64e_filter
+        env.filters[WordlistType.base64d] = jinja_base64d_filter
         
         env.globals[WordlistType.image] = jinja_image_func
         env.globals[WordlistType.file] = jinja_file_func
