@@ -229,3 +229,4 @@ class WordlistType:
     filename = 'filename'
     numrange = 'numrange'
     httppath = 'httppath'
+    random = 'random'

@@ -38,10 +38,12 @@ class RequestMessageFuzzContextCreator:
         
         self.jinjaEnvPrimitive  = WordlistTypeHelper.create_jinja_primitive_env(
             mutate_jinja_filter=self.mutate_jinja_filter,
+            jinja_randomize_items_filter=self.jinja_randomize_items_filter,
             jinja_numrange_func=self.jinja_numrange_func)
         
         self.jinjaEnvBody = WordlistTypeHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
                                                                      myfile_jinja_filter=self.myfile_jinja_filter,
+                                                                     jinja_randomize_items_filter=self.jinja_randomize_items_filter,
                                                                      jinja_file_func=self.jinja_file_func,
                                                                      jinja_image_func=self.jinja_image_func,
                                                                      jinja_pdf_func=self.jinja_pdf_func,
@@ -682,6 +684,25 @@ class RequestMessageFuzzContextCreator:
         evalOutput = f'{{{{ eval(wordlist_type=\'mutate\', mutate_value=\'{value}\') }}}}' #, my_uniquename=\'{my_uniquename}\') }}}}'
               
         return evalOutput
+    
+    # take only 100 items
+    def jinja_randomize_items_filter(self, items):
+        
+        itemLimit = 100
+        
+        itemList = []
+        
+        if len(items) > itemLimit:
+            for idx in range(0,itemLimit -1):
+                itemList.append(items[idx])
+        else:
+            itemList = items
+        
+        
+        mappedItems = map(str, itemList)
+        
+        itemsStr = ','.join(mappedItems)
+        return f'{{{{ eval(wordlist_type=\'random\', randomItemsStr=\'{itemsStr}\') }}}}'
             
     
     def myfile_jinja_filter(self, content: str, filename: str):
