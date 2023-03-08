@@ -1,15 +1,17 @@
 ## Fuzzie
-<img src="https://badgen.net/badge/version/1.0.0-alpha/green" />
+<img src="https://badgen.net/badge/vs-marketplace/0.10.0-preview/green" />
 
 Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for fuzz testing REST API and GraphQL.  
-The ability to fuzz test your REST and GraphQL APIs directly in an IDE brings about several advantages:
+The ability to fuzz test right in VSCode brings about several benefits:
 
+* As early as while debugging APIs in VSCode running on localhost, you can concurrently use Fuzzie to fuzz test your APIs.  
+  As Fuzzie also sends random unpredictable data, you can catch common bugs like unhandled input parameters early in development.
 * fuzz tests guided by an intuitive WebView
-* the ability to fuzz test very early during software development
 * Being available in VSCode allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
 ### *Things to Note    
 
+* Depending on [wordlist type](#2-write-http-request-messages), Fuzzie can send malicious strings from [SecList](https://github.com/danielmiessler/SecLists), recommend to use Fuzzie in test environments only
 * requires Python 3.10 and above
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
@@ -52,25 +54,29 @@ By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie
 
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
-| WordList Type | Is Primitive wordlist type | file upload | Description   |
-| ------------- |-------------| -------------| ------------- |
-| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates |
-| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) |
-| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
-| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist |
-| {{ bool }} | yes | no | boolean values and something naughty |
-| {{ digit }} | yes | no | Integers, floats and something naughty |
-| {{ char }} | yes | no | naughty chars |
-| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
-| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+Type = wordlist provides data  
+Type = function acts on your provided custom data
+| WordList Type | Is Primitive wordlist type | file upload | Description | Type |
+| ------------- |-------------| -------------| ------------- | ------------- |
+| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | wordlist |
+| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) | wordlist |
+| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist | wordlist |
+| {{ bool }} | yes | no | boolean values and something naughty | wordlist |
+| {{ digit }} | yes | no | Integers, floats and something naughty | wordlist |
+| {{ char }} | yes | no | naughty chars | wordlist |
+| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
+| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
 | {{ file }} |  no | yes | naught payload from danielmiessle/seclist |
-| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
-| {{ datetime }} | yes | no | date + time |
-| {{ date }} | yes | no | date only |
-| {{ time }} | yes | no | time only |
-| {{ username }} | yes | no | hacked usernames from danielmiessler seclist |
-| {{ password }} | yes | no | hacked password from danielmiessler seclist |
-| {{ filename }} | yes | no | random file name and extensions |  
+| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  | wordlist |
+| {{ datetime }} | yes | no | date + time | wordlist |
+| {{ date }} | yes | no | date only | wordlist |
+| {{ time }} | yes | no | time only | wordlist |
+| {{ username }} | yes | no | hacked usernames from danielmiessler seclist | wordlist |
+| {{ password }} | yes | no | hacked password from danielmiessler seclist | wordlist |
+| {{ filename }} | yes | no | random file name and extensions |  wordlist |
+| {{ httppath }} | yes | no | discover directories and files |  wordlist |
+| {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 | function |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
 
 #### 2.1 Request Message Syntax  
 
