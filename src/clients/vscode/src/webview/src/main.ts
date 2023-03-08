@@ -90,6 +90,8 @@ app.use(VueCodemirror, {
               {label: "numrange", type: "keyword", apply: "{{ numrange(1,50000) }}", info:"increments \"start\" param by 1 and stops when at \"end\". Negative values accepted"},
               {label: "httppath", type: "keyword", apply: "{{ httppath }}", info:"*path DOES NOT contain prefix \"/\". use to discover directories and files. From danielmiessler/seclist and https://wordlists.assetnote.io"},
               {label: "random", type: "keyword", apply: "{{ ['never', 'give' , 'up', 'never', 'stop', 'believing'] | random }}", info:"randonly returns an item from your provided list"},
+              {label: "base64e", type: "keyword", apply: "{{ 'value to be encoded' | base64e }}", info:"base64 encode a value"},
+              {label: "base64d", type: "keyword", apply: "{{ 'decode a base64 encoded value' | base64d }}", info:"base64 decode an encoded value"},
 
               {label: "GET", type: "keyword", apply: "GET ", info:"GET HTTP verb"},
               {label: "PUT", type: "keyword", apply: "PUT ", info:"PUT HTTP verb"},

@@ -22,6 +22,7 @@ from username_corpora import UsernameCorpora
 from eventstore import EventStore
 from auto_num_increment_corpora import NumberRangeCorpora
 from randomize_items_corpora import RandomItemsCorpora
+from base64_encodedecode_corpora import Base64EncodeCorpora, Base64DecodeCorpora
 
 from backgroundtask_corpora_loader import corporaProvider
 
@@ -132,7 +133,9 @@ class CorporaContext:
                                          my_file_content_filename='',
                                          autonumStart=1,
                                          autonumEnd=80000,
-                                         randomItemsStr = '',):
+                                         randomItemsStr = '',
+                                         base64eValue = '',
+                                         base64dValue = ''):
         
         expression = wordlist_type
         
@@ -189,6 +192,26 @@ class CorporaContext:
             corpora = RandomItemsCorpora(items=itemArr)
             
             self.context[corporaContextKey] = corpora
+            
+            return
+        
+        # base64 encode value
+        if wordlist_type == WordlistType.base64e:
+            
+            corporaContextKey = base64eValue
+            
+            
+            
+            self.context[corporaContextKey] = Base64EncodeCorpora(value=base64eValue)
+            
+            return
+        
+        # base64 decode value
+        if wordlist_type == WordlistType.base64d:
+            
+            corporaContextKey = base64dValue
+            
+            self.context[corporaContextKey] = Base64DecodeCorpora(value=base64dValue)
             
             return
         
@@ -291,8 +314,9 @@ class CorporaContext:
                                      my_file_content_filename='',
                                      autonumStart=1,
                                      autonumEnd=100000,
-                                     randomItemsStr = ''):
-                                     #jsonEscape=True):
+                                     randomItemsStr = '',
+                                     base64eValue = '',
+                                     base64dValue = ''):
         
         try:
             
@@ -324,6 +348,18 @@ class CorporaContext:
             
             elif wordlist_type == WordlistType.random:
                 corporaContextKey = randomItemsStr
+                corpora = self.context[corporaContextKey]
+                data = corpora.next_corpora()
+                return data
+            
+            elif wordlist_type == WordlistType.base64e:
+                corporaContextKey = base64eValue
+                corpora = self.context[corporaContextKey]
+                data = corpora.next_corpora()
+                return data
+            
+            elif wordlist_type == WordlistType.base64d:
+                corporaContextKey = base64dValue
                 corpora = self.context[corporaContextKey]
                 data = corpora.next_corpora()
                 return data

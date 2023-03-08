@@ -230,3 +230,5 @@ class WordlistType:
     numrange = 'numrange'
     httppath = 'httppath'
     random = 'random'
+    base64e = 'base64e'
+    base64d = 'base64d'
