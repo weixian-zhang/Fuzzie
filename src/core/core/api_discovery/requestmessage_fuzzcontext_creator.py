@@ -679,13 +679,29 @@ class RequestMessageFuzzContextCreator:
     def jinja_numrange_func(self, start=1, end=100000):
         return  f'{{{{ eval(wordlist_type=\'numrange\', autonumStart={start}, autonumEnd={end}) }}}}'
     
+    # value can be a list of strings or single string
     def jinja_base64e_filter(self, value):
         
-        cVal = str(value)
+        cVal = ''
+        
+        if type(value) is list:
+           cVal = '```'.join(value)
+        else:
+           cVal = str(value)
+           
         return  f'{{{{ eval(wordlist_type=\'base64e\', base64eValue=\'{cVal}\') }}}}'
     
+    # value can be a list of strings or single string
+    # use backtick as delimiter is rare string type and should not conflict with user input
     def jinja_base64d_filter(self, value):
-        cVal = str(value)
+        
+        cVal = ''
+        
+        if type(value) is list:
+           cVal = '```'.join(value)
+        else:
+           cVal = str(value)
+           
         return  f'{{{{ eval(wordlist_type=\'base64d\', base64dValue=\'{cVal}\') }}}}'
     
     # insert my wordlist type

@@ -6,14 +6,21 @@ core_core_dir = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, core_core_dir)
 models_dir = os.path.join(os.path.dirname(Path(__file__).parent), 'models')
 sys.path.insert(0, models_dir)
-
+import json
 import base64
+from utils import Utils
+import random
+
+list_delimiter = '```'
 
 class Base64EncodeCorpora:
         
-    def __init__(self, value: str) -> None:
+    def __init__(self, value: any) -> None:
         
-        self.data = value
+        # for single string, list contains 1 item
+        valueArr = value.split(list_delimiter)
+        
+        self.data = valueArr
     
     def load_corpora(self):
         pass
@@ -21,26 +28,35 @@ class Base64EncodeCorpora:
         
     def next_corpora(self):
         
-        if not self.data or self.data == '':
-            return ''
+        listItemVal = ''
         
         try:
-            valBytes = self.data.encode('utf-8')
-        
-            encoded = base64.b64encode(valBytes)
             
-            b64Str = encoded.decode('utf-8')
+            if len(self.data) == 0:
+                return ''
             
-            return b64Str
+            randIdx = random.randint(0, len(self.data) - 1)
+                
+            listItemVal = self.data[randIdx]
+            
+            if listItemVal == '':
+                return ''
+            
+            b64e = Utils.b64e(listItemVal) 
+            
+            return b64e
     
         except Exception as e:
-            return ''
+            return listItemVal
         
 class Base64DecodeCorpora:
         
     def __init__(self, value: str) -> None:
         
-        self.data = value
+        # for single string, list contains 1 item
+        valueArr = value.split(list_delimiter)
+        
+        self.data = valueArr
     
     def load_corpora(self):
         pass
@@ -48,20 +64,26 @@ class Base64DecodeCorpora:
         
     def next_corpora(self):
         
-        if not self.data or self.data == '':
-            return ''
+        listItemVal = ''
         
         try:
-            b64Bytes = self.data.encode('utf-8')
             
-            strBytes = base64.b64decode(b64Bytes)
+            if len(self.data) == 0:
+                return ''
             
-            valStr = strBytes.decode('utf-8')
+            randIdx = random.randint(0, len(self.data) - 1)
+                
+            listItemVal = self.data[randIdx]
             
-            return valStr
+            if listItemVal == '':
+                return ''
+            
+            b64d = Utils.b64d(listItemVal) 
+            
+            return b64d
             
         except Exception as e:
-            return ''
+            return listItemVal
     
         
         

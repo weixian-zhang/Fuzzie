@@ -61,6 +61,18 @@ class Utils:
         
         return b64str
     
+    def b64d(data):
+        if Utils.isNoneEmpty(data):
+            return ''
+        
+        b64Bytes = data.encode('utf-8')
+            
+        strBytes = base64.b64decode(b64Bytes)
+        
+        valStr = strBytes.decode('utf-8')
+        
+        return valStr
+    
     def validUrl(url):
         
         regex = re.compile(
