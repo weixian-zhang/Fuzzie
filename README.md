@@ -76,7 +76,9 @@ Type = function acts on your provided custom data
 | {{ filename }} | yes | no | random file name and extensions |  wordlist |
 | {{ httppath }} | yes | no | discover directories and files |  wordlist |
 | {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 | function |
-| {{ 'a quick brown fox' &#124; mutate }} | yes | no | your custom input that Fuzzie mutates | function |
+| {{ 'a quick brown fox' &#124; mutate }} | yes | no | input will be mutated | function |
+| {{ ['a', 'list', 'of', 'items' ]  &#124; random }} | yes | no | returns a random item from your list | function |
+| {{ <br>'single string to be base64 encoded' &#124; base64e }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; base64e }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 
 #### 2.1 Request Message Syntax  
 
