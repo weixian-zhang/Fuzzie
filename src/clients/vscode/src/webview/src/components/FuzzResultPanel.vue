@@ -547,7 +547,7 @@ class Props {
       }
     }
 
-    async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId) {
+    async onFuzzCaseSetSelected(fuzzCaseSetId, fuzzCaseSetRunId, statusCode) {
 
       try {
 
@@ -571,7 +571,7 @@ class Props {
           
           this.fuzzCaseSetRunId = fuzzCaseSetRunId;
 
-          await this.getFuzzRequestResponses();
+          await this.getFuzzRequestResponses(statusCode);
       }
       catch(error) {
         this.$logger.error(error);
@@ -581,7 +581,7 @@ class Props {
       //}
     }
 
-    async getFuzzRequestResponses() {
+    async getFuzzRequestResponses(statusCode = -1) {
       
       try
       {
@@ -598,6 +598,7 @@ class Props {
         const [ok, error, totalPages, result] = await this.webclient.getFuzzRequestResponse(
           this.fuzzCaseSetId, 
           this.fuzzCaseSetRunId, 
+          statusCode,
           this.paginationPageSize, 
           this.paginationCurrentPage)
 

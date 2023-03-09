@@ -325,10 +325,10 @@ class ServiceManager:
             return (False, Utils.errAsText(e), [])
         
             
-    def get_fuzz_request_response(self, fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1) -> tuple[bool, str, int, list[FuzzDataCase_ViewModel]]:
+    def get_fuzz_request_response(self, fuzzCaseSetId, fuzzCaseSetRunId, statusCode = -1, pageSize=500, page=1) -> tuple[bool, str, int, list[FuzzDataCase_ViewModel]]:
         
         try:
-            rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize, page)
+            rows = get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, statusCode, pageSize, page)
             
             if rows is None or len(rows) == 0:
                 return True, '', 0, []

@@ -52,6 +52,7 @@ class Query(graphene.ObjectType):
     fuzzRequestResponse = graphene.Field(FuzzRequestResponseQueryResult,
                                          fuzzCaseSetId = graphene.Argument(graphene.String),
                                          fuzzCaseSetRunId = graphene.Argument(graphene.String),
+                                         statusCode=graphene.Argument(graphene.Int), 
                                          pageSize=graphene.Argument(graphene.Int), 
                                          page=graphene.Argument(graphene.Int)
                                          )
@@ -110,10 +111,10 @@ class Query(graphene.ObjectType):
         return r
     
     
-    def resolve_fuzzRequestResponse(self, info, fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=1):
+    def resolve_fuzzRequestResponse(self, info, fuzzCaseSetId, fuzzCaseSetRunId, statusCode = -1, pageSize=500, page=1):
         sm = ServiceManager()
         
-        ok , err, totalPages, result = sm.get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize, page)
+        ok , err, totalPages, result = sm.get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, statusCode, pageSize, page)
         
         r = FuzzRequestResponseQueryResult()
           

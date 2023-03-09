@@ -277,12 +277,13 @@ export default class FuzzerWebClient
         return [false, '', []];
     }
 
-    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string, pageSize = 500, page=1): Promise<[boolean, string, number, Array<FuzzDataCase>]> {
+    public async getFuzzRequestResponse(fuzzCaseSetId: string, fuzzCaseSetRunId: string, statusCode = -1, pageSize = 500, page=1): Promise<[boolean, string, number, Array<FuzzDataCase>]> {
         const query = `
         query {
             fuzzRequestResponse(
                 fuzzCaseSetId: "${fuzzCaseSetId}",
                 fuzzCaseSetRunId: "${fuzzCaseSetRunId}",
+                statusCode: ${statusCode},
                 pageSize: ${pageSize},
                 page: ${page})
                 {

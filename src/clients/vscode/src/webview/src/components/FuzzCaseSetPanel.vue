@@ -299,22 +299,26 @@
               {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
             </td>
             <td>
-              <span :class="item.http2xx > 0 ? 'font-weight-bold': ''">
-                {{ item.http2xx == undefined ? 0 : (item.http2xx) }}
+              <a href="#" class="font-weight-bold" v-if="item.http2xx > 0" @click="onFilterBy2xxClicked(item)"> {{ item.http2xx == undefined ? 0 : (item.http2xx) }} </a>
+              <span v-else :class="item.http2xx > 0 ? 'font-weight-bold': ''">
+                  {{ item.http2xx == undefined ? 0 : (item.http2xx) }} 
               </span>
             </td>
             <td>
-              <span :class="item.http3xx > 0 ? 'font-weight-bold': ''">
-                {{ item.http3xx == undefined ? 0 : item.http3xx }}
+              <a href="#" class="font-weight-bold" v-if="item.http3xx > 0" @click="onFilterBy3xxClicked(item)"> {{ item.http3xx == undefined ? 0 : item.http3xx }} </a>
+              <span v-else :class="item.http3xx > 0 ? 'font-weight-bold': ''">
+                  {{ item.http3xx == undefined ? 0 : item.http3xx }}
               </span>
             </td>
             <td>
-              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
-                {{ item.http4xx == undefined ? 0 : item.http4xx }}
+              <a href="#" class="font-weight-bold" v-if="item.http4xx > 0" @click="onFilterBy4xxClicked(item)"> {{ item.http4xx == undefined ? 0 : item.http4xx }} </a>
+              <span v-else :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+                {{ item.http3xx == undefined ? 0 : item.http4xx }}
               </span>
             </td>
             <td>
-              <span :class="item.http4xx > 0 ? 'font-weight-bold': ''">
+              <a href="#" class="font-weight-bold" v-if="item.http4xx > 0" @click="onFilterBy5xxClicked(item)"> {{ item.http5xx == undefined ? 0 : item.http5xx }} </a>
+              <span v-else :class="item.http4xx > 0 ? 'font-weight-bold': ''">
                 {{ item.http5xx == undefined ? 0 : item.http5xx }}
               </span>
             </td>
@@ -692,22 +696,116 @@ class Props {
         return;
     }
 
-      this.rowClickEnabled = false;
+    this.rowClickEnabled = false;
 
-      
+    // send event to FuzzResult panel to display request and response
+    this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, -1);
 
-      // send event to FuzzResult panel to display request and response
-      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId);
-
-      if (fcsrs.hostname != '') {
-        this.hostname = fcsrs.hostname;
-        this.port = fcsrs.port;
-        this.refreshHostnameDisplay();
-      }
+    if (fcsrs.hostname != '') {
+      this.hostname = fcsrs.hostname;
+      this.port = fcsrs.port;
+      this.refreshHostnameDisplay();
+    }
 
     await Utils.delay(2000);   // spam click prevention
 
     this.rowClickEnabled = true;
+  }
+
+  async onFilterBy2xxClicked(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+
+    try {
+
+      if (!this.rowClickEnabled) {
+        return;
+      }
+
+      this.rowClickEnabled = false;
+
+      // send event to FuzzResult panel to display request and response
+      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, 299);
+
+      await Utils.delay(2000);   // spam click prevention
+      
+    } catch (error) {
+        this.$logger.error(error)
+    }
+    finally {
+      this.rowClickEnabled = true;
+    }
+    
+  }
+
+  async onFilterBy3xxClicked(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+
+    try {
+
+      if (!this.rowClickEnabled) {
+        return;
+      }
+
+      this.rowClickEnabled = false;
+
+      // send event to FuzzResult panel to display request and response
+      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, 399);
+
+      await Utils.delay(2000);   // spam click prevention
+      
+    } catch (error) {
+        this.$logger.error(error)
+    }
+    finally {
+      this.rowClickEnabled = true;
+    }
+    
+  }
+
+  async onFilterBy4xxClicked(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+
+    try {
+
+      if (!this.rowClickEnabled) {
+        return;
+      }
+
+      this.rowClickEnabled = false;
+
+      // send event to FuzzResult panel to display request and response
+      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, 499);
+
+      await Utils.delay(2000);   // spam click prevention
+      
+    } catch (error) {
+        this.$logger.error(error)
+    }
+    finally {
+      this.rowClickEnabled = true;
+    }
+    
+  }
+
+  async onFilterBy5xxClicked(fcsrs: ApiFuzzCaseSetsWithRunSummaries) {
+
+    try {
+
+      if (!this.rowClickEnabled) {
+        return;
+      }
+
+      this.rowClickEnabled = false;
+
+      // send event to FuzzResult panel to display request and response
+      this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, 599);
+
+      await Utils.delay(2000);   // spam click prevention
+      
+    } catch (error) {
+        this.$logger.error(error)
+    }
+    finally {
+      this.rowClickEnabled = true;
+    }
+    
   }
 
   async parseRequestMessage(rqMsg) {
