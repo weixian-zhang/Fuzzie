@@ -14,7 +14,7 @@
   "homepage": "https://github.com/weixian-zhang/Fuzzie",
   "license": "MIT",
   "icon": "dist/fuzzie-logo-2.png",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "preview": true,
   "engines": {
     "vscode": "^1.68.0"
