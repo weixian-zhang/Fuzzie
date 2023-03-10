@@ -16,6 +16,7 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult)
 from corporafactory.corpora_context import CorporaContext
+from corporafactory.corpora_context_builder import CorporaContextBuilder
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
 from eventstore import EventStore, MsgType
 from utils import Utils
@@ -41,7 +42,7 @@ from pubsub import pub
 from datetime import datetime
 import queue
 from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
-         
+
 class ServiceManager:
     
     eventstore = EventStore()
@@ -636,14 +637,18 @@ class ServiceManager:
             rqMsg = base64.b64decode(rqMsgB64).decode('utf-8')
             
             reqMsgFuzzCaseSetCreator = RequestMessageFuzzContextCreator()
-            cp = CorporaContext()
             
             fcsOK, fcsErr, fuzzCaseSets = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
             
             if not fcsOK:
                 return False, fcsErr
             
-            ok, error = cp.try_build_context(fuzzCaseSets) #cp.try_build_context(rqMsg)
+            cp = CorporaContext()
+            ccBuilder = CorporaContextBuilder(cp)
+            
+            ok, error = ccBuilder.build_for_api(fuzzCaseSets, tryBuild=True)
+            
+            #ok, error = cp.try_build_context(fuzzCaseSets)
             
             if not ok:
                 return False, error

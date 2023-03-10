@@ -299,25 +299,25 @@
               {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
             </td>
             <td>
-              <a href="#" class="font-weight-bold" v-if="item.http2xx > 0" @click="onFilterBy2xxClicked(item)"> {{ item.http2xx == undefined ? 0 : (item.http2xx) }} </a>
+              <a href="#" class="font-weight-bold text-info" v-if="item.http2xx > 0" @click="onFilterBy2xxClicked(item)"> {{ item.http2xx == undefined ? 0 : (item.http2xx) }} </a>
               <span v-else :class="item.http2xx > 0 ? 'font-weight-bold': ''">
                   {{ item.http2xx == undefined ? 0 : (item.http2xx) }} 
               </span>
             </td>
             <td>
-              <a href="#" class="font-weight-bold" v-if="item.http3xx > 0" @click="onFilterBy3xxClicked(item)"> {{ item.http3xx == undefined ? 0 : item.http3xx }} </a>
+              <a href="#" class="font-weight-bold text-info" v-if="item.http3xx > 0" @click="onFilterBy3xxClicked(item)"> {{ item.http3xx == undefined ? 0 : item.http3xx }} </a>
               <span v-else :class="item.http3xx > 0 ? 'font-weight-bold': ''">
                   {{ item.http3xx == undefined ? 0 : item.http3xx }}
               </span>
             </td>
             <td>
-              <a href="#" class="font-weight-bold" v-if="item.http4xx > 0" @click="onFilterBy4xxClicked(item)"> {{ item.http4xx == undefined ? 0 : item.http4xx }} </a>
+              <a href="#" class="font-weight-bold text-info" v-if="item.http4xx > 0" @click="onFilterBy4xxClicked(item)"> {{ item.http4xx == undefined ? 0 : item.http4xx }} </a>
               <span v-else :class="item.http4xx > 0 ? 'font-weight-bold': ''">
                 {{ item.http3xx == undefined ? 0 : item.http4xx }}
               </span>
             </td>
             <td>
-              <a href="#" class="font-weight-bold" v-if="item.http5xx > 0" @click="onFilterBy5xxClicked(item)"> {{ item.http5xx == undefined ? 0 : item.http5xx }} </a>
+              <a href="#" class="font-weight-bold text-info" v-if="item.http5xx > 0" @click="onFilterBy5xxClicked(item)"> {{ item.http5xx == undefined ? 0 : item.http5xx }} </a>
               <span v-else :class="item.http5xx > 0 ? 'font-weight-bold': ''">
                 {{ item.http5xx == undefined ? 0 : item.http5xx }}
               </span>
