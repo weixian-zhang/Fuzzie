@@ -213,7 +213,7 @@
                   style="cursor:pointer"
                   icon = "mdi-eye"
                   color="cyan"
-                  v-tooltip="'view fuzz result'"
+                  v-tooltip="'all result'"
                   @click="(onRowClick(item), selectedRow= item.fuzzCaseSetId)"
                 >
                 </v-icon>
@@ -317,7 +317,7 @@
               </span>
             </td>
             <td>
-              <a href="#" class="font-weight-bold" v-if="item.http4xx > 0" @click="onFilterBy5xxClicked(item)"> {{ item.http5xx == undefined ? 0 : item.http5xx }} </a>
+              <a href="#" class="font-weight-bold" v-if="item.http5xx > 0" @click="onFilterBy5xxClicked(item)"> {{ item.http5xx == undefined ? 0 : item.http5xx }} </a>
               <span v-else :class="item.http5xx > 0 ? 'font-weight-bold': ''">
                 {{ item.http5xx == undefined ? 0 : item.http5xx }}
               </span>
