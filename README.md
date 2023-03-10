@@ -29,7 +29,7 @@ Fuzzie VSCode extension provides a webview for you to perform everything from AP
 
 <br /> 
 
-![Animation - Copy](https://user-images.githubusercontent.com/43234101/211010226-679c7e24-50a6-4a64-ad32-8fd3e40642fe.gif)
+![Animation - Copy](https://github.com/weixian-zhang/Fuzzie/blob/main/doc/fuzzie-webview-walkthrough.gif)
 
 <br />  
 
