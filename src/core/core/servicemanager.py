@@ -335,7 +335,7 @@ class ServiceManager:
             
             result = []
             
-            totalPages = get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId)
+            totalPages = get_request_response_total_pages(fuzzCaseSetId=fuzzCaseSetId, fuzzCaseSetRunId=fuzzCaseSetRunId, statusCode=statusCode)
             
             for row in rows:
                 

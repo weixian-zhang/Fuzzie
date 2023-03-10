@@ -472,6 +472,7 @@ class Props {
     fuzzCaseSetId = ''
     fuzzCaseSetRunId = ''
 
+    statusCode = -1;
     
 
     beforeMount() {
@@ -481,7 +482,7 @@ class Props {
     mounted() {
 
       watch(() => this.paginationCurrentPage, async (newVal, oldVal) => {
-        await this,this.getFuzzRequestResponses();
+        await this.getFuzzRequestResponses(this.statusCode);
       });
 
       this.vscode = new VSCode();
@@ -560,6 +561,8 @@ class Props {
             this.$logger.errorMsg('fuzzCaseSetId and fuzzCaseSetRunId are empty when fuzz-case-set is selected', 'onFuzzCaseSetSelected');
             return;
           }
+
+          this.statusCode = statusCode;
 
           this.paginationCurrentPage = 0;
 
@@ -972,6 +975,8 @@ class Props {
 
     //clear data on fuzz-context change but leave "fdcsFuzzing" alone
     clearData() {
+
+      this.statusCode = -1;
 
       this.fuzzCaseSetId = '';
       this.fuzzCaseSetRunId = ''
