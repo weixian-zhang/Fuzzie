@@ -492,14 +492,14 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
     
     return result
 
-def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, page=0):
+def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, statusCode = -1, pageSize=500, page=0):
     
     Session = scoped_session(session_factory)
     
     rows = []
     
     if page == 0:
-        rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+        query = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
                                 ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
                                 ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
                                 ApiFuzzRequestTable.columns.hostname,
@@ -521,16 +521,26 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, pag
                                 ApiFuzzResponseTable.columns.headerJson,
                                 ApiFuzzResponseTable.columns.contentLength
                                 )
-                    .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
-                            ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
-                    .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
-                    .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
-                    # implement pagination
-                    .limit(pageSize)
-                    .all()
+                                .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+                                        ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+                                .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+                                .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                 )
+        
+        if statusCode == -1:
+            rows = (query
+                    .limit(pageSize)
+                    .all())
+        else:
+            statusCodeStart = statusCode - 99
+            page = page - 1
+            rows = (query
+                    .filter(ApiFuzzResponseTable.c.statusCode.between(statusCodeStart, statusCode))
+                    .limit(pageSize)
+                    .all())
+    
     else:
-        rows = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+        query = (Session.query(ApiFuzzDataCaseTable, ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
                                     ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
                                     ApiFuzzRequestTable.columns.datetime.label('requestDateTime'),
                                     ApiFuzzRequestTable.columns.hostname,
@@ -556,23 +566,48 @@ def get_fuzz_request_response(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500, pag
                                 ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                         .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                         .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
-                        # implement pagination
-                        .limit(pageSize).offset(page * pageSize)
-                        .all()
                     )
+        
+        page = page - 1
+        
+        if statusCode == -1:
+            rows = (query
+                    .offset((page * pageSize) + 1).limit(pageSize)    # pagination
+                    .all())
+        else:
+            statusCodeStart = statusCode - 99
+            
+            rows = (query
+                    .filter(ApiFuzzResponseTable.c.statusCode.between(statusCodeStart, statusCode))
+                    .offset((page * pageSize) + 1).limit(pageSize)
+                    .all())
     
     Session.commit()
     Session.close()
     
     return rows
 
-def get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=500):
+def get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId, statusCode = -1, pageSize=500):
     
     Session = scoped_session(session_factory)
     
     totalPages = 1
     
-    rowCount = (Session.query(
+    rowCount = 0
+    
+    # rowCount = (Session.query(
+    #             ApiFuzzDataCaseTable, 
+    #             ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
+    #             ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
+    #             )
+    #                 .filter(ApiFuzzDataCaseTable.c.fuzzCaseSetId == fuzzCaseSetId,
+    #                         ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
+    #                 .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+    #                 .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
+    #                 .count()
+    #             )
+    
+    query = (Session.query(
                 ApiFuzzDataCaseTable, 
                 ApiFuzzDataCaseTable.columns.Id.label("fuzzDataCaseId"),
                 ApiFuzzRequestTable.columns.Id.label('fuzzRequestId'),
@@ -581,17 +616,23 @@ def get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId, pageSize=5
                             ApiFuzzDataCaseTable.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                     .join(ApiFuzzRequestTable, ApiFuzzRequestTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
                     .join(ApiFuzzResponseTable, ApiFuzzResponseTable.columns.fuzzDataCaseId == ApiFuzzDataCaseTable.columns.Id, isouter=True)
-                    .count()
+                    #.count()
                 )
     
+    if statusCode == -1:
+        rowCount = query.count()
+    else:
+        statusCodeStart = statusCode - 99
+        rowCount = (query
+                .filter(ApiFuzzResponseTable.c.statusCode.between(statusCodeStart, statusCode))
+                .count())
+    
     if rowCount > 0:
-         totalPages = math.ceil(rowCount / pageSize)
+         totalPages = int(rowCount / pageSize)
     
     
     return totalPages
-    
-    
-                    
+             
 
 def get_uploaded_files(requestId):
     
