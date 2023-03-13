@@ -16,6 +16,7 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
 * Fuzzie uses sqlite internally to store all data, when upgrading to a newer extension version, previous data will not be retained
+* On the very first launch, Fuzzie can take up to 10 - 12 secs to start up due to data loading 
 
 ### Launching Fuzzie  
 
@@ -39,14 +40,14 @@ Fuzzie VSCode extension provides a webview for you to perform everything from AP
 
 #### 2. Start by creating a  new API Fuzz Context
 
-A Fuzz Context contains a list of cohesive "fuzz test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
+A Fuzz Context contains a list of cohesive "test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
 Each test case contains HTTP verb, domain name, port, path, querystring, headers and body and Fuzzie make HTTP requests against all test cases in a Fuzz Context. 
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/create-new-api-context.png" />  
 
 #### 2. Write HTTP Request Messages  
 
-Your REST and GraphQL contracts are described by writing Request Messages.  
+Your REST and GraphQL target endpoints are described by writing Request Messages.  
 The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 
 In request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
