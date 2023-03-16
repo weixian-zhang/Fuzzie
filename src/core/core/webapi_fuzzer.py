@@ -20,8 +20,8 @@ from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDa
                                        ApiFuzzRequest, ApiFuzzResponse, FuzzTestResult,
                                         FuzzMode, FuzzCaseSetFile, WordlistType)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
+from corporafactory.corpora_context_builder import CorporaContextBuilder
 
-import http.client
 import re
 
 from db import (insert_api_fuzzCaseSetRuns,
@@ -82,13 +82,12 @@ class WebApiFuzzer:
         
         self.multithreadEventSet = Event()
         
-        # self.processLock = Lock()
-        # self.dbLock = Lock()
+        self.corporaContext = CorporaContext()
+        
+        self.corporaContextBuilder = CorporaContextBuilder(self.corporaContext)
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
-        
-        self.corporaContext = CorporaContext()
         
         #subscribe cancel-fuzzing event
         #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
@@ -121,7 +120,9 @@ class WebApiFuzzer:
         
         try:
             
-            self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
+            ok, err = self.corporaContextBuilder.build_for_api(self.apifuzzcontext.fuzzcaseSets)
+            if not ok:
+                raise Exception(err)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
                         
@@ -182,7 +183,9 @@ class WebApiFuzzer:
           
         try:
             
-            self.corporaContext.build_context(self.apifuzzcontext.fuzzcaseSets)
+            ok, err = self.corporaContextBuilder.build_for_api(self.apifuzzcontext.fuzzcaseSets)
+            if not ok:
+                raise Exception(err)
             
             insert_api_fuzzCaseSetRuns(self.fuzzCaseSetRunId, self.apifuzzcontext.Id)
                         

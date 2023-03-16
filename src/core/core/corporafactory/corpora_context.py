@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(core_core_dir, 'models'))
 
 import jinja2
 from utils import Utils
-from webapi_fuzzcontext import (ApiFuzzCaseSet, WordlistType)
+from models.webapi_fuzzcontext import (ApiFuzzCaseSet, WordlistType)
 from corpora_provider import CorporaProvider
 from user_supplied_corpora import StringMutateCorpora
 from boolean_corpora import BoolCorpora
@@ -36,39 +36,83 @@ class CorporaContext:
         self.myfile_wordlist_type = 'myfile'
     
     # try_build_context is used only for parsing request messages from webview
-    def try_build_context(self, fcss: list[ApiFuzzCaseSet]) -> tuple([bool, str]):
-        try:
-            self.build_context(fcss, tryBuild=True)
-            return True, ''
-        except Exception as e:
-            return False, ''
+    # def try_build_context(self, fcss: list[ApiFuzzCaseSet]) -> tuple([bool, str]):
+    #     try:
+    #         self.build_context(fcss, tryBuild=True)
+    #         return True, ''
+    #     except Exception as e:
+    #         return False, ''
     
+    # # tryBuild flag is to prevent unnecessary wordlist-type/corpora data loading.
+    # # Especially type like "numrange" which require user input to generate data on the fly when fuzzing starts
+    # def build_context(self, fcss: list[ApiFuzzCaseSet], tryBuild=False):
+        
+    #     self.tryBuild = tryBuild
+        
+    #     try:
+    #         for fcs in fcss:
+                
+    #             if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.pathDataTemplate)
+                    
+    #             if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.querystringDataTemplate)
+                    
+    #             if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.headerDataTemplate)
+                
+    #             if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.bodyDataTemplate)
+                    
+    #             if not self.isDataTemplateEmpty(fcs.graphQLVariableDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.graphQLVariableDataTemplate)
+                    
+    #             if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
+    #                 self.build_data_context_from_req_msg(fcs.fileDataTemplate)
+                    
+    #         return True, ''
+                
+    #     except Exception as e:
+    #         return False, Utils.errAsText(e)
+    
+    # try_build_context will select and cache corpora-provider according to workdlist-type in Jinja wordlist template
+    # def try_build_context(self, wordlistTpl = '') -> tuple([bool, str]):
+    #     try:
+    #         self.build_context(wordlistTpl, tryBuild=True)
+    #         return True, ''
+    #     except Exception as e:
+    #         return False, ''
+    
+    # try_build_context will select and cache corpora-provider according to workdlist-type in Jinja wordlist template
     # tryBuild flag is to prevent unnecessary wordlist-type/corpora data loading.
     # Especially type like "numrange" which require user input to generate data on the fly when fuzzing starts
-    def build_context(self, fcss: list[ApiFuzzCaseSet], tryBuild=False):
+    def build_context(self, wordlistTpl = '', tryBuild=False):
         
         self.tryBuild = tryBuild
         
         try:
-            for fcs in fcss:
+            
+            self.build_data_context_from_req_msg(wordlistTpl)
+            
+            # for fcs in fcss:
                 
-                if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.pathDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.pathDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.pathDataTemplate)
                     
-                if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.querystringDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.querystringDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.querystringDataTemplate)
                     
-                if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.headerDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.headerDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.headerDataTemplate)
                 
-                if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.bodyDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.bodyDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.bodyDataTemplate)
                     
-                if not self.isDataTemplateEmpty(fcs.graphQLVariableDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.graphQLVariableDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.graphQLVariableDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.graphQLVariableDataTemplate)
                     
-                if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
-                    self.build_data_context_from_req_msg(fcs.fileDataTemplate)
+            #     if not self.isDataTemplateEmpty(fcs.fileDataTemplate):
+            #         self.build_data_context_from_req_msg(fcs.fileDataTemplate)
                     
             return True, ''
                 
@@ -435,6 +479,6 @@ class CorporaContext:
         return False
     
     def get_context_key_for_mutate(self, mutate_value):
-       return f'{WordlistType.mutate}_{Utils.sha256(mutate_value)}' 
+       return f'{WordlistType.mutate}_{Utils.sha256(mutate_value)}'
        
         
