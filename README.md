@@ -16,7 +16,18 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
 * Fuzzie uses sqlite internally to store all data, when upgrading to a newer extension version, previous data will not be retained
-* On the very first launch, Fuzzie can take up to 10 - 12 secs to start up due to data loading 
+* On the very first launch, Fuzzie can take up to 10 - 12 secs to start up due to data loading  
+
+<br />  
+
+### Content  
+* [Launching Fuzzie](#launching-fuzzie)
+* [Using Fuzzie](#using-fuzzie )
+* [How to write HTTP Request Message ](#2-write-http-request-messages)  
+  * [Wordlist Types](#wordlist-types)
+* [More examples of Request Messages](#21-request-message-examples)
+
+<br /> 
 
 ### Launching Fuzzie  
 
@@ -50,8 +61,29 @@ Each test case contains HTTP verb, domain name, port, path, querystring, headers
 Your REST and GraphQL target endpoints are described by writing Request Messages.  
 The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 
-In request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
-By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.
+```
+{VERB} {url + optional port number}
+{headers}
+
+{body}
+```
+
+In request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
+By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
+for example:
+
+```
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+```
 
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
@@ -82,7 +114,10 @@ Type = function acts on your provided custom data
 | {{ <br>'single string to be base64 encoded' &#124; <b>base64e</b> }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; <b>base64e</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 | {{ <br>'base64 encoded string to be decoded' &#124; <b>base64d</b> }}<br> <br>{{ ['list', 'of', 'encoded', 'items', 'to be base64 decoded'] &#124; <b>base64d</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 
-#### 2.1 Request Message Syntax  
+<br>
+<br>
+
+#### 2.1 Request Message Examples  
 
 Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
 "Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  
