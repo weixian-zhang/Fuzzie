@@ -125,6 +125,8 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
+        rqMsgWithoutComments = self.remove_variables_for_single_rq_fuzzcaseset(rqMsgWithoutComments)
+        
         splittedRqBlocks = rqMsgWithoutComments.strip().split('###')
         
         singleRQBlock = ''
@@ -158,8 +160,10 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
+        rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsg)
+        
         # split request-blocks by delimiter ###
-        requestBlocks = rqMsgWithoutComments.strip().split('###')
+        requestBlocks = rqMsgWithoutVars.strip().split('###')
         
         # each block is a fuzzcaseset
         for eachReqBlock in requestBlocks:
@@ -595,7 +599,7 @@ class RequestMessageFuzzContextCreator:
         line = line.strip()
         
         if line.startswith('//'):
-            return True
+            return False
         
         if '###' in line:
             return False
@@ -625,6 +629,15 @@ class RequestMessageFuzzContextCreator:
                 
         return lines
     
+    def get_jinja_variables(self, rqMsg: str) -> tuple([str,str]): 
+        lines = rqMsg.splitlines()
+        variables = [x for x in lines if x.startswith('{%')]
+        withoutVar = [x for x in lines if not x.startswith('{%')]
+        
+        vars = '\n'.join(map(str,variables))
+        rqMsgWithoutVars = '\n'.join(map(str,withoutVar))
+        
+        return [rqMsgWithoutVars, vars]
     
     def remove_all_comments(self, rqMsg: str) -> str: 
         
@@ -632,6 +645,13 @@ class RequestMessageFuzzContextCreator:
         lines = [x for x in lines if not self.is_line_comment(x)]
         return '\n'.join(map(str,lines))
     
+    # variables are global, ignoring variables at per fuzzcaseset level
+    def remove_variables_for_single_rq_fuzzcaseset(self, rqMsg: str) -> str: 
+        
+        lines = rqMsg.splitlines()
+        lines = [x for x in lines if not self.is_line_comment(x)]
+        result = [x for x in lines if not x.startswith('{%')]
+        return '\n'.join(map(str,result))
 
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}

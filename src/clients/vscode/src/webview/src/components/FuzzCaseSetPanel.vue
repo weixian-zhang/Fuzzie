@@ -106,7 +106,7 @@
   </Sidebar>
 
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
-      <v-toolbar-title>API to Fuzz</v-toolbar-title>
+      <v-toolbar-title>Discovered API</v-toolbar-title>
         <v-btn v-tooltip.bottom="'save'" icon  variant="plain" height="30px" plain 
           :disabled="saveBtnDisabled"
           @click="(

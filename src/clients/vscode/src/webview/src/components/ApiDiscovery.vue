@@ -679,12 +679,16 @@
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
 
-      <v-btn icon  variant="plain" height="30px" plain 
+      <!-- <v-btn icon  variant="plain" height="30px" plain  v-tooltip="'Kafka'" >
+        <v-icon color="cyan darken-3" icon="mdi-apache-kafka"></v-icon>
+      </v-btn> -->
+     
+      <v-btn icon  variant="plain" height="30px" plain v-tooltip="'REST API'" 
          :disabled="(!fuzzerConnected)"
          @click="(newContextSideBarVisible = true )">
-        <v-icon color="cyan darken-3" icon="mdi-plus"></v-icon>
+        <v-icon color="cyan darken-3" icon="mdi-web"></v-icon>
       </v-btn>
-
+      
     </v-toolbar>
 
     
