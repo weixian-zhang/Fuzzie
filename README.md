@@ -69,7 +69,7 @@ The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Clie
 ```
 
 In request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
-By replacing parameter with wordlist <p style='color: blue'>{{ wordlist type }}</p>, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
+By replacing parameter with {{ wordlist type }} , during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
 for example:
 
 ```
