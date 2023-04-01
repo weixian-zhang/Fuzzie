@@ -85,6 +85,18 @@ CustomHeader-2: {{ filename }}
 CustomHeader-3: {{ username }}
 ```
 
+wordlist type expressions will be replaced with fuzz data during fuzzing  
+```
+GET https://httpbin.org:443/get?name=!root&address=undefined&order=5&mode=select user from sysibm.sysdummy1;
+
+Content-Type:application/xml
+Authorization:IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),âSLEEP(1)))OR*/
+CustomHeader-1:-£100000
+CustomHeader-2:HRUZgKCQcM7deZue.class
+CustomHeader-3:$ALOC$
+User-Agent:fuzzie
+```
+
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
 Type = wordlist provides data  
