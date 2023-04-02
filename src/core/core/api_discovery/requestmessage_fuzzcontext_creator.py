@@ -28,6 +28,8 @@ class RequestMessageFuzzContextCreator:
         self.eventstore = EventStore()
         self.verbs = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
         
+        self.detectedJinjaVariables = ''
+        
         # currentFuzzCaseSet:
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
@@ -52,17 +54,9 @@ class RequestMessageFuzzContextCreator:
                                                                      jinja_numrange_func=self.jinja_numrange_func,
                                                                      jinja_base64e_filter=self.jinja_base64e_filter,
                                                                      jinja_base64d_filter=self.jinja_base64d_filter)
-        
-        # self.jinjaEnvBody = jinja2.Environment()
-        # self.jinjaEnvBody.filters[WordlistType.mutate] = self.mutate_jinja_filter
-        # self.jinjaEnvBody.filters[WordlistType.myfile] = self.myfile_jinja_filter
-        # self.jinjaEnvBody.globals['image'] = self.jinja_image_func
-        # self.jinjaEnvBody.globals['file'] = self.jinja_file_func
-        # self.jinjaEnvBody.globals['pdf'] = self.jinja_pdf_func
-        
+  
 
-    def new_fuzzcontext(self,
-                 apiDiscoveryMethod,  
+    def new_fuzzcontext(self,  
                  hostname, 
                  port,
                  authnType,
@@ -81,7 +75,7 @@ class RequestMessageFuzzContextCreator:
                  apikey = '') -> tuple([bool, str, ApiFuzzContext]):
         
         try:
-            ok, error, fcSets = self.parse_request_msg_as_fuzzcasesets(requestTextContent)
+            ok, error, fcSets, jinjaVariables = self.parse_request_msg_as_fuzzcasesets(requestTextContent)
         
             if not ok or len(fcSets) == 0:
                 return False, error, ApiFuzzContext()
@@ -94,7 +88,6 @@ class RequestMessageFuzzContextCreator:
                 fuzzcontext.name = name
                 
             fuzzcontext.datetime = datetime.now()
-            fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
             fuzzcontext.requestTextContent = requestTextContent
             fuzzcontext.requestMessageFilePath = requestTextFilePath
             fuzzcontext.openapi3FilePath = openapi3FilePath
@@ -114,14 +107,20 @@ class RequestMessageFuzzContextCreator:
             
             fuzzcontext.fuzzcaseSets = fcSets
             
+            fuzzcontext.templateVariables = jinjaVariables
+            
             return True, '', fuzzcontext
+        
         except Exception as e:
             self.eventstore.emitErr(e)
             
-    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str) -> tuple([bool, str, ApiFuzzCaseSet]):
+    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str, tplVariables: str) -> tuple([bool, str, ApiFuzzCaseSet]):
         
         if rqMsg == '' or rqMsg.strip() == '':
             return True, '', []
+        
+        # during inject_eval_func_primitive_wordlist, vairables will be added to template
+        self.detectedJinjaVariables = tplVariables
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
@@ -148,7 +147,7 @@ class RequestMessageFuzzContextCreator:
     # parse_request_msg_as_fuzzcasesets
     # take means process the number of request-msg-blocks within the entire Request MEssage.
     # # -1 means take-in all
-    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet]]):
+    def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet], str]):
 
 
         if rqMsg == '' or rqMsg.strip() == '':
@@ -161,6 +160,8 @@ class RequestMessageFuzzContextCreator:
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
         rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsg)
+        
+        self.detectedJinjaVariables = jinjaVariables
         
         # split request-blocks by delimiter ###
         requestBlocks = rqMsgWithoutVars.strip().split('###')
@@ -239,7 +240,9 @@ class RequestMessageFuzzContextCreator:
                 if len(headers) > 0:
                     evalHeaderDict = {}
                     for key in headers.keys():
+                        
                         hVal = headers[key]
+            
                         hOK, hErr, evalHeader = self.inject_eval_func_primitive_wordlist(hVal)
                         if not hOK:
                             return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
@@ -300,7 +303,7 @@ class RequestMessageFuzzContextCreator:
 
             fcSets.append(self.currentFuzzCaseSet)
             
-        return True, '', fcSets                    
+        return True, '', fcSets, self.detectedJinjaVariables
     
     def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
         
@@ -631,8 +634,8 @@ class RequestMessageFuzzContextCreator:
     
     def get_jinja_variables(self, rqMsg: str) -> tuple([str,str]): 
         lines = rqMsg.splitlines()
-        variables = [x for x in lines if x.startswith('{%')]
-        withoutVar = [x for x in lines if not x.startswith('{%')]
+        variables = [x.strip() for x in lines if x.startswith('{%')]
+        withoutVar = [x.strip() for x in lines if not x.startswith('{%')]
         
         vars = '\n'.join(map(str,variables))
         rqMsgWithoutVars = '\n'.join(map(str,withoutVar))
@@ -659,7 +662,9 @@ class RequestMessageFuzzContextCreator:
     def inject_eval_func_primitive_wordlist(self, expr: str) -> tuple([bool, str, str]):
         
         try:
-        
+            
+            expr = self.add_variables_to_tpl(expr)
+                    
             tpl = self.jinjaEnvPrimitive.from_string(expr)
             
             output = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
@@ -668,7 +673,18 @@ class RequestMessageFuzzContextCreator:
         
         except Exception as e:
             return False, e,  expr
-   
+    
+    # method uses global var self.detectedJinjaVariables
+    def add_variables_to_tpl(self, tpl: str):
+        
+        if tpl == '':
+            return tpl
+        
+        if self.detectedJinjaVariables != '':
+            return self.detectedJinjaVariables + '\n' + tpl
+        
+        return tpl
+            
     
     # *** jinja filters and functions
     

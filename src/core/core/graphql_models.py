@@ -202,6 +202,8 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     # CaseSetRun
     fuzzCaseSetRuns = graphene.List(ApiFuzzCaseSetRunViewModel)
     
+    templateVariables = graphene.String()
+    
 class FuzzContextRunQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()

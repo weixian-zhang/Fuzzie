@@ -42,7 +42,6 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('name', String),
                             Column('hostname', String),
                             Column('port', Integer),
-                            Column('apiDiscoveryMethod', String),
                             Column('requestTextContent', String),
                             Column('requestTextFilePath', String),
                             Column('openapi3FilePath', String),
@@ -54,7 +53,8 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('bearerTokenHeader', String),
                             Column('bearerToken', String),
                             Column('apikeyHeader', String),
-                            Column('apikey', String)
+                            Column('apikey', String),
+                            Column('templateVariables', String)
                             )
 
 # Api schema, or see this as a "Api schema template" for execution
@@ -285,6 +285,22 @@ def get_fuzzcontexts() -> list[ApiFuzzContext]:
     
     return fuzzcontexts
 
+def get_tplvariables_of_fuzzcontext(fuzzcontextId) -> str:       
+        
+        Session = scoped_session(session_factory)
+        
+        fcRow = (Session.query(ApiFuzzContextTable.columns.templateVariables)
+                  .filter(ApiFuzzContextTable.c.Id == fuzzcontextId)
+                  .one()
+                )
+        
+        Session.commit()
+        Session.close()
+        
+        tplVars = fcRow['templateVariables']
+        
+        return tplVars
+
 # gets the fuzz-context for fuzzing with option to select only FuzzCaseSet marked with 'selected'
 def get_fuzzcontext(Id, fuzzCaseSetSelected = True) -> ApiFuzzContext:       
         
@@ -344,6 +360,7 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                         ApiFuzzContextTable.columns.port,
                         ApiFuzzContextTable.columns.fuzzcaseToExec,
                         ApiFuzzContextTable.columns.authnType,
+                        ApiFuzzContextTable.columns.templateVariables,
                         
                         ApiFuzzCaseSetRunsTable.columns.Id.label("fuzzCaseSetRunsId"),
                         ApiFuzzCaseSetRunsTable.columns.startTime,
@@ -392,6 +409,7 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                 fcView.port = rowDict['port']
                 fcView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
                 fcView.authnType = rowDict['authnType']
+                fcView.templateVariables = rowDict['templateVariables']
                 
                 fcViews[fcid] = fcView
            
@@ -1021,7 +1039,8 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                     bearerTokenHeader = fuzzcontext.bearerTokenHeader,
                     bearerToken = fuzzcontext.bearerToken,
                     apikeyHeader = fuzzcontext.apikeyHeader,
-                    apikey = fuzzcontext.apikey
+                    apikey = fuzzcontext.apikey,
+                    templateVariables = fuzzcontext.templateVariables
                    )
          )
         

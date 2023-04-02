@@ -170,6 +170,8 @@ class ApiFuzzContext:
         self.authnType: str = SupportedAuthnType.Anonymous.name
         
         self.fuzzcaseSets: list[ApiFuzzCaseSet] = []
+        
+        self.templateVariables = ''
 
     
     def get_hostname_port(self):

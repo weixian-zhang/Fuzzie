@@ -35,7 +35,8 @@ from db import  (get_fuzzcontext,
                  get_uploaded_files,
                  get_uploaded_file_content,
                  search_body,
-                 get_request_response_total_pages)
+                 get_request_response_total_pages,
+                 get_tplvariables_of_fuzzcontext)
 from sqlalchemy.sql import select, insert
 import base64
 from pubsub import pub
@@ -115,75 +116,103 @@ class ServiceManager:
         
         try:
             
-            if apiDiscoveryMethod == 'openapi3':
+            # if apiDiscoveryMethod == 'openapi3':
                 
-                pass
-                # if openapi3Content == '':
-                #     return False, 'OpenApi3 spec content is empty'
+            #     pass
+            #     # if openapi3Content == '':
+            #     #     return False, 'OpenApi3 spec content is empty'
                 
-                # openapi3Dis = OpenApi3ApiDiscover()
+            #     # openapi3Dis = OpenApi3ApiDiscover()
                 
-                # openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
+            #     # openapi3Str=  base64.b64decode(openapi3Content).decode('UTF-8')
                 
-                # isApiDisOK, error, apicontext = openapi3Dis.create_apicontext(openapi3Str)
+            #     # isApiDisOK, error, apicontext = openapi3Dis.create_apicontext(openapi3Str)
                 
-                # if not isApiDisOK:
-                #     return False, error
+            #     # if not isApiDisOK:
+            #     #     return False, error
                 
-                # fcc = OpenApi3FuzzContextCreator()
+            #     # fcc = OpenApi3FuzzContextCreator()
                 
-                # fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
-                #                                     apicontext=apicontext,
-                #                                     name=name,
-                #                                     hostname=hostname,
-                #                                     port=port,
-                #                                     requestTextContent = requestTextContent,
-                #                                     requestTextFilePath = requestTextFilePath,
-                #                                     openapi3FilePath = openapi3FilePath,
-                #                                     openapi3Url = openapi3Url,
-                #                                     openapi3Content = openapi3Content,
-                #                                     fuzzcaseToExec=fuzzcaseToExec,
-                #                                     authnType=authnType,
-                #                                     basicUsername=basicUsername,
-                #                                     basicPassword=basicPassword,
-                #                                     bearerTokenHeader=bearerTokenHeader,
-                #                                     bearerToken=bearerToken,
-                #                                     apikeyHeader=apikeyHeader,
-                #                                     apikey=apikey)
+            #     # fuzzcontext = fcc.new_fuzzcontext(  apiDiscoveryMethod=apiDiscoveryMethod,
+            #     #                                     apicontext=apicontext,
+            #     #                                     name=name,
+            #     #                                     hostname=hostname,
+            #     #                                     port=port,
+            #     #                                     requestTextContent = requestTextContent,
+            #     #                                     requestTextFilePath = requestTextFilePath,
+            #     #                                     openapi3FilePath = openapi3FilePath,
+            #     #                                     openapi3Url = openapi3Url,
+            #     #                                     openapi3Content = openapi3Content,
+            #     #                                     fuzzcaseToExec=fuzzcaseToExec,
+            #     #                                     authnType=authnType,
+            #     #                                     basicUsername=basicUsername,
+            #     #                                     basicPassword=basicPassword,
+            #     #                                     bearerTokenHeader=bearerTokenHeader,
+            #     #                                     bearerToken=bearerToken,
+            #     #                                     apikeyHeader=apikeyHeader,
+            #     #                                     apikey=apikey)
                 
-                # insert_db_fuzzcontext(fuzzcontext)
+            #     # insert_db_fuzzcontext(fuzzcontext)
                 
-            elif apiDiscoveryMethod == 'request_message':
+            # elif apiDiscoveryMethod == 'request_message':
                 
-                if requestTextContent == '':
-                    return False, 'Request text content is empty'
+            #     if requestTextContent == '':
+            #         return False, 'Request text content is empty'
                 
-                rmStr=  base64.b64decode(requestTextContent).decode('UTF-8')
+            #     rmStr=  base64.b64decode(requestTextContent).decode('UTF-8')
                 
-                rmFuzzContextCreator = RequestMessageFuzzContextCreator()
+            #     rmFuzzContextCreator = RequestMessageFuzzContextCreator()
                 
-                ok, error, fuzzcontext = rmFuzzContextCreator.new_fuzzcontext(apiDiscoveryMethod=apiDiscoveryMethod,
-                                                    name=name,
-                                                    hostname=hostname,
-                                                    port=port,
-                                                    requestTextContent = rmStr,
-                                                    requestTextFilePath = requestTextFilePath,
-                                                    openapi3FilePath = openapi3FilePath,
-                                                    openapi3Url = openapi3Url,
-                                                    openapi3Content = openapi3Content,
-                                                    fuzzcaseToExec=fuzzcaseToExec,
-                                                    authnType=authnType,
-                                                    basicUsername=basicUsername,
-                                                    basicPassword=basicPassword,
-                                                    bearerTokenHeader=bearerTokenHeader,
-                                                    bearerToken=bearerToken,
-                                                    apikeyHeader=apikeyHeader,
-                                                    apikey=apikey)
-                if not ok:
-                    return False, error
+            #     ok, error, fuzzcontext = rmFuzzContextCreator.new_fuzzcontext(apiDiscoveryMethod=apiDiscoveryMethod,
+            #                                         name=name,
+            #                                         hostname=hostname,
+            #                                         port=port,
+            #                                         requestTextContent = rmStr,
+            #                                         requestTextFilePath = requestTextFilePath,
+            #                                         openapi3FilePath = openapi3FilePath,
+            #                                         openapi3Url = openapi3Url,
+            #                                         openapi3Content = openapi3Content,
+            #                                         fuzzcaseToExec=fuzzcaseToExec,
+            #                                         authnType=authnType,
+            #                                         basicUsername=basicUsername,
+            #                                         basicPassword=basicPassword,
+            #                                         bearerTokenHeader=bearerTokenHeader,
+            #                                         bearerToken=bearerToken,
+            #                                         apikeyHeader=apikeyHeader,
+            #                                         apikey=apikey)
+            #     if not ok:
+            #         return False, error
                 
-                insert_db_fuzzcontext(fuzzcontext)
+            #     insert_db_fuzzcontext(fuzzcontext)
             
+            if requestTextContent == '':
+                return False, 'Request text content cannot be empty'
+                
+            rmStr=  base64.b64decode(requestTextContent).decode('UTF-8')
+            
+            rmFuzzContextCreator = RequestMessageFuzzContextCreator()
+            
+            ok, error, fuzzcontext = rmFuzzContextCreator.new_fuzzcontext(
+                                                name=name,
+                                                hostname=hostname,
+                                                port=port,
+                                                requestTextContent = rmStr,
+                                                requestTextFilePath = requestTextFilePath,
+                                                openapi3FilePath = openapi3FilePath,
+                                                openapi3Url = openapi3Url,
+                                                openapi3Content = openapi3Content,
+                                                fuzzcaseToExec=fuzzcaseToExec,
+                                                authnType=authnType,
+                                                basicUsername=basicUsername,
+                                                basicPassword=basicPassword,
+                                                bearerTokenHeader=bearerTokenHeader,
+                                                bearerToken=bearerToken,
+                                                apikeyHeader=apikeyHeader,
+                                                apikey=apikey)
+            if not ok:
+                return False, error
+            
+            insert_db_fuzzcontext(fuzzcontext)
             
             return True, ''
             
@@ -212,8 +241,11 @@ class ServiceManager:
                 if rq == '':
                     continue
                 
+                # get template variables from db
+                tplVariables = get_tplvariables_of_fuzzcontext(fuzzcontextId=fuzzcontextId)
+                
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
-                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)
+                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq, tplVariables)
                 
                 if ok and singleFCS != None:
                     
@@ -638,7 +670,7 @@ class ServiceManager:
             
             reqMsgFuzzCaseSetCreator = RequestMessageFuzzContextCreator()
             
-            fcsOK, fcsErr, fuzzCaseSets = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
+            fcsOK, fcsErr, fuzzCaseSets, _ = reqMsgFuzzCaseSetCreator.parse_request_msg_as_fuzzcasesets(rqMsg)
             
             if not fcsOK:
                 return False, fcsErr

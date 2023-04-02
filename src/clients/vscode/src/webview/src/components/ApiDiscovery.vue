@@ -683,7 +683,7 @@
         <v-icon color="cyan darken-3" icon="mdi-apache-kafka"></v-icon>
       </v-btn> -->
      
-      <v-btn icon  variant="plain" height="30px" plain v-tooltip="'REST API'" 
+      <v-btn icon  variant="plain" height="30px" plain v-tooltip="'REST API or GraphQL Fuzz Context'" 
          :disabled="(!fuzzerConnected)"
          @click="(newContextSideBarVisible = true )">
         <v-icon color="cyan darken-3" icon="mdi-web"></v-icon>
