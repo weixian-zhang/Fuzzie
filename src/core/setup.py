@@ -11,7 +11,7 @@ import os
 required_modules = []
 modules_to_exclude = ['pyinstaller==5.1', 'pyinstaller-hooks-contrib', 'pylint']
 with open('core/requirements.txt', 'rb') as f:
-    decode = f.read().decode("utf-16")
+    decode = f.read().decode("utf-8")
     
     splitted = decode.split('\r\n')
     for fn in splitted:
