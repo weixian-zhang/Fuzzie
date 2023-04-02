@@ -475,7 +475,7 @@ class Props {
     //event from master
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
-    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.ready', this.onFuzzerReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
 
     // listen to ApiDiscovery Tree item select event
@@ -515,7 +515,7 @@ class Props {
     this.currentFuzzingCaseSetRunId = ''
   }
 
-  onFuzzStartReady() {
+  onFuzzerReady() {
     this.fuzzerConnected = true;
   }
 

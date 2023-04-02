@@ -125,6 +125,8 @@ class CorporaProvider:
             
             self.es.emitInfo('CorporaProvider: corpora fully loaded')
             
+            pub.sendMessage(self.es.CorporaEventTopic, command='corpora_loaded', msgData='')
+            
             return True, ''
             
         except Exception as e:

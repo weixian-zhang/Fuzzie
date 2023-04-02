@@ -769,6 +769,7 @@
                   <v-icon
                   v-tooltip="'start fuzzing'"
                   v-show="(
+                      isDataloadingCompleted &&
                       (currentFuzzingContextId == '' && currentFuzzingCaseSetRunId == '') && 
                       slotProps.node.isFuzzCaseRun == false)"
                   variant="flat"
@@ -891,6 +892,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   fuzzerConnected = false;
   currentFuzzingContextId = '';
   currentFuzzingCaseSetRunId = '';
+  isDataloadingCompleted = false;
 
   showFuzzIcon = true;
   showCancelFuzzIcon = false;
@@ -932,7 +934,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
   async mounted() {
 
-    this.eventemitter.on('fuzzer.ready', this.onFuzzStartReady);
+    this.eventemitter.on('fuzzer.ready', this.onFuzzerReady);
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
     this.eventemitter.on('fuzz.start', this.onFuzzStart);
     this.eventemitter.on('fuzz.once.stop', this.onFuzzOnceStop);
@@ -940,19 +942,26 @@ export default class ApiDiscovery extends Vue.with(Props) {
     this.eventemitter.on('fuzz.stop', this.onFuzzStop);
     this.eventemitter.on('onFuzzCaseSetUpdated', this.onFuzzCaseSetUpdated);
 
+    this.eventemitter.on('fuzzer.dataloading.complete', this.onDataloadingCompleted);
+
     this.getFuzzcontexts()
   }
 
-  onFuzzStartReady() {
+  onFuzzerReady() {
     this.fuzzerConnected = true;
     this.getFuzzcontexts();
   }
 
   onFuzzerNotReady() {
     this.clearData();
+    this.isDataloadingCompleted = false;
     this.fuzzerConnected = false;
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
+  }
+
+  onDataloadingCompleted() {
+    this.isDataloadingCompleted = true;
   }
 
   //constantly receiving event
@@ -1166,6 +1175,10 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onFuzzIconClicked (fuzzcontextId, name)  {
+
+    if(!this.isDataloadingCompleted) {
+      this.toastInfo('please wait for fuzz data loading to complete');
+    }
 
     await this.webclient.fuzz(fuzzcontextId)
 
