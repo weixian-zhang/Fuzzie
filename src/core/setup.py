@@ -12,12 +12,14 @@ requirementTxtPath = os.path.join(curDir, 'core', 'requirements.txt')
 
 required_modules = []
 modules_to_exclude = ['pyinstaller==5.1', 'pyinstaller-hooks-contrib', 'pylint']
-decode = f.read().decode("utf-8")
+
+with open(requirementTxtPath, 'rb') as f:
+    decode = f.read().decode("utf-8")
     
-splitted = decode.split('\r\n')
-for fn in splitted:
-    if fn not in modules_to_exclude:
-        required_modules.append(fn)
+    splitted = decode.split('\r\n')
+    for fn in splitted:
+        if fn not in modules_to_exclude:
+            required_modules.append(fn)
     
 setup(
    name='Fuzzie',
