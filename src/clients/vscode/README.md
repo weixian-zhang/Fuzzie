@@ -1,5 +1,5 @@
 ## Fuzzie
-<img src="https://badgen.net/badge/vs-marketplace/0.12.0-preview/green" />
+[<img src="https://badgen.net/badge/vs-marketplace/0.12.0-preview/green" />](https://marketplace.visualstudio.com/items?itemName=wxz.wxz-fuzzie)
 
 Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for fuzz testing REST API and GraphQL.  
 The ability to fuzz test right in VSCode brings about several benefits:
@@ -16,6 +16,18 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
 * Fuzzie uses sqlite internally to store all data, when upgrading to a newer extension version, previous data will not be retained
+* On the very first launch, Fuzzie can take up to 10 - 12 secs to start up due to data loading  
+
+<br />  
+
+### Content  
+* [Launching Fuzzie](#launching-fuzzie)
+* [Using Fuzzie](#using-fuzzie )
+* [How to write HTTP Request Message ](#2-write-http-request-messages)  
+  * [Wordlist Types](#wordlist-types)
+* [More examples of Request Messages](#21-request-message-examples)
+
+<br /> 
 
 ### Launching Fuzzie  
 
@@ -29,7 +41,7 @@ Fuzzie VSCode extension provides a webview for you to perform everything from AP
 
 <br /> 
 
-![Animation - Copy](https://user-images.githubusercontent.com/43234101/211010226-679c7e24-50a6-4a64-ad32-8fd3e40642fe.gif)
+![Animation - Copy](https://github.com/weixian-zhang/Fuzzie/blob/main/doc/fuzzie-webview-walkthrough.gif)
 
 <br />  
 
@@ -39,18 +51,39 @@ Fuzzie VSCode extension provides a webview for you to perform everything from AP
 
 #### 2. Start by creating a  new API Fuzz Context
 
-A Fuzz Context contains a list of cohesive "fuzz test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
+A Fuzz Context contains a list of cohesive "test cases" created by writing [HTTP Request Messages](#http-write-request-messages).  
 Each test case contains HTTP verb, domain name, port, path, querystring, headers and body and Fuzzie make HTTP requests against all test cases in a Fuzz Context. 
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/create-new-api-context.png" />  
 
 #### 2. Write HTTP Request Messages  
 
-Your REST and GraphQL contracts are described by writing Request Messages.  
+Your REST and GraphQL target endpoints are described by writing Request Messages.  
 The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 
-In request message, you can replace any parameter in path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types).  
-By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.
+```
+{VERB} {url + optional port number}
+{headers}
+
+{body}
+```
+
+In request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
+By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
+for example:
+
+```
+GET https://httpbin.org/get
+?name={{username}}
+&address={{string}}
+&order=5
+&mode={{string}}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+```
 
 #### Wordlist Types
 The following are built-in wordlist-types, more will be added in future  
@@ -81,7 +114,10 @@ Type = function acts on your provided custom data
 | {{ <br>'single string to be base64 encoded' &#124; <b>base64e</b> }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; <b>base64e</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 | {{ <br>'base64 encoded string to be decoded' &#124; <b>base64d</b> }}<br> <br>{{ ['list', 'of', 'encoded', 'items', 'to be base64 decoded'] &#124; <b>base64d</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 
-#### 2.1 Request Message Syntax  
+<br>
+<br>
+
+#### 2.1 Request Message Examples  
 
 Request message syntax follows [VSCode Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) closely.  
 "Samples" drop-down button allows you to load different samples of request message where you can modify to suit your scenario  

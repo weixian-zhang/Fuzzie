@@ -136,15 +136,18 @@ def start():
     except Exception as e:
         eventstore.emitErr(e)
     
-    
+from concurrent.futures import ThreadPoolExecutor
+ 
 if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name is core.main when run in cmdline python fuzzie-fuzzer.pyz
     try:
         # check if there is existing fuzzer process already running
         if not is_port_in_use(webserverPort):
             
-            load_corpora_background()
+            executor =  ThreadPoolExecutor(max_workers=2)
+            executor.submit(load_corpora_background())
             
-            start()
+            start()   
+    
         else:
             eventstore.emitInfo('detected new fuzzer process spawned, shutting down new fuzzer')
         

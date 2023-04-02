@@ -80,6 +80,7 @@
     fuzzerConnected = false;
     $logger;
     isFuzzInProgress = false;
+    dataloadingComplete = false;
 
 
     public beforeMount() {
@@ -112,8 +113,9 @@
          if(status == undefined) {
             //stop any fuzzing activity
             this.fuzzerConnected = false;
+            this.dataloadingComplete = false;
             this.notifyFuzzerIsNotReady();
-            this.toastInfo('fuzzer engine starting up, can take up to 15 secs on first launch', '', 1500);
+            this.toastInfo('fuzzer engine is starting up, could take a moment for the first time', '', 1500);
             return;
          }
 
@@ -129,16 +131,28 @@
             this.eventemitter.emit('fuzz.stop');
         }
 
-         if (!status.isDataLoaded) {
-            this.toastInfo('connected to fuzzer at http://localhost:50001, loading data...', '', 3000)
-            return;
-         } else {
-            if(!this.fuzzerConnected) {
-              this.notifyFuzzerReady();
-              this.toastSuccess('fuzzer is ready at http://localhost:50001');
-              this.fuzzerConnected = true;
-            }
+        if (status.alive && !this.fuzzerConnected) {
+          this.toastInfo('connected to fuzzer at http://localhost:50001, fuzz data loading in progress', '', 3000)
+          this.notifyFuzzerReady();
+          this.fuzzerConnected = true;
+        }
+
+        if (status.isDataLoaded && !this.dataloadingComplete) {
+          this.dataloadingComplete = true;
+          this.toastInfo('Fuzz data is loaded, you can start fuzzing', '', 3000)
+          this.notifyDataLoadingComplete();
          }
+
+        //  if (!status.isDataLoaded) {
+        //     this.toastInfo('connected to fuzzer at http://localhost:50001, loading data...', '', 3000)
+        //     return;
+        //  } else {
+        //     if(!this.fuzzerConnected) {
+        //       this.notifyFuzzerReady();
+        //       this.toastSuccess('fuzzer is ready at http://localhost:50001');
+        //       this.fuzzerConnected = true;
+        //     }
+        //  }
     }
 
 
@@ -158,6 +172,11 @@
     private notifyFuzzerReady() {
         this.$logger.info('fuzzer is ready');
         this.eventemitter.emit('fuzzer.ready')
+    }
+
+    private notifyDataLoadingComplete() {
+        this.$logger.info('fuzzer is ready');
+        this.eventemitter.emit('fuzzer.dataloading.complete')
     }
 
     private onUpdateCaseSetRunSummary(data) {

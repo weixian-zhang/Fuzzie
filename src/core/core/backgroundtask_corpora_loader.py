@@ -20,22 +20,19 @@ def load_corpora_background_done(future):
 # load data background on another thread
 def load_corpora_background():
     
-    corporaProvider.vacuumSqlite()
+    executor =  ThreadPoolExecutor(max_workers=5)
+        
+    executor.submit(corporaProvider.vacuumSqlite()) 
     
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        
-        executor.submit(corporaProvider.load_password_corpora) 
-        
-        executor.submit(corporaProvider.load_files_corpora)
-        
-        executor.submit(corporaProvider.load_username_corpora)
-        
-        executor.submit(corporaProvider.load_string_corpora)
-        
-        executor.submit(corporaProvider.load_http_path_corpora)
-        
-        executor.submit(corporaProvider.load_all)
+    executor.submit(corporaProvider.load_password_corpora) 
     
-    es.emitInfo('data loading complete')
+    executor.submit(corporaProvider.load_files_corpora)
     
-    pub.sendMessage(es.CorporaEventTopic, command='corpora_loaded', msgData='')
+    executor.submit(corporaProvider.load_username_corpora)
+    
+    executor.submit(corporaProvider.load_string_corpora)
+    
+    executor.submit(corporaProvider.load_http_path_corpora)
+    
+    executor.submit(corporaProvider.load_all)
+    
