@@ -12,7 +12,6 @@ requirementTxtPath = os.path.join(curDir, 'core', 'requirements.txt')
 
 required_modules = []
 modules_to_exclude = ['pyinstaller==5.1', 'pyinstaller-hooks-contrib', 'pylint']
-with open(requirementTxtPath, 'rb') as f:
     decode = f.read().decode("utf-8")
     
     splitted = decode.split('\r\n')

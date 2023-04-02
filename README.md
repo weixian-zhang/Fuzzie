@@ -69,7 +69,7 @@ The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Clie
 ```
 
 In request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
-By replacing parameter with wordlist {{ wordlist type }}, during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
+By replacing parameter with {{ wordlist type }} , during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
 for example:
 
 ```
@@ -83,6 +83,18 @@ Authorization: {{ string }}
 CustomHeader-1: {{ digit }}
 CustomHeader-2: {{ filename }}
 CustomHeader-3: {{ username }}
+```
+
+{{ wordlist type }} will be replaced with fuzz data during fuzzing  
+```
+GET https://httpbin.org:443/get?name=!root&address=undefined&order=5&mode=select user from sysibm.sysdummy1;
+
+Content-Type:application/xml
+Authorization:IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1))/*'XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),SLEEP(1)))OR'|XOR(IF(SUBSTR(@@version,1,1)<5,BENCHMARK(2000000,SHA1(0xDE7EC71F1)),âSLEEP(1)))OR*/
+CustomHeader-1:-£100000
+CustomHeader-2:HRUZgKCQcM7deZue.class
+CustomHeader-3:$ALOC$
+User-Agent:fuzzie
 ```
 
 #### Wordlist Types
