@@ -118,7 +118,7 @@
         </v-btn>
     </v-toolbar>
     <!-- <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly> -->
-      <v-table fixed-header height="350px" hover="true" class="table table-responsive">
+      <v-table density="compact" fixed-header height="350px" hover="true" class="table table-responsive">
         <thead>
           <tr>
             <th >
