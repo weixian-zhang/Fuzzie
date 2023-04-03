@@ -234,7 +234,6 @@ export default class FuzzerWebClient
                         verb
                         urlNonTemplate
                         urlDataTemplate
-                        querystringNonTemplate
                         bodyNonTemplate
                         headerNonTemplate
                         authnType

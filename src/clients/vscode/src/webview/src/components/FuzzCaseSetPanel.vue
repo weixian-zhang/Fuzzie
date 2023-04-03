@@ -118,51 +118,47 @@
         </v-btn>
     </v-toolbar>
     <!-- <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly> -->
-      <v-table density="compact" fixed-header height="350px" hover="true" >
+      <v-table fixed-header height="350px" hover="true" class="table table-responsive">
         <thead>
           <tr>
-            <th class="text-left">
+            <th >
               <div class="form-check">
                 <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
               </div>
             </th>
             
-            <!-- <th>
+            <!-- <th >
             </th> -->
-            <th>
+
+            <th >
             </th>
 
-            <th class="text-left">
+            <th >
             </th>
-            <th class="text-left">
+            
+            <th >
               Verb
             </th>
-            <th class="text-left">
-              Path
+            <th >
+              URL
             </th>
-            <th class="text-left">
-              Header
-            </th>
-            <th class="text-left">
-              Body
-            </th>
-            <th class="text-left">
+            <th >
               File Type
             </th>
-            <th class="text-left">
+            <th >
               2xx
             </th>
-            <th class="text-left">
+            <th >
               3xx
             </th>
-            <th class="text-left">
+            <th >
               4xx
             </th>
-            <th class="text-left">
+            <th >
               5xx
             </th>
-            <th class="text-left">
+            <th >
               Total Runs
             </th>
           </tr>
@@ -183,12 +179,14 @@
             @click="(selectedRow= item.fuzzCaseSetId)"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
 
+            <!--checkbox-->
             <td>
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected" density="compact" @click="isTableDirty=true"  hide-details />
               </div>
             </td>
 
+            <!--rest or gql icon-->
             <!-- <td>
                 <v-icon
                     :hidden="!(item.isGraphQL)"
@@ -197,30 +195,53 @@
                     color="purple darken-3"
                     size="small"
                     >
-                    </v-icon>
-                <v-img
-                  :hidden="(item.isGraphQL)"
-                  height="50"
-                  width="40"
-                  src="../assets/img/fuzzie-icon-rest-api.png"
-                ></v-img>
-
+                </v-icon>
+                <v-icon
+                    :hidden="(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-web"
+                    color="purple darken-3"
+                    size="small"
+                    >
+                </v-icon>
             </td> -->
 
+            
+
+            <!--view result-->
             <td>
+              <v-icon
+                    :hidden="!(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-graphql"
+                    color="purple darken-3"
+                    size="x-small"
+                    class="m-0 p-0"
+                    >
+                </v-icon>
+                <v-icon
+                    :hidden="(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-web"
+                    color="purple darken-3"
+                    size="x-small"
+                    class="m-0 p-0"
+                    >
+                </v-icon>
               <v-icon
                   v-show="item.fuzzCaseSetRunId != ''"
                   style="cursor:pointer"
                   icon = "mdi-eye"
                   color="cyan"
+                  class="m-0 p-0"
+                  size="x-small"
                   v-tooltip="'all result'"
                   @click="(onRowClick(item), selectedRow= item.fuzzCaseSetId)"
                 >
                 </v-icon>
             </td>
-
             
-
+            <!--settings-->
             <td>
               <div class="btn-group" style="cursor: pointer">
                   <v-icon
@@ -256,23 +277,25 @@
                   </ul>
                 </div>
             </td>
-
-            <td>{{ item.verb }}</td>
             
+            <!--verb-->
+            <td>
+              <span>{{ item.verb }}</span>
+            </td>
 
-            <!-- v-tooltip.bottom="formatLongValueForTooltip(item.path + item.querystringNonTemplate)" -->
+            <!--url-->
             <td>
               <span>
                 <v-tooltip
-                :text="(item.path + item.querystringNonTemplate)"
+                :text="(item.urlNonTemplate)"
                 activator="parent"
                 max-width="500"
                 max-height="500" />
-                {{ shortenValueInTable(item.path + item.querystringNonTemplate) }}
+                {{ shortenValueInTable(item.urlNonTemplate, 30) }}
               </span>
             </td>
             
-            <td>
+            <!-- <td>
               <span>
                 <v-tooltip
                 :text="(item.headerNonTemplate)"
@@ -293,7 +316,7 @@
                 />
               {{ shortenValueInTable(item.bodyNonTemplate, 20) }} 
               </span>
-            </td>
+            </td> -->
 
             <td>
               {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
@@ -884,6 +907,17 @@ class Props {
  
  <!-- Add "scoped" attribute to limit CSS to this component only -->
  <style scoped>
+
+table.table-fit {
+    width: auto !important;
+    table-layout: auto !important;
+}
+table.table-fit thead th, table.table-fit tfoot th {
+    width: auto !important;
+}
+table.table-fit tbody td, table.table-fit tfoot td {
+    width: auto !important;
+}
 
 .v-tooltip__content.menuable__content__active {
   opacity: 1!important;

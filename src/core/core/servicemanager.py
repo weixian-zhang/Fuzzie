@@ -243,15 +243,12 @@ class ServiceManager:
                 rowDict = row._asdict()
                 
                 fcsSum = ApiFuzzCaseSets_With_RunSummary_ViewModel()
-            
-                fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']                    
+                fcsSum.verb = rowDict['verb']
+                fcsSum.fuzzCaseSetId = rowDict['fuzzCaseSetId']
                 fcsSum.fuzzcontextId = rowDict['fuzzcontextId']
                 fcsSum.selected = rowDict['selected']
-                fcsSum.hostname = rowDict['hostname']
-                fcsSum.port = rowDict['port']
-                fcsSum.verb = rowDict['verb']
-                fcsSum.path = rowDict['path']
-                fcsSum.querystringNonTemplate = rowDict['querystringNonTemplate']
+                fcsSum.urlNonTemplate = rowDict['urlNonTemplate']
+                fcsSum.urlDataTemplate = rowDict['urlDataTemplate']
                 fcsSum.bodyNonTemplate = rowDict['bodyNonTemplate']
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
