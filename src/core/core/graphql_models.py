@@ -193,8 +193,6 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     bearerToken = graphene.String()
     apikeyHeader = graphene.String()
     apikey = graphene.String()
-    hostname = graphene.String()
-    port = graphene.Int()   
     fuzzcaseToExec = graphene.Int() 
     authnType = graphene.String()
     

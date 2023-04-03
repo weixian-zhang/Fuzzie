@@ -1,334 +1,334 @@
 
-# how to serialize parameters
-# https://swagger.io/docs/specification/serialization/
+# # how to serialize parameters
+# # https://swagger.io/docs/specification/serialization/
 
-import json
-from sre_parse import fix_flags
-import shortuuid
-from datetime import datetime
+# import json
+# from sre_parse import fix_flags
+# import shortuuid
+# from datetime import datetime
 
-import os,sys
-from pathlib import Path
+# import os,sys
+# from pathlib import Path
 
-parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
-sys.path.insert(0, parentFolderOfThisFile)
-sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
+# parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
+# sys.path.insert(0, parentFolderOfThisFile)
+# sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
-from apicontext import ApiContext, ParameterType, ParamProp, Api, SupportedAuthnType
-from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
-from eventstore import EventStore
+# from apicontext import ApiContext, ParameterType, ParamProp, Api, SupportedAuthnType
+# from webapi_fuzzcontext import ApiFuzzCaseSet, ApiFuzzContext, FuzzMode
+# from eventstore import EventStore
 
-class OpenApi3FuzzContextCreator:
+# class OpenApi3FuzzContextCreator:
     
-    def __init__(self):
-        self.apicontext = None
-        self.fuzzcontext = ApiFuzzContext()
-        self.eventstore = EventStore()
+#     def __init__(self):
+#         self.apicontext = None
+#         self.fuzzcontext = ApiFuzzContext()
+#         self.eventstore = EventStore()
         
-    def new_fuzzcontext(self,
-                 apiDiscoveryMethod,  
-                 apicontext,
-                 hostname, 
-                 port,
-                 authnType,
-                 name = '',
-                 requestTextContent = '',
-                 requestTextFilePath = '',
-                 openapi3FilePath = '',
-                 openapi3Url = '',
-                 openapi3Content = '',
-                 fuzzcaseToExec = 100,
-                 basicUsername = '',
-                 basicPassword = '',
-                 bearerTokenHeader = '',
-                 bearerToken = '',
-                 apikeyHeader = '',
-                 apikey = '') -> ApiFuzzContext:
+#     def new_fuzzcontext(self,
+#                  apiDiscoveryMethod,  
+#                  apicontext,
+#                  hostname, 
+#                  port,
+#                  authnType,
+#                  name = '',
+#                  requestTextContent = '',
+#                  requestTextFilePath = '',
+#                  openapi3FilePath = '',
+#                  openapi3Url = '',
+#                  openapi3Content = '',
+#                  fuzzcaseToExec = 100,
+#                  basicUsername = '',
+#                  basicPassword = '',
+#                  bearerTokenHeader = '',
+#                  bearerToken = '',
+#                  apikeyHeader = '',
+#                  apikey = '') -> ApiFuzzContext:
         
-        fuzzcontext = ApiFuzzContext()
-        fuzzcontext.Id = shortuuid.uuid()
-        if name == '':
-            fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
-        else:
-            fuzzcontext.name = name
+#         fuzzcontext = ApiFuzzContext()
+#         fuzzcontext.Id = shortuuid.uuid()
+#         if name == '':
+#             fuzzcontext.name = datetime.now().strftime("%m-%d-%Y-%H-%M-%S")
+#         else:
+#             fuzzcontext.name = name
             
-        fuzzcontext.datetime = datetime.now()
-        fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
-        fuzzcontext.requestMessageText = requestTextContent
-        fuzzcontext.requestMessageFilePath = requestTextFilePath
-        fuzzcontext.openapi3FilePath = openapi3FilePath
-        fuzzcontext.openapi3Content = openapi3Content
-        fuzzcontext.openapi3Url = openapi3Url
-        fuzzcontext.hostname = hostname
-        fuzzcontext.port = port
-        fuzzcontext.authnType = authnType
-        fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
+#         fuzzcontext.datetime = datetime.now()
+#         fuzzcontext.apiDiscoveryMethod = apiDiscoveryMethod
+#         fuzzcontext.requestMessageText = requestTextContent
+#         fuzzcontext.requestMessageFilePath = requestTextFilePath
+#         fuzzcontext.openapi3FilePath = openapi3FilePath
+#         fuzzcontext.openapi3Content = openapi3Content
+#         fuzzcontext.openapi3Url = openapi3Url
+#         fuzzcontext.hostname = hostname
+#         fuzzcontext.port = port
+#         fuzzcontext.authnType = authnType
+#         fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
         
-        fuzzcontext.basicUsername = basicUsername
-        fuzzcontext.basicPassword= basicPassword
-        fuzzcontext.bearerTokenHeader= bearerTokenHeader
-        fuzzcontext.bearerToken= bearerToken 
-        fuzzcontext.apikeyHeader=  apikeyHeader 
-        fuzzcontext.apikey= apikey
+#         fuzzcontext.basicUsername = basicUsername
+#         fuzzcontext.basicPassword= basicPassword
+#         fuzzcontext.bearerTokenHeader= bearerTokenHeader
+#         fuzzcontext.bearerToken= bearerToken 
+#         fuzzcontext.apikeyHeader=  apikeyHeader 
+#         fuzzcontext.apikey= apikey
         
-        fcSets = self.create_fuzzCaseSet(apicontext)
+#         fcSets = self.create_fuzzCaseSet(apicontext)
         
-        fuzzcontext.fuzzcaseSets = fcSets
+#         fuzzcontext.fuzzcaseSets = fcSets
         
-        return fuzzcontext
+#         return fuzzcontext
         
-    def create_fuzzCaseSet(self, apicontext: ApiContext) -> [ApiFuzzCaseSet]:
+#     def create_fuzzCaseSet(self, apicontext: ApiContext) -> [ApiFuzzCaseSet]:
         
-        if self.fuzzcontext  is None:
-            raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
+#         if self.fuzzcontext  is None:
+#             raise Exception('initialize ApiFuzzContext with new_fuzzcontext(...)')
         
-        self.set_hostname(apicontext)
+#         self.set_hostname(apicontext)
         
-        apis = apicontext.apis
+#         apis = apicontext.apis
         
-        if apis == None or len(apis) == 0:
-            return ApiFuzzContext()
+#         if apis == None or len(apis) == 0:
+#             return ApiFuzzContext()
         
-        fcSets = []
+#         fcSets = []
         
-        for api in apis:
+#         for api in apis:
             
-            fuzzcaseSet = ApiFuzzCaseSet()
-            fuzzcaseSet.Id = shortuuid.uuid()
-            fuzzcaseSet.verb = api.verb.name
-            fuzzcaseSet.hostname = ''
-            fuzzcaseSet.port = -1
+#             fuzzcaseSet = ApiFuzzCaseSet()
+#             fuzzcaseSet.Id = shortuuid.uuid()
+#             fuzzcaseSet.verb = api.verb.name
+#             fuzzcaseSet.hostname = ''
+#             fuzzcaseSet.port = -1
             
-            fuzzcaseSet.path = api.path
+#             fuzzcaseSet.path = api.path
             
-            fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
+#             fuzzcaseSet.pathDataTemplate= self.create_path_data_template(api)
             
-            querystring = self.create_querystring_data_template(api)
-            fuzzcaseSet.querystringDataTemplate = querystring
-            fuzzcaseSet.querystringNonTemplate = self.remove_micro_template_for_gui_display(querystring)
+#             querystring = self.create_querystring_data_template(api)
+#             fuzzcaseSet.querystringDataTemplate = querystring
+#             fuzzcaseSet.querystringNonTemplate = self.remove_micro_template_for_gui_display(querystring)
             
-            body = self.create_body_data_template(api)
-            fuzzcaseSet.bodyDataTemplate = body
-            fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
+#             body = self.create_body_data_template(api)
+#             fuzzcaseSet.bodyDataTemplate = body
+#             fuzzcaseSet.bodyNonTemplate = self.remove_micro_template_for_gui_display(json.dumps(body))
             
-            header = self.create_header_data_template(api)
-            fuzzcaseSet.headerDataTemplate = header
-            fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
+#             header = self.create_header_data_template(api)
+#             fuzzcaseSet.headerDataTemplate = header
+#             fuzzcaseSet.headerNonTemplate =  self.remove_micro_template_for_gui_display(json.dumps(header))
             
-            if api.file != '':
-                fuzzcaseSet.file.append(api.file)
+#             if api.file != '':
+#                 fuzzcaseSet.file.append(api.file)
                     
-            fcSets.append(fuzzcaseSet)
+#             fcSets.append(fuzzcaseSet)
             
-        return fcSets
+#         return fcSets
     
-    def determine_security_scheme(self, 
-                                  basicUsername = '',
-                                  basicPassword = '',
-                                  bearerToken = '', 
-                                  apikeyHeader = '',
-                                  apikey = '',
-                                  name = '') -> str:
+#     def determine_security_scheme(self, 
+#                                   basicUsername = '',
+#                                   basicPassword = '',
+#                                   bearerToken = '', 
+#                                   apikeyHeader = '',
+#                                   apikey = '',
+#                                   name = '') -> str:
     
-        if basicUsername != '' and basicPassword != '' and (basicUsername != 'null' and basicPassword != 'null'):
-            return SupportedAuthnType.Basic.name
-        elif bearerToken != '' and bearerToken != 'null':
-            return SupportedAuthnType.Bearer.name
-        elif apikeyHeader != '' and apikey != '' and  (apikeyHeader != 'null' and apikey != 'null'):
-            return SupportedAuthnType.ApiKey.name
-        else:
-            return SupportedAuthnType.Anonymous.name
+#         if basicUsername != '' and basicPassword != '' and (basicUsername != 'null' and basicPassword != 'null'):
+#             return SupportedAuthnType.Basic.name
+#         elif bearerToken != '' and bearerToken != 'null':
+#             return SupportedAuthnType.Bearer.name
+#         elif apikeyHeader != '' and apikey != '' and  (apikeyHeader != 'null' and apikey != 'null'):
+#             return SupportedAuthnType.ApiKey.name
+#         else:
+#             return SupportedAuthnType.Anonymous.name
             
             
-    def set_hostname(self, apicontext: ApiContext):
+#     def set_hostname(self, apicontext: ApiContext):
         
-        if self.fuzzcontext.hostname == '':
-            if len(apicontext.baseUrl) > 0:
-                self.fuzzcontext.hostname = apicontext.baseUrl[0]
+#         if self.fuzzcontext.hostname == '':
+#             if len(apicontext.baseUrl) > 0:
+#                 self.fuzzcontext.hostname = apicontext.baseUrl[0]
         
                 
-    def remove_micro_template_for_gui_display(self, datatemplate: str):
-       if datatemplate == '':
-            return datatemplate
+#     def remove_micro_template_for_gui_display(self, datatemplate: str):
+#        if datatemplate == '':
+#             return datatemplate
         
-       datatemplate = datatemplate.replace('{{ eval(\'', '')
-       datatemplate = datatemplate.replace('\') }}', '')
-       return datatemplate
+#        datatemplate = datatemplate.replace('{{ eval(\'', '')
+#        datatemplate = datatemplate.replace('\') }}', '')
+#        return datatemplate
     
-    # does not support array in path, array is only supported in querystring
-    def create_path_data_template(self, api: Api) -> str:
+#     # does not support array in path, array is only supported in querystring
+#     def create_path_data_template(self, api: Api) -> str:
         
-        resultMap = {}
+#         resultMap = {}
         
-        if len(api.parameters) == 0:
-            return api.path
+#         if len(api.parameters) == 0:
+#             return api.path
         
-        for param in api.parameters:
+#         for param in api.parameters:
         
-            if self.is_path_param(param.paramType):
+#             if self.is_path_param(param.paramType):
                 
-                if param.type == 'object':
-                    resultMap[param.propertyName] = self.create_object_micro_data_template(param.parameters, resultMap)
-                else:
-                    resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
+#                 if param.type == 'object':
+#                     resultMap[param.propertyName] = self.create_object_micro_data_template(param.parameters, resultMap)
+#                 else:
+#                     resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
                     
-        if len(resultMap) > 0:     
-            apiPathDataTemplate = api.path.format_map(resultMap)
-            return apiPathDataTemplate
+#         if len(resultMap) > 0:     
+#             apiPathDataTemplate = api.path.format_map(resultMap)
+#             return apiPathDataTemplate
         
-        return api.path
+#         return api.path
     
-    def create_querystring_data_template(self, api: Api) -> str:
+#     def create_querystring_data_template(self, api: Api) -> str:
     
-        qsDT = ''       
+#         qsDT = ''       
         
-        if len(api.parameters) == 0:
-            return qsDT
+#         if len(api.parameters) == 0:
+#             return qsDT
         
-        for param in api.parameters:
+#         for param in api.parameters:
         
-            if self.is_querystring_param(param.paramType):
+#             if self.is_querystring_param(param.paramType):
                 
-                if param.type == 'object':
-                    complexObject = {}
-                    self.create_object_micro_data_template(param.parameters, complexObject)
-                    objectJsonStr = json.dumps(complexObject)
-                    qsDT = qsDT + f'{param.propertyName}={objectJsonStr}&'
+#                 if param.type == 'object':
+#                     complexObject = {}
+#                     self.create_object_micro_data_template(param.parameters, complexObject)
+#                     objectJsonStr = json.dumps(complexObject)
+#                     qsDT = qsDT + f'{param.propertyName}={objectJsonStr}&'
                     
-                elif param.type == 'array':
-                    arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
-                    qsDT = qsDT + f'{param.propertyName}={arrayQSTemplate}&'
+#                 elif param.type == 'array':
+#                     arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
+#                     qsDT = qsDT + f'{param.propertyName}={arrayQSTemplate}&'
                     
-                else:
-                    qsDT = qsDT + f'{param.propertyName}={self.insert_eval_keyword_fuzzdata_expression(param.type)}&'
+#                 else:
+#                     qsDT = qsDT + f'{param.propertyName}={self.insert_eval_keyword_fuzzdata_expression(param.type)}&'
                     
-        if len(qsDT) > 0:     
-            qsDT = '?' + qsDT
-            if qsDT.endswith('&'):
-                qsDT = qsDT.rstrip(qsDT[-1])
+#         if len(qsDT) > 0:     
+#             qsDT = '?' + qsDT
+#             if qsDT.endswith('&'):
+#                 qsDT = qsDT.rstrip(qsDT[-1])
             
-        return qsDT
+#         return qsDT
     
-    # body wil be serialize to json string format
-    def create_body_data_template(self, api: Api)  -> dict[str]:
+#     # body wil be serialize to json string format
+#     def create_body_data_template(self, api: Api)  -> dict[str]:
         
-        #bodyNonTemplate = {}
-        body = {}
+#         #bodyNonTemplate = {}
+#         body = {}
         
-        if len(api.body) == 0:
-            return body
+#         if len(api.body) == 0:
+#             return body
         
-        for param in api.body:
+#         for param in api.body:
         
-            if param.type == 'object':
-                complexObjectDict = {}
-                self.create_object_micro_data_template(param.parameters, complexObjectDict)
-                body[param.propertyName] = complexObjectDict
+#             if param.type == 'object':
+#                 complexObjectDict = {}
+#                 self.create_object_micro_data_template(param.parameters, complexObjectDict)
+#                 body[param.propertyName] = complexObjectDict
                 
-            elif param.type == 'array':
-                arrayOfDataTemplates = self.create_array_data_template_for_body(param, 5)
-                body[param.propertyName] = arrayOfDataTemplates
+#             elif param.type == 'array':
+#                 arrayOfDataTemplates = self.create_array_data_template_for_body(param, 5)
+#                 body[param.propertyName] = arrayOfDataTemplates
                 
-            else:
-                body[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
+#             else:
+#                 body[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
 
 
-        return body
+#         return body
     
-    def create_header_data_template(self, api: Api) -> dict[str]:
+#     def create_header_data_template(self, api: Api) -> dict[str]:
         
-        headers = {}
+#         headers = {}
         
-        if len(api.parameters) == 0:
-            return headers
+#         if len(api.parameters) == 0:
+#             return headers
         
-        for param in api.parameters:
-            if self.is_header_param(param.paramType):
-                headers[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
+#         for param in api.parameters:
+#             if self.is_header_param(param.paramType):
+#                 headers[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
                   
-        return headers
+#         return headers
     
-    # data template helpers   
-    def create_object_micro_data_template(self, parameters: list[ParamProp], resultMap: dict) -> dict:
+#     # data template helpers   
+#     def create_object_micro_data_template(self, parameters: list[ParamProp], resultMap: dict) -> dict:
         
-        if parameters == None:
-            return resultMap
+#         if parameters == None:
+#             return resultMap
         
-        for param in parameters:
+#         for param in parameters:
             
-            if param.type == 'object':
-                jsonObj = {}
-                self.create_object_micro_data_template(param.parameters, jsonObj)
-                resultMap[param.propertyName] = json.dumps(jsonObj)
+#             if param.type == 'object':
+#                 jsonObj = {}
+#                 self.create_object_micro_data_template(param.parameters, jsonObj)
+#                 resultMap[param.propertyName] = json.dumps(jsonObj)
                 
-            elif param.type == 'array':
+#             elif param.type == 'array':
                 
-                arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
+#                 arrayQSTemplate = self.create_array_data_template_for_querystring(param, 5)
                 
-                resultMap[param.propertyName] = arrayQSTemplate
+#                 resultMap[param.propertyName] = arrayQSTemplate
 
-            else:
-                resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
+#             else:
+#                 resultMap[param.propertyName] = self.insert_eval_keyword_fuzzdata_expression(param.type)
     
     
-    #example: #?foo[]=bar&foo[]=qux
-    #OpenApi3 does not support object
-    def create_array_data_template_for_querystring(self, param: ParamProp, arraySize=5):
+#     #example: #?foo[]=bar&foo[]=qux
+#     #OpenApi3 does not support object
+#     def create_array_data_template_for_querystring(self, param: ParamProp, arraySize=5):
         
-        arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
+#         arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
         
-        propName = param.propertyName
+#         propName = param.propertyName
         
-        template = ''
-        for x in range(arraySize):
+#         template = ''
+#         for x in range(arraySize):
             
-            if x == arraySize - 1:
-                template = template + f'{propName}[]={arrayMicroTemplate}'
-            else:  
-                template = template + f'{propName}[]={arrayMicroTemplate}&'
+#             if x == arraySize - 1:
+#                 template = template + f'{propName}[]={arrayMicroTemplate}'
+#             else:  
+#                 template = template + f'{propName}[]={arrayMicroTemplate}&'
                 
-        return template
+#         return template
         
         
         
-    def create_array_data_template_for_body(self, param: ParamProp, arraySize=5) -> list[str]:
+#     def create_array_data_template_for_body(self, param: ParamProp, arraySize=5) -> list[str]:
         
-        array = []
-        arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
+#         array = []
+#         arrayMicroTemplate = self.insert_eval_keyword_fuzzdata_expression(param.arrayProp.type)
     
-        for x in range(arraySize):
-            array.append(arrayMicroTemplate)
+#         for x in range(arraySize):
+#             array.append(arrayMicroTemplate)
                 
-        return array
+#         return array
                     
     
-    def insert_eval_keyword_fuzzdata_expression(self, type: str):
-        return f'{{{{ eval(\'{type}\') }}}}'
+#     def insert_eval_keyword_fuzzdata_expression(self, type: str):
+#         return f'{{{{ eval(\'{type}\') }}}}'
     
-    def is_path_param(self, paramType):
-        if paramType.lower() == ParameterType.Path.value.lower():
-            return True
-        return False
+#     def is_path_param(self, paramType):
+#         if paramType.lower() == ParameterType.Path.value.lower():
+#             return True
+#         return False
     
-    def is_querystring_param(self, paramType):
-        if paramType.lower() == ParameterType.Query.value.lower():
-            return True
-        return False
+#     def is_querystring_param(self, paramType):
+#         if paramType.lower() == ParameterType.Query.value.lower():
+#             return True
+#         return False
     
-    def is_header_param(self, paramType):
-        if paramType.lower() == ParameterType.Header.value.lower():
-            return True
-        return False
+#     def is_header_param(self, paramType):
+#         if paramType.lower() == ParameterType.Header.value.lower():
+#             return True
+#         return False
 
     
-    def get_fuzzmode(self, fuzzmode: str):
+#     def get_fuzzmode(self, fuzzmode: str):
         
-        if fuzzmode == FuzzMode.Quick.name:
-            return FuzzMode.Quick.name
-        elif fuzzmode == FuzzMode.Full.name:
-            return FuzzMode.Full.name
-        else:
-             return FuzzMode.Custom.name
+#         if fuzzmode == FuzzMode.Quick.name:
+#             return FuzzMode.Quick.name
+#         elif fuzzmode == FuzzMode.Full.name:
+#             return FuzzMode.Full.name
+#         else:
+#              return FuzzMode.Custom.name
         
         
         

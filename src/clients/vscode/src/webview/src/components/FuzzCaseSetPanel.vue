@@ -117,7 +117,7 @@
           </v-badge>
         </v-btn>
     </v-toolbar>
-    <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly>
+    <!-- <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly> -->
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
@@ -410,9 +410,9 @@ class Props {
   fuzzContextId = '';
   fuzzCaseSetRunsId = '';
 
-  hostname = '';
-  port = -1;
-  hostnameDisplay = ''
+  // hostname = '';
+  // port = -1;
+  // hostnameDisplay = ''
 
   rowClickEnabled = true;
 
@@ -457,19 +457,19 @@ class Props {
     this.fuzzcasesetViewInSideBar = val
   }
 
-  refreshHostnameDisplay() {
+  // refreshHostnameDisplay() {
 
-    this.hostnameDisplay = '';
+  //   this.hostnameDisplay = '';
 
-    if (this.hostname != '' && this.port != undefined) {
-      if (this.port != 80 && this.port != 443) {
-        this.hostnameDisplay = `${this.hostname}:${this.port}`;
-      }
-      else {
-        this.hostnameDisplay = `${this.hostname}`;
-      }
-    }
-  }
+  //   if (this.hostname != '' && this.port != undefined) {
+  //     if (this.port != 80 && this.port != 443) {
+  //       this.hostnameDisplay = `${this.hostname}:${this.port}`;
+  //     }
+  //     else {
+  //       this.hostnameDisplay = `${this.hostname}`;
+  //     }
+  //   }
+  // }
 
   mounted(){
     //event from master
@@ -633,11 +633,6 @@ class Props {
     this.selectedFuzzCaseSetRunId = '';
     this.selectedFuzzCaseSetId = '';
 
-     this.hostname = hostname;
-     this.port = port;
-
-     this.refreshHostnameDisplay();
-
      await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
   }
 
@@ -647,16 +642,16 @@ class Props {
       }
     }
 
-  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string, hostname, port)
+  async onFuzzCaseSetRunSelected(fuzzcontextId: string, fuzzCaseSetRunsId: string)
   {
     this.selectedFuzzContextId = fuzzcontextId;
     this.selectedFuzzCaseSetRunId = fuzzCaseSetRunsId;
     this.selectedFuzzCaseSetId = '';
 
-    this.hostname = hostname;
-    this.port = port;
+    // this.hostname = hostname;
+    // this.port = port;
 
-    this.refreshHostnameDisplay();
+    //this.refreshHostnameDisplay();
 
     await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, fuzzCaseSetRunsId);
   }
@@ -701,11 +696,11 @@ class Props {
     // send event to FuzzResult panel to display request and response
     this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, -1);
 
-    if (fcsrs.hostname != '') {
-      this.hostname = fcsrs.hostname;
-      this.port = fcsrs.port;
-      this.refreshHostnameDisplay();
-    }
+    // if (fcsrs.hostname != '') {
+    //   this.hostname = fcsrs.hostname;
+    //   this.port = fcsrs.port;
+    //   this.refreshHostnameDisplay();
+    // }
 
     await Utils.delay(2000);   // spam click prevention
 
@@ -826,7 +821,7 @@ class Props {
 
   showFuzzCaseSetInSideBar(item: ApiFuzzCaseSetsWithRunSummaries) {
     this.fuzzcasesetViewInSideBar = {
-                        url: item.hostname + item.path + item.querystringNonTemplate,
+                        url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
                         body: Utils.jsonPrettify(item.bodyNonTemplate)
                       },
@@ -869,11 +864,11 @@ class Props {
     this.selectedFuzzCaseSetRunId = '';
 
     this.fcsRunSums = [];
-    this.hostname = '';
-    this.port = -1;
+    // this.hostname = '';
+    // this.port = -1;
     this.selectedRow = ''
 
-    this.refreshHostnameDisplay();
+    //this.refreshHostnameDisplay();
   }
 
   isFuzzingInProgress() {

@@ -1120,8 +1120,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
               name: fc.name,
               data: fc,
               isFuzzCaseRun: false,
-              hostname: fc.hostname,
-              port: fc.port
             };
 
             this.expandedNodeKeys[fc.Id] = true;
@@ -1139,8 +1137,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
               label: moment(new Date(fcsr.startTime), 'YYYY-MM-DD hh:mm:ss').startOf('second').fromNow(),//dateformat(fcsr.startTime, "dS mmm, yy - H:MM:ss"), //`${nodeLabel.toLocaleDateString('en-us')} ${nodeLabel.toLocaleTimeString()}`,
               data: fcsr,
               isFuzzCaseRun: true,
-              hostname: fc.hostname,
-              port: fc.port
             };
           
             if(fcNode.children == undefined)

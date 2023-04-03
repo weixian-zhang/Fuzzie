@@ -322,8 +322,6 @@ class NewApiFuzzContext(graphene.Mutation):
                 bearerToken,
                 apikeyHeader,
                 apikey,
-                hostname,
-                port,
                 fuzzcaseToExec,
                 authnType):
         
@@ -331,8 +329,6 @@ class NewApiFuzzContext(graphene.Mutation):
         
         OK, error = sm.new_api_fuzzcontext(
                                         name=name,
-                                        hostname=hostname,
-                                        port=port,
                                         requestTextContent = requestTextContent,
                                         requestTextFilePath = requestTextFilePath,
                                         openapi3FilePath = openapi3FilePath,

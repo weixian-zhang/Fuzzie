@@ -232,9 +232,8 @@ export default class FuzzerWebClient
                         fuzzcontextId
                         selected 
                         verb
-                        hostname
-                        port
-                        path
+                        urlNonTemplate
+                        urlDataTemplate
                         querystringNonTemplate
                         bodyNonTemplate
                         headerNonTemplate
@@ -421,8 +420,6 @@ export default class FuzzerWebClient
                         bearerToken,
                         apikeyHeader,
                         apikey,
-                        hostname,
-                        port,
                         fuzzcaseToExec,
                         authnType,
                         templateVariables
@@ -558,24 +555,6 @@ export default class FuzzerWebClient
             //   })
 
             const response = await axios.post(this.gqlUrl, {query});
-
-            // const response = await axios
-            //         .post(this.gqlUrl, {query})
-            //         .then(function (response) {
-            //             if(this.responseHasData(response))
-            //             {
-            //                 const ok = response.data.data.getUploadedFiles.ok;
-            //                 const error = response.data.data.getUploadedFiles.error;
-            //                 const result = response.data.data.getUploadedFiles.result;
-            //                 return [ok, error, result];
-            //             }
-            //         })
-            //         .catch(function (error) {
-            //         console.log(error);
-            //         })
-            //         .finally(function () {
-            //         // always executed
-            //         });
 
             if(this.responseHasData(response))
             {
@@ -832,8 +811,6 @@ export default class FuzzerWebClient
                             bearerToken:"${fuzzcontext.bearerToken}",
                             apikeyHeader:"${fuzzcontext.apikeyHeader}",
                             apikey:"${fuzzcontext.apikey}",
-                            hostname:"${fuzzcontext.hostname}",
-                            port:${fuzzcontext.port},
                             fuzzcaseToExec: ${fuzzcontext.fuzzcaseToExec},
                             authnType: "${fuzzcontext.authnType}"
                         }
@@ -891,8 +868,6 @@ export default class FuzzerWebClient
                             bearerToken:"${fuzzcontext.bearerToken}",
                             apikeyHeader:"${fuzzcontext.apikeyHeader}",
                             apikey:"${fuzzcontext.apikey}",
-                            hostname:"${fuzzcontext.hostname}",
-                            port:${fuzzcontext.port},
                             fuzzcaseToExec: ${fuzzcontext.fuzzcaseToExec},
                             authnType: "${fuzzcontext.authnType}"){
                 ok

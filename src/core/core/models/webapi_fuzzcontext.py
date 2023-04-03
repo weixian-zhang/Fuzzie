@@ -115,12 +115,14 @@ class ApiFuzzCaseSet:
         self.fuzzcontextId = ''
         self.fuzzDataCases: list[ApiFuzzDataCase] = []
         
-        self.hostname = ''
-        self.port = -1
-        self.path = ''
-        self.querystringNonTemplate = ''
+        self.urlNonTemplate = ''
+        self.urlDataTemplate = ''
+
         self.bodyNonTemplate = ''
+        self.bodyDataTemplate = ''
+        
         self.headerNonTemplate = ''
+        self.headerDataTemplate = ''
         
         self.file = ''
         self.fileName = ''
@@ -129,11 +131,6 @@ class ApiFuzzCaseSet:
         self.isGraphQL = False
         self.graphQLVariableNonTemplate = ''
         self.graphQLVariableDataTemplate = ''
-        
-        self.pathDataTemplate = ''
-        self.querystringDataTemplate = ''
-        self.bodyDataTemplate = ''
-        self.headerDataTemplate = ''
         
         self.requestMessage = ''
 
@@ -164,8 +161,6 @@ class ApiFuzzContext:
         self.apikeyHeader=  '' 
         self.apikey= '' 
         
-        self.hostname: str = ''
-        self.port: int   
         self.fuzzcaseToExec = 100
         self.authnType: str = SupportedAuthnType.Anonymous.name
         
@@ -173,11 +168,6 @@ class ApiFuzzContext:
         
         self.templateVariables = ''
 
-    
-    def get_hostname_port(self):
-        if self.port == '':
-            return self.hostname
-        return f'{self.hostname}:{self.port}'
         
 class ApiFuzzReport:
     def __init__(self) -> None:

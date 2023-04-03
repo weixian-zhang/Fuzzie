@@ -19,11 +19,11 @@ class CorporaContextBuilder:
         
             for fcs in fcss:
                 
-                if not self.isWordlistTemplateEmpty(fcs.pathDataTemplate):
-                    self.cp.build_data_context_from_req_msg(fcs.pathDataTemplate)
+                if not self.isWordlistTemplateEmpty(fcs.urlDataTemplate):
+                    self.cp.build_data_context_from_req_msg(fcs.urlDataTemplate)
                 
-                if not self.isWordlistTemplateEmpty(fcs.querystringDataTemplate):
-                    self.cp.build_data_context_from_req_msg(fcs.querystringDataTemplate)
+                # if not self.isWordlistTemplateEmpty(fcs.querystringDataTemplate):
+                #     self.cp.build_data_context_from_req_msg(fcs.querystringDataTemplate)
                     
                 if not self.isWordlistTemplateEmpty(fcs.headerDataTemplate):
                     self.cp.build_data_context_from_req_msg(fcs.headerDataTemplate)

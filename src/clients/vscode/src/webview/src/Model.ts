@@ -21,8 +21,6 @@ export class ApiFuzzContextUpdate {
     public bearerToken: string;
     public apikeyHeader: string;
     public apikey: string;
-    public hostname: string;
-    public port: number;
     public fuzzcaseToExec: number;
     public authnType: string;
     public apiDiscoveryMethod  ='request_message';
@@ -46,8 +44,6 @@ export class ApiFuzzContext {
     public bearerToken ='';
     public apikeyHeader ='Authorization';
     public apikey ='';
-    public hostname = ''; //'https://eovogku1ema9d9b.m.pipedream.net'; //'https://httpbin.org';
-    public port = 443;
     public fuzzcaseToExec =500;
     public templateVariables ='';
 
@@ -60,10 +56,8 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public fuzzcontextId = '';
     public selected = true;
     public verb = '';
-    public hostname = '';
-    public port = -1;
-    public path = '';
-    public querystringNonTemplate = '';
+    public urlNonTemplate = '';
+    public urlDataTemplate = '';
     public bodyNonTemplate = '';
     public headerNonTemplate = '';
     public authnType = '';

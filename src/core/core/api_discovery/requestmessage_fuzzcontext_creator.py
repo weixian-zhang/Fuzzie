@@ -57,8 +57,6 @@ class RequestMessageFuzzContextCreator:
   
 
     def new_fuzzcontext(self,  
-                 hostname, 
-                 port,
                  authnType,
                  name = '',
                  requestTextContent = '',
@@ -93,8 +91,6 @@ class RequestMessageFuzzContextCreator:
             fuzzcontext.openapi3FilePath = openapi3FilePath
             fuzzcontext.openapi3Content = openapi3Content
             fuzzcontext.openapi3Url = openapi3Url
-            fuzzcontext.hostname = hostname
-            fuzzcontext.port = port
             fuzzcontext.authnType = authnType
             fuzzcontext.fuzzcaseToExec = fuzzcaseToExec
             
@@ -161,6 +157,7 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsg)
         
+        #set in global variable so that Jinja filter function can access
         self.detectedJinjaVariables = jinjaVariables
         
         # split request-blocks by delimiter ###
@@ -195,42 +192,46 @@ class RequestMessageFuzzContextCreator:
             # parse verb
             self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
-            url, path = self.get_url_path(multilineBlock)
-            
-            urlOK, urlErr, urlRend = self.inject_eval_func_primitive_wordlist(url)
-            
-            if not urlOK:
-                return False, urlErr, [], ''
+            urlWithoutQS = self.get_url_without_querystring(multilineBlock)
             
             # parse path
-            parseOK, parseErr, hostname, port = self.parse_hostname_port(urlRend)
-            if not parseOK:
-                # cannot find path, skip to next block
-                self.eventstore.emitErr(parseErr)
-                return False, parseErr, [] , ''
+            # parseOK, parseErr, hostname, port = self.parse_hostname_port(urlRend)
+            # if not parseOK:
+            #     # cannot find path, skip to next block
+            #     self.eventstore.emitErr(parseErr)
+            #     return False, parseErr, [] , ''
             
-            self.currentFuzzCaseSet.hostname = hostname
-            self.currentFuzzCaseSet.port = port
-            self.currentFuzzCaseSet.path = path
+            # self.currentFuzzCaseSet.hostname = hostname
+            # self.currentFuzzCaseSet.port = port
+            # self.currentFuzzCaseSet.path = path
             
-            pathOK, pathErr, evalPath = self.inject_eval_func_primitive_wordlist(path)
+            # pathOK, pathErr, evalPath = self.inject_eval_func_primitive_wordlist(path)
             
-            if not pathOK:
-                return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', [], ''
+            # if not pathOK:
+            #     return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', [], ''
             
-            self.currentFuzzCaseSet.pathDataTemplate = evalPath
+            # self.currentFuzzCaseSet.pathDataTemplate = evalPath
             
             # parse querystring
             # lineIndex is the index of the multiline list when querystring ends at
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
-            self.currentFuzzCaseSet.querystringNonTemplate = qs
             
-            qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
-            if not qsOK:
-                return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', [], ''
+            url = f'{urlWithoutQS}{qs}'
             
-            self.currentFuzzCaseSet.querystringDataTemplate = evalQS
+            urlOK, urlErr, urlRendered = self.inject_eval_func_primitive_wordlist(url)
+            
+            if not urlOK:
+                return False, urlErr, [], ''
+            
+            self.currentFuzzCaseSet.urlNonTemplate = url.strip()
+            self.currentFuzzCaseSet.urlDataTemplate = urlRendered.strip()
+            
+            # qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
+            # if not qsOK:
+            #     return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', [], ''
+            
+            # self.currentFuzzCaseSet.querystringDataTemplate = evalQS
             
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
@@ -278,16 +279,11 @@ class RequestMessageFuzzContextCreator:
                         
                         if not bok:
                             return False, berr, [], ''
-                        # bodyTpl = self.jinjaEnvPrimitive.from_string(gqlBody)
-                        # bodyEval = bodyTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())
                         
                         vok, verr, renderedGQLVar = self.inject_eval_func_primitive_wordlist(graphqlVariable)
                         
                         if not vok:
                             return False, verr, [], ''
-                        
-                        # gqlVariableTpl = self.jinjaEnvPrimitive.from_string(graphqlVariable)
-                        # graphqlVariableEval = gqlVariableTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())
                         
                         self.currentFuzzCaseSet.isGraphQL = True
                         self.currentFuzzCaseSet.graphQLVariableNonTemplate = graphqlVariable
@@ -329,7 +325,7 @@ class RequestMessageFuzzContextCreator:
             
         return True, '', fcSets, self.detectedJinjaVariables
     
-    def get_url_path(self, multilineBlock) -> tuple([str, str]):
+    def get_url_without_querystring(self, multilineBlock) -> str:
         
         if len(multilineBlock) >= 1:
             
@@ -343,9 +339,11 @@ class RequestMessageFuzzContextCreator:
             
             urlonly = requestLine.strip()
             
-            parseOutput = urlparse(urlonly)
+            if '?' in urlonly:
+                urlWithQS = urlonly.split('?')
+                urlonly = urlWithQS[0]
             
-            return parseOutput.geturl(), parseOutput.path
+            return urlonly.strip()
             
         return '', ''
     

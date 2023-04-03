@@ -40,8 +40,6 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('datetime', DateTime),
                             Column('name', String),
-                            Column('hostname', String),
-                            Column('port', Integer),
                             Column('requestTextContent', String),
                             Column('requestTextFilePath', String),
                             Column('openapi3FilePath', String),
@@ -62,10 +60,9 @@ ApiFuzzContextTable = Table(apifuzzcontext_TableName, metadata,
 ApiFuzzCaseSetTable = Table(apifuzzCaseSet_TableName, metadata,
                             Column('Id', String, primary_key=True),
                             Column('selected', Boolean),
-                            Column('hostname', String),
-                            Column('port', Integer),
                             Column('verb', String),
-                            Column('path', String),
+                            Column('urlNonTemplate', String),
+                            Column('urlDataTemplate', String),
                             Column('isGraphQL', Boolean),
                             Column('graphQLVariableNonTemplate', String),
                             Column('graphQLVariableDataTemplate', String),
@@ -355,8 +352,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                         ApiFuzzContextTable.columns.bearerToken,
                         ApiFuzzContextTable.columns.apikeyHeader,
                         ApiFuzzContextTable.columns.apikey,
-                        ApiFuzzContextTable.columns.hostname,
-                        ApiFuzzContextTable.columns.port,
                         ApiFuzzContextTable.columns.fuzzcaseToExec,
                         ApiFuzzContextTable.columns.authnType,
                         ApiFuzzContextTable.columns.templateVariables,
@@ -403,8 +398,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                 fcView.bearerToken = rowDict['bearerToken']
                 fcView.apikeyHeader = rowDict['apikeyHeader']
                 fcView.apikey = rowDict['apikey']
-                fcView.hostname = rowDict['hostname']
-                fcView.port = rowDict['port']
                 fcView.fuzzcaseToExec = rowDict['fuzzcaseToExec']
                 fcView.authnType = rowDict['authnType']
                 fcView.templateVariables = rowDict['templateVariables']
@@ -1022,10 +1015,7 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
             values(
                    Id=fuzzcontext.Id, 
                    datetime= datetime.now(),
-                   apiDiscoveryMethod = fuzzcontext.apiDiscoveryMethod,
                    name = fuzzcontext.name,
-                    hostname = fuzzcontext.hostname,
-                    port = fuzzcontext.port,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
                     requestTextContent = fuzzcontext.requestTextContent,
                     requestTextFilePath = fuzzcontext.requestTextFilePath,
@@ -1062,13 +1052,9 @@ def insert_db_fuzzcontext(fuzzcontext: ApiFuzzContext):
                         Id=fcset.Id, 
                         selected = fcset.selected,
                         verb = fcset.verb,
-                        hostname = fcset.hostname,
-                        port = fcset.port,
-                        path = fcset.path,
-                        querystringNonTemplate = fcset.querystringNonTemplate,
+                        urlNonTemplate = fcset.urlNonTemplate,
+                        urlDataTemplate = fcset.urlDataTemplate,
                         bodyNonTemplate = fcset.bodyNonTemplate,
-                        pathDataTemplate = fcset.pathDataTemplate,
-                        querystringDataTemplate = fcset.querystringDataTemplate,
                         headerDataTemplate = fcset.headerDataTemplate,
                         headerNonTemplate = fcset.headerNonTemplate,
                         bodyDataTemplate =  fcset.bodyDataTemplate,

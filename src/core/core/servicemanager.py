@@ -91,7 +91,7 @@ class ServiceManager:
             return False, Utils.errAsText(e)
         
     
-    def new_api_fuzzcontext(self, apiDiscoveryMethod,  
+    def new_api_fuzzcontext(self,   
                                 name,
                                 requestTextContent,
                                 requestTextFilePath,
@@ -104,8 +104,6 @@ class ServiceManager:
                                 bearerToken,
                                 apikeyHeader,
                                 apikey,
-                                hostname,
-                                port,
                                 fuzzcaseToExec,
                                 authnType):
         
@@ -125,8 +123,6 @@ class ServiceManager:
             
             ok, error, fuzzcontext = rmFuzzContextCreator.new_fuzzcontext(
                                                 name=name,
-                                                hostname=hostname,
-                                                port=port,
                                                 requestTextContent = rmStr,
                                                 requestTextFilePath = requestTextFilePath,
                                                 openapi3FilePath = openapi3FilePath,
@@ -610,8 +606,6 @@ class ServiceManager:
             ccBuilder = CorporaContextBuilder(cp)
             
             ok, error = ccBuilder.build_for_api(fuzzCaseSets, tryBuild=True)
-            
-            #ok, error = cp.try_build_context(fuzzCaseSets)
             
             if not ok:
                 return False, error
