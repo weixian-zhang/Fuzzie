@@ -410,7 +410,6 @@ export default class FuzzerWebClient
                     result {
                         Id
                         datetime
-                        apiDiscoveryMethod,  
                         name,
                         requestTextContent,
                         requestTextFilePath,
@@ -425,7 +424,8 @@ export default class FuzzerWebClient
                         hostname,
                         port,
                         fuzzcaseToExec,
-                        authnType
+                        authnType,
+                        templateVariables
                         fuzzCaseSetRuns {
                             fuzzCaseSetRunsId
                             fuzzcontextId
@@ -878,9 +878,7 @@ export default class FuzzerWebClient
 
         const query = `
             mutation newApiFuzzContext {
-                newApiFuzzContext(
-                            apiDiscoveryMethod: "${fuzzcontext.apiDiscoveryMethod}",
-                           
+                newApiFuzzContext(                           
                             name:"${fuzzcontext.name}",
                             requestTextContent:"${fuzzcontext.requestTextContent}",
                             requestTextFilePath:"${fuzzcontext.requestTextFilePath}",

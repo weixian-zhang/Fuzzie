@@ -34,7 +34,6 @@ export class ApiFuzzContext {
     public Id = '';
     public name ='my REST Api';
     public datetime ='';
-    public apiDiscoveryMethod  ='request_message';
     public requestTextContent ='';
     public requestTextFilePath ='';
     public openapi3FilePath ='';
@@ -50,6 +49,7 @@ export class ApiFuzzContext {
     public hostname = ''; //'https://eovogku1ema9d9b.m.pipedream.net'; //'https://httpbin.org';
     public port = 443;
     public fuzzcaseToExec =500;
+    public templateVariables ='';
 
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []
 }

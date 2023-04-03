@@ -102,6 +102,8 @@ app.use(VueCodemirror, {
               {label: "http", type: "keyword", apply: "GET http://", info:""},
               {label: "https", type: "keyword", apply: "GET https://", info:""},
 
+              {label: "variable", type: "keyword", apply: "{% set varname = 'name' %}\n", info:""},
+
               {label: "Accept", type: "keyword", apply: "Accept: ", info:""},
               {label: "Accept-Charset", type: "keyword", apply: "Accept-Charset: ", info:""},
               {label: "Accept-Datetime", type: "keyword", apply: "Accept-Datetime: ", info:""},

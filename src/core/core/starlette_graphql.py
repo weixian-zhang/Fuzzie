@@ -310,7 +310,6 @@ class NewApiFuzzContext(graphene.Mutation):
     error = graphene.String()
     
     def mutate(self, info,
-               apiDiscoveryMethod,
                 name,
                 requestTextContent,
                 requestTextFilePath,
@@ -331,7 +330,6 @@ class NewApiFuzzContext(graphene.Mutation):
         sm = ServiceManager()
         
         OK, error = sm.new_api_fuzzcontext(
-                                        apiDiscoveryMethod=apiDiscoveryMethod,
                                         name=name,
                                         hostname=hostname,
                                         port=port,

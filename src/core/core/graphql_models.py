@@ -183,7 +183,6 @@ class ApiFuzzContext_Runs_ViewModel(graphene.ObjectType):
     Id = graphene.String()
     datetime = graphene.DateTime()
     name = graphene.String()
-    apiDiscoveryMethod = graphene.String()
     requestTextContent = graphene.String()
     requestTextFilePath = graphene.String()
     openapi3FilePath = graphene.String()

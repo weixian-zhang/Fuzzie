@@ -176,13 +176,13 @@ class RequestMessageFuzzContextCreator:
             multilineBlock: list[str] = eachReqBlock.strip().splitlines()
             
             if len(multilineBlock) == 0:
-                return True, '', fcSets  
+                return True, '', fcSets, ''
 
             # remove all breaklines until first char is found
             multilineBlock = self.remove_breaklines_until_char_detected(multilineBlock)
             
             if len(multilineBlock) == 0:
-                return False, 'Request Message contains no fuzz case sets', []
+                return False, 'Request Message contains no fuzz case sets', [], ''
             
             # start request-message parsing
             fuzzcaseSet = ApiFuzzCaseSet()
@@ -195,12 +195,19 @@ class RequestMessageFuzzContextCreator:
             # parse verb
             self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
+            url, path = self.get_url_path(multilineBlock)
+            
+            urlOK, urlErr, urlRend = self.inject_eval_func_primitive_wordlist(url)
+            
+            if not urlOK:
+                return False, urlErr, [], ''
+            
             # parse path
-            ok, error, path, hostname, port = self.get_hostname_path(multilineBlock)
-            if not ok:
+            parseOK, parseErr, hostname, port = self.parse_hostname_port(urlRend)
+            if not parseOK:
                 # cannot find path, skip to next block
-                self.eventstore.emitErr(error)
-                return False, error, [] 
+                self.eventstore.emitErr(parseErr)
+                return False, parseErr, [] , ''
             
             self.currentFuzzCaseSet.hostname = hostname
             self.currentFuzzCaseSet.port = port
@@ -209,7 +216,7 @@ class RequestMessageFuzzContextCreator:
             pathOK, pathErr, evalPath = self.inject_eval_func_primitive_wordlist(path)
             
             if not pathOK:
-                return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', []
+                return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', [], ''
             
             self.currentFuzzCaseSet.pathDataTemplate = evalPath
             
@@ -221,7 +228,7 @@ class RequestMessageFuzzContextCreator:
             
             qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
             if not qsOK:
-                return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', []
+                return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', [], ''
             
             self.currentFuzzCaseSet.querystringDataTemplate = evalQS
             
@@ -245,7 +252,7 @@ class RequestMessageFuzzContextCreator:
             
                         hOK, hErr, evalHeader = self.inject_eval_func_primitive_wordlist(hVal)
                         if not hOK:
-                            return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', []
+                            return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', [], ''
                         
                         evalHeaderDict[key] = evalHeader
 
@@ -263,40 +270,57 @@ class RequestMessageFuzzContextCreator:
                 self.remove_breaklines_until_char_detected(multilineBlock)
                 
                 if self.is_grapgql(headers):
-                   ok, error, body, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
+                   ok, error, gqlBody, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
                    
                    if ok:
-                        bodyTpl = self.jinjaEnvPrimitive.from_string(body)
-                        bodyEval = bodyTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #bodyTpl.render(self.jinja_primitive_wordlist_types_dict())
                         
-                        gqlVariableTpl = self.jinjaEnvPrimitive.from_string(graphqlVariable)
-                        graphqlVariableEval = gqlVariableTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #gqlVariableTpl.render(self.jinja_primitive_wordlist_types_dict())
+                        bok, berr, renderedBody = self.inject_eval_func_primitive_wordlist(gqlBody)
+                        
+                        if not bok:
+                            return False, berr, [], ''
+                        # bodyTpl = self.jinjaEnvPrimitive.from_string(gqlBody)
+                        # bodyEval = bodyTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())
+                        
+                        vok, verr, renderedGQLVar = self.inject_eval_func_primitive_wordlist(graphqlVariable)
+                        
+                        if not vok:
+                            return False, verr, [], ''
+                        
+                        # gqlVariableTpl = self.jinjaEnvPrimitive.from_string(graphqlVariable)
+                        # graphqlVariableEval = gqlVariableTpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())
                         
                         self.currentFuzzCaseSet.isGraphQL = True
                         self.currentFuzzCaseSet.graphQLVariableNonTemplate = graphqlVariable
-                        self.currentFuzzCaseSet.graphQLVariableDataTemplate = graphqlVariableEval
-                        self.currentFuzzCaseSet.bodyNonTemplate = body
-                        self.currentFuzzCaseSet.bodyDataTemplate = bodyEval
+                        self.currentFuzzCaseSet.graphQLVariableDataTemplate = renderedGQLVar
+                        self.currentFuzzCaseSet.bodyNonTemplate = gqlBody
+                        self.currentFuzzCaseSet.bodyDataTemplate = renderedBody
                    else:
-                       return False, error, []
+                       return False, error, [], ''
                 else:
+                    
                     body = self.get_body_as_one_str(multilineBlock)
+                    
                 
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
-                    tpl = self.jinjaEnvBody.from_string(body)
-                    bodyRendered = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    # tpl = self.jinjaEnvBody.from_string(body)
+                    # bodyRendered = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
-                    if self.is_rendered_body_has_func(bodyRendered):
-                        return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] 
+                    ok, err, renderedBody = self.inject_eval_func_primitive_wordlist(body)
+                        
+                    if not ok:
+                        return False, err, [], ''
+                    
+                    if self.is_rendered_body_has_func(renderedBody):
+                        return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] , ''
 
                     # no file found in body
                     if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
-                        self.currentFuzzCaseSet.bodyDataTemplate = bodyRendered
+                        self.currentFuzzCaseSet.bodyDataTemplate = renderedBody
                         self.currentFuzzCaseSet.bodyNonTemplate = body
                     # *has file in body containing file kind myfile, file, image or pdf
                     else:
                         if self.currentFuzzCaseSet.file == WordlistType.myfile and self.currentFuzzCaseSet.fileDataTemplate == '':
-                            return False, 'error when parsing file-content myfile wordlist,', []
+                            return False, 'error when parsing file-content myfile wordlist,', [], ''
                             
                         self.currentFuzzCaseSet.bodyNonTemplate = ''
                         self.currentFuzzCaseSet.bodyDataTemplate = ''           
@@ -305,9 +329,7 @@ class RequestMessageFuzzContextCreator:
             
         return True, '', fcSets, self.detectedJinjaVariables
     
-    def get_hostname_path(self, multilineBlock) -> tuple([bool, str, str, str, int]):
-        
-        path = ''
+    def get_url_path(self, multilineBlock) -> tuple([str, str]):
         
         if len(multilineBlock) >= 1:
             
@@ -323,27 +345,38 @@ class RequestMessageFuzzContextCreator:
             
             parseOutput = urlparse(urlonly)
             
-            # determine port
-            port = -1
+            return parseOutput.geturl(), parseOutput.path
             
-            scheme = parseOutput.scheme
-            if parseOutput.port != None:
-                port = parseOutput.port
-            elif scheme.lower() == 'http':
-                port = 80
-            elif scheme.lower() == 'https':
-                port = 443
+        return '', ''
+    
+    def parse_hostname_port(self, url) -> tuple([bool, str, str, int]):
+        
+        path = ''
+        
+        if len(url) >= 1:
+                        
+            # remove verb
+            url = self.remove_verb_if_exist(url)
             
-            hostname = f'{parseOutput.scheme}://{parseOutput.hostname}'
+            # remove HTTP/1.1 if any
+            url = url.replace('HTTP/1.1', '')
+            
+            urlonly = url.strip()
+            
+            parseOutput = urlparse(urlonly)
+            url = parseOutput.geturl()
+            scheme = parseOutput.scheme if parseOutput.scheme is not None else ''
+            hostname = parseOutput.hostname if parseOutput.hostname is not None else ''
+            port = parseOutput.port if parseOutput.port is not None else -1
+                
+            hostname = f'{scheme}://{hostname}'
             
             if not validators.url(hostname):
-                return False, f'Invalid hostname {hostname}', path, hostname, port
+                return False, f'Invalid url {urlonly}', hostname, port
             
-            path = parseOutput.path.strip()
-            
-            return True, '', path, hostname, port
+            return True, '', hostname, port
                 
-        return True, '', path, '', -1
+        return True, '', '', -1
     
     
      # examples
@@ -684,6 +717,19 @@ class RequestMessageFuzzContextCreator:
             return self.detectedJinjaVariables + '\n' + tpl
         
         return tpl
+    
+    def render_tpl_with_jinja_variables(self, url: str):
+        
+        if url == '':
+            return url
+        
+        url = self.detectedJinjaVariables + '\n' + url
+        
+        tpl = self.jinjaEnvPrimitive.from_string(url)
+            
+        output = tpl.render()
+        
+        return output
             
     
     # *** jinja filters and functions

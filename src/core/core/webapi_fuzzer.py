@@ -323,7 +323,6 @@ class WebApiFuzzer:
             reqBody = ''
             reqBody = self.try_decode_body(body)
             
-
             try:
                 req = None                
                 

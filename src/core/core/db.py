@@ -344,7 +344,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                     (
                         ApiFuzzContextTable.columns.Id.label("fuzzcontextId"), 
                         ApiFuzzContextTable.columns.datetime,
-                        ApiFuzzContextTable.columns.apiDiscoveryMethod,  
                         ApiFuzzContextTable.columns.name,
                         ApiFuzzContextTable.columns.requestTextContent,
                         ApiFuzzContextTable.columns.requestTextFilePath,
@@ -394,7 +393,6 @@ def get_fuzzContexts_and_runs() -> list[ApiFuzzContext_Runs_ViewModel]:
                 fcView.Id = rowDict['fuzzcontextId']
                 fcView.datetime = rowDict['datetime']
                 fcView.name = rowDict['name']
-                fcView.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
                 fcView.requestTextContent = rowDict['requestTextContent']
                 fcView.requestTextFilePath = rowDict['requestTextFilePath']
                 fcView.openapi3FilePath = rowDict['openapi3FilePath']

@@ -1381,8 +1381,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     
         this.newApiContext.authnType = this.determineAuthnType();
 
-        this.newApiContext.apiDiscoveryMethod = this.determineApiDiscoveryMethod();
-
         if(this.newApiContext.name == '') // || this.newApiContext.hostname == '' || this.newApiContext.port == undefined)
         {
           this.toastError('Name is required');
@@ -1487,13 +1485,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
     return "Anonymous";
   }
 
-  determineApiDiscoveryMethod(){
-    if(this.newApiContext.requestTextContent != '')
-    {
-        return 'request_message';
-    }
-    return 'openapi3';
-  }
 
   clearData() {
     this.fuzzcontexts = [];
