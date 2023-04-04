@@ -4,7 +4,7 @@ from datetime import datetime
 import base64
 import re
 import xml.etree.ElementTree as elementTree
-import jinja2
+from urllib.parse import urlparse
 from jinja2 import environment
 import json
 import hashlib
@@ -75,18 +75,24 @@ class Utils:
     
     def validUrl(url):
         
-        regex = re.compile(
-        r'^(?:http|ftp)s?://' # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-        r'localhost|' #localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-        r'(?::\d+)?' # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+        try:
+            result = urlparse(url)
+            return all([result.scheme, result.netloc, result.path])
+        except:
+            return False
+    
+        # regex = re.compile(
+        # r'^(?:http|ftp)s?://' # http:// or https://
+        # r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        # r'localhost|' #localhost...
+        # r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        # r'(?::\d+)?' # optional port
+        # r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         
-        if re.match(regex, url) is not None:
-            return True
+        # if re.match(regex, url) is not None:
+        #     return True
         
-        return False
+        # return False
     
     
     def isInString(substringToFind, text):

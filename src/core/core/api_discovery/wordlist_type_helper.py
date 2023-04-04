@@ -34,7 +34,10 @@ class WordlistTypeHelper:
                                    jinja_randomize_items_filter,
                                    jinja_base64e_filter,
                                    jinja_base64d_filter):
-        env = jinja2.Environment(undefined=jinja2.ChainableUndefined)
+        
+        # DebugUndefined retains undefined variables in {{ var }} and not replace unfound variables with nothing
+        env = jinja2.Environment(undefined=jinja2.DebugUndefined)   
+        
         env.filters[WordlistType.mutate] = mutate_jinja_filter
         env.filters[WordlistType.random] = jinja_randomize_items_filter
         env.filters[WordlistType.base64e] = jinja_base64e_filter
@@ -54,7 +57,9 @@ class WordlistTypeHelper:
                               jinja_base64e_filter,
                               jinja_base64d_filter):
         
-        env = jinja2.Environment(undefined=jinja2.ChainableUndefined)
+         # DebugUndefined retains undefined variables in {{ var }} and not replace unfound variables with nothing
+        env = jinja2.Environment(undefined=jinja2.DebugUndefined)
+        
         env.filters[WordlistType.mutate] = mutate_jinja_filter
         env.filters[WordlistType.myfile] = myfile_jinja_filter
         env.filters[WordlistType.random] = jinja_randomize_items_filter

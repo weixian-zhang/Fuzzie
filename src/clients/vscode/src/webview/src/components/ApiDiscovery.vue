@@ -12,7 +12,7 @@
      <Sidebar v-model:visible="newContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h4>Create new Fuzz Context</h4></div>
+        <div class="row mb-3"><h4>New HTTP Fuzz Context</h4></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -285,7 +285,7 @@
      <Sidebar v-model:visible="updateContextSideBarVisible" position="right" style="width:950px;">
       
       <div class="container-fluid">
-        <div class="row mb-3"><h4>Update Fuzz Context</h4></div>
+        <div class="row mb-3"><h4>Update HTTP Fuzz Context</h4></div>
         <div class="row">
             <div class="col-6">
               <form>
@@ -302,31 +302,8 @@
                   ></v-text-field>
                 </div>
 
-              <h4>Test Properties</h4>
               <v-divider />
 
-              <div class="form-group mb-3" >
-                <v-text-field
-                    v-model="apiContextEdit.hostname"
-                    variant="underlined"
-                    :rules="[() => !!apiContextEdit.hostname || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    label="Hostname" 
-                    clearable/>
-                </div>
-
-                <div class="form-group">
-                  <v-text-field
-                    v-model="apiContextEdit.port"
-                    type="number" 
-                    variant="underlined"
-                    :rules="[() => !!apiContextEdit.port || 'This field is required']"
-                    density="compact"
-                    hint=""
-                    max="65535"
-                    label="Port number" />
-                </div>
 
               <h4>API Discovery</h4>
 

@@ -169,10 +169,14 @@ class ServiceManager:
                     continue
                 
                 # get template variables from db
-                tplVariables = get_tplvariables_of_fuzzcontext(fuzzcontextId=fuzzcontextId)
+                #tplVariables = get_tplvariables_of_fuzzcontext(fuzzcontextId=fuzzcontextId)
+                
+                # reason for attaching variables is that when Jinja-render runs against rq in parsing,
+                # variable-keyword in template if not found, will be replaced as empty string 
+                #rq = f'{tplVariables} \n {rq}'
                 
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
-                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq, tplVariables)
+                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)
                 
                 if ok and singleFCS != None:
                     
@@ -181,12 +185,6 @@ class ServiceManager:
                     parsedFCSs['fuzzCaseSetId'] = unParsedFCS['fuzzCaseSetId']
                     parsedFCSs['selected'] = unParsedFCS['selected']
                     parsedFCSs['verb'] = singleFCS.verb
-                    parsedFCSs['hostname'] =  singleFCS.hostname
-                    parsedFCSs['port'] = singleFCS.port
-                    parsedFCSs['path'] = singleFCS.path
-                    parsedFCSs['querystringNonTemplate'] = singleFCS.querystringNonTemplate
-                    parsedFCSs['bodyNonTemplate'] = singleFCS.bodyNonTemplate
-                    parsedFCSs['headerNonTemplate'] = singleFCS.headerNonTemplate
                     
                     if singleFCS.file != '':
                         parsedFCSs['file'] = singleFCS.file.wordlist_type
@@ -199,9 +197,11 @@ class ServiceManager:
                     parsedFCSs['graphQLVariableNonTemplate'] = singleFCS.graphQLVariableNonTemplate 
                     parsedFCSs['graphQLVariableDataTemplate'] = singleFCS.graphQLVariableDataTemplate
                     
+                    parsedFCSs['urlNonTemplate'] =  singleFCS.urlNonTemplate
+                    parsedFCSs['urlDataTemplate'] = singleFCS.urlDataTemplate
+                    parsedFCSs['bodyNonTemplate'] = singleFCS.bodyNonTemplate
+                    parsedFCSs['headerNonTemplate'] = singleFCS.headerNonTemplate
                     parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
-                    parsedFCSs['pathDataTemplate'] = singleFCS.pathDataTemplate
-                    parsedFCSs['querystringDataTemplate'] = singleFCS.querystringDataTemplate
                     parsedFCSs['bodyDataTemplate'] = singleFCS.bodyDataTemplate
                     parsedFCSs['headerDataTemplate'] = singleFCS.headerDataTemplate
                     parsedFCSs['requestMessage'] = parsedRequestMsg

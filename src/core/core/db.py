@@ -930,17 +930,13 @@ def save_updated_fuzzcasesets(fcsList: dict):
         values(
                 selected = bindparam('selected'),
                 verb = bindparam('verb'),
-                hostname =  bindparam('hostname'),
-                port = bindparam('port'),
-                path = bindparam('path'),
-                querystringNonTemplate = bindparam('querystringNonTemplate'),
+                urlNonTemplate =  bindparam('urlNonTemplate'),
+                urlDataTemplate = bindparam('urlDataTemplate'),
                 bodyNonTemplate = bindparam('bodyNonTemplate'),
                 headerNonTemplate = bindparam('headerNonTemplate'),
                 file = bindparam('file'),
                 fileName = bindparam('fileName'),
                 fileDataTemplate = bindparam('fileDataTemplate'),
-                pathDataTemplate = bindparam('pathDataTemplate'),
-                querystringDataTemplate = bindparam('querystringDataTemplate'),
                 bodyDataTemplate = bindparam('bodyDataTemplate'),
                 headerDataTemplate = bindparam('headerDataTemplate'),
                 requestMessage = bindparam('requestMessage'),
@@ -1285,15 +1281,10 @@ def create_fuzzcontext_from_dict(rowDict):
     fuzzcontext = ApiFuzzContext()       
     fuzzcontext.Id = rowDict['fuzzContextId']
     fuzzcontext.datetime = rowDict['datetime']
-    fuzzcontext.apiDiscoveryMethod = rowDict['apiDiscoveryMethod']
     fuzzcontext.name = rowDict['name']
-    fuzzcontext.hostname = rowDict['hostname']
-    fuzzcontext.port = rowDict['port']
     fuzzcontext.fuzzcaseToExec = rowDict['fuzzcaseToExec']
     fuzzcontext.requestTextContent = rowDict['requestTextContent']
     fuzzcontext.requestTextFilePath = rowDict['requestTextFilePath']
-    fuzzcontext.openapi3FilePath = rowDict['openapi3FilePath']
-    fuzzcontext.openapi3Url = rowDict['openapi3Url']
     fuzzcontext.authnType = rowDict['authnType']
     fuzzcontext.basicUsername = rowDict['basicUsername']
     fuzzcontext.basicPassword = rowDict['basicPassword']
@@ -1308,14 +1299,10 @@ def create_fuzzcontext_from_dict(rowDict):
 def create_fuzzcaseset_from_dict(rowDict):
     fcs = ApiFuzzCaseSet()
     fcs.Id = rowDict['fuzzCaseSetId']
-    fcs.hostname = rowDict['hostname']
-    fcs.port = rowDict['port']
-    fcs.path = rowDict['path']
-    fcs.pathDataTemplate = rowDict['pathDataTemplate']
-    fcs.querystringDataTemplate= rowDict['querystringDataTemplate']
+    fcs.urlNonTemplate = rowDict['urlNonTemplate']
+    fcs.urlDataTemplate = rowDict['urlDataTemplate']
     fcs.bodyDataTemplate= rowDict['bodyDataTemplate']
     fcs.headerDataTemplate = rowDict['headerDataTemplate']
-    fcs.querystringNonTemplate = rowDict['querystringNonTemplate']
     fcs.bodyNonTemplate = rowDict['bodyNonTemplate']
     fcs.selected = rowDict['selected']
     fcs.verb = rowDict['verb']

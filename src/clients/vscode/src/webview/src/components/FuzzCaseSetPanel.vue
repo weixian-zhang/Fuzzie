@@ -7,7 +7,8 @@
     outlined
     style="display: flex; flex-flow: column; height: 97%;">
   
-  <Dialog v-model:visible="showReqMsgEditDialog" 
+  <!-- request message editor for update fuzz context -->
+  <Dialog v-model:visible="showHttpReqMsgEditDialog" 
       header="Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
@@ -52,7 +53,46 @@
           :extensions="extensions"
           @ready="onCMReady" 
         />
-    </Dialog>
+  </Dialog>
+
+  <!-- request message editor for updating variables only -->
+  <Dialog v-model:visible="showHttpReqMsgEditVariablesDialog" 
+      header="Request Message Editor" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true"
+      :dismissableMask="false" :closeOnEscape="false"
+      @hide="onDialogClose(rqInEdit)">
+
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col text-left">
+              <RequestMessageExampleView 
+              v-bind:rqmsg:loadexample="rqInEdit"
+              v-on:rqmsg:loadexample="rqInEdit = $event" />
+          </div>
+          <div class="col text-right">
+              <v-btn
+                size="x-small"
+                color="cyan"
+                @click="parseRequestMessage(rqInEdit)"
+                >
+              Parse
+              </v-btn>
+              <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
+                    mdi-check-circle
+              </v-icon>
+              <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
+                mdi-close-circle
+              </v-icon>
+          </div>
+        </div>
+      </div>
+
+
+      <div style="height: 10px;"></div>
+
+      
+  </Dialog>
 
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:700px;" :modal="true" :dismissable="true">
     <v-card
@@ -118,7 +158,7 @@
         </v-btn>
     </v-toolbar>
     <!-- <input class="form-control input-sm" type="text" style="height:27px;" v-model="hostnameDisplay" readonly> -->
-      <v-table density="compact" fixed-header height="350px" hover="true" class="table table-responsive">
+      <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
             <th >
@@ -136,8 +176,11 @@
 
             <th >
             </th>
-            
+
             <th >
+            </th>
+            
+            <th>
               Verb
             </th>
             <th >
@@ -186,26 +229,6 @@
               </div>
             </td>
 
-            <!--rest or gql icon-->
-            <!-- <td>
-                <v-icon
-                    :hidden="!(item.isGraphQL)"
-                    variant="flat"
-                    icon="mdi-graphql"
-                    color="purple darken-3"
-                    size="small"
-                    >
-                </v-icon>
-                <v-icon
-                    :hidden="(item.isGraphQL)"
-                    variant="flat"
-                    icon="mdi-web"
-                    color="purple darken-3"
-                    size="small"
-                    >
-                </v-icon>
-            </td> -->
-
             
 
             <!--view result-->
@@ -215,7 +238,7 @@
                     variant="flat"
                     icon="mdi-graphql"
                     color="purple darken-3"
-                    size="x-small"
+                    size="small"
                     class="m-0 p-0"
                     >
                 </v-icon>
@@ -224,17 +247,20 @@
                     variant="flat"
                     icon="mdi-web"
                     color="purple darken-3"
-                    size="x-small"
+                    size="small"
                     class="m-0 p-0"
                     >
                 </v-icon>
+            </td>
+
+            <td>
               <v-icon
                   v-show="item.fuzzCaseSetRunId != ''"
                   style="cursor:pointer"
                   icon = "mdi-eye"
                   color="cyan"
                   class="m-0 p-0"
-                  size="x-small"
+                  size="small"
                   v-tooltip="'all result'"
                   @click="(onRowClick(item), selectedRow= item.fuzzCaseSetId)"
                 >
@@ -261,7 +287,7 @@
                     <li><button class="dropdown-item" type="button" 
                     :disabled="(isFuzzingInProgress())"
                     @click="(
-                      showReqMsgEditDialog = true,
+                      showHttpReqMsgEditDialog = true,
                       rqInEdit = item.requestMessage,
                       rqInEditOriginal = item.requestMessage,
                       currentEditFuzzCaseSetId = item.fuzzCaseSetId
@@ -295,31 +321,8 @@
               </span>
             </td>
             
-            <!-- <td>
-              <span>
-                <v-tooltip
-                :text="(item.headerNonTemplate)"
-                activator="parent"
-                max-width="500"
-                max-height="500" />
-                {{ shortenValueInTable(item.headerNonTemplate, 20) }} 
-              </span>
-            </td>
-
             <td>
-              <span >
-                <v-tooltip
-                :text="(item.bodyNonTemplate)"
-                activator="parent"
-                max-width="500"
-                max-height="500"
-                />
-              {{ shortenValueInTable(item.bodyNonTemplate, 20) }} 
-              </span>
-            </td> -->
-
-            <td>
-              {{ item.file }} {{ item.fileName != '' ? `| ${item.fileName}` : '' }}
+              {{item.file}}
             </td>
             <td>
               <a href="#" class="font-weight-bold text-info" v-if="item.http2xx > 0" @click="onFilterBy2xxClicked(item)"> {{ item.http2xx == undefined ? 0 : (item.http2xx) }} </a>
@@ -401,7 +404,7 @@ class Props {
 
   fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
 
-  showReqMsgEditDialog = false;
+  showHttpReqMsgEditDialog = false;
   rqInEdit = '';
   rqInEditOriginal = '';
   currentEditFuzzCaseSetId = '';
@@ -459,12 +462,6 @@ class Props {
 
   onTableValueSeeInFullClicked(jsonValue) {
     return;
-    // try {
-    //   // wordlist-type-expression could likely break json format especially {{ "custom input | my" }}
-    //   this.fuzzcasesetViewInSideBar = JSON.stringify(JSON.parse(jsonValue),null,'\t')
-    // } catch (error) {
-    //     this.fuzzcasesetViewInSideBar = jsonValue;
-    // }
   }
 
   formatLongValueForTooltip(value) {
@@ -650,7 +647,7 @@ class Props {
      } 
   }
 
-  async onFuzzContextSelected(fuzzcontextId, hostname, port)
+  async onFuzzContextSelected(fuzzcontextId)
   {
     this.selectedFuzzContextId = fuzzcontextId;
     this.selectedFuzzCaseSetRunId = '';
@@ -843,11 +840,21 @@ class Props {
   }
 
   showFuzzCaseSetInSideBar(item: ApiFuzzCaseSetsWithRunSummaries) {
-    this.fuzzcasesetViewInSideBar = {
+    if(!item.isGraphQL) {
+      this.fuzzcasesetViewInSideBar = {
                         url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
                         body: Utils.jsonPrettify(item.bodyNonTemplate)
-                      },
+                      }
+    }
+    else {
+      this.fuzzcasesetViewInSideBar = {
+                        url: item.urlNonTemplate,
+                        header: Utils.jsonPrettify(item.headerNonTemplate),
+                        body: Utils.jsonPrettify(item.bodyNonTemplate + '\n\n' + item.graphQLVariableNonTemplate)
+                      }
+    }
+                  
     this.showFullValueSideBar = true
   }
 
@@ -890,6 +897,8 @@ class Props {
     // this.hostname = '';
     // this.port = -1;
     this.selectedRow = ''
+
+    this.isTableDirty = false;
 
     //this.refreshHostnameDisplay();
   }

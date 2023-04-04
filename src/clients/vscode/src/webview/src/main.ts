@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import Vue from 'vue';
 
+import $ from "jquery";
+
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import "@mdi/font/css/materialdesignicons.css";
@@ -220,5 +222,6 @@ app.use(VueCodemirror, {
 });
 
 app.directive('tooltip', Tooltip);
+
 app.mount('#app')
 

@@ -233,13 +233,13 @@
                   <td>{{ item.response.statusCode }}</td>
                   
                   <td>
-                    <span>
+                    <span v-tooltip="item.request.url">
                       {{ shortenValueInTable(item.request.path, 15) }}
                     </span>
                   </td>
                   
                   <td>
-                    <span v-tooltip="item.response.reasonPharse">
+                    <span>
                     {{shortenValueInTable(item.response.reasonPharse, 15) }}
                     </span>
                   </td>
@@ -396,6 +396,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import VSCode from  '../VSCode';
 import { Watch } from 'vue-property-decorator'
+import { Tooltip } from 'bootstrap/dist/js/bootstrap.esm.min.js'
 
 class Props {
   toastInfo: any = {};
@@ -496,8 +497,8 @@ class Props {
       this.eventemitter.on("onFuzzCaseRunDeleted", this.onFuzzCaseRunDeleted)
       //fuzzing data event stream
       this.eventemitter.on('fuzz.start', this.onFuzzStart);
-      this.eventemitter.on('fuzz.stop', this.onFuzzStop);
-      
+      this.eventemitter.on('fuzz.stop', this.onFuzzStop);      
+
     }
 
     onFuzzNotReady() {

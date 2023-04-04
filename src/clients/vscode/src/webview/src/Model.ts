@@ -69,6 +69,9 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public http5xx = 0;
     public completedDataCaseRuns = 0; 
     public totalDataCaseRunsToComplete = 0;
+    public isGraphQL = false;
+    public graphQLVariableNonTemplate = ''
+    public graphQLVariableDataTemplate = ''
 }
 
 

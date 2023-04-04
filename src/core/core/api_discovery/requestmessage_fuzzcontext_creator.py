@@ -4,7 +4,6 @@ import shortuuid
 from datetime import datetime
 from urllib.parse import urlparse
 import json
-from urllib.parse import urlparse
 
 from api_discovery.wordlist_type_helper import WordlistTypeHelper
 
@@ -110,13 +109,10 @@ class RequestMessageFuzzContextCreator:
         except Exception as e:
             self.eventstore.emitErr(e)
             
-    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str, tplVariables: str) -> tuple([bool, str, ApiFuzzCaseSet]):
+    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str) -> tuple([bool, str, ApiFuzzCaseSet]):
         
         if rqMsg == '' or rqMsg.strip() == '':
             return True, '', []
-        
-        # during inject_eval_func_primitive_wordlist, vairables will be added to template
-        self.detectedJinjaVariables = tplVariables
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
@@ -132,7 +128,9 @@ class RequestMessageFuzzContextCreator:
         if singleRQBlock == '' or singleRQBlock.strip() == '':
             return True, '', []
         
-        ok, error, fcsList = self.parse_request_msg_as_fuzzcasesets(singleRQBlock)
+        singleRQBlock = self.add_variables_to_tpl(singleRQBlock)
+        
+        ok, error, fcsList, _ = self.parse_request_msg_as_fuzzcasesets(singleRQBlock)
         
         fcsSingleResult = None
         if ok and len(fcsList) > 0:
@@ -155,7 +153,7 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
-        rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsg)
+        rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsgWithoutComments)
         
         #set in global variable so that Jinja filter function can access
         self.detectedJinjaVariables = jinjaVariables
@@ -166,11 +164,13 @@ class RequestMessageFuzzContextCreator:
         # each block is a fuzzcaseset
         for eachReqBlock in requestBlocks:
             
+            eachReqBlock = eachReqBlock.strip()
+            
             if eachReqBlock == '':
                 continue
             
             # in 1 req message block, split it multi-line
-            multilineBlock: list[str] = eachReqBlock.strip().splitlines()
+            multilineBlock: list[str] = eachReqBlock.splitlines()
             
             if len(multilineBlock) == 0:
                 return True, '', fcSets, ''
@@ -217,15 +217,15 @@ class RequestMessageFuzzContextCreator:
             # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
             lineIndex, qs = self.get_querystring(multilineBlock)
             
-            url = f'{urlWithoutQS}{qs}'
+            url = f'{urlWithoutQS}{qs}'.strip()
             
             urlOK, urlErr, urlRendered = self.inject_eval_func_primitive_wordlist(url)
             
             if not urlOK:
                 return False, urlErr, [], ''
             
-            self.currentFuzzCaseSet.urlNonTemplate = url.strip()
-            self.currentFuzzCaseSet.urlDataTemplate = urlRendered.strip()
+            self.currentFuzzCaseSet.urlNonTemplate = url
+            self.currentFuzzCaseSet.urlDataTemplate = urlRendered
             
             # qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
             # if not qsOK:
@@ -296,15 +296,9 @@ class RequestMessageFuzzContextCreator:
                     
                     body = self.get_body_as_one_str(multilineBlock)
                     
-                
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
-                    # tpl = self.jinjaEnvBody.from_string(body)
-                    # bodyRendered = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
-                    
-                    ok, err, renderedBody = self.inject_eval_func_primitive_wordlist(body)
-                        
-                    if not ok:
-                        return False, err, [], ''
+                    tpl = self.jinjaEnvBody.from_string(body)
+                    renderedBody = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
                     if self.is_rendered_body_has_func(renderedBody):
                         return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] , ''
@@ -692,18 +686,18 @@ class RequestMessageFuzzContextCreator:
     # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
     def inject_eval_func_primitive_wordlist(self, expr: str) -> tuple([bool, str, str]):
         
+        exprWithVar = self.add_variables_to_tpl(expr)
+        
         try:
-            
-            expr = self.add_variables_to_tpl(expr)
-                    
-            tpl = self.jinjaEnvPrimitive.from_string(expr)
+                 
+            tpl = self.jinjaEnvPrimitive.from_string(exprWithVar)
             
             output = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
                     
-            return True, '', output
+            return True, '', output.strip()
         
         except Exception as e:
-            return False, e,  expr
+            return False, Utils.errAsText(e),  exprWithVar
     
     # method uses global var self.detectedJinjaVariables
     def add_variables_to_tpl(self, tpl: str):
