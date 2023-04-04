@@ -296,8 +296,10 @@ class RequestMessageFuzzContextCreator:
                     
                     body = self.get_body_as_one_str(multilineBlock)
                     
+                    bodyWithVar = self.add_variables_to_tpl(body)
+                    
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
-                    tpl = self.jinjaEnvBody.from_string(body)
+                    tpl = self.jinjaEnvBody.from_string(bodyWithVar)
                     renderedBody = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
                     if self.is_rendered_body_has_func(renderedBody):
