@@ -80,7 +80,7 @@ class CorporaContext:
             template = jinja2.Template(reqMsg)
             rendered = template.render({ 'eval': self.resolve_data_by_eval_func })
             
-            return True, '', rendered
+            return True, '', rendered.strip()
             
         except Exception as e:
             self.eventstore.emitErr(e, 'CorporaContext.resolve_fuzzdata')

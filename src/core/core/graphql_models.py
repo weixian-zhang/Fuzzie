@@ -145,7 +145,7 @@ class ApiFuzzContextUpdate(graphene.InputObjectType):
 class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzCaseSetId = graphene.String()
     fuzzCaseSetRunId = graphene.String()
-    fuzzcontextId = graphene.String()
+    
     selected = graphene.Boolean()
     verb = graphene.Field(ApiVerb) 
     urlNonTemplate = graphene.String()
@@ -166,7 +166,12 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     http4xx = graphene.Int(default_value=0)
     http5xx =  graphene.Int(default_value=0)
     completedDataCaseRuns = graphene.Int(default_value=0) 
-    totalDataCaseRunsToComplete = graphene.Int(default_value=0) 
+    totalDataCaseRunsToComplete = graphene.Int(default_value=0)
+
+class ApiFuzzCaseSets_With_RunSummary_FuzzContext(graphene.ObjectType):
+    fuzzcontextId = graphene.String()
+    templateVariables = graphene.String()
+    fcsRunSums = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
     
 class ApiFuzzCaseSetRunViewModel(graphene.ObjectType):
     fuzzCaseSetRunsId = graphene.String()
@@ -207,7 +212,7 @@ class FuzzContextRunQueryResult(graphene.ObjectType):
 class FuzzCaseSetRunSummaryQueryResult(graphene.ObjectType):
     ok = graphene.Boolean()
     error = graphene.String()
-    result = graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
+    result = graphene.Field(ApiFuzzCaseSets_With_RunSummary_FuzzContext) #graphene.List(ApiFuzzCaseSets_With_RunSummary_ViewModel)
         
     
 class FuzzRequest_ViewModel(graphene.ObjectType):

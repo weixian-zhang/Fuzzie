@@ -307,7 +307,7 @@ class WebApiFuzzer:
             # problem exist in fuzz data preparation, cannot continue.
             if not ok:
                 self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
-                return
+                raise Exception(err)
             
             #contentType = self.determine_and_set_content_type(headers)
             
@@ -426,12 +426,29 @@ class WebApiFuzzer:
         except Exception as e:
             err = Utils.errAsText(e)
             
+            fuzzDataCase.request = self.create_fuzzrequest(
+                                        fuzzDataCaseId=fuzzDataCase.Id,
+                                        fuzzcontextId=self.apifuzzcontext.Id,
+                                        hostname=hostname, 
+                                        port=port,
+                                        hostnamePort=hostnamePort,
+                                        url=url,
+                                        path=path,
+                                        qs=querystring,
+                                        verb=fcs.verb,
+                                        headers=headers,
+                                        body=body,
+                                        contentLength=0,
+                                        invalidRequestError=err)
+            
             resp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
                                                                    reason=err)
             resp.statusCode = 400
             
             fuzzDataCase.response = resp
+            
+            return fuzzDataCase, ''
             
         return fuzzDataCase, file
              
@@ -608,6 +625,7 @@ class WebApiFuzzer:
     def dataprep_fuzzcaseset(self, fc: ApiFuzzContext, fcs: ApiFuzzCaseSet):            
             
         try:
+            
             url = ''
             hostname = ''
             port = 0
@@ -615,9 +633,11 @@ class WebApiFuzzer:
             path = ''
             query = ''
             
-            urlDT= fcs.urlDataTemplate
-            bodyDT= fcs.bodyDataTemplate
-            headerDT = fcs.headerDataTemplate
+            tplVars = fc.templateVariables
+            
+            urlDT= self.add_tpl_vars(vars=tplVars, tpl=fcs.urlDataTemplate)
+            bodyDT= self.add_tpl_vars(vars=tplVars, tpl=fcs.bodyDataTemplate)
+            headerDT = self.add_tpl_vars(vars=tplVars, tpl=fcs.headerDataTemplate)
             file = ''        #for openapi3 single file only
             resolvedBodyDT = ''
             headers = {}
@@ -627,11 +647,11 @@ class WebApiFuzzer:
             # get fuzz data for Url
             urlok, urlerr, renderedUrl = self.corporaContext.resolve_fuzzdata(urlDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not urlok:
-                return [False, urlerr, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
+                return [False, urlerr, hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
             
             # check if url is valid
             if not Utils.validUrl(renderedUrl):
-                return [False, 'Url is not valid', hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
+                return [False, 'Url is not valid', hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
             
             # build Url parts
             parsedUrl = urlparse(renderedUrl)
@@ -714,6 +734,12 @@ class WebApiFuzzer:
             self.eventstore.emitErr(e, data='WebApiFuzzer.dataprep_fuzzcaseset')
             return [False, errText, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
     
+    def add_tpl_vars(self, vars: str, tpl: str) -> str:
+        if Utils.isNoneEmpty(vars):
+            return tpl.strip()
+        
+        return f'{vars} \n {tpl}'.strip()
+        
     def determine_port(self, port, scheme) -> int:
         if port is None:
             if scheme == 'http':

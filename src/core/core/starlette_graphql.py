@@ -14,7 +14,7 @@ from graphql_models import ( ApiFuzzCaseSetUpdate,
                             FuzzRequestFileUploadQueryResult,
                             FuzzRequestFileDownloadContentQueryResult,
                             ParseRequestMessageResult,
-                            FuzzOnceResult
+                            ApiFuzzCaseSets_With_RunSummary_FuzzContext
                             )
 from utils import Utils 
 import base64

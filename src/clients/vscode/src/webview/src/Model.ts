@@ -50,6 +50,12 @@ export class ApiFuzzContext {
     fuzzCaseSetRuns: Array<ApiFuzzcontextRuns> = []
 }
 
+export class ApiFuzzCaseSetsWithRunSummariesFuzzContext {
+    public fuzzcontextId = ''
+    public templateVariables = ''
+    public fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries> = []
+}
+
 export class ApiFuzzCaseSetsWithRunSummaries {
     public fuzzCaseSetId = '';
     public fuzzCaseSetRunId = '';
@@ -72,6 +78,7 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public isGraphQL = false;
     public graphQLVariableNonTemplate = ''
     public graphQLVariableDataTemplate = ''
+    public templateVariables = ''
 }
 
 

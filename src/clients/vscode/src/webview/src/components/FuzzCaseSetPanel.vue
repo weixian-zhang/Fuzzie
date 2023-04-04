@@ -41,57 +41,22 @@
       </div>
 
 
-      <div style="height: 10px;"></div>
+      <div style="height: 5px;"></div>
+      
+      <span style="text-align:center; width: 100%">Variables for reference</span>
+      <textarea readonly style="resize: none; width: 100%;" rows="5" :value="fcsRunFuzzContext.templateVariables">
+      </textarea>
 
       <codemirror
           v-model="rqInEdit"
           placeholder="request message goes here..."
-          :style="{ height: '600px' }"
+          :style="{ height: '500px' }"
           :autofocus="true"
           :indent-with-tab="true"
           :tab-size="2"
           :extensions="extensions"
           @ready="onCMReady" 
         />
-  </Dialog>
-
-  <!-- request message editor for updating variables only -->
-  <Dialog v-model:visible="showHttpReqMsgEditVariablesDialog" 
-      header="Request Message Editor" 
-      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
-      :maximizable="true" :modal="true"
-      :dismissableMask="false" :closeOnEscape="false"
-      @hide="onDialogClose(rqInEdit)">
-
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col text-left">
-              <RequestMessageExampleView 
-              v-bind:rqmsg:loadexample="rqInEdit"
-              v-on:rqmsg:loadexample="rqInEdit = $event" />
-          </div>
-          <div class="col text-right">
-              <v-btn
-                size="x-small"
-                color="cyan"
-                @click="parseRequestMessage(rqInEdit)"
-                >
-              Parse
-              </v-btn>
-              <v-icon v-tooltip.right="'syntax is valid'" aria-hidden="false" color="green darken-2" v-show="(!requestMsgHasError)">
-                    mdi-check-circle
-              </v-icon>
-              <v-icon  aria-hidden="false" color="red darken-2" v-show="requestMsgHasError" v-tooltip.right="'request message has error'">
-                mdi-close-circle
-              </v-icon>
-          </div>
-        </div>
-      </div>
-
-
-      <div style="height: 10px;"></div>
-
-      
   </Dialog>
 
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:700px;" :modal="true" :dismissable="true">
@@ -217,7 +182,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in fcsRunSums"
+            v-for="item in fcsRunFuzzContext.fcsRunSums"
             :key="item.fuzzCaseSetId"
             @click="(selectedRow= item.fuzzCaseSetId)"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
@@ -371,7 +336,7 @@ import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Sidebar from 'primevue/sidebar';
 import Utils from '../Utils';
-import { ApiFuzzCaseSetsWithRunSummaries } from '../Model';
+import { ApiFuzzCaseSetsWithRunSummaries, ApiFuzzCaseSetsWithRunSummariesFuzzContext } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import InputText from 'primevue/inputtext';
@@ -402,7 +367,9 @@ class Props {
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
 
-  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
+  //fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
+
+  fcsRunFuzzContext: ApiFuzzCaseSetsWithRunSummariesFuzzContext;
 
   showHttpReqMsgEditDialog = false;
   rqInEdit = '';
@@ -549,7 +516,7 @@ class Props {
   // events from websocket
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
-    this.fcsRunSums.map(x => {
+    this.fcsRunFuzzContext.fcsRunSums.map(x => {
       if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && x.fuzzCaseSetRunId == runSummary.fuzzCaseSetRunId) {
         x.http2xx = runSummary.http2xx;
         x.http3xx = runSummary.http3xx;
@@ -565,7 +532,7 @@ class Props {
 
   async saveFuzzCaseSets() {
 
-    if(!this.isTableDirty || this.fcsRunSums == undefined || this.fcsRunSums.length == 0) {
+    if(!this.isTableDirty || this.fcsRunFuzzContext.fcsRunSums == undefined || this.fcsRunFuzzContext.fcsRunSums.length == 0) {
       this.toastInfo('no changes to save');
       return;
     }
@@ -573,7 +540,7 @@ class Props {
     try {
       this.saveBtnDisabled = true;
 
-      const updatedFCSList = this.fcsRunSums.map(x => {
+      const updatedFCSList = this.fcsRunFuzzContext.fcsRunSums.map(x => {
         return {
           fuzzcontextId: x.fuzzcontextId,
           fuzzCaseSetId: x.fuzzCaseSetId,
@@ -637,7 +604,7 @@ class Props {
       else
       {
         if(!Utils.isNothing(result)){
-          this.fcsRunSums = result;
+          this.fcsRunFuzzContext = result;
         }
       }
      } 
@@ -862,7 +829,7 @@ class Props {
     if (this.rqInEditOriginal != this.rqInEdit) {
       this.isTableDirty = true;
 
-       this.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+       this.fcsRunFuzzContext.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
         if (fcs.fuzzCaseSetId == this.currentEditFuzzCaseSetId ) {
             fcs.requestMessage = this.rqInEdit;
         }
@@ -874,7 +841,7 @@ class Props {
   }
 
   selectAllChanged(event) {
-    this.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+    this.fcsRunFuzzContext.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
       fcs.selected = this.selectAll;
     });
     this.isTableDirty = true;
@@ -893,14 +860,11 @@ class Props {
     this.selectedFuzzCaseSetId = '';
     this.selectedFuzzCaseSetRunId = '';
 
-    this.fcsRunSums = [];
-    // this.hostname = '';
-    // this.port = -1;
+    this.fcsRunFuzzContext.fcsRunSums = [];
+
     this.selectedRow = ''
 
     this.isTableDirty = false;
-
-    //this.refreshHostnameDisplay();
   }
 
   isFuzzingInProgress() {

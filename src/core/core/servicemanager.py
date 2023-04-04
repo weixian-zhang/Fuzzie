@@ -14,7 +14,8 @@ from graphql_models import (ApiFuzzContext_Runs_ViewModel,
                             FuzzRequestResponseMessage_ViewModel,
                             FuzzRequestFileUpload_ViewModel,
                             FuzzRequestFileUploadQueryResult,
-                            FuzzRequestFileDownloadContentQueryResult)
+                            FuzzRequestFileDownloadContentQueryResult,
+                            ApiFuzzCaseSets_With_RunSummary_FuzzContext)
 from corporafactory.corpora_context import CorporaContext
 from corporafactory.corpora_context_builder import CorporaContextBuilder
 from webapi_fuzzer import WebApiFuzzer, FuzzingStatus
@@ -235,8 +236,18 @@ class ServiceManager:
         
         try:
             fcsSumRows = get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId)
-        
-            result = []
+            
+            if len(fcsSumRows) == 0:
+                return True, '', []
+            
+            singleRow = fcsSumRows[0]._asdict()
+            fuzzcontextId = singleRow['fuzzcontextId']
+            templateVars = singleRow['templateVariables']
+            
+            fcsSumFuzzContext = ApiFuzzCaseSets_With_RunSummary_FuzzContext()
+            fcsSumFuzzContext.fuzzcontextId = fuzzcontextId
+            fcsSumFuzzContext.templateVariables = templateVars
+            fcsSumFuzzContext.fcsRunSums = []
         
             for row in fcsSumRows:
                 
@@ -274,9 +285,9 @@ class ServiceManager:
                     fcsSum.completedDataCaseRuns = rowDict['completedDataCaseRuns']
                     fcsSum.totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
                 
-                result.append(fcsSum)
+                fcsSumFuzzContext.fcsRunSums.append(fcsSum)
             
-            return (True, '', result)
+            return (True, '', fcsSumFuzzContext)
                 
         except Exception as e:
             return (False, Utils.errAsText(e), [])

@@ -227,29 +227,32 @@ export default class FuzzerWebClient
                     ok,
                     error,
                     result {
-                        fuzzCaseSetId
-                        fuzzCaseSetRunId
-                        fuzzcontextId
-                        selected 
-                        verb
-                        urlNonTemplate
-                        urlDataTemplate
-                        bodyNonTemplate
-                        headerNonTemplate
-                        authnType
-                        runSummaryId
-                        http2xx
-                        http3xx
-                        http4xx
-                        http5xx
-                        completedDataCaseRuns
-                        totalDataCaseRunsToComplete
-                        file
-                        fileName
-                        requestMessage
-                        isGraphQL
-                        graphQLVariableNonTemplate
-                        graphQLVariableDataTemplate
+                        fuzzcontextId,
+                        templateVariables,
+                        fcsRunSums {
+                            fuzzCaseSetId
+                            fuzzCaseSetRunId
+                            selected 
+                            verb
+                            urlNonTemplate
+                            urlDataTemplate
+                            bodyNonTemplate
+                            headerNonTemplate
+                            authnType
+                            runSummaryId
+                            http2xx
+                            http3xx
+                            http4xx
+                            http5xx
+                            completedDataCaseRuns
+                            totalDataCaseRunsToComplete
+                            file
+                            fileName
+                            requestMessage
+                            isGraphQL
+                            graphQLVariableNonTemplate
+                            graphQLVariableDataTemplate
+                        }
                     }
                 }
             }

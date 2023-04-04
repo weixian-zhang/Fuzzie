@@ -441,7 +441,8 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
         result = (
                         Session.query(ApiFuzzCaseSetTable, ApiFuzzCaseSetTable.columns.Id.label("fuzzCaseSetId"),
                                 ApiFuzzCaseSetTable.columns.fuzzcontextId.label("fuzzcontextId"),
-                                ApiFuzzContextTable.columns.fuzzcaseToExec
+                                ApiFuzzContextTable.columns.fuzzcaseToExec,
+                                ApiFuzzContextTable.columns.templateVariables
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
                         .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
@@ -484,12 +485,12 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                                     runSummaryQuery.columns.http5xx,
                                     runSummaryQuery.columns.completedDataCaseRuns,
                                     runSummaryQuery.columns.totalDataCaseRunsToComplete,
-                                    ApiFuzzContextTable.columns.fuzzcaseToExec
+                                    ApiFuzzContextTable.columns.fuzzcaseToExec,
+                                    ApiFuzzContextTable.columns.templateVariables
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
                         .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
                         .outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetId == ApiFuzzCaseSetTable.c.Id )
-                        #.outerjoin(runSummaryQuery, runSummaryQuery.c.fuzzCaseSetRunId == fuzzCaseSetRunId)
                         .all()
                      )
         
@@ -1292,6 +1293,7 @@ def create_fuzzcontext_from_dict(rowDict):
     fuzzcontext.bearerToken = rowDict['bearerToken']
     fuzzcontext.apikeyHeader = rowDict['apikeyHeader']
     fuzzcontext.apikey = rowDict['apikey']
+    fuzzcontext.templateVariables = rowDict['templateVariables']
     
     return fuzzcontext
     
