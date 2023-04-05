@@ -127,7 +127,7 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('misc-http-port-scan'))">Misc - HTTP port scanningL</a>
+                    @click="(loadExample('misc-http-port-scan'))">Misc - HTTP port scanning</a>
                   </li>
 
                 </ul>
