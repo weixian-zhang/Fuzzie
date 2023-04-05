@@ -41,22 +41,30 @@
       </div>
 
 
-      <div style="height: 5px;"></div>
+      <div style="height: 15px;"></div>
       
-      <span style="text-align:center; width: 100%">Variables for reference</span>
-      <textarea readonly style="resize: none; width: 100%;" rows="5" :value="fcsRunFuzzContext.templateVariables">
-      </textarea>
-
-      <codemirror
-          v-model="rqInEdit"
-          placeholder="request message goes here..."
-          :style="{ height: '500px' }"
-          :autofocus="true"
-          :indent-with-tab="true"
-          :tab-size="2"
-          :extensions="extensions"
-          @ready="onCMReady" 
-        />
+      <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+              <span style="text-align:center; width: 100%;" >Variables (readonly)</span>
+              <textarea class="mt-2" readonly style="resize: none; width: 100%;height:100%" :value="fcsRunFuzzContext.templateVariables">
+              </textarea>
+            </div>
+            <div class="col-9">
+              <codemirror
+                v-model="rqInEdit"
+                placeholder="request message goes here..."
+                :style="{ height: '500px' }"
+                :autofocus="true"
+                :indent-with-tab="true"
+                :tab-size="2"
+                :extensions="extensions"
+                @ready="onCMReady" 
+              />
+            </div>
+        </div>
+      </div> 
+      
   </Dialog>
 
   <Sidebar v-model:visible="showFullValueSideBar" position="right" style="width:700px;" :modal="true" :dismissable="true">

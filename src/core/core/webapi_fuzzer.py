@@ -451,6 +451,12 @@ class WebApiFuzzer:
             return fuzzDataCase, ''
             
         return fuzzDataCase, file
+    
+    
+    
+    def create_erroreous_fuzzdatacase():
+        pass
+        
              
     def fuzzcaseset_done(self, runNumber):
         
@@ -648,10 +654,6 @@ class WebApiFuzzer:
             urlok, urlerr, renderedUrl = self.corporaContext.resolve_fuzzdata(urlDT) #self.inject_fuzzdata_in_datatemplate(pathDT)
             if not urlok:
                 return [False, urlerr, hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
-            
-            # check if url is valid
-            if not Utils.validUrl(renderedUrl):
-                return [False, 'Url is not valid', hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
             
             # build Url parts
             parsedUrl = urlparse(renderedUrl)

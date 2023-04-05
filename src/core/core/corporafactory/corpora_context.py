@@ -34,7 +34,7 @@ class CorporaContext:
         self.context = {}
         self.tryBuild = False
         self.myfile_wordlist_type = 'myfile'
-        self.jinjaTemplate = jinja2.Environment()
+        self.tplRenderer = jinja2.Environment(undefined=jinja2.DebugUndefined)
     
     
     # try_build_context will select and cache corpora-provider according to workdlist-type in Jinja wordlist template
@@ -64,7 +64,10 @@ class CorporaContext:
         try:
                                     
             if isinstance(reqMsg, str):
-                tpl = jinja2.Template(reqMsg)
+                #tpl = jinja2.Template(reqMsg)
+                #tpl.render({ 'eval': self.parse_wordlist_type_by_eval_func })
+                
+                tpl = self.tplRenderer.from_string(reqMsg)
                 tpl.render({ 'eval': self.parse_wordlist_type_by_eval_func })
                 
             return True, ''
@@ -77,8 +80,11 @@ class CorporaContext:
         
         try:
             
-            template = jinja2.Template(reqMsg)
-            rendered = template.render({ 'eval': self.resolve_data_by_eval_func })
+            # template = jinja2.Template(reqMsg)
+            # rendered = template.render({ 'eval': self.resolve_data_by_eval_func })
+            
+            tpl = self.tplRenderer.from_string(reqMsg)
+            rendered = tpl.render({ 'eval': self.resolve_data_by_eval_func })
             
             return True, '', rendered.strip()
             
@@ -177,29 +183,22 @@ class CorporaContext:
         if wordlist_type == WordlistType.base64e:
             
             corporaContextKey = base64eValue
-            
-            
-            
             self.context[corporaContextKey] = Base64EncodeCorpora(value=base64eValue)
-            
             return
         
         # base64 decode value
         if wordlist_type == WordlistType.base64d:
             
             corporaContextKey = base64dValue
-            
             self.context[corporaContextKey] = Base64DecodeCorpora(value=base64dValue)
-            
             return
-        
         
         match wordlist_type:
             case 'string':
                 if not 'string' in self.context:
                     self.context['string'] = self.cp.stringCorpora
                     return
-                    #return originalExpression
+
             case 'xss':
                 if not 'xss' in self.context:
                     self.context['xss'] = self.cp.stringCorpora
@@ -208,64 +207,63 @@ class CorporaContext:
                 if not 'sqlinject' in self.context:
                     self.context['sqlinject'] = self.cp.stringCorpora
                     return
-                    #return originalExpression
+
             case 'bool':
                 if not 'bool' in self.context:
                     self.context['bool'] = self.cp.boolCorpora
                     return
-                    #return originalExpression
+
             case 'digit':
                 if not 'digit' in self.context:
                     self.context['digit'] = self.cp.digitCorpora
                     return
-                    #return originalExpression
+
             case 'char':
                 if not 'char' in self.context:
                     self.context['char'] = self.cp.charCorpora
                     return
-                    #return originalExpression
+
             case 'filename':
                 if not 'filename' in self.context:
                     self.context['filename'] = self.cp.fileNameCorpora
                     return
-                    #return originalExpression
+
             case 'datetime':
                 if not 'datetime' in self.context:
                     self.context['datetime'] = self.cp.datetimeCorpora
                     return
-                    #return originalExpression
+
             case 'date':
                 if not 'date' in self.context:
                     self.context['date'] = self.cp.datetimeCorpora
                     return
-                    #return originalExpression
+
             case 'time':
                 if not 'time' in self.context:
                     self.context['time'] = self.cp.datetimeCorpora
                     return
-                    #return originalExpression
+
             case 'username':
                if not 'username' in self.context:
                     self.context['username'] = self.cp.usernameCorpora
                     return
-                    #return originalExpression
+
             case 'password':
                 if not 'password' in self.context:
                     self.context['password'] = self.cp.passwordCorpora
                     return
-                    #return originalExpression
+
             case WordlistType.httppath:
                 if not WordlistType.httppath in self.context:
                     self.context[WordlistType.httppath] = self.cp.httpPathCorpora
                     return
-                    #return originalExpression
-                
+
             # image
             case WordlistType.image:
                 if not 'image' in self.context:
                     self.context[WordlistType.image] = self.cp.imageCorpora
                     return
-                    #return originalExpression
+
             # pdf          
             case WordlistType.pdf:
                 if not WordlistType.pdf in self.context:
