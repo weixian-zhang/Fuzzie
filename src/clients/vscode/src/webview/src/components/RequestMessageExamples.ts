@@ -264,9 +264,9 @@ GET https://httpbin.org/get
 
     };
 
-    private mutate = {
+    private misc = {
         
-        'mutate-post-json':
+        'misc-mutate-post':
 `
 POST https://httpbin.org/post
 Content-Type: application/json
@@ -275,10 +275,9 @@ Content-Type: application/json
     "name": "john doe",
     "info": {{ 'this custom input will be mutated by fuzzie' | mutate }}
 }
-`,
 
-'mutate-post-xml':
-`
+###
+
 POST https://httpbin.org/post
 Content-Type: application/xml
 
@@ -289,6 +288,16 @@ Content-Type: application/xml
     <body>{{ 'Don\\'t forget me this weekend!' | mutate }}</body>
 </note>
 
+`,
+
+'misc-http-port-scan':
+`
+//HTTP port scanning
+
+{% set scheme = 'https://' %}
+{% set hostname = 'httpbin.org' %}
+
+GET {{scheme}}{{domain}}:{{ numrange(0,65536) }}/
 `
     }
 
@@ -303,8 +312,8 @@ Content-Type: application/xml
                 return this.get[key];
             case 'post':
                 return this.post[key];
-            case 'mutate':
-                return this.mutate[key];
+            case 'misc':
+                return this.misc[key];
             case 'gql':
                 return this.graphql[key];
         }

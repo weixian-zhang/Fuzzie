@@ -190,7 +190,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in fcsRunFuzzContext.fcsRunSums"
+            v-for="item in fcsRunSums"
             :key="item.fuzzCaseSetId"
             @click="(selectedRow= item.fuzzCaseSetId)"
             :style="item.fuzzCaseSetId === selectedRow ? 'background-color:lightgrey;' : ''">
@@ -375,9 +375,10 @@ class Props {
 
  export default class FuzzCaseSetPanel extends Vue.with(Props) {
 
-  //fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
-
   fcsRunFuzzContext: ApiFuzzCaseSetsWithRunSummariesFuzzContext;
+
+  //array has to be a property by itself as live update of fuzz-stats are not able to for nested array in fcsRunFuzzContext
+  fcsRunSums: Array<ApiFuzzCaseSetsWithRunSummaries| any> = [];
 
   showHttpReqMsgEditDialog = false;
   rqInEdit = '';
@@ -524,7 +525,7 @@ class Props {
   // events from websocket
   onFuzzingUpdateRunSummary(runSummary: ApiFuzzCaseSetsWithRunSummaries) {
 
-    this.fcsRunFuzzContext.fcsRunSums.map(x => {
+    this.fcsRunSums.map(x => {
       if(x.fuzzCaseSetId == runSummary.fuzzCaseSetId && x.fuzzCaseSetRunId == runSummary.fuzzCaseSetRunId) {
         x.http2xx = runSummary.http2xx;
         x.http3xx = runSummary.http3xx;
@@ -540,7 +541,7 @@ class Props {
 
   async saveFuzzCaseSets() {
 
-    if(!this.isTableDirty || this.fcsRunFuzzContext.fcsRunSums == undefined || this.fcsRunFuzzContext.fcsRunSums.length == 0) {
+    if(!this.isTableDirty || this.fcsRunSums == undefined || this.fcsRunSums.length == 0) {
       this.toastInfo('no changes to save');
       return;
     }
@@ -548,7 +549,7 @@ class Props {
     try {
       this.saveBtnDisabled = true;
 
-      const updatedFCSList = this.fcsRunFuzzContext.fcsRunSums.map(x => {
+      const updatedFCSList = this.fcsRunSums.map(x => {
         return {
           fuzzcontextId: x.fuzzcontextId,
           fuzzCaseSetId: x.fuzzCaseSetId,
@@ -613,6 +614,7 @@ class Props {
       {
         if(!Utils.isNothing(result)){
           this.fcsRunFuzzContext = result;
+          this.fcsRunSums =  this.fcsRunFuzzContext.fcsRunSums;
         }
       }
      } 
@@ -837,7 +839,7 @@ class Props {
     if (this.rqInEditOriginal != this.rqInEdit) {
       this.isTableDirty = true;
 
-       this.fcsRunFuzzContext.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+       this.fcsRunSums.map((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
         if (fcs.fuzzCaseSetId == this.currentEditFuzzCaseSetId ) {
             fcs.requestMessage = this.rqInEdit;
         }
@@ -849,7 +851,7 @@ class Props {
   }
 
   selectAllChanged(event) {
-    this.fcsRunFuzzContext.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
+    this.fcsRunSums.forEach((fcs: ApiFuzzCaseSetsWithRunSummaries) => {
       fcs.selected = this.selectAll;
     });
     this.isTableDirty = true;
@@ -867,8 +869,9 @@ class Props {
     this.selectedFuzzContextId = '';
     this.selectedFuzzCaseSetId = '';
     this.selectedFuzzCaseSetRunId = '';
-
-    this.fcsRunFuzzContext.fcsRunSums = [];
+    
+    this.fcsRunFuzzContext = new ApiFuzzCaseSetsWithRunSummariesFuzzContext();
+    this.fcsRunSums = [];
 
     this.selectedRow = ''
 

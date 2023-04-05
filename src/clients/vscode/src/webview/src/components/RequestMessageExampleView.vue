@@ -3,22 +3,23 @@
 <template>
     <div class="container-fluid width=100%">
           <div class="row">
-            <div class="col-6">
+            <div class="col">
+
               <div class="btn-group">
                 <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                  samples
+                  GET
                 </button>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-multiple-1'))">GET</a>
+                  @click="(loadExample('get-multiple-1'))">Multiple requests</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path'))">Path</a>
+                  @click="(loadExample('get-path'))">Path fuzzing</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path-qs'))">Path & Querystring</a>
+                  @click="(loadExample('get-path-qs'))">Querystring fuzzing</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
@@ -26,53 +27,82 @@
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-path-mutate-1'))">Mutate Path</a>
+                  @click="(loadExample('get-path-mutate-1'))">Path param mutation</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#" 
-                  @click="(loadExample('get-with-random-qs-1'))">Randomized items in Querystring</a>
+                  @click="(loadExample('get-with-random-qs-1'))">Querystring param ramdomized values</a>
                   </li>
+                </ul>
+              </div>
+            </div>
 
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-json'))">POST JSON</a>
-                  </li>
+            <!--post-->
+            <div class="col">
+              <div class="btn-group">
+                  <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    POST
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-json'))">Fuzzing JSON content</a>
+                    </li>
 
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-xml'))">POST XML</a>
-                  </li>
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-xml'))">Fuzzing XML content</a>
+                    </li>
 
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-html-xss'))">POST HTML with XSS</a>
-                  </li>
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-html-xss'))">Fuzzing HTML content</a>
+                    </li>
 
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-xwwwformurlencoded'))">POST x-www-form-urlencoded</a>
-                  </li>
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-xwwwformurlencoded'))">Fuzzing x-www-form-urlencoded</a>
+                    </li>
+                  </ul>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="btn-group">
+                  <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    Fuzzing upload-file
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-pdf'))">Upload File: PDF</a>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#" 
+                      @click="(loadExample('post-image'))">Upload File: Image</a>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#"
+                      @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#"
+                      @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
+                    </li>
+
+                    <li><a class="dropdown-item" href="#"
+                      @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                    </li>
+                  </ul>
+              </div>
+            </div>
+            
+            <div class="col">
+              <div class="btn-group">
+                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  GraphQL
+                </button>
+                <ul class="dropdown-menu">
                   
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-pdf'))">Upload File: PDF</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#" 
-                    @click="(loadExample('post-image'))">Upload File: Image</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
-                  </li>
-
                   <li><a class="dropdown-item" href="#"
                     @click="(loadExample('gql-query-no-var-1'))">GraphQL Query</a>
                   </li>
@@ -81,18 +111,29 @@
                     @click="(loadExample('gql-mutation-var-1'))">GraphQL Mutate with Variables</a>
                   </li>
 
+                </ul>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="btn-group">
+                <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                  MISC
+                </button>
+                <ul class="dropdown-menu">
+                  
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('mutate-post-json'))">Mutate your input - JSON</a>
+                    @click="(loadExample('misc-mutate-post'))">Misc - Mutate your input</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('mutate-post-xml'))">Mutate your input - XML</a>
+                    @click="(loadExample('misc-http-port-scan'))">Misc - HTTP port scanningL</a>
                   </li>
 
                 </ul>
               </div>
-              
             </div>
+            
           </div>
       </div>
 </template>

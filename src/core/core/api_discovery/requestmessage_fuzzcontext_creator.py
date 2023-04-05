@@ -601,14 +601,10 @@ class RequestMessageFuzzContextCreator:
         
         line = line.strip()
         
-        if line.startswith('//'):
-            return False
-        
         if '###' in line:
             return False
         
-        line = line.strip()
-        if line.startswith('#'):
+        if line.startswith('//') or line.startswith('#'):
             return True
         
         return False
