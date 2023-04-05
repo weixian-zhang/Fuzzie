@@ -23,7 +23,7 @@ export class ApiFuzzContextUpdate {
     public apikey: string;
     public fuzzcaseToExec: number;
     public authnType: string;
-    public apiDiscoveryMethod  ='request_message';
+    public templateVariables: string;
 
 }
 

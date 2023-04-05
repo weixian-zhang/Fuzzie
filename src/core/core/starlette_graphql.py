@@ -278,6 +278,9 @@ class UpdateApiContext(graphene.Mutation):
         
         sm = ServiceManager()
         
+        b64dVars = Utils.b64d(fuzzContext.templateVariables)
+        fuzzContext.templateVariables = b64dVars
+        
         OK, error = sm.update_api_fuzzcontext(fuzzContext)
 
         ok = OK

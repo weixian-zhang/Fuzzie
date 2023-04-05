@@ -44,8 +44,8 @@
       <div style="height: 15px;"></div>
       
       <div class="container-fluid">
-        <div class="row">
-            <div class="col">
+        <div class="row" style="border: 1px solid grey">
+            <div class="col" >
               <span style="text-align:center; width: 100%;" >Variables (readonly)</span>
               <textarea class="mt-2" readonly style="resize: none; width: 100%;height:100%" :value="fcsRunFuzzContext.templateVariables">
               </textarea>

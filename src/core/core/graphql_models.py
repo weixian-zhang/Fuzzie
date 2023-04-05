@@ -137,10 +137,9 @@ class ApiFuzzContextUpdate(graphene.InputObjectType):
     bearerToken = graphene.String()
     apikeyHeader = graphene.String()
     apikey = graphene.String()
-    hostname = graphene.String()
-    port = graphene.Int()
     fuzzcaseToExec = graphene.Int()
     authnType = graphene.String()
+    templateVariables = graphene.String()
     
 class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     fuzzCaseSetId = graphene.String()

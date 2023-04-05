@@ -814,7 +814,8 @@ export default class FuzzerWebClient
                             apikeyHeader:"${fuzzcontext.apikeyHeader}",
                             apikey:"${fuzzcontext.apikey}",
                             fuzzcaseToExec: ${fuzzcontext.fuzzcaseToExec},
-                            authnType: "${fuzzcontext.authnType}"
+                            authnType: "${fuzzcontext.authnType}",
+                            templateVariables: "${fuzzcontext.templateVariables}"
                         }
                     )
                 {

@@ -304,11 +304,24 @@
 
               <v-divider />
 
+              <b>Edit Global Variables of this Context</b>
+              <v-divider />
 
-              <h4>API Discovery</h4>
+                <div class="mb-2">
+                  <v-textarea 
+                    label="Request Message" 
+                    shaped
+                    variant="outlined"
+                    density="compact"
+                    no-resize
+                    readonly
+                    v-model="apiContextEdit.requestTextContent"
+                    @click="(showReqMsgVariableDialog = true)"
+                  ></v-textarea>
+                </div>
 
               <v-divider />
-              <b>Request Message (readonly)</b>
+              <b>View Request Message (readonly)</b>
               <v-divider />
 
                 <div class="mb-2">
@@ -322,28 +335,11 @@
                     v-model="apiContextEdit.requestTextContent"
                     @click="(showReqMsgReadOnlyDialog = true)"
                   ></v-textarea>
-                  <small>Request Messages will not be updated, please create a new context or 
+                  <small>Request Messages cannot be updated, please create a new context or 
                     update individual API Operation
                   </small>
                 </div>
 
-                <!-- <div class="form-group">
-                  <v-text-field
-                    v-model="apiContextEdit.openapi3FilePath"
-                    variant="underlined"
-                    density="compact"
-                    readonly
-                    label="OpenAPI 3 File Path" />
-                </div>
-
-                <div class="form-group">
-                  <v-text-field
-                    v-model="apiContextEdit.openapi3Url"
-                    variant="underlined"
-                    density="compact"
-                    readonly
-                    label="Request Text File Path" />
-                </div> -->
               </form>
             </div>
             <div class="col-6">
@@ -565,15 +561,28 @@
         />
     </Dialog>
 
+    <!--view readonly request message-->
     <Dialog v-model:visible="showReqMsgReadOnlyDialog" 
       header="HTTP Request Message Editor" 
       :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
       :maximizable="true" :modal="true"
+      :dismissableMask="true">
+
+      <textarea style="width:100%; height:50vw; overflow=scroll;resize: none;" readonly class="form-control" row="12" 
+              spellcheck="false" wrap="off" autocorrect="off" autocapitalize="off"
+              :value="(apiContextEdit.requestTextContent)" />
+    </Dialog>
+
+
+    <!--edit variables request message-->
+    <Dialog v-model:visible="showReqMsgVariableDialog" 
+      header="Edit Global Variables for this Context" 
+      :breakpoints="{ '960px': '75vw', '640px': '90vw' }" :style="{ width: '80vw' }"
+      :maximizable="true" :modal="true"
       :dismissableMask="false">
 
-
           <codemirror
-          v-model="apiContextEdit.requestTextContent"
+          v-model="apiContextEdit.templateVariables"
           placeholder="request message goes here..."
           :style="{ height: '80vw' }"
           :autofocus="true"
@@ -814,6 +823,7 @@ import { ApiFuzzContext, ApiFuzzContextUpdate } from '../Model';
 import FuzzerWebClient from "../services/FuzzerWebClient";
 import FuzzerManager from "../services/FuzzerManager";
 import moment from 'moment';
+import { Util } from '@microsoft/applicationinsights-web';
 
 class Props {
   // optional prop
@@ -854,6 +864,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
   showFuzzConfirmDialog = false;
   showReqMsgCreateDialog = false;
   showReqMsgReadOnlyDialog = false;
+  showReqMsgVariableDialog = false;
   newContextSideBarVisible = false;
   updateContextSideBarVisible = false;
   isGetFuzzContextFinish = true;
@@ -1321,10 +1332,16 @@ export default class ApiDiscovery extends Vue.with(Props) {
     }
 
     const apiFCUpdate = new ApiFuzzContextUpdate();
-    
     apiFCUpdate.fuzzcontextId = this.apiContextEdit.Id;
 
     Utils.mapProp(this.apiContextEdit, apiFCUpdate);
+
+    const tplVar = apiFCUpdate.templateVariables;
+    // base64 encode multiline free-text global variables for easy transport
+    if (!Utils.isNothing(tplVar)) {
+        apiFCUpdate.templateVariables = btoa(tplVar)
+    }
+
 
     const [ok, error] = await this.webclient.updateApiFuzzContext(apiFCUpdate);
 

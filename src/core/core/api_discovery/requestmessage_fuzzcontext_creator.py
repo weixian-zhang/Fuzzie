@@ -32,7 +32,7 @@ class RequestMessageFuzzContextCreator:
         # currentFuzzCaseSet:
         # use for jinja filters to access current processing fuzzcaseset
         # for now, used by only myfile filter
-        self.currentFuzzCaseSet = None
+        self.currentFuzzCaseSet: ApiFuzzCaseSet = None
         
         # self.jinjaEnvPrimitive = jinja2.Environment()
         # self.jinjaEnvPrimitive.filters[WordlistType.mutate] = self.mutate_jinja_filter
@@ -147,8 +147,6 @@ class RequestMessageFuzzContextCreator:
         if rqMsg == '' or rqMsg.strip() == '':
             return True, '', []
         
-        # multiline split
-        
         fcSets = []
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
@@ -187,51 +185,26 @@ class RequestMessageFuzzContextCreator:
             self.currentFuzzCaseSet = fuzzcaseSet
             self.currentFuzzCaseSet.requestMessage = eachReqBlock
             
-            # get request line: which includes VERB + (URL + querystring) + http-version (HTTP/1.1)
-            
-            # parse verb
+            # get verb
             self.currentFuzzCaseSet.verb = self.get_verb(multilineBlock)
             
+            # get url without query
             urlWithoutQS = self.get_url_without_querystring(multilineBlock)
             
-            # parse path
-            # parseOK, parseErr, hostname, port = self.parse_hostname_port(urlRend)
-            # if not parseOK:
-            #     # cannot find path, skip to next block
-            #     self.eventstore.emitErr(parseErr)
-            #     return False, parseErr, [] , ''
+            # get query
+            lineIndex, qs = self.get_query(multilineBlock)
             
-            # self.currentFuzzCaseSet.hostname = hostname
-            # self.currentFuzzCaseSet.port = port
-            # self.currentFuzzCaseSet.path = path
-            
-            # pathOK, pathErr, evalPath = self.inject_eval_func_primitive_wordlist(path)
-            
-            # if not pathOK:
-            #     return pathOK, f'Path parsing error: {Utils.errAsText(pathErr)}', [], ''
-            
-            # self.currentFuzzCaseSet.pathDataTemplate = evalPath
-            
-            # parse querystring
-            # lineIndex is the index of the multiline list when querystring ends at
-            # multilineBlock lst will pop lines until lineIndex so that get headers will process at header line
-            lineIndex, qs = self.get_querystring(multilineBlock)
-            
+            # full url
             url = f'{urlWithoutQS}{qs}'.strip()
             
+            # render url template
             urlOK, urlErr, urlRendered = self.inject_eval_func_primitive_wordlist(url)
-            
             if not urlOK:
                 return False, urlErr, [], ''
             
+            
             self.currentFuzzCaseSet.urlNonTemplate = url
             self.currentFuzzCaseSet.urlDataTemplate = urlRendered
-            
-            # qsOK, qsErr, evalQS = self.inject_eval_func_primitive_wordlist(qs)
-            # if not qsOK:
-            #     return qsOK, f'Querystring parsing error: {Utils.errAsText(qsErr)}', [], ''
-            
-            # self.currentFuzzCaseSet.querystringDataTemplate = evalQS
             
             #remove requestline lines including multi-line querystring and breaklines between requestline and headers
             self.removeProcessedLines(lineIndex, multilineBlock)
@@ -380,7 +353,7 @@ class RequestMessageFuzzContextCreator:
      # GET https://example.com/comments
         # ?page=2
         # &pageSize=10
-    def get_querystring(self, multilineBlock) -> tuple([int, str]):
+    def get_query(self, multilineBlock) -> tuple([int, str]):
         
         qsChars = ['?', '&']
         qsTokens = []

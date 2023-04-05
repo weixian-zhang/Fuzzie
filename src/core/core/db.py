@@ -968,10 +968,9 @@ def update_api_fuzz_context(fuzzcontext: ApiFuzzContextUpdate):
                     bearerToken = fuzzcontext.bearerToken,
                     apikeyHeader = fuzzcontext.apikeyHeader,
                     apikey = fuzzcontext.apikey,
-                    hostname = fuzzcontext.hostname,
-                    port = fuzzcontext.port,
                     fuzzcaseToExec = fuzzcontext.fuzzcaseToExec,
-                    authnType = fuzzcontext.authnType
+                    authnType = fuzzcontext.authnType,
+                    templateVariables = fuzzcontext.templateVariables
                    )
             )
     
