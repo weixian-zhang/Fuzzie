@@ -297,7 +297,21 @@ Content-Type: application/xml
 {% set hostname = 'httpbin.org' %}
 
 GET {{scheme}}{{domain}}:{{ numrange(0,65536) }}/
-`
+`,
+
+ 'misc-variables-1':
+ `
+{% set htmlOpen = '<html><body><div>' %}
+{% set htmlClose = '</div</body><html>' %}
+
+POST https://httpbin.org/post HTTP/1.1
+
+{{ htmlOpen }}
+<p> Welcome <p> <script>{{ xss }}</script> </p>
+{{ htmlClose }}
+
+ `
+ 
     }
 
     public loadExample(key = 'get'): string {

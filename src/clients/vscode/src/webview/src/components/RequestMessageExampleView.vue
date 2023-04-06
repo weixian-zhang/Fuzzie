@@ -45,19 +45,19 @@
                   </button>
                   <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-json'))">Fuzzing JSON content</a>
+                      @click="(loadExample('post-json'))">JSON body</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-xml'))">Fuzzing XML content</a>
+                      @click="(loadExample('post-xml'))">XML body</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-html-xss'))">Fuzzing HTML content</a>
+                      @click="(loadExample('post-html-xss'))">HTML body</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-xwwwformurlencoded'))">Fuzzing x-www-form-urlencoded</a>
+                      @click="(loadExample('post-xwwwformurlencoded'))">x-www-form-urlencoded</a>
                     </li>
                   </ul>
               </div>
@@ -66,31 +66,31 @@
             <div class="col">
               <div class="btn-group">
                   <button type="button" class="btn btn-info btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    Fuzzing upload-file
+                    Upload file
                   </button>
                   <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-file'))">Upload File: file with naughty content</a>
+                      @click="(loadExample('post-file'))">file with naughty content</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-pdf'))">Upload File: PDF</a>
+                      @click="(loadExample('post-pdf'))">PDF</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#" 
-                      @click="(loadExample('post-image'))">Upload File: Image</a>
+                      @click="(loadExample('post-image'))">Image</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#"
-                      @click="(loadExample('file-upload-myfile-batchfile'))">Upload File: custom file content - delimited batch-file</a>
+                      @click="(loadExample('file-upload-myfile-batchfile'))">custom file content - delimited batch-file</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#"
-                      @click="(loadExample('file-upload-myfile-json'))">Upload File: custom file content - JSON</a>
+                      @click="(loadExample('file-upload-myfile-json'))">custom file content - JSON</a>
                     </li>
 
                     <li><a class="dropdown-item" href="#"
-                      @click="(loadExample('file-upload-myfile-wordlisttypes'))">Upload File: custom file content - primitive wordlist-type support</a>
+                      @click="(loadExample('file-upload-myfile-wordlisttypes'))">custom file content - primitive wordlist-type support</a>
                     </li>
                   </ul>
               </div>
@@ -123,12 +123,17 @@
                 <ul class="dropdown-menu">
                   
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('misc-mutate-post'))">Misc - Mutate your input</a>
+                    @click="(loadExample('misc-mutate-post'))">Mutate your input</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('misc-http-port-scan'))">Misc - HTTP port scanning</a>
+                    @click="(loadExample('misc-http-port-scan'))">HTTP port scanning</a>
                   </li>
+
+                  <li><a class="dropdown-item" href="#"
+                    @click="(loadExample('misc-variables-1'))">Global variables</a>
+                  </li>
+                  
 
                 </ul>
               </div>
