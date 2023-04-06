@@ -580,9 +580,9 @@ class Props {
       catch(error) {
         this.$logger.error(error);
       }
-      //finally {
-      //  this.isDataLoadingInProgress = false;
-      //}
+      finally {
+        this.isDataLoadingInProgress = false;
+      }
     }
 
     async getFuzzRequestResponses(statusCode = -1) {
@@ -1040,7 +1040,7 @@ class Props {
     //}
 
     isFuzzingInProgress() {
-        if(!Utils.isNothing(this.currentFuzzingFuzzContext)  && !Utils.isNothing(this.currentFuzzingFuzzContext)) {
+        if(!Utils.isNothing(this.currentFuzzingFuzzContext) ) {
           return true;
         }
         return false;

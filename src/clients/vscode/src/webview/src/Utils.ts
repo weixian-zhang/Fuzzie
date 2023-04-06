@@ -91,7 +91,7 @@ export default class Utils
     }
 
     public static isNothing(obj) {
-        if(typeof(obj) === "undefined" && obj === null) {
+        if(typeof(obj) === "undefined" || obj === null || obj === '') {
             return true;
         }
         else {

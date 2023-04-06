@@ -75,7 +75,7 @@ POST https://httpbin.org/post
     }
     
     private graphql = {
-        'gql-mutation-var-1':
+        'gql-mutation-mutate-var-1':
 `
 POST https://graphqlzero.almansi.me/api
 X-REQUEST-TYPE: GraphQL
@@ -98,24 +98,23 @@ mutation (
 }
 `,
 
-    'gql-query-no-var-1':
+    'gql-query-1':
 `
-POST https://spacex-production.up.railway.app/
+POST https://rickandmortyapi.com/graphql
 X-REQUEST-TYPE: GraphQL
 
-{
-    launchesPast(limit: 10) {
-      mission_name
-      launch_date_local
-      launch_site {
-        site_name_long
-      }
-      links {
-        article_link
-        video_link
-      }
-      rocket {
-        rocket_name
+query MyQuery {
+    character(id: "{{ digit }}") {
+      id
+      gender
+      name
+      species
+      status
+      type
+      origin {
+        dimension
+        name
+        created
       }
     }
   }

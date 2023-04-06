@@ -104,11 +104,11 @@
                 <ul class="dropdown-menu">
                   
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('gql-query-no-var-1'))">GraphQL Query</a>
+                    @click="(loadExample('gql-query-1'))">Query with param</a>
                   </li>
 
                   <li><a class="dropdown-item" href="#"
-                    @click="(loadExample('gql-mutation-var-1'))">GraphQL Mutate with Variables</a>
+                    @click="(loadExample('gql-mutation-mutate-var-1'))">Mutate with Variables</a>
                   </li>
 
                 </ul>
