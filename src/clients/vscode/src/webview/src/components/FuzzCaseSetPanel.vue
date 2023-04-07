@@ -265,7 +265,7 @@
                       rqInEditOriginal = item.requestMessage,
                       currentEditFuzzCaseSetId = item.fuzzCaseSetId
                     )"
-                    >Edit</button></li>
+                    >Edit Request Message</button></li>
 
                     <li><button class="dropdown-item" type="button"
                     :hidden="(isFuzzingInProgress() || selectedFuzzCaseSetRunId !='')"
@@ -681,12 +681,6 @@ class Props {
     // send event to FuzzResult panel to display request and response
     this.eventemitter.emit("onFuzzCaseSetSelected", fcsrs.fuzzCaseSetId, fcsrs.fuzzCaseSetRunId, -1);
 
-    // if (fcsrs.hostname != '') {
-    //   this.hostname = fcsrs.hostname;
-    //   this.port = fcsrs.port;
-    //   this.refreshHostnameDisplay();
-    // }
-
     await Utils.delay(2000);   // spam click prevention
 
     this.rowClickEnabled = true;
@@ -792,6 +786,9 @@ class Props {
     if(rqMsg == ''){
       return;
     }
+
+    rqMsg = `${this.fcsRunFuzzContext.templateVariables}\n${rqMsg}`
+
     const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
 
     if(!ok) {

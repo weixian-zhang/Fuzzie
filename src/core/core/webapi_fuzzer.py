@@ -720,7 +720,8 @@ class WebApiFuzzer:
             
             #graphql support
             if fcs.isGraphQL:
-                ok, err, gqlVariables = self.corporaContext.resolve_fuzzdata(fcs.graphQLVariableDataTemplate)
+                gqlVarDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.graphQLVariableDataTemplate)
+                ok, err, gqlVariables = self.corporaContext.resolve_fuzzdata(gqlVarDT)
                 gqlVars = Utils.try_parse_json_to_object(gqlVariables)
                 
             

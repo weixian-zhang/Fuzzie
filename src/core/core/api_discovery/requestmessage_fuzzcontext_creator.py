@@ -107,7 +107,8 @@ class RequestMessageFuzzContextCreator:
         
         except Exception as e:
             self.eventstore.emitErr(e)
-            
+    
+    # request message already contains variables
     def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str) -> tuple([bool, str, ApiFuzzCaseSet]):
         
         if rqMsg == '' or rqMsg.strip() == '':
@@ -125,7 +126,6 @@ class RequestMessageFuzzContextCreator:
         if singleRQBlock == '' or singleRQBlock.strip() == '':
             return True, '', []
         
-        singleRQBlock = self.add_variables_to_tpl(singleRQBlock)
         
         ok, error, fcsList, _ = self.parse_request_msg_as_fuzzcasesets(singleRQBlock)
         
@@ -135,9 +135,7 @@ class RequestMessageFuzzContextCreator:
             
         return True, '', fcsResult
         
-    # parse_request_msg_as_fuzzcasesets
-    # take means process the number of request-msg-blocks within the entire Request MEssage.
-    # # -1 means take-in all
+    # request message already contains variables
     def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet], str]):
 
 
@@ -244,11 +242,15 @@ class RequestMessageFuzzContextCreator:
                    ok, error, gqlBody, graphqlVariable = self.graphql_get_body_and_variable(multilineBlock)
                    
                    if ok:
+                       
+                        gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
                         
                         bok, berr, renderedBody = self.inject_eval_func_primitive_wordlist(gqlBody)
                         
                         if not bok:
                             return False, berr, [], ''
+                        
+                        graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
                         
                         vok, verr, renderedGQLVar = self.inject_eval_func_primitive_wordlist(graphqlVariable)
                         
@@ -265,11 +267,11 @@ class RequestMessageFuzzContextCreator:
                 else:
                     
                     body = self.get_body_as_one_str(multilineBlock)
-                    
-                    bodyWithVar = self.add_variables_to_tpl(body)
+                
+                    body = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
                     
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
-                    tpl = self.jinjaEnvBody.from_string(bodyWithVar)
+                    tpl = self.jinjaEnvBody.from_string(body)
                     renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
                     if self.is_rendered_body_has_func(renderedBody):
@@ -646,43 +648,17 @@ class RequestMessageFuzzContextCreator:
     # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
     def inject_eval_func_primitive_wordlist(self, expr: str) -> tuple([bool, str, str]):
         
-        exprWithVar = self.add_variables_to_tpl(expr)
-        
         try:
                  
-            tpl = self.jinjaEnvPrimitive.from_string(exprWithVar)
+            tpl = self.jinjaEnvPrimitive.from_string(expr)
             
             output = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
                     
             return True, '', output.strip()
         
         except Exception as e:
-            return False, Utils.errAsText(e),  exprWithVar
-    
-    # method uses global var self.detectedJinjaVariables
-    def add_variables_to_tpl(self, tpl: str):
-        
-        if tpl == '':
-            return tpl
-        
-        if self.detectedJinjaVariables != '':
-            return self.detectedJinjaVariables + '\n' + tpl
-        
-        return tpl
-    
-    def render_tpl_with_jinja_variables(self, url: str):
-        
-        if url == '':
-            return url
-        
-        url = self.detectedJinjaVariables + '\n' + url
-        
-        tpl = self.jinjaEnvPrimitive.from_string(url)
-            
-        output = tpl.render()
-        
-        return output
-            
+            return False, Utils.errAsText(e),  expr
+                
     
     # *** jinja filters and functions
     

@@ -170,8 +170,7 @@ class ServiceManager:
                 if rq == '':
                     continue
                 
-                
-                rq = TemplateHelper.add_global_vars(tpl=rq, vars=tplVariables)
+                rq = TemplateHelper.add_global_vars(tpl=rq, vars= tplVariables)
                 
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
                 ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)
