@@ -37,7 +37,7 @@ Open VSCode command palette (Ctrl + Shift + P) and search for "Fuzzie"
 
 ### Using Fuzzie 
 
-Fuzzie VSCode extension provides a webview for you to perform everything from API and GraphQL discovery to fuzzing and analyzing test result, all in a single place.  
+Fuzzie VSCode extension provides a webview for you to perform everything from writing request messages to discover API and GraphQL, to fuzzing and analyzing test result, all in a single place.  
 
 <br /> 
 
