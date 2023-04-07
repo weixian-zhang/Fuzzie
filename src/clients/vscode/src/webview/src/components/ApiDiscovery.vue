@@ -315,7 +315,7 @@
                     density="compact"
                     no-resize
                     readonly
-                    v-model="apiContextEdit.requestTextContent"
+                    v-model="apiContextEdit.templateVariables"
                     @click="(showReqMsgVariableDialog = true)"
                   ></v-textarea>
                 </div>
