@@ -44,6 +44,7 @@ from pubsub import pub
 from datetime import datetime
 import queue
 from api_discovery.requestmessage_fuzzcontext_creator import RequestMessageFuzzContextCreator
+from template_helper import TemplateHelper
 
 class ServiceManager:
     
@@ -150,7 +151,7 @@ class ServiceManager:
         
         
     
-    def save_updated_fuzzcasesets(self, fuzzcontextId: str, fcsList: list):
+    def save_updated_fuzzcasesets(self, fuzzcontextId: str, tplVariables:str, fcsList: list):
         
         if fcsList is None or len(fcsList) == 0:
             return (True, '')
@@ -169,12 +170,8 @@ class ServiceManager:
                 if rq == '':
                     continue
                 
-                # get template variables from db
-                #tplVariables = get_tplvariables_of_fuzzcontext(fuzzcontextId=fuzzcontextId)
                 
-                # reason for attaching variables is that when Jinja-render runs against rq in parsing,
-                # variable-keyword in template if not found, will be replaced as empty string 
-                #rq = f'{tplVariables} \n {rq}'
+                rq = TemplateHelper.add_global_vars(tpl=rq, vars=tplVariables)
                 
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
                 ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)

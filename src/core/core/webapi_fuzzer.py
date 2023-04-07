@@ -20,6 +20,7 @@ from models.webapi_fuzzcontext import (ApiFuzzContext, ApiFuzzCaseSet, ApiFuzzDa
                                         FuzzMode, FuzzCaseSetFile, WordlistType)
 from graphql_models import ApiFuzzCaseSets_With_RunSummary_ViewModel
 from corporafactory.corpora_context_builder import CorporaContextBuilder
+from template_helper import TemplateHelper
 
 import re
 
@@ -87,9 +88,7 @@ class WebApiFuzzer:
         
         self.eventstore = EventStore()
         self.apifuzzcontext = apifuzzcontext
-        
-        #subscribe cancel-fuzzing event
-        #pub.subscribe( listener=self.pubsub_command_receiver, topicName= self.eventstore.CancelFuzzWSTopic)
+    
         
     def __del__(self):
         
@@ -641,9 +640,9 @@ class WebApiFuzzer:
             
             tplVars = fc.templateVariables
             
-            urlDT= self.add_tpl_vars(vars=tplVars, tpl=fcs.urlDataTemplate)
-            bodyDT= self.add_tpl_vars(vars=tplVars, tpl=fcs.bodyDataTemplate)
-            headerDT = self.add_tpl_vars(vars=tplVars, tpl=fcs.headerDataTemplate)
+            urlDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.urlDataTemplate)
+            bodyDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.bodyDataTemplate)
+            headerDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.headerDataTemplate)
             file = ''        #for openapi3 single file only
             resolvedBodyDT = ''
             headers = {}
@@ -735,12 +734,6 @@ class WebApiFuzzer:
             errText =  Utils.errAsText(e)
             self.eventstore.emitErr(e, data='WebApiFuzzer.dataprep_fuzzcaseset')
             return [False, errText, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
-    
-    def add_tpl_vars(self, vars: str, tpl: str) -> str:
-        if Utils.isNoneEmpty(vars):
-            return tpl.strip()
-        
-        return f'{vars} \n {tpl}'.strip()
         
     def determine_port(self, port, scheme) -> int:
         if port is None:

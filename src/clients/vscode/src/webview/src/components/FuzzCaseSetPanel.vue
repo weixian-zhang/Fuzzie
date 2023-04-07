@@ -453,19 +453,6 @@ class Props {
     this.fuzzcasesetViewInSideBar = val
   }
 
-  // refreshHostnameDisplay() {
-
-  //   this.hostnameDisplay = '';
-
-  //   if (this.hostname != '' && this.port != undefined) {
-  //     if (this.port != 80 && this.port != 443) {
-  //       this.hostnameDisplay = `${this.hostname}:${this.port}`;
-  //     }
-  //     else {
-  //       this.hostnameDisplay = `${this.hostname}`;
-  //     }
-  //   }
-  // }
 
   mounted(){
     //event from master
@@ -564,8 +551,9 @@ class Props {
       
       // base64 encode to easily transport via GraphQL as single string
       jsonFCSUpdated = btoa(jsonFCSUpdated)
+      const tplVarB64e = btoa(this.fcsRunFuzzContext.templateVariables)
 
-      const [ok, error] =  await this.webclient.saveFuzzCaseSets(fuzzcontextId, jsonFCSUpdated); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
+      const [ok, error] =  await this.webclient.saveFuzzCaseSets(fuzzcontextId, jsonFCSUpdated, tplVarB64e); //await this.fuzzermanager.saveFuzzCaseSetSelected(newFCS);
 
       if(!ok)
         {

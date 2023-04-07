@@ -190,19 +190,21 @@ class Query(graphene.ObjectType):
 class SaveEditedFuzzCaseSets(graphene.Mutation):
     class Arguments:
         fuzzcontextId = graphene.String()
-        fcsus = graphene.String() #graphene.List(ApiFuzzCaseSetUpdate)
+        templateVariables = graphene.String()
+        fcsus = graphene.String()
 
     #define output
     ok = graphene.Boolean()
     error = graphene.String()
     
-    def mutate(self, info, fuzzcontextId, fcsus):
+    def mutate(self, info, fuzzcontextId, fcsus, templateVariables):
         if fcsus == '':
             return True, ''
         
-        b64d = base64.b64decode(fcsus)
+        fcsusb64d = base64.b64decode(fcsus)
+        tplVarb64d = base64.b64decode(templateVariables).decode('utf-8')
         
-        fcsList = json.loads(b64d)
+        fcsList = json.loads(fcsusb64d)
         
         if fcsList is None or len(fcsList) == 0:
             ok = True
@@ -211,7 +213,7 @@ class SaveEditedFuzzCaseSets(graphene.Mutation):
         
         sm = ServiceManager()
         
-        OK, error = sm.save_updated_fuzzcasesets(fuzzcontextId, fcsList)
+        OK, error = sm.save_updated_fuzzcasesets(fuzzcontextId=fuzzcontextId, fcsList=fcsList, tplVariables=tplVarb64d)
 
         ok = OK
         error = error

@@ -5,16 +5,18 @@ from datetime import datetime
 from urllib.parse import urlparse
 import json
 
-from api_discovery.wordlist_type_helper import WordlistTypeHelper
+
 
 parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
+from core.template_helper import TemplateHelper
+
 import re
 import validators
 from utils import Utils
-from webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
+from models.webapi_fuzzcontext import (ApiFuzzCaseSet, ApiFuzzContext, FuzzCaseSetFile, WordlistType)
 from eventstore import EventStore
 
     
@@ -34,17 +36,14 @@ class RequestMessageFuzzContextCreator:
         # for now, used by only myfile filter
         self.currentFuzzCaseSet: ApiFuzzCaseSet = None
         
-        # self.jinjaEnvPrimitive = jinja2.Environment()
-        # self.jinjaEnvPrimitive.filters[WordlistType.mutate] = self.mutate_jinja_filter
-        
-        self.jinjaEnvPrimitive  = WordlistTypeHelper.create_jinja_primitive_env(
+        self.jinjaEnvPrimitive  = TemplateHelper.create_jinja_primitive_env(
             mutate_jinja_filter=self.mutate_jinja_filter,
             jinja_randomize_items_filter=self.jinja_randomize_items_filter,
             jinja_numrange_func=self.jinja_numrange_func,
             jinja_base64e_filter=self.jinja_base64e_filter,
             jinja_base64d_filter=self.jinja_base64d_filter)
         
-        self.jinjaEnvBody = WordlistTypeHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
+        self.jinjaEnvBody = TemplateHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
                                                                      myfile_jinja_filter=self.myfile_jinja_filter,
                                                                      jinja_randomize_items_filter=self.jinja_randomize_items_filter,
                                                                      jinja_file_func=self.jinja_file_func,
@@ -115,8 +114,6 @@ class RequestMessageFuzzContextCreator:
             return True, '', []
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
-        
-        rqMsgWithoutComments = self.remove_variables_for_single_rq_fuzzcaseset(rqMsgWithoutComments)
         
         splittedRqBlocks = rqMsgWithoutComments.strip().split('###')
         
@@ -273,7 +270,7 @@ class RequestMessageFuzzContextCreator:
                     
                     # jinja wil execute all filters and file-functions bind to image, pdf, file
                     tpl = self.jinjaEnvBody.from_string(bodyWithVar)
-                    renderedBody = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
                     if self.is_rendered_body_has_func(renderedBody):
                         return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] , ''
@@ -643,14 +640,6 @@ class RequestMessageFuzzContextCreator:
         lines = rqMsg.splitlines()
         lines = [x for x in lines if not self.is_line_comment(x)]
         return '\n'.join(map(str,lines))
-    
-    # variables are global, ignoring variables at per fuzzcaseset level
-    def remove_variables_for_single_rq_fuzzcaseset(self, rqMsg: str) -> str: 
-        
-        lines = rqMsg.splitlines()
-        lines = [x for x in lines if not self.is_line_comment(x)]
-        result = [x for x in lines if not x.startswith('{%')]
-        return '\n'.join(map(str,result))
 
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
@@ -663,7 +652,7 @@ class RequestMessageFuzzContextCreator:
                  
             tpl = self.jinjaEnvPrimitive.from_string(exprWithVar)
             
-            output = tpl.render(WordlistTypeHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
+            output = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
                     
             return True, '', output.strip()
         

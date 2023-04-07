@@ -6,9 +6,10 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
-from webapi_fuzzcontext import (WordlistType)
+from utils import Utils
+from models.webapi_fuzzcontext import (WordlistType)
 
-class WordlistTypeHelper:
+class TemplateHelper:
     
     # integer type is to support OpenApi3, but is same as digit
     def jinja_primitive_wordlist_types_dict() -> dict:
@@ -73,5 +74,13 @@ class WordlistTypeHelper:
         
         
         return env
+    
+    
+    def add_global_vars(vars: str, tpl: str) -> str:
+        if Utils.isNoneEmpty(vars):
+            return tpl.strip()
+        
+        return f'{vars} \n {tpl}'.strip()
+    
         
     

@@ -657,11 +657,11 @@ export default class FuzzerWebClient
         }
     }
 
-    public async saveFuzzCaseSets(fuzzcontextId: string, fcsList: string) {
+    public async saveFuzzCaseSets(fuzzcontextId: string, fcsList: string, templateVariables: string) {
         
         const query = `
         mutation {
-                saveApiFuzzcaseset(fuzzcontextId: "${fuzzcontextId}", fcsus: "${fcsList}") {
+                saveApiFuzzcaseset(fuzzcontextId: "${fuzzcontextId}", fcsus: "${fcsList}", templateVariables: "${templateVariables}") {
                     ok,
                     error
                 }
