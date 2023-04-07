@@ -116,7 +116,7 @@ Type = function acts on your provided custom data
 | {{ char }} | yes | no | naughty chars | wordlist |
 | {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
 | {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
-| {{ file }} |  no | yes | naught payload from danielmiessle/seclist |
+| {{ file }} |  no | yes | naughty [payload](#https://github.com/danielmiessler/SecLists/tree/master/Payloads) from danielmiessle/seclist |
 | <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  | wordlist |
 | {{ datetime }} | yes | no | date + time | wordlist |
 | {{ date }} | yes | no | date only | wordlist |
