@@ -71,8 +71,10 @@ The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Clie
 {body}
 ```
 
-In a request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's [Wordlists](#wordlist-types)</b>.  
+In a request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's [Wordlists or Functions](#wordlist-types)</b>.  
 By replacing parameter with {{ wordlist type }} , during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
+  * wordlist type = fuzz data type e.g: sql-inection string, xss string, hacked usernames and password and more
+  * function = transform, iterate or randomize your provided input
 for example:
 
 ```
