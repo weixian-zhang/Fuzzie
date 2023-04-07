@@ -982,7 +982,6 @@ export default class ApiDiscovery extends Vue.with(Props) {
   }
 
   async onFuzzStop() {
-    this.onFuzzCaseSetRunSelected(this.currentFuzzingContextId, this.currentFuzzingCaseSetRunId);
     this.currentFuzzingContextId = '';
     this.currentFuzzingCaseSetRunId = ''
   }
