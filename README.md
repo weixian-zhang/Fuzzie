@@ -116,15 +116,15 @@ Type = function acts on your provided custom data
 | {{ char }} | yes | no | naughty chars | wordlist |
 | {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
 | {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
-| {{ file }} |  no | yes | naughty [payload](#https://github.com/danielmiessler/SecLists/tree/master/Payloads) from danielmiessle/seclist |
+| {{ file }} |  no | yes | naughty [payload](https://github.com/danielmiessler/SecLists/tree/master/Payloads) from danielmiessle/seclist |
 | <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  | wordlist |
 | {{ datetime }} | yes | no | date + time | wordlist |
 | {{ date }} | yes | no | date only | wordlist |
 | {{ time }} | yes | no | time only | wordlist |
-| {{ username }} | yes | no | hacked usernames from danielmiessler seclist | wordlist |
-| {{ password }} | yes | no | hacked password from danielmiessler seclist | wordlist |
+| {{ username }} | yes | no | hacked [usernames](https://github.com/danielmiessler/SecLists/tree/master/Usernames) from danielmiessler seclist | wordlist |
+| {{ password }} | yes | no | hacked [password](https://github.com/danielmiessler/SecLists/tree/master/Passwords) from danielmiessler seclist | wordlist |
 | {{ filename }} | yes | no | random file name and extensions |  wordlist |
-| {{ httppath }} | yes | no | discover directories and files |  wordlist |
+| {{ httppath }} | yes | no | discover [directories and files](https://github.com/danielmiessler/SecLists/tree/master/Discovery) from danielmiessler seclist |  wordlist |
 | {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 | function |
 | {{ 'a quick brown fox' &#124; <b>mutate</b> }} | yes | no | input will be mutated | function |
 | {{ ['a', 'list', 'of', 'items' ]  &#124; <b>random</b> }} | yes | no | returns a random item from your list | function |
