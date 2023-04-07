@@ -23,7 +23,7 @@ The ability to fuzz test right in VSCode brings about several benefits:
 ### Content  
 * [Launching Fuzzie](#launching-fuzzie)
 * [Using Fuzzie](#using-fuzzie )
-* [How to write HTTP Request Message ](#2-write-http-request-messages)  
+* [How to write HTTP Request Message ](#2-writing-http-request-messages)  
   * [Wordlist Types](#wordlist-types)
 * [More examples of Request Messages](#21-request-message-examples)
 
@@ -56,19 +56,22 @@ Each test case contains HTTP verb, domain name, port, path, querystring, headers
 
 <img src="https://github.com/weixian-zhang/Fuzzie/blob/main/doc/tutorial/create-new-api-context.png" />  
 
-#### 2. Write HTTP Request Messages  
+#### 2. Writing HTTP Request Messages  
 
 Your REST and GraphQL target endpoints are described by writing Request Messages.  
 The concept of Request Message is fully inspired by [Hau Chao's VSCode Rest Client project](https://github.com/Huachao/vscode-restclient#select-request-text).  
 
 ```
-{VERB} {url + optional port number}
+//this is a comment
+# and this is comment too
+
+{VERB} {url}
 {headers}
 
 {body}
 ```
 
-In request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
+In a request message, you can <b>replace any part of path, querystring, header, body with Fuzzie's built-in [Wordlists](#wordlist-types)</b>.  
 By replacing parameter with {{ wordlist type }} , during fuzzing, Fuzzie will replace the wordlist with fuzz data depending on the type of wordlist.  
 for example:
 
