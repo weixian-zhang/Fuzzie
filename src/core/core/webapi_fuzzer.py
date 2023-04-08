@@ -362,9 +362,12 @@ class WebApiFuzzer:
                     resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 except Exception as e:
                     
+                    errMsg = Utils.errAsText(e)
+                    
                     fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
-                                                                   reason='request timed out, Fuzzie has a short time-out of 4 seconds')
+                                                                   reason= errMsg)
+                                                                   #reason='request timed out, Fuzzie has a short time-out of 4 seconds')
                     fuzzDataCase.response = fuzzResp
                     return fuzzDataCase, file
                 
@@ -709,7 +712,7 @@ class WebApiFuzzer:
                     if not ok:
                         return [False, err, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
                     
-                    decoded = self.try_decode_file_content(fileContent)
+                    _, decoded = Utils.try_decode_utf8(fileContent)
                     
                     file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
                     
