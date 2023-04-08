@@ -154,6 +154,7 @@ class ApiFuzzCaseSets_With_RunSummary_ViewModel(graphene.ObjectType):
     authnType = graphene.Field(SupportedAuthnType)
     file = graphene.String()
     fileName = graphene.String()
+    fileDataTemplate = graphene.String()
     requestMessage = graphene.String()
     isGraphQL = graphene.Boolean()
     graphQLVariableNonTemplate = graphene.String()

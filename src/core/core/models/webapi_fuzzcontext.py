@@ -133,6 +133,11 @@ class ApiFuzzCaseSet:
         self.graphQLVariableDataTemplate = ''
         
         self.requestMessage = ''
+        
+    def has_file_to_upload(self) -> bool:
+        if self.file != '':
+            return True
+        return False
 
     def get_path_datatemplate(self):
         if not self.pathDataTemplate.startswith('/'):

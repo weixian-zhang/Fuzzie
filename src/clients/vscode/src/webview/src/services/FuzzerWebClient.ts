@@ -248,6 +248,7 @@ export default class FuzzerWebClient
                             totalDataCaseRunsToComplete
                             file
                             fileName
+                            fileDataTemplate
                             requestMessage
                             isGraphQL
                             graphQLVariableNonTemplate
@@ -534,27 +535,6 @@ export default class FuzzerWebClient
         `
         
         try {
-            
-            // fetch(this.gqlUrl, {
-            //     method: 'POST',
-            //     headers: {
-            //         "Content-Type": "application/json"
-            //       },
-            //     body: JSON.stringify({
-            //         query: query
-            //       })
-            //   })
-            //   .then(response => {
-            //     const data = response.json()
-            //     if(this.responseHasData(response))
-            //     {
-                    
-            //         // const ok = data.data.getUploadedFiles.ok;
-            //         // const error = data.data.getUploadedFiles.error;
-            //         // const result = data.data.getUploadedFiles.result;
-            //         //return [ok, error, result];
-            //     }
-            //   })
 
             const response = await axios.post(this.gqlUrl, {query});
 

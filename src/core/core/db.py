@@ -635,7 +635,7 @@ def get_request_response_total_pages(fuzzCaseSetId, fuzzCaseSetRunId, statusCode
                 .count())
     
     if rowCount > 0:
-         totalPages = int(rowCount / pageSize)
+         totalPages = math.ceil(rowCount / pageSize)
     
     
     return totalPages

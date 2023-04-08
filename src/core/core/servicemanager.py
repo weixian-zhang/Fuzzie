@@ -260,6 +260,7 @@ class ServiceManager:
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
                 fcsSum.fileName = rowDict['fileName']
+                fcsSum.fileDataTemplate = rowDict['fileDataTemplate']
                 fcsSum.requestMessage = rowDict['requestMessage']
                 fcsSum.isGraphQL = rowDict['isGraphQL']
                 fcsSum.graphQLVariableNonTemplate = rowDict['graphQLVariableNonTemplate']

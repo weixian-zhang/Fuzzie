@@ -138,7 +138,7 @@
         full-width
         density="compact"
         variant="solo"
-        label="search path, querystring and header"
+        label="quick search path, query & header"
         single-line
         hide-details
         clear-icon="mdi-close-circle"
@@ -159,7 +159,7 @@
           full-width
           density="compact"
           variant="solo"
-          label="search request and response body"
+          label="deep search request & response body"
           single-line
           hide-details
           clear-icon="mdi-close-circle"

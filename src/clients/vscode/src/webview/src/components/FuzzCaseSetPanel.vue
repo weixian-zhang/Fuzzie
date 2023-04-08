@@ -107,12 +107,25 @@
             Body
           </div>
           <div>
-            <textarea :value="fuzzcasesetViewInSideBar.body" rows="15"
+            <textarea :value="fuzzcasesetViewInSideBar.body" rows="10"
             style="height:100%; overflow=scroll;resize: none;" class="form-control"
             spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
             />
           </div>
         </div>
+
+        <div class="row">
+          <div>
+            myfile content
+          </div>
+          <div>
+            <textarea :value="fuzzcasesetViewInSideBar.fileDataTemplate" rows="10"
+            style="height:100%; overflow=scroll;resize: none;" class="form-control"
+            spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
+            />
+          </div>
+        </div>
+
         <div class="row">&nbsp;</div>
       </div>
     </v-card>
@@ -402,7 +415,8 @@ class Props {
  fuzzcasesetViewInSideBar = {
                         url: '',
                         header: '',
-                        body: ''
+                        body: '',
+                        fileDataTemplate: ''
                       };
 
   fuzzerConnected = false;
@@ -806,14 +820,16 @@ class Props {
       this.fuzzcasesetViewInSideBar = {
                         url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
-                        body: Utils.jsonPrettify(item.bodyNonTemplate)
+                        body: Utils.jsonPrettify(item.bodyNonTemplate),
+                        fileDataTemplate: item.fileDataTemplate
                       }
     }
     else {
       this.fuzzcasesetViewInSideBar = {
                         url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
-                        body: Utils.jsonPrettify(item.bodyNonTemplate + '\n\n' + item.graphQLVariableNonTemplate)
+                        body: Utils.jsonPrettify(item.bodyNonTemplate + '\n\n' + item.graphQLVariableNonTemplate),
+                        fileDataTemplate: item.fileDataTemplate
                       }
     }
                   

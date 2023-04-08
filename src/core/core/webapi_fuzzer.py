@@ -280,7 +280,6 @@ class WebApiFuzzer:
         headers={}
         file = ''
         gqlVars = {}
-        contentType = 0
         
         try:
             
@@ -307,29 +306,26 @@ class WebApiFuzzer:
             if not ok:
                 self.eventstore.emitErr(Exception('Error at data prep when fuzzing: {err}'))
                 raise Exception(err)
-            
-            #contentType = self.determine_and_set_content_type(headers)
-            
-            reqBody = ''
-            reqBody = self.try_decode_body(body)
+    
             
             try:
                 req = None                
                 
                 # post with body multipart-form, www-form-urlencoded
-                if file != None and reqBody != '':
+                if body != '':
                     
-                    if self.is_grapgql(headers):
-                        req = Request('POST', url, headers=headers, json={"query": reqBody, 'variables': gqlVars}) #, 'variables': gqlVars})
+                    if fcs.isGraphQL:
+                        req = Request('POST', url, headers=headers, json={"query": body, 'variables': gqlVars})
+                        body = f'{body}\n\n{Utils.jsone(gqlVars)}'
                     else:
-                        req = Request(fcs.verb, url, headers=headers, data=reqBody) 
+                        req = Request(fcs.verb, url, headers=headers, data=body) 
 
                 # upload file
                 # support single file only.
-                # fuzzie's goal is to upload file content as the "whole" POST body.
+                # intention is to upload file content as the entire POST body.
                 # with multiple files being uploaded, multipart-form headers Content-Disposition will be included as file content.
                 # which fuzzie tries to avoid altering original file content
-                elif not Utils.isNoneEmpty(file):
+                elif fcs.has_file_to_upload():
                     
                     req = Request(fcs.verb, url, headers=headers, data=file.content)
                 else:
@@ -356,13 +352,13 @@ class WebApiFuzzer:
                         qs=querystring,
                         verb=fcs.verb,
                         headers=headers,
-                        body=reqBody,
+                        body=body,
                         contentLength=reqContentLength)
                 
-                httpSession = Session()
                 
-                # handle client time-out error
+                # make http request
                 try:
+                    httpSession = Session()
                     resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 except Exception as e:
                     
@@ -387,7 +383,7 @@ class WebApiFuzzer:
                                         qs=querystring,
                                         verb=fcs.verb,
                                         headers=headers,
-                                        body=reqBody,
+                                        body=body,
                                         contentLength=0,
                                         invalidRequestError=err)
                 fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
@@ -643,7 +639,8 @@ class WebApiFuzzer:
             urlDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.urlDataTemplate)
             bodyDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.bodyDataTemplate)
             headerDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.headerDataTemplate)
-            file = ''        #for openapi3 single file only
+            myfileDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.fileDataTemplate)
+            file = ''
             resolvedBodyDT = ''
             headers = {}
             file = ''
@@ -664,6 +661,9 @@ class WebApiFuzzer:
             hostnamePort = f'{hostname}:{port}'
             
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            
+            _, resolvedBodyDT = Utils.try_decode_utf8(resolvedBodyDT)
+            
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
             
@@ -689,21 +689,22 @@ class WebApiFuzzer:
                     
             # handle file upload with "proper" encoding,
             # without encoding requests will throw error as requests uses utf-8 by default
-            if fcs.file != '':
+            if fcs.has_file_to_upload():
                 
                 ok = True
                 err = ''
                 fileContent = ''
                 fileWordlistType = fcs.file
                 filename = ''
+                
                 if not Utils.isNoneEmpty(fcs.fileName):
                     filename = fcs.fileName
                 else:
                     filename = self.corporaContext.cp.fileNameCorpora.next_corpora(fileType=fileWordlistType)
                 
-                if fileWordlistType == WordlistType.myfile: #FuzzCaseSetFile.is_myfile(fcs.file):
+                if fileWordlistType == WordlistType.myfile:
                     
-                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(fcs.fileDataTemplate)
+                    ok, err, fileContent = self.corporaContext.resolve_fuzzdata(myfileDT)
                     
                     if not ok:
                         return [False, err, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
@@ -711,6 +712,7 @@ class WebApiFuzzer:
                     decoded = self.try_decode_file_content(fileContent)
                     
                     file = FuzzCaseSetFile(wordlist_type=WordlistType.myfile, filename=filename, content=decoded)
+                    
                 # image, file, pdf
                 else:
                     ok, err, fileContent = self.corporaContext.resolve_file(fcs.file)

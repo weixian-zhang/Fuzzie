@@ -270,7 +270,8 @@ class RequestMessageFuzzContextCreator:
                 
                     body = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
                     
-                    # jinja wil execute all filters and file-functions bind to image, pdf, file
+                    # jinja wil execute all filters and file-functions bind to image, pdf, file and myfile
+                    # if body contains file wordlist, then body will be empty
                     tpl = self.jinjaEnvBody.from_string(body)
                     renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
                     
@@ -278,7 +279,7 @@ class RequestMessageFuzzContextCreator:
                         return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] , ''
 
                     # no file found in body
-                    if Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
+                    if not self.currentFuzzCaseSet.has_file_to_upload(): #Utils.isNoneEmpty(self.currentFuzzCaseSet.file):
                         self.currentFuzzCaseSet.bodyDataTemplate = renderedBody
                         self.currentFuzzCaseSet.bodyNonTemplate = body
                     # *has file in body containing file kind myfile, file, image or pdf
@@ -635,7 +636,7 @@ class RequestMessageFuzzContextCreator:
         vars = '\n'.join(map(str,variables))
         rqMsgWithoutVars = '\n'.join(map(str,withoutVar))
         
-        return [rqMsgWithoutVars, vars]
+        return [rqMsgWithoutVars.strip(), vars.strip()]
     
     def remove_all_comments(self, rqMsg: str) -> str: 
         
@@ -748,6 +749,8 @@ class RequestMessageFuzzContextCreator:
         
         try:
             escapedContent = content.replace('"', '\\"')
+            
+            escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
         
             ok, err, output = self.inject_eval_func_primitive_wordlist(escapedContent)
             
