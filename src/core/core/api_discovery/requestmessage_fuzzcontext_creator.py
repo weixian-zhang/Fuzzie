@@ -191,10 +191,10 @@ class RequestMessageFuzzContextCreator:
             # full url
             url = f'{urlWithoutQS}{qs}'.strip()
             
-            urlWithVar = TemplateHelper.add_global_vars(tpl=url, vars=self.detectedJinjaVariables)
+            #urlWithVar = TemplateHelper.add_global_vars(tpl=url, vars=self.detectedJinjaVariables)
             
             # render url template
-            urlOK, urlErr, urlRendered = self.render_jinja_expr_with_eval_func(urlWithVar)
+            urlOK, urlErr, urlRendered = self.render_jinja_expr_with_eval_func(url)
             if not urlOK:
                 return False, urlErr, [], ''
             
@@ -223,15 +223,15 @@ class RequestMessageFuzzContextCreator:
                         keyVal = key
                         hVal = headers[key]
                         
-                        headerKeyWithVar = TemplateHelper.add_global_vars(tpl=keyVal, vars=self.detectedJinjaVariables)
+                        #headerKeyWithVar = TemplateHelper.add_global_vars(tpl=keyVal, vars=self.detectedJinjaVariables)
                         
-                        hKeyOK, hKeyErr, evalHeaderKey = self.render_jinja_expr_with_eval_func(headerKeyWithVar)
+                        hKeyOK, hKeyErr, evalHeaderKey = self.render_jinja_expr_with_eval_func(keyVal)
                         if not hKeyOK:
                             return hKeyOK, f'Header key parsing error: {Utils.errAsText(hKeyErr)}', [], ''
                         
-                        headerValueWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
+                        #headerValueWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
                         
-                        hValOK, hValErr, evalHeaderValue = self.render_jinja_expr_with_eval_func(headerValueWithVar)
+                        hValOK, hValErr, evalHeaderValue = self.render_jinja_expr_with_eval_func(hVal)
                         if not hValOK:
                             return hValOK, f'Header value parsing error: {Utils.errAsText(hValErr)}', [], ''
                         
@@ -255,14 +255,14 @@ class RequestMessageFuzzContextCreator:
                    
                    if ok:
                        
-                        gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
+                        #gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
                         
                         bok, berr, renderedBody = self.render_jinja_expr_with_eval_func(gqlBody)
                         
                         if not bok:
                             return False, berr, [], ''
                         
-                        graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
+                        #graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
                         
                         vok, verr, renderedGQLVar = self.render_jinja_expr_with_eval_func(graphqlVariable)
                         
@@ -280,11 +280,11 @@ class RequestMessageFuzzContextCreator:
                     
                     body = self.get_body_as_one_str(multilineBlock)
                 
-                    bodyWithVars = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
+                    #bodyWithVars = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
                     
                     # jinja wil execute all filters and file-functions bind to image, pdf, file and myfile
                     # if body contains file wordlist, then body will be empty
-                    tpl = self.jinjaEnvBody.from_string(bodyWithVars)
+                    tpl = self.jinjaEnvBody.from_string(body)
                     renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlists()) #tpl.render(self.jinja_primitive_wordlists())
                     renderedBody = renderedBody.strip()
                     
@@ -756,11 +756,11 @@ class RequestMessageFuzzContextCreator:
         try:
             escapedContent = content.replace('"', '\\"')
             
-            escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
+            #escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
         
             ok, err, output = self.render_jinja_expr_with_eval_func(escapedContent)
             
-            filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
+            #filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
             
             fOK, fErr, renderedFilename = self.render_jinja_expr_with_eval_func(filename)
             
@@ -807,25 +807,6 @@ class RequestMessageFuzzContextCreator:
         if 'RequestMessageFuzzContextCreator' in renderedBody:
             return True
         return False
-    
-    #refactored, move to "wordlist_type_helper.py"
-    # integer type is to support OpenApi3, but is same as digit
-    # def jinja_primitive_wordlist_types_dict(self) -> dict:
-    #     return {
-    #         'string': '{{ eval(wordlist_type=\'string\') }}',
-    #         'xss': '{{ eval(wordlist_type=\'xss\') }}',
-    #         'sqlinject': '{{ eval(wordlist_type=\'sqlinject\') }}',
-    #         'bool':  '{{ eval(wordlist_type=\'bool\') }}',
-    #         'digit': '{{ eval(wordlist_type=\'digit\') }}',
-    #         'integer': '{{ eval(wordlist_type=\'integer\') }}',
-    #         'char': '{{ eval(wordlist_type=\'char\') }}',
-    #         'filename': '{{ eval(wordlist_type=\'filename\') }}',
-    #         'datetime': '{{ eval(wordlist_type=\'datetime\') }}',
-    #         'date': '{{ eval(wordlist_type=\'date\') }}',
-    #         'time': '{{ eval(wordlist_type=\'time\') }}',
-    #         'username': '{{ eval(wordlist_type=\'username\') }}',
-    #         'password': '{{ eval(wordlist_type=\'password\') }}'
-    #     }
     
     def is_grapgql(self, headers: dict):
         if Utils.isNoneEmpty(headers) or len(headers) == 0:

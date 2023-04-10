@@ -72,7 +72,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 4
+        self.httpTimeoutInSec = 4.0
         self.fuzzCaseSetRunId = shortuuid.uuid()
         
         self.totalRunsForAllCaseSets = 0
@@ -359,7 +359,7 @@ class WebApiFuzzer:
                 # make http request
                 try:
                     httpSession = Session()
-                    resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
+                    resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, retries=False, allow_redirects=False, verify=False)
                 except Exception as e:
                     
                     errMsg = Utils.errAsText(e)
