@@ -215,18 +215,27 @@ class RequestMessageFuzzContextCreator:
                 self.currentFuzzCaseSet.headerNonTemplate = headerJson
                 
                 if len(headers) > 0:
+                    
                     evalHeaderDict = {}
+                    
                     for key in headers.keys():
                         
+                        keyVal = key
                         hVal = headers[key]
                         
-                        headerWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
-            
-                        hOK, hErr, evalHeader = self.render_jinja_expr_with_eval_func(headerWithVar)
-                        if not hOK:
-                            return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', [], ''
+                        headerKeyWithVar = TemplateHelper.add_global_vars(tpl=keyVal, vars=self.detectedJinjaVariables)
                         
-                        evalHeaderDict[key] = evalHeader
+                        hKeyOK, hKeyErr, evalHeaderKey = self.render_jinja_expr_with_eval_func(headerKeyWithVar)
+                        if not hKeyOK:
+                            return hKeyOK, f'Header key parsing error: {Utils.errAsText(hKeyErr)}', [], ''
+                        
+                        headerValueWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
+                        
+                        hValOK, hValErr, evalHeaderValue = self.render_jinja_expr_with_eval_func(headerValueWithVar)
+                        if not hValOK:
+                            return hValOK, f'Header value parsing error: {Utils.errAsText(hValErr)}', [], ''
+                        
+                        evalHeaderDict[evalHeaderKey] = evalHeaderValue
 
                     if len(evalHeaderDict) > 0:
                         self.currentFuzzCaseSet.headerDataTemplate = '' if len(evalHeaderDict) == 0 else json.dumps(evalHeaderDict)
