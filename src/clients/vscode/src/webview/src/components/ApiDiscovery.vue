@@ -4,7 +4,7 @@
 
     <!--v-card height affects Splitter in Master height="455px" -->
     <v-card
-    color="white"
+    color=""
     outlined
     style="display: flex; flex-flow: column; height: 97%;">
 
@@ -655,6 +655,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- toolbar -->
     <v-toolbar card color="#F6F6F6" flat density="compact" dense height="50px">
 
       <v-toolbar-title >Fuzz Contexts</v-toolbar-title>
@@ -664,10 +665,6 @@
         @click="(getFuzzcontexts)">
             <v-icon color="cyan darken-3">mdi-refresh</v-icon>
       </v-btn>
-
-      <!-- <v-btn icon  variant="plain" height="30px" plain  v-tooltip="'Kafka'" >
-        <v-icon color="cyan darken-3" icon="mdi-apache-kafka"></v-icon>
-      </v-btn> -->
      
       <v-btn icon  variant="plain" height="30px" plain v-tooltip="'REST API or GraphQL Fuzz Context'" 
          :disabled="(!fuzzerConnected)"
@@ -687,7 +684,7 @@
         scrollHeight="320px" 
         style="height: 320px" class=" border-0">
           <template #default="slotProps" >
-
+            
             <!--fuzz context-->
             <small v-show="slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2'"
               :class="( (slotProps.node.isFuzzCaseRun == false && slotProps.node.key != '-1' && slotProps.node.key != '-2' &&

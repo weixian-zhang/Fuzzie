@@ -153,15 +153,9 @@
                   selectAllChanged($event))"  hide-details />
               </div>
             </th>
-            
-            <!-- <th >
-            </th> -->
 
             <th class="viewall">
             </th>
-
-            <!-- <th >
-            </th> -->
 
             <th class="settings">
             </th>
@@ -236,7 +230,7 @@
                   variant="flat"
                   icon="mdi-cog-outline"
                   color="cyan darken-3"
-                  size="x-small"
+                  size="small"
                   data-bs-toggle="dropdown">
                   </v-icon>
                   <ul class="dropdown-menu dropdown-menu-end">
@@ -272,7 +266,7 @@
                     :hidden="!(item.isGraphQL)"
                     variant="flat"
                     icon="mdi-graphql"
-                    color="purple darken-3"
+                    color="cyan darken-3"
                     size="x-small"
                     class="m-0 p-0"
                     >
@@ -281,7 +275,7 @@
                     :hidden="(item.isGraphQL)"
                     variant="flat"
                     icon="mdi-web"
-                    color="purple darken-3"
+                    color="cyan darken-3"
                     size="x-small"
                     class="m-0 p-0"
                     >

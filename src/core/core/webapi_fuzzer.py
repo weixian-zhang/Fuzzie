@@ -641,7 +641,6 @@ class WebApiFuzzer:
             
             urlDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.urlDataTemplate)
             bodyDT= TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.bodyDataTemplate)
-            headerDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.headerDataTemplate)
             myfileDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=fcs.fileDataTemplate)
             file = ''
             resolvedBodyDT = ''
@@ -663,7 +662,7 @@ class WebApiFuzzer:
             port = self.determine_port(parsedUrl.port, parsedUrl.scheme)
             hostnamePort = f'{hostname}:{port}'
             
-            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT) #self.inject_fuzzdata_in_datatemplate(bodyDT)
+            okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT)
             
             _, resolvedBodyDT = Utils.try_decode_utf8(resolvedBodyDT)
             
@@ -673,13 +672,17 @@ class WebApiFuzzer:
             # header - reason for looping over each header data template and getting fuzz data is to 
             # prevent json.dump throwing error from Json reserved characters 
             headerDict = {}
-            headerDTObj = Utils.try_parse_json_to_object(headerDT)
+            headerDTObj = Utils.try_parse_json_to_object(fcs.headerDataTemplate)
+            
             if Utils.dict_has_items(headerDTObj):
                 
                 for hk in headerDTObj.keys():
+                    
                     dt = headerDTObj[hk]
                     
-                    ok, err, resolvedVal = self.corporaContext.resolve_fuzzdata(dt) #self.inject_fuzzdata_in_datatemplate(dataTemplate)
+                    headerDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=dt)
+                    
+                    ok, err, resolvedVal = self.corporaContext.resolve_fuzzdata(headerDT)
                     
                     if not ok:
                         self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')

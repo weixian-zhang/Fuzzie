@@ -191,8 +191,10 @@ class RequestMessageFuzzContextCreator:
             # full url
             url = f'{urlWithoutQS}{qs}'.strip()
             
+            urlWithVar = TemplateHelper.add_global_vars(tpl=url, vars=self.detectedJinjaVariables)
+            
             # render url template
-            urlOK, urlErr, urlRendered = self.inject_eval_func_primitive_wordlist(url)
+            urlOK, urlErr, urlRendered = self.render_jinja_expr_with_eval_func(urlWithVar)
             if not urlOK:
                 return False, urlErr, [], ''
             
@@ -217,8 +219,10 @@ class RequestMessageFuzzContextCreator:
                     for key in headers.keys():
                         
                         hVal = headers[key]
+                        
+                        headerWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
             
-                        hOK, hErr, evalHeader = self.inject_eval_func_primitive_wordlist(hVal)
+                        hOK, hErr, evalHeader = self.render_jinja_expr_with_eval_func(headerWithVar)
                         if not hOK:
                             return hOK, f'Header parsing error: {Utils.errAsText(hErr)}', [], ''
                         
@@ -244,14 +248,14 @@ class RequestMessageFuzzContextCreator:
                        
                         gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
                         
-                        bok, berr, renderedBody = self.inject_eval_func_primitive_wordlist(gqlBody)
+                        bok, berr, renderedBody = self.render_jinja_expr_with_eval_func(gqlBody)
                         
                         if not bok:
                             return False, berr, [], ''
                         
                         graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
                         
-                        vok, verr, renderedGQLVar = self.inject_eval_func_primitive_wordlist(graphqlVariable)
+                        vok, verr, renderedGQLVar = self.render_jinja_expr_with_eval_func(graphqlVariable)
                         
                         if not vok:
                             return False, verr, [], ''
@@ -272,7 +276,7 @@ class RequestMessageFuzzContextCreator:
                     # jinja wil execute all filters and file-functions bind to image, pdf, file and myfile
                     # if body contains file wordlist, then body will be empty
                     tpl = self.jinjaEnvBody.from_string(bodyWithVars)
-                    renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlists()) #tpl.render(self.jinja_primitive_wordlists())
                     renderedBody = renderedBody.strip()
                     
                     if self.is_rendered_body_has_func(renderedBody):
@@ -647,13 +651,13 @@ class RequestMessageFuzzContextCreator:
         
     # insert eval into wordlist expressions e.g: {{ string }} to {{ eval(string) }}
     # this is for corpora_context to execute eval function to build up the corpora_context base on wordlist-type
-    def inject_eval_func_primitive_wordlist(self, expr: str) -> tuple([bool, str, str]):
+    def render_jinja_expr_with_eval_func(self, expr: str) -> tuple([bool, str, str]):
         
         try:
                  
             tpl = self.jinjaEnvPrimitive.from_string(expr)
             
-            output = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict())   #tpl.render(self.jinja_primitive_wordlist_types_dict())                
+            output = tpl.render(TemplateHelper.jinja_primitive_wordlists())   #tpl.render(self.jinja_primitive_wordlists())                
                     
             return True, '', output.strip()
         
@@ -745,11 +749,11 @@ class RequestMessageFuzzContextCreator:
             
             escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
         
-            ok, err, output = self.inject_eval_func_primitive_wordlist(escapedContent)
+            ok, err, output = self.render_jinja_expr_with_eval_func(escapedContent)
             
             filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
             
-            fOK, fErr, renderedFilename = self.inject_eval_func_primitive_wordlist(filename)
+            fOK, fErr, renderedFilename = self.render_jinja_expr_with_eval_func(filename)
             
             if not ok:
                 self.eventstore.emitErr(err, data=f'source: requestmessage_fuzzcontext_creator.myfile_jinja_filter')

@@ -11,8 +11,7 @@ from models.webapi_fuzzcontext import (WordlistType)
 
 class TemplateHelper:
     
-    # integer type is to support OpenApi3, but is same as digit
-    def jinja_primitive_wordlist_types_dict() -> dict:
+    def jinja_primitive_wordlists() -> dict:
         return {
             'string': '{{ eval(wordlist_type=\'string\') }}',
             'xss': '{{ eval(wordlist_type=\'xss\') }}',
