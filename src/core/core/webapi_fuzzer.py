@@ -676,19 +676,25 @@ class WebApiFuzzer:
             
             if Utils.dict_has_items(headerDTObj):
                 
-                for hk in headerDTObj.keys():
+                for key in headerDTObj.keys():
                     
-                    dt = headerDTObj[hk]
+                    valueDT = headerDTObj[key]
                     
-                    headerDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=dt)
+                    headerKeyDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=key)
                     
-                    ok, err, resolvedVal = self.corporaContext.resolve_fuzzdata(headerDT)
-                    
-                    if not ok:
-                        self.eventstore.emitErr(err, 'webapi_fuzzer.dataprep_fuzzcaseset')
+                    keyOK, keyErr, resolvedKey = self.corporaContext.resolve_fuzzdata(headerKeyDT)
+                    if not keyOK:
+                        self.eventstore.emitErr(keyErr, 'webapi_fuzzer.dataprep_fuzzcaseset')
                         continue
                     
-                    headerDict[hk] = resolvedVal
+                    headerValueDT = TemplateHelper.add_global_vars(vars=tplVars, tpl=valueDT)
+                    
+                    valOK, valErr, resolvedVal = self.corporaContext.resolve_fuzzdata(headerValueDT)
+                    if not valOK:
+                        self.eventstore.emitErr(valErr, 'webapi_fuzzer.dataprep_fuzzcaseset')
+                        continue
+                    
+                    headerDict[resolvedKey] = resolvedVal
             
             # fuzzie custom header
             headerDict['User-Agent'] = 'fuzzie'
