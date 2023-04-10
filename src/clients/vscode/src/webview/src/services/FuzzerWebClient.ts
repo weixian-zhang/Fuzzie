@@ -248,6 +248,7 @@ export default class FuzzerWebClient
                             totalDataCaseRunsToComplete
                             file
                             fileName
+                            fileNonTemplate
                             fileDataTemplate
                             requestMessage
                             isGraphQL

@@ -126,6 +126,7 @@ class ApiFuzzCaseSet:
         
         self.file = ''
         self.fileName = ''
+        self.fileNonTemplate = ''
         self.fileDataTemplate = ''
         
         self.isGraphQL = False

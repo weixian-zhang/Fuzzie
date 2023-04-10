@@ -107,7 +107,7 @@
             Body
           </div>
           <div>
-            <textarea :value="fuzzcasesetViewInSideBar.body" rows="10"
+            <textarea :value="fuzzcasesetViewInSideBar.body" rows="13"
             style="height:100%; overflow=scroll;resize: none;" class="form-control"
             spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
             />
@@ -119,7 +119,7 @@
             myfile content
           </div>
           <div>
-            <textarea :value="fuzzcasesetViewInSideBar.fileDataTemplate" rows="10"
+            <textarea :value="fuzzcasesetViewInSideBar.fileNonTemplate" rows="10"
             style="height:100%; overflow=scroll;resize: none;" class="form-control"
             spellcheck="false" wrap="on" autocorrect="off" autocapitalize="off"
             />
@@ -147,7 +147,7 @@
       <v-table density="compact" fixed-header height="350px" hover="true" >
         <thead>
           <tr>
-            <th >
+            <th class="checkbox">
               <div class="form-check">
                 <v-checkbox v-tooltip="'select for fuzzing'" color="cyan" id="flexCheckDefault" label="All" v-model="selectAll" density="compact" @change="(
                   selectAllChanged($event))"  hide-details />
@@ -157,37 +157,37 @@
             <!-- <th >
             </th> -->
 
-            <th >
+            <th class="viewall">
             </th>
 
-            <th >
-            </th>
+            <!-- <th >
+            </th> -->
 
-            <th >
+            <th class="settings">
             </th>
             
-            <th>
+            <th class="verb">
               Verb
             </th>
-            <th >
+            <th class="url">
               URL
             </th>
-            <th >
+            <th class="filetype">
               File Type
             </th>
-            <th >
+            <th class="httpcode">
               2xx
             </th>
-            <th >
+            <th class="httpcode">
               3xx
             </th>
-            <th >
+            <th class="httpcode">
               4xx
             </th>
-            <th >
+            <th class="httpcode">
               5xx
             </th>
-            <th >
+            <th class="httpcode">
               Total Runs
             </th>
           </tr>
@@ -213,30 +213,6 @@
               <div class="form-check">
                 <v-checkbox color="cyan" id="flexCheckDefault" label="" v-model="item.selected" density="compact" @click="isTableDirty=true"  hide-details />
               </div>
-            </td>
-
-            
-
-            <!--view result-->
-            <td>
-              <v-icon
-                    :hidden="!(item.isGraphQL)"
-                    variant="flat"
-                    icon="mdi-graphql"
-                    color="purple darken-3"
-                    size="small"
-                    class="m-0 p-0"
-                    >
-                </v-icon>
-                <v-icon
-                    :hidden="(item.isGraphQL)"
-                    variant="flat"
-                    icon="mdi-web"
-                    color="purple darken-3"
-                    size="small"
-                    class="m-0 p-0"
-                    >
-                </v-icon>
             </td>
 
             <td>
@@ -292,7 +268,25 @@
             
             <!--verb-->
             <td>
-              <span>{{ item.verb }}</span>
+              <v-icon
+                    :hidden="!(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-graphql"
+                    color="purple darken-3"
+                    size="x-small"
+                    class="m-0 p-0"
+                    >
+                </v-icon>
+                <v-icon
+                    :hidden="(item.isGraphQL)"
+                    variant="flat"
+                    icon="mdi-web"
+                    color="purple darken-3"
+                    size="x-small"
+                    class="m-0 p-0"
+                    >
+                </v-icon>
+              {{ item.verb }}
             </td>
 
             <!--url-->
@@ -303,7 +297,7 @@
                 activator="parent"
                 max-width="500"
                 max-height="500" />
-                {{ shortenValueInTable(item.urlNonTemplate, 30) }}
+                {{ shortenValueInTable(item.urlNonTemplate, 40) }}
               </span>
             </td>
             
@@ -416,7 +410,7 @@ class Props {
                         url: '',
                         header: '',
                         body: '',
-                        fileDataTemplate: ''
+                        fileNonTemplate: ''
                       };
 
   fuzzerConnected = false;
@@ -821,7 +815,7 @@ class Props {
                         url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
                         body: Utils.jsonPrettify(item.bodyNonTemplate),
-                        fileDataTemplate: item.fileDataTemplate
+                        fileNonTemplate: item.fileNonTemplate
                       }
     }
     else {
@@ -829,7 +823,7 @@ class Props {
                         url: item.urlNonTemplate,
                         header: Utils.jsonPrettify(item.headerNonTemplate),
                         body: Utils.jsonPrettify(item.bodyNonTemplate + '\n\n' + item.graphQLVariableNonTemplate),
-                        fileDataTemplate: item.fileDataTemplate
+                        fileNonTemplate: item.fileNonTemplate
                       }
     }
                   
@@ -902,6 +896,22 @@ table.table-fit thead th, table.table-fit tfoot th {
 }
 table.table-fit tbody td, table.table-fit tfoot td {
     width: auto !important;
+}
+
+th.checkbox {
+  width: 7%
+}
+
+th.url {
+  width: 21%
+}
+
+th.settings, th.viewall{
+  width: 5%
+}
+
+th.verb {
+  width: 7%
 }
 
 .v-tooltip__content.menuable__content__active {

@@ -79,6 +79,7 @@ export class ApiFuzzCaseSetsWithRunSummaries {
     public graphQLVariableNonTemplate = ''
     public graphQLVariableDataTemplate = ''
     public templateVariables = ''
+    public fileNonTemplate = ''
     public fileDataTemplate = ''
 }
 

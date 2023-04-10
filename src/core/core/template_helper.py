@@ -51,7 +51,6 @@ class TemplateHelper:
     def create_jinja_body_env(mutate_jinja_filter, 
                               myfile_jinja_filter, 
                               jinja_image_func, 
-                              jinja_file_func, 
                               jinja_pdf_func,
                               jinja_numrange_func,
                               jinja_randomize_items_filter,
@@ -68,7 +67,6 @@ class TemplateHelper:
         env.filters[WordlistType.base64d] = jinja_base64d_filter
         
         env.globals[WordlistType.image] = jinja_image_func
-        env.globals[WordlistType.file] = jinja_file_func
         env.globals[WordlistType.pdf] = jinja_pdf_func
         env.globals[WordlistType.numrange] = jinja_numrange_func
         

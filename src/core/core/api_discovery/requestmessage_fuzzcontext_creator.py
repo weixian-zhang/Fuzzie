@@ -46,7 +46,6 @@ class RequestMessageFuzzContextCreator:
         self.jinjaEnvBody = TemplateHelper.create_jinja_body_env(mutate_jinja_filter=self.mutate_jinja_filter,
                                                                      myfile_jinja_filter=self.myfile_jinja_filter,
                                                                      jinja_randomize_items_filter=self.jinja_randomize_items_filter,
-                                                                     jinja_file_func=self.jinja_file_func,
                                                                      jinja_image_func=self.jinja_image_func,
                                                                      jinja_pdf_func=self.jinja_pdf_func,
                                                                      jinja_numrange_func=self.jinja_numrange_func,
@@ -268,12 +267,13 @@ class RequestMessageFuzzContextCreator:
                     
                     body = self.get_body_as_one_str(multilineBlock)
                 
-                    body = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
+                    bodyWithVars = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
                     
                     # jinja wil execute all filters and file-functions bind to image, pdf, file and myfile
                     # if body contains file wordlist, then body will be empty
-                    tpl = self.jinjaEnvBody.from_string(body)
+                    tpl = self.jinjaEnvBody.from_string(bodyWithVars)
                     renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlist_types_dict()) #tpl.render(self.jinja_primitive_wordlist_types_dict())
+                    renderedBody = renderedBody.strip()
                     
                     if self.is_rendered_body_has_func(renderedBody):
                         return False, 'missing parentheses for file wordlist type. e.g: {{ image() }} {{ pdf() }} {{ file() }} {{ '' | myfile() }}', [] , ''
@@ -679,13 +679,6 @@ class RequestMessageFuzzContextCreator:
         
         return ''
         
-    def jinja_file_func(self, filename=''):
-        
-        self.currentFuzzCaseSet.file = FuzzCaseSetFile(wordlist_type=WordlistType.file, filename=filename)
-        self.currentFuzzCaseSet.fileName = filename
-        self.currentFuzzCaseSet.fileDataTemplate = '{{ eval(wordlist_type=\'file\') }}'
-        
-        return ''
     
     def jinja_numrange_func(self, start=1, end=100000):
         return  f'{{{{ eval(wordlist_type=\'numrange\', autonumStart={start}, autonumEnd={end}) }}}}'
@@ -754,13 +747,18 @@ class RequestMessageFuzzContextCreator:
         
             ok, err, output = self.inject_eval_func_primitive_wordlist(escapedContent)
             
+            filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
+            
+            fOK, fErr, renderedFilename = self.inject_eval_func_primitive_wordlist(filename)
+            
             if not ok:
                 self.eventstore.emitErr(err, data=f'source: requestmessage_fuzzcontext_creator.myfile_jinja_filter')
                 self.currentFuzzCaseSet.file = FuzzCaseSetFile(
-                    wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
-                    filename = filename, #corporaContextKeyName,
+                    wordlist_type = WordlistType.myfile,
+                    filename = renderedFilename,
                     content = '' )
-                self.currentFuzzCaseSet.fileName = filename
+                self.currentFuzzCaseSet.fileName = renderedFilename
+                self.currentFuzzCaseSet.fileNonTemplate = content
                 self.currentFuzzCaseSet.fileDataTemplate = ''
                     
                 return ''
@@ -772,20 +770,20 @@ class RequestMessageFuzzContextCreator:
             
             jinjaTpl = jinjaTpl.strip()
             
-            evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{filename}") }}}}'
+            evalOutput =  f'{{{{ eval(wordlist_type="{WordlistType.myfile}", my_file_content_value="{jinjaTpl}", my_file_content_filename="{renderedFilename}") }}}}'
             
-            # used in corpora_context to find myfile_corpora to supply myfile data
-            corporaContextKeyName = f'{WordlistType.myfile}_{filename}'
             
             # *create file object in current fuzzcaseset
             self.currentFuzzCaseSet.file = FuzzCaseSetFile(
                     wordlist_type = WordlistType.myfile, #corporaContextKeyName, #
-                    filename = filename, #corporaContextKeyName,
+                    filename = renderedFilename,
                     content = evalOutput )
-            self.currentFuzzCaseSet.fileName = filename
+            self.currentFuzzCaseSet.fileName = renderedFilename
+            self.currentFuzzCaseSet.fileNonTemplate = content
             self.currentFuzzCaseSet.fileDataTemplate = evalOutput
                 
             return ''
+        
         except Exception as e:
             pass
         

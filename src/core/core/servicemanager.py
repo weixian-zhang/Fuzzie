@@ -198,6 +198,7 @@ class ServiceManager:
                     parsedFCSs['urlDataTemplate'] = singleFCS.urlDataTemplate
                     parsedFCSs['bodyNonTemplate'] = singleFCS.bodyNonTemplate
                     parsedFCSs['headerNonTemplate'] = singleFCS.headerNonTemplate
+                    parsedFCSs['fileNonTemplate'] = singleFCS.fileNonTemplate 
                     parsedFCSs['fileDataTemplate'] = singleFCS.fileDataTemplate 
                     parsedFCSs['bodyDataTemplate'] = singleFCS.bodyDataTemplate
                     parsedFCSs['headerDataTemplate'] = singleFCS.headerDataTemplate
@@ -260,6 +261,7 @@ class ServiceManager:
                 fcsSum.headerNonTemplate = rowDict['headerNonTemplate']
                 fcsSum.file = rowDict['file']
                 fcsSum.fileName = rowDict['fileName']
+                fcsSum.fileNonTemplate = rowDict['fileNonTemplate']
                 fcsSum.fileDataTemplate = rowDict['fileDataTemplate']
                 fcsSum.requestMessage = rowDict['requestMessage']
                 fcsSum.isGraphQL = rowDict['isGraphQL']
