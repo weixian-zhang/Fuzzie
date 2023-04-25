@@ -35,11 +35,7 @@ class Utils:
     
     
     def errAsText(err):
-        errMsg = ''
-        if err != None and err.args is not None and len(err.args) > 0:
-            errMsg = err.args[0] #', '.join([x for x in err.args])
-            
-        return errMsg
+        return repr(err)           
     
     def isNoneEmpty(obj) -> bool:
         if obj is None or obj == '':

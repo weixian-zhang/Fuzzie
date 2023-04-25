@@ -239,7 +239,7 @@
                   </td>
                   
                   <td>
-                    <span>
+                    <span v-tooltip="item.response.reasonPharse">
                     {{shortenValueInTable(item.response.reasonPharse, 15) }}
                     </span>
                   </td>

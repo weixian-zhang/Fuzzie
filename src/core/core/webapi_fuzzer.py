@@ -8,9 +8,11 @@ from threading import Event
 from urllib.error import HTTPError
 from requests import Request, Response, Session
 import requests
+from requests.adapters import HTTPAdapter, Retry
 from urllib.parse import urlparse
 from types import MappingProxyType
 import shortuuid
+from collections import OrderedDict
 from datetime import datetime
 from eventstore import EventStore, MsgType
 from fuzz_test_result_queue import FuzzTestResultQueue
@@ -55,6 +57,9 @@ class WebApiFuzzer:
                     # apikeyHeader = '',
                     # apikey = '') -> None:
         
+        #request config
+        requests.adapters.DEFAULT_RETRIES = 1
+        
         # supports remember Set-Cookie from response
         #cookie example
         # contain in single header = cookie1=value1;cookie2=value2
@@ -72,7 +77,7 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 4.0
+        self.httpTimeoutInSec = 3.0
         self.fuzzCaseSetRunId = shortuuid.uuid()
         
         self.totalRunsForAllCaseSets = 0
@@ -355,11 +360,17 @@ class WebApiFuzzer:
                         body=body,
                         contentLength=reqContentLength)
                 
-                
+    
                 # make http request
                 try:
-                    httpSession = Session()
-                    resp = httpSession.send(prepReq, timeout=self.httpTimeoutInSec, retries=False, allow_redirects=False, verify=False)
+                    retry_strategy  = Retry(total=False)
+                    adapter = HTTPAdapter(max_retries=retry_strategy)
+                    session = requests.Session()
+                    session.mount('https://', adapter)
+                    session.mount('http://', adapter)                    
+                   
+                    resp = session.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False) #timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
+                
                 except Exception as e:
                     
                     errMsg = Utils.errAsText(e)
@@ -367,7 +378,6 @@ class WebApiFuzzer:
                     fuzzResp = self.create_fuzz_response_on_error(self.apifuzzcontext.Id, 
                                                                    fuzzDataCase.Id, 
                                                                    reason= errMsg)
-                                                                   #reason='request timed out, Fuzzie has a short time-out of 4 seconds')
                     fuzzDataCase.response = fuzzResp
                     return fuzzDataCase, file
                 
@@ -555,7 +565,7 @@ class WebApiFuzzer:
         fuzzResp.fuzzcontextId = fuzzcontextId 
         fuzzResp.statusCode = 408
         fuzzResp.reasonPharse = reason
-        fuzzResp.responseDisplayText = ''
+        fuzzResp.responseDisplayText = Utils.b64e(reason) 
         return fuzzResp
      
     def create_fuzz_response(self, fuzzcontextId, fuzzDataCaseId, resp: Response) -> ApiFuzzResponse:
