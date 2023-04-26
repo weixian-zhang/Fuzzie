@@ -145,11 +145,14 @@ class RequestMessageFuzzContextCreator:
         
         rqMsgWithoutComments = self.remove_all_comments(rqMsg)
         
-        rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsgWithoutComments)
+        varValid, varErr, rqMsgWithoutVars, jinjaVariables = self.get_jinja_variables(rqMsgWithoutComments)
+        
+        if not varValid:
+            return False, varErr, [], ''
         
         #set in global variable so that Jinja filter function can access
         self.detectedJinjaVariables = jinjaVariables
-        
+                
         # split request-blocks by delimiter ###
         requestBlocks = rqMsgWithoutVars.strip().split('###')
         
@@ -641,15 +644,17 @@ class RequestMessageFuzzContextCreator:
                 
         return lines
     
-    def get_jinja_variables(self, rqMsg: str) -> tuple([str,str]): 
+    def get_jinja_variables(self, rqMsg: str) -> tuple([bool, str, str,str]): 
         lines = rqMsg.splitlines()
         variables = [x.strip() for x in lines if x.startswith('{%')]
         withoutVar = [x.strip() for x in lines if not x.startswith('{%')]
         
-        vars = '\n'.join(map(str,variables))
-        rqMsgWithoutVars = '\n'.join(map(str,withoutVar))
+        valid, err = self.is_jinja_var_valid(variables)
         
-        return [rqMsgWithoutVars.strip(), vars.strip()]
+        vars = '\n'.join(map(str,variables)).strip()
+        rqMsgWithoutVars = '\n'.join(map(str,withoutVar)).strip()
+        
+        return [valid,err, rqMsgWithoutVars, vars]
     
     def remove_all_comments(self, rqMsg: str) -> str: 
         
@@ -673,6 +678,20 @@ class RequestMessageFuzzContextCreator:
         except Exception as e:
             return False, Utils.errAsText(e),  expr
                 
+    def is_jinja_var_valid(self, varList: list[str]) -> tuple([bool, str]):
+        
+        valid = True
+        
+        for x in varList:
+            if not x.startswith('{%}') and not x.endswith('%}'):
+                return False, 'a variable has to end with %}'
+            
+        try:
+            self.jinjaEnvPrimitive.parse(x)
+        except Exception as e:
+            return False, Utils.errAsText(e)
+        
+        return True, ''
     
     # *** jinja filters and functions
     
