@@ -14,24 +14,33 @@
   "homepage": "https://github.com/weixian-zhang/Fuzzie",
   "license": "MIT",
   "icon": "dist/fuzzie-logo-2.png",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "preview": true,
   "engines": {
     "vscode": "^1.68.0"
   },
   "categories": [
-   "Other","Testing"
+    "Other",
+    "Testing"
   ],
   "keywords": [
-    "fuzzing","fuzzer", "testing", "fuzz", "fuzz test", "security", "REST", "rest", "GraphQL", "graphql", "API", "pentest"
+    "fuzzing",
+    "fuzzer",
+    "testing",
+    "fuzz",
+    "fuzz test",
+    "security",
+    "REST",
+    "rest",
+    "GraphQL",
+    "graphql",
+    "API",
+    "pentest"
   ],
-
-  
   "galleryBanner": {
     "color": "#00FFFF",
     "theme": "light"
   },
-
   "main": "./dist/extension.js",
   "activationEvents": [
     "*",

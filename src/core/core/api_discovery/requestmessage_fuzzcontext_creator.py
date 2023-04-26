@@ -11,7 +11,7 @@ parentFolderOfThisFile = os.path.dirname(Path(__file__).parent)
 sys.path.insert(0, parentFolderOfThisFile)
 sys.path.insert(0, os.path.join(parentFolderOfThisFile, 'models'))
 
-from core.template_helper import TemplateHelper
+from template_helper import TemplateHelper
 
 import re
 import validators

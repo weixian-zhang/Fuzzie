@@ -146,7 +146,7 @@
 		{
 			"label": "npm build extension host",
 			"type": "shell",
-			"command": "npm run compile",
+			"command": "npm version minor; npm run compile",
 			"options": {
 				"cwd": "${workspaceFolder}/src/clients/vscode/"
 			}
@@ -179,6 +179,14 @@
 				// "package fuzzer.pyz",
 				"package webview dist"
 			]
+		},
+		{
+			"label": "vsce version minor",
+			"type": "shell",
+			"command": "npm version minor",
+			"options": {
+				"cwd": "${workspaceFolder}/src/clients/vscode"
+			},
 		}
 		
 	]
