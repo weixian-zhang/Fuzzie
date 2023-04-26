@@ -663,8 +663,11 @@ class WebApiFuzzer:
             if not urlok:
                 return [False, urlerr, hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
             
+            renderedUrl = renderedUrl.replace("\n", "").strip()
+            
             if not Utils.validUrl(renderedUrl):
-                return [False, 'invalid Url', hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
+                return [False, f'invalid Url: {renderedUrl}', hostname, port, hostnamePort, renderedUrl, path, query, resolvedBodyDT, headers, file, gqlVars]
+            
             
             # build Url parts
             parsedUrl = urlparse(renderedUrl)

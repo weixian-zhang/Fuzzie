@@ -678,16 +678,25 @@ class RequestMessageFuzzContextCreator:
         except Exception as e:
             return False, Utils.errAsText(e),  expr
                 
-    def is_jinja_var_valid(self, varList: list[str]) -> tuple([bool, str]):
+    def is_jinja_var_valid(self, vars) -> tuple([bool, str]):
         
+        def has_open_close_tags(var):
+            if not var.startswith('{%') and not var.endswith('%}'):
+                return False
+            return True
+            
         valid = True
         
-        for x in varList:
-            if not x.startswith('{%}') and not x.endswith('%}'):
+        if type(vars) is str:
+            if not has_open_close_tags(vars):
                 return False, 'a variable has to end with %}'
+        else:
+            for x in vars:
+                if not has_open_close_tags(x):
+                    return False, 'a variable has to end with %}'
             
         try:
-            self.jinjaEnvPrimitive.parse(x)
+            self.jinjaEnvPrimitive.parse(vars)
         except Exception as e:
             return False, Utils.errAsText(e)
         

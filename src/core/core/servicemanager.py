@@ -84,9 +84,15 @@ class ServiceManager:
         
         try:
             
+            rqParser = RequestMessageFuzzContextCreator()
+            ok, err = rqParser.is_jinja_var_valid(apiFuzzcontext.templateVariables)
+            
+            if not ok:
+                return False, err
+            
             update_api_fuzz_context(apiFuzzcontext)
             
-            return (True, '')
+            return True, ''
         
         except Exception as e:
             ServiceManager.eventstore.emitErr(e)

@@ -1350,9 +1350,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.apiContextEdit = new ApiFuzzContext();
 
       this.toastSuccess(`${apiFCUpdate.name} updated successfully`, '');
-    }
 
-    this.updateContextSideBarVisible = false;
+      this.updateContextSideBarVisible = false;
+    }
   }
 
   async createNewApiContext() {
