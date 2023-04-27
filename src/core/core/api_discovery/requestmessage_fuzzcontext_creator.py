@@ -107,39 +107,13 @@ class RequestMessageFuzzContextCreator:
         except Exception as e:
             self.eventstore.emitErr(e)
     
-    # request message already contains variables
-    def parse_first_request_msg_as_single_fuzzcaseset(self, rqMsg: str) -> tuple([bool, str, ApiFuzzCaseSet]):
-        
-        if rqMsg == '' or rqMsg.strip() == '':
-            return True, '', []
-        
-        rqMsgWithoutComments = self.remove_all_comments(rqMsg)
-        
-        splittedRqBlocks = rqMsgWithoutComments.strip().split('###')
-        
-        singleRQBlock = ''
-        
-        if len(splittedRqBlocks) > 0:
-            singleRQBlock = splittedRqBlocks[0]
-        
-        if singleRQBlock == '' or singleRQBlock.strip() == '':
-            return True, '', []
-        
-        
-        ok, error, fcsList, _ = self.parse_request_msg_as_fuzzcasesets(singleRQBlock)
-        
-        fcsSingleResult = None
-        if ok and len(fcsList) > 0:
-            fcsResult = fcsList[0]
-            
-        return True, '', fcsResult
         
     # request message already contains variables
     def parse_request_msg_as_fuzzcasesets(self, rqMsg: str) -> tuple([bool, str, list[ApiFuzzCaseSet], str]):
 
 
         if rqMsg == '' or rqMsg.strip() == '':
-            return True, '', []
+            return True, '', [], ''
         
         fcSets = []
         

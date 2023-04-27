@@ -85,7 +85,9 @@ class ServiceManager:
         try:
             
             rqParser = RequestMessageFuzzContextCreator()
-            ok, err = rqParser.get_jinja_variables(apiFuzzcontext.templateVariables)
+            ok,err, _, vars = rqParser.get_jinja_variables(apiFuzzcontext.templateVariables)
+            
+            apiFuzzcontext.templateVariables = vars
             
             if not ok:
                 return False, err
@@ -176,12 +178,14 @@ class ServiceManager:
                 if rq == '':
                     continue
                 
-                #rq = TemplateHelper.add_global_vars(tpl=rq, vars= tplVariables)
+                rq = TemplateHelper.add_global_vars(tpl=rq, vars= tplVariables)
                 
                 # parse only first request-msg-block even though at FuzzCaseSet level user may accidentally add more than 1 rq-msg
-                ok, err, singleFCS = rqParser.parse_first_request_msg_as_single_fuzzcaseset(rq)
+                ok, err, fcs, _ = rqParser.parse_request_msg_as_fuzzcasesets(rq)
                 
-                if ok and singleFCS != None:
+                if ok and len(fcs)  >= 1:
+                    
+                    singleFCS = fcs[0]
                     
                     parsedRequestMsg = singleFCS.requestMessage
                     

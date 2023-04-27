@@ -56,9 +56,7 @@ class WebApiFuzzer:
                     # bearerToken = '',
                     # apikeyHeader = '',
                     # apikey = '') -> None:
-        
-        #request config
-        requests.adapters.DEFAULT_RETRIES = 1
+
         
         # supports remember Set-Cookie from response
         #cookie example
