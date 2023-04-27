@@ -1351,6 +1351,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
 
       this.toastSuccess(`${apiFCUpdate.name} updated successfully`, '');
 
+      await this.getFuzzcontexts()
+
       this.updateContextSideBarVisible = false;
     }
   }
