@@ -194,10 +194,10 @@ class RequestMessageFuzzContextCreator:
             # full url
             url = f'{urlWithoutQS}{qs}'.strip()
             
-            #urlWithVar = TemplateHelper.add_global_vars(tpl=url, vars=self.detectedJinjaVariables)
+            urlWithVar = TemplateHelper.add_global_vars(tpl=url, vars=self.detectedJinjaVariables)
             
             # render url template
-            urlOK, urlErr, urlRendered = self.render_jinja_expr_with_eval_func(url)
+            urlOK, urlErr, urlRendered = self.render_jinja_expr_with_eval_func(urlWithVar)
             if not urlOK:
                 return False, urlErr, [], ''
             
@@ -226,15 +226,15 @@ class RequestMessageFuzzContextCreator:
                         keyVal = key
                         hVal = headers[key]
                         
-                        #headerKeyWithVar = TemplateHelper.add_global_vars(tpl=keyVal, vars=self.detectedJinjaVariables)
+                        headerKeyWithVar = TemplateHelper.add_global_vars(tpl=keyVal, vars=self.detectedJinjaVariables)
                         
-                        hKeyOK, hKeyErr, evalHeaderKey = self.render_jinja_expr_with_eval_func(keyVal)
+                        hKeyOK, hKeyErr, evalHeaderKey = self.render_jinja_expr_with_eval_func(headerKeyWithVar)
                         if not hKeyOK:
                             return hKeyOK, f'Header key parsing error: {Utils.errAsText(hKeyErr)}', [], ''
                         
-                        #headerValueWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
+                        headerValueWithVar = TemplateHelper.add_global_vars(tpl=hVal, vars=self.detectedJinjaVariables)
                         
-                        hValOK, hValErr, evalHeaderValue = self.render_jinja_expr_with_eval_func(hVal)
+                        hValOK, hValErr, evalHeaderValue = self.render_jinja_expr_with_eval_func(headerValueWithVar)
                         if not hValOK:
                             return hValOK, f'Header value parsing error: {Utils.errAsText(hValErr)}', [], ''
                         
@@ -258,14 +258,14 @@ class RequestMessageFuzzContextCreator:
                    
                    if ok:
                        
-                        #gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
+                        gqlBody = TemplateHelper.add_global_vars(tpl=gqlBody, vars=self.detectedJinjaVariables)
                         
                         bok, berr, renderedBody = self.render_jinja_expr_with_eval_func(gqlBody)
                         
                         if not bok:
                             return False, berr, [], ''
                         
-                        #graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
+                        graphqlVariable = TemplateHelper.add_global_vars(tpl=graphqlVariable, vars=self.detectedJinjaVariables)
                         
                         vok, verr, renderedGQLVar = self.render_jinja_expr_with_eval_func(graphqlVariable)
                         
@@ -283,11 +283,11 @@ class RequestMessageFuzzContextCreator:
                     
                     body = self.get_body_as_one_str(multilineBlock)
                 
-                    #bodyWithVars = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
+                    bodyWithVar = TemplateHelper.add_global_vars(tpl=body, vars=self.detectedJinjaVariables)
                     
                     # jinja wil execute all filters and file-functions bind to image, pdf, file and myfile
                     # if body contains file wordlist, then body will be empty
-                    tpl = self.jinjaEnvBody.from_string(body)
+                    tpl = self.jinjaEnvBody.from_string(bodyWithVar)
                     renderedBody = tpl.render(TemplateHelper.jinja_primitive_wordlists()) #tpl.render(self.jinja_primitive_wordlists())
                     renderedBody = renderedBody.strip()
                     
@@ -646,13 +646,22 @@ class RequestMessageFuzzContextCreator:
     
     def get_jinja_variables(self, rqMsg: str) -> tuple([bool, str, str,str]): 
         lines = rqMsg.splitlines()
-        variables = [x.strip() for x in lines if x.startswith('{%')]
-        withoutVar = [x.strip() for x in lines if not x.startswith('{%')]
+        variables = [x.strip() for x in lines if x.strip().startswith('{%')]
+        withoutVar = [x.strip() for x in lines if not x.strip().startswith('{%')]
         
-        valid, err = self.is_jinja_var_valid(variables)
-        
-        vars = '\n'.join(map(str,variables)).strip()
+        vars = '\n'.join(map(str, variables)).strip()
         rqMsgWithoutVars = '\n'.join(map(str,withoutVar)).strip()
+        
+        # extract all variables
+        varsFinalResult = []
+        matches = re.findall(r"{%(.+?)%}", vars)
+        for x in matches:
+            varsFinalResult.append(f'{{% {x} %}}')
+        
+        # parse variables in jinja env to check variable validity
+        valid, err = self.is_jinja_var_valid(varsFinalResult)
+        
+        vars = '\n'.join(map(str, varsFinalResult)).strip()
         
         return [valid,err, rqMsgWithoutVars, vars]
     
@@ -679,21 +688,6 @@ class RequestMessageFuzzContextCreator:
             return False, Utils.errAsText(e),  expr
                 
     def is_jinja_var_valid(self, vars) -> tuple([bool, str]):
-        
-        def has_open_close_tags(var):
-            if not var.startswith('{%') and not var.endswith('%}'):
-                return False
-            return True
-            
-        valid = True
-        
-        if type(vars) is str:
-            if not has_open_close_tags(vars):
-                return False, 'a variable has to end with %}'
-        else:
-            for x in vars:
-                if not has_open_close_tags(x):
-                    return False, 'a variable has to end with %}'
             
         try:
             self.jinjaEnvPrimitive.parse(vars)
@@ -784,11 +778,11 @@ class RequestMessageFuzzContextCreator:
         try:
             escapedContent = content.replace('"', '\\"')
             
-            #escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
+            escapedContent = TemplateHelper.add_global_vars(tpl=escapedContent, vars=self.detectedJinjaVariables)
         
             ok, err, output = self.render_jinja_expr_with_eval_func(escapedContent)
             
-            #filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
+            filename = TemplateHelper.add_global_vars(tpl=filename, vars=self.detectedJinjaVariables)
             
             fOK, fErr, renderedFilename = self.render_jinja_expr_with_eval_func(filename)
             
