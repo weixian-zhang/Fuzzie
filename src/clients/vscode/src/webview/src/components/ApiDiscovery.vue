@@ -309,7 +309,7 @@
 
                 <div class="mb-2">
                   <v-textarea 
-                    label="Request Message" 
+                    label="Variables Only" 
                     shaped
                     variant="outlined"
                     density="compact"
@@ -1352,6 +1352,8 @@ export default class ApiDiscovery extends Vue.with(Props) {
       this.toastSuccess(`${apiFCUpdate.name} updated successfully`, '');
 
       await this.getFuzzcontexts()
+
+      this.eventemitter.emit('apidiscovery.variables.updated', apiFCUpdate.fuzzcontextId)
 
       this.updateContextSideBarVisible = false;
     }

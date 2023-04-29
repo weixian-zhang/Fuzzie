@@ -446,7 +446,7 @@ def get_caseSets_with_runSummary(fuzzcontextId, fuzzCaseSetRunId):
                                 ApiFuzzContextTable.columns.templateVariables
                                 )
                         .filter(ApiFuzzCaseSetTable.c.fuzzcontextId == fuzzcontextId)
-                        .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == ApiFuzzCaseSetTable.c.fuzzcontextId)
+                        .join(ApiFuzzContextTable, ApiFuzzContextTable.c.Id == fuzzcontextId) #ApiFuzzCaseSetTable.c.fuzzcontextId)
                         
                         .all()
                      )

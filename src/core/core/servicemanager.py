@@ -159,7 +159,7 @@ class ServiceManager:
         
         
     
-    def save_updated_fuzzcasesets(self, fuzzcontextId: str, tplVariables:str, fcsList: list):
+    def save_updated_fuzzcasesets(self, fuzzcontextId: str, tplVariables:str, fcsList: list, saveAll = False):
         
         if fcsList is None or len(fcsList) == 0:
             return (True, '')
@@ -230,6 +230,7 @@ class ServiceManager:
                 
         except Exception as e:
             return (False, Utils.errAsText(e))
+        
     
     # used internally when fuzzing occurs to get fuzzcontext to fuzz
     def get_fuzzcontext(self, Id) -> ApiFuzzContext:

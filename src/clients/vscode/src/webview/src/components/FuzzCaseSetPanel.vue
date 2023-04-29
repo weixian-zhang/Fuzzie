@@ -475,6 +475,8 @@ class Props {
     this.eventemitter.on('fuzz.update.casesetrunsummary', this.onFuzzingUpdateRunSummary);
 
     this.eventemitter.on('fuzzer.notready', this.onFuzzerNotReady);
+
+    this.eventemitter.on('apidiscovery.variables.updated', this.onVariablesUpdated);
   }
 
   async onFuzzStart(data) {
@@ -527,8 +529,18 @@ class Props {
     });
   }
 
+  async onVariablesUpdated(fuzzcontextId) {
+    
+    // get latest fuzzcasesets in order to get latest updatedvariables
+    await this.getFuzzCaseSet_And_RunSummaries(fuzzcontextId, '').then(async (val) => {
+      this.isTableDirty = true;
+      await this.saveFuzzCaseSets(false);
+      this.isTableDirty = false;
+    });
+  }
 
-  async saveFuzzCaseSets() {
+
+  async saveFuzzCaseSets(refreshFCS=true) {
 
     if(!this.isTableDirty || this.fcsRunSums == undefined || this.fcsRunSums.length == 0) {
       this.toastInfo('no changes to save');
@@ -565,8 +577,10 @@ class Props {
         {
           // get latest updated fuzzcontext
           //this.eventemitter.emit("onFuzzCaseSetUpdated", this.fuzzContextId);
-
-          await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
+          if (refreshFCS) {
+            await this.getFuzzCaseSet_And_RunSummaries(this.selectedFuzzContextId, '');
+          }
+          
 
           this.isTableDirty = false;
           
