@@ -5,8 +5,9 @@ Fuzzie is a simple grey-box fuzz testing tool available as VSCode extension for 
 The ability to fuzz test right in VSCode brings about several benefits:
 
 * As early as while debugging APIs in VSCode running on localhost, you can concurrently use Fuzzie to fuzz test your APIs.  
-  As Fuzzie also sends random unpredictable data, you can catch common bugs like unhandled input parameters early in development.
+  As Fuzzie also sends random unpredictable data, you can catch common erros from unhandled input parameters early.
 * fuzz tests guided by an intuitive WebView
+* able to fuzz test any parts of a HTTP message by creating your request messages with built-in wordlist, functions and variables
 * Being available in VSCode allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
 ### *Things to Note    
