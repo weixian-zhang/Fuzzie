@@ -132,8 +132,33 @@ Type = function acts on your provided custom data
 | {{ <br>'single string to be base64 encoded' &#124; <b>base64e</b> }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; <b>base64e</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 | {{ <br>'base64 encoded string to be decoded' &#124; <b>base64d</b> }}<br> <br>{{ ['list', 'of', 'encoded', 'items', 'to be base64 decoded'] &#124; <b>base64d</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
 
-<br>
-<br>
+<br> 
+
+#### Variables  
+
+starting v0.15, Fuzzie supports variables  
+
+```
+{% set url = 'https://httpbin.org' %}
+{% set name = 'Kean' %}
+{% set address = '182 Cecil St, #13-01 069547' %}
+
+###
+
+GET {{ url }}/get
+?name={{ name }}
+&address={{ address }}
+Content-Type: application/xml
+Authorization: {{ string }}
+CustomHeader-1: {{ digit }}
+CustomHeader-2: {{ filename }}
+CustomHeader-3: {{ username }}
+
+```
+
+Edit variables in API Context  
+![image](https://user-images.githubusercontent.com/43234101/235344075-ce5a921e-3945-44d6-a644-6639eea5e5db.png)
+
 
 #### 2.1 Request Message Examples  
 
