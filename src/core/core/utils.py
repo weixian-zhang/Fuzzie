@@ -150,13 +150,17 @@ class Utils:
         except Exception as e:
             return False, expr
     
-
+    def try_escape_unicode_for_str(data: str):
+        try:
+            return data.encode('utf-8').decode('unicode-escape')
+        except Exception as e:
+            return data.encode('utf-8')
     
     # first decode by latin-1 then try utf-8
     def try_decode_bytes_string(content):
         
         if not isinstance(content, bytes):
-            return content
+            return Utils.try_escape_unicode_for_str(content)  #ensure certain chars are encoded to prevent requests throw error
         
         lok, latinContent = Utils.try_decode_latin1(content)
         if lok:
@@ -175,15 +179,11 @@ class Utils:
         
     def try_decode_utf8(content):
         try:
-            return True, content.decode('UTF-8')
+            return True, content.decode('UTF-8', 'ignore')
         except Exception as e:
             return False, content
         
-    def try_escape_unicode_for_str(data: str):
-        try:
-            return data.encode('utf-8').decode('unicode-escape')
-        except Exception as e:
-            return data.encode('utf-8')
+
         
     
     def sha256(value) -> str:

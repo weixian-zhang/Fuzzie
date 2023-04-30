@@ -1146,7 +1146,7 @@ export default class ApiDiscovery extends Vue.with(Props) {
     if(rqMsg == ''){
       return;
     }
-    const [ok, error] = await this.webclient.parseRequestMessage(btoa(rqMsg));
+    const [ok, error] = await this.webclient.parseRequestMessage(btoa(unescape(encodeURIComponent(rqMsg))));
 
     if(!ok) {
       this.requestMsgHasError = true;
@@ -1383,29 +1383,9 @@ export default class ApiDiscovery extends Vue.with(Props) {
           return;
         }
 
-        // if(this.newApiContext.openapi3Url != '') {
-        //   const [ok, error, data] = await this.fuzzermanager.httpGetOpenApi3FromUrl(this.newApiContext.openapi3Url)
-
-        //   if(!ok)
-        //   {
-        //     this.toastError(error, 'Trying to get OpenApi3 spec by Url');
-
-        //     return;
-        //   }
-
-        //   this.newApiContext.openapi3Content = data;
-
-        // }
-
-        // if(this.newApiContext.openapi3Content == '' && this.newApiContext.requestTextContent == '')
-        // {
-        //   this.toastError('need either OpenAPI 3 spec or Request Text to create context', 'API Discovery');
-        //   return;
-        // }
-      
         const apifc: ApiFuzzContext = Utils.copy(this.newApiContext);
-        apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(apifc.openapi3Content) : '';
-        apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(apifc.requestTextContent) : '';
+        apifc.openapi3Content = apifc.openapi3Content != '' ? btoa(unescape(encodeURIComponent(apifc.openapi3Content))) : '';
+        apifc.requestTextContent = apifc.requestTextContent != '' ? btoa(unescape(encodeURIComponent(apifc.requestTextContent))) : '';
 
         const result =  await this.fuzzermanager.newFuzzContext(apifc);
         const ok = result['ok'];

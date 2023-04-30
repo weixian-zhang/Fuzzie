@@ -75,7 +75,8 @@ class WebApiFuzzer:
         self.apikeyHeader = apifuzzcontext.apikeyHeader,
         self.apikey = apifuzzcontext.apikey
         
-        self.httpTimeoutInSec = 3.0
+        self.httpTimeoutInSec = 4.0
+        self.httpReadTimeoutInSec = 10.0
         self.fuzzCaseSetRunId = shortuuid.uuid()
         
         self.totalRunsForAllCaseSets = 0
@@ -367,7 +368,7 @@ class WebApiFuzzer:
                     session.mount('https://', adapter)
                     session.mount('http://', adapter)                    
                    
-                    resp = session.send(prepReq, timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False) #timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
+                    resp = session.send(prepReq, timeout=(self.httpTimeoutInSec,self.httpReadTimeoutInSec), allow_redirects=False, verify=False) #timeout=self.httpTimeoutInSec, allow_redirects=False, verify=False)
                 
                 except Exception as e:
                     
@@ -678,7 +679,7 @@ class WebApiFuzzer:
             
             okbody, errbody, resolvedBodyDT = self.corporaContext.resolve_fuzzdata(bodyDT)
             
-            _, resolvedBodyDT = Utils.try_decode_utf8(resolvedBodyDT)
+            resolvedBodyDT = Utils.try_decode_bytes_string(resolvedBodyDT)
             
             if not okbody:
                 return [False, errbody, hostname, port, hostnamePort, url, path, query, resolvedBodyDT, headers, file, gqlVars]
