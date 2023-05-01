@@ -25,7 +25,9 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * [Launching Fuzzie](#launching-fuzzie)
 * [Using Fuzzie](#using-fuzzie )
 * [How to write HTTP Request Message ](#2-writing-http-request-messages)  
+  * [Variable](#variables)
   * [Wordlist Types](#wordlist-types)
+  * [Functions](#functions)
 * [More examples of Request Messages](#21-request-message-examples)
 
 <br /> 
@@ -103,38 +105,7 @@ CustomHeader-3:$ALOC$
 User-Agent:fuzzie
 ```
 
-#### Wordlist Types
-The following are built-in wordlist-types, more will be added in future  
-Type = wordlist provides data  
-Type = function acts on your provided custom data
-| WordList Type | Is Primitive wordlist type | file upload | Description | Type |
-| ------------- |-------------| -------------| ------------- | ------------- |
-| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | wordlist |
-| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) | wordlist |
-| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist | wordlist |
-| {{ bool }} | yes | no | boolean values and something naughty | wordlist |
-| {{ digit }} | yes | no | Integers, floats and something naughty | wordlist |
-| {{ char }} | yes | no | naughty chars | wordlist |
-| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
-| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | wordlist |
-| {{ file }} |  no | yes | naughty [payload](https://github.com/danielmiessler/SecLists/tree/master/Payloads) from danielmiessle/seclist |
-| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  | wordlist |
-| {{ datetime }} | yes | no | date + time | wordlist |
-| {{ date }} | yes | no | date only | wordlist |
-| {{ time }} | yes | no | time only | wordlist |
-| {{ username }} | yes | no | hacked [usernames](https://github.com/danielmiessler/SecLists/tree/master/Usernames) from danielmiessler seclist | wordlist |
-| {{ password }} | yes | no | hacked [password](https://github.com/danielmiessler/SecLists/tree/master/Passwords) from danielmiessler seclist | wordlist |
-| {{ filename }} | yes | no | random file name and extensions |  wordlist |
-| {{ httppath }} | yes | no | discover [directories and files](https://github.com/danielmiessler/SecLists/tree/master/Discovery) from danielmiessler seclist |  wordlist |
-| {{ numrange(start, end) }} | yes | no | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 | function |
-| {{ 'a quick brown fox' &#124; <b>mutate</b> }} | yes | no | input will be mutated | function |
-| {{ ['a', 'list', 'of', 'items' ]  &#124; <b>random</b> }} | yes | no | returns a random item from your list | function |
-| {{ <br>'single string to be base64 encoded' &#124; <b>base64e</b> }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; <b>base64e</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
-| {{ <br>'base64 encoded string to be decoded' &#124; <b>base64d</b> }}<br> <br>{{ ['list', 'of', 'encoded', 'items', 'to be base64 decoded'] &#124; <b>base64d</b> }}<br>  | yes | no | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it | function |
-
-<br> 
-
-#### Variables  
+### Variables  
 
 starting at version 0.15-preview, Fuzzie supports Variables  
 
@@ -158,6 +129,42 @@ CustomHeader-3: {{ username }}
 
 Edit variables in API Context  
 ![image](https://user-images.githubusercontent.com/43234101/235344075-ce5a921e-3945-44d6-a644-6639eea5e5db.png)
+
+### Wordlist Types
+The following are built-in wordlist-types, more will be added in future  
+Type = wordlist provides data  
+Type = function acts on your provided custom data
+| WordList Type | Is Primitive wordlist type | file upload | Description |
+| ------------- |-------------| -------------| ------------- |
+| {{ string }} |  yes | no | naughty strings from [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | 
+| {{ xss }} | yes | no | cross-site scripting strings from [danielmiessle/seclist](https://github.com/danielmiessler/SecLists) |
+| {{ sqlinject }} | yes | no | sql-injection strings from danielmiessle/seclist |
+| {{ bool }} | yes | no | boolean values and something naughty |
+| {{ digit }} | yes | no | Integers, floats and something naughty |
+| {{ char }} | yes | no | naughty chars |
+| {{ image }} |  no | yes | DALL-E images and a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist | 
+| {{ pdf }} |  no | yes | Fuzzie generated fake PDF with a mix of naughty payloads (same as {{ file }} ) from danielmiessle/seclist |
+| {{ file }} |  no | yes | naughty [payload](https://github.com/danielmiessler/SecLists/tree/master/Payloads) from danielmiessle/seclist |
+| <br>{{<br> '<br>custom file content<br>'<br> &#124; myfile('filename.csv')<br> }} | no | yes | Custom file content within single quite '...' are uploaded as file<br>{{<br>'<br>this is a file content<br>{{string}} {{username}}<br>'<br> &#124; myfile("data.json")<br>}}  |
+| {{ datetime }} | yes | no | date + time | 
+| {{ date }} | yes | no | date only |
+| {{ time }} | yes | no | time only |
+| {{ username }} | yes | no | hacked [usernames](https://github.com/danielmiessler/SecLists/tree/master/Usernames) from danielmiessler seclist |
+| {{ password }} | yes | no | hacked [password](https://github.com/danielmiessler/SecLists/tree/master/Passwords) from danielmiessler seclist 
+| {{ filename }} | yes | no | random file name and extensions |  wordlist |
+| {{ httppath }} | yes | no | discover [directories and files](https://github.com/danielmiessler/SecLists/tree/master/Discovery) from danielmiessler seclist |
+
+### Functions  
+
+| WordList Type | Description |
+| ------------- |-------------|
+| {{ numrange(start, end) }} | increment number by 1 from start to end. <br>Example numrange(1, 5000): result is 1, 2, 3,...4999, 5000 |
+| {{ 'a quick brown fox' &#124; <b>mutate</b> }} | input will be mutated |
+| {{ ['a', 'list', 'of', 'items' ]  &#124; <b>random</b> }} | returns a random item from your list |
+| {{ <br>'single string to be base64 encoded' &#124; <b>base64e</b> }}<br> <br>{{ ['list', 'of', 'items', 'to be base64 encoded'] &#124; <b>base64e</b> }}<br>  | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it |
+| {{ <br>'base64 encoded string to be decoded' &#124; <b>base64d</b> }}<br> <br>{{ ['list', 'of', 'encoded', 'items', 'to be base64 decoded'] &#124; <b>base64d</b> }}<br>  | base64 encodes your input, or if a list is supplied, randomly pick an item and encodes it |
+
+<br> 
 
 
 #### 2.1 Request Message Examples  
