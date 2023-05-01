@@ -136,7 +136,7 @@ Type = function acts on your provided custom data
 
 #### Variables  
 
-starting v0.15, Fuzzie supports variables  
+starting at version 0.15-preview, Fuzzie supports Variables  
 
 ```
 {% set url = 'https://httpbin.org' %}
