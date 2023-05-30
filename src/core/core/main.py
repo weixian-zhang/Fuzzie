@@ -142,8 +142,8 @@ if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name
         # check if there is existing fuzzer process already running
         if not is_port_in_use(webserverPort):
             
-            # executor =  ThreadPoolExecutor(max_workers=2)
-            # executor.submit(load_corpora_background())
+            executor =  ThreadPoolExecutor(max_workers=2)
+            executor.submit(load_corpora_background())
             
             start()   
     
