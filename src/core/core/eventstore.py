@@ -11,7 +11,6 @@ from collections import deque
 from threading import Thread
 import time
 from starlette_graphene3 import WebSocket, WebSocketState
-
 class MessageLevel:
     INFO = "INFO"
     ERROR = "ERROR"
