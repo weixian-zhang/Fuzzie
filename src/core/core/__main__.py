@@ -5,10 +5,6 @@ Usage:
     main.py fuzz [--openapi-url=<url>] [--openapi-path=<filepath>] [--rt=<request-text-string>] [--rt-path=<request-text-path>] 
 '''
 
-#https://stackoverflow.com/questions/60899741/python-graphene-subscription-server
-# https://github.com/graphql-python/graphql-ws
-# https://github.com/graphql-python/graphql-ws/blob/master/examples/flask_gevent/app.py
-
 from multiprocessing import Event
 from docopt import docopt
 
@@ -37,12 +33,11 @@ wsEventSender.start()
 fuzztestResultSaver = BackgroundTask_FuzzTest_Result_Saver()
 fuzztestResultSaver.start()
 
-async def server_error(request, exc):
+async def on_webserver_error(request, exc):
     return JSONResponse(content={"error": 500}, status_code=exc.status_code)
 
 exception_handlers = {
-    #404: not_found,
-    500: server_error
+    500: on_webserver_error
 }
 
 app = Starlette(exception_handlers=exception_handlers)
@@ -53,6 +48,14 @@ app.add_middleware(
     allow_headers=["*"],
     allow_methods=["*"],
 )
+
+@app.on_event("startup")
+def on_webserver_startup():
+    eventstore.emitInfo('fuzzer web server started')
+    
+@app.on_event("shutdown")
+def on_webserver_startup():
+    eventstore.emitInfo('fuzzer web server shutting down')
 
 @app.websocket_route("/")
 class WebSocketServer(WebSocketEndpoint):
@@ -80,11 +83,8 @@ class WebSocketServer(WebSocketEndpoint):
             eventstore.emitErr(e)
         
 
-
 # init graphql server
 app.mount("/graphql", GraphQLApp(schema, on_get=make_graphiql_handler()))
-
-eventstore.emitInfo('websocket server initialized')
 
 host='localhost'
 webserverPort = 50001
@@ -129,9 +129,8 @@ def start():
                         # ssl_certfile=".\certs\localhost+2.pem"
                         )
             
-            eventstore.emitInfo("GraphQL server shutting down")
         else:
-            eventstore.emitInfo('fuzzer started')
+            eventstore.emitInfo('fuzzer started without web server')
             
     except Exception as e:
         eventstore.emitErr(e)
@@ -143,8 +142,8 @@ if __name__ == "__main__" or __name__ == "main": #__name__ == "core.main": #name
         # check if there is existing fuzzer process already running
         if not is_port_in_use(webserverPort):
             
-            executor =  ThreadPoolExecutor(max_workers=2)
-            executor.submit(load_corpora_background())
+            # executor =  ThreadPoolExecutor(max_workers=2)
+            # executor.submit(load_corpora_background())
             
             start()   
     

@@ -1,4 +1,4 @@
-'''Fuzzie EventStore'''
+
 import logging
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 from utils import Utils
@@ -6,17 +6,11 @@ from enum import Enum
 from multiprocessing import Event
 import jsonpickle
 from  datetime import datetime
-# import asyncio
-# import nest_asyncio
 from pubsub import pub
 from collections import deque
 from threading import Thread
 import time
 from starlette_graphene3 import WebSocket, WebSocketState
-
-# nest_asyncio.apply()
-
-
 
 class MessageLevel:
     INFO = "INFO"
