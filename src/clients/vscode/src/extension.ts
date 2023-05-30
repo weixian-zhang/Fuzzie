@@ -34,7 +34,7 @@ var fuzzerStartState = FuzzerStartState.NotStarted;
 
 var _pythonProcess: cp.ChildProcessWithoutNullStreams;
 
-const fuzzerPackageName = "fuzzie-fuzzer.zip";
+const fuzzerPackageName = "main.py"; //"fuzzie-fuzzer.zip";
 
 
 // this method is called when VSCode starts
@@ -67,40 +67,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	_vscEHLogger.log(`starting fuzzer`);
 	
-
-		// const commands = await vscode.commands.getCommands(true);
-
-		// if (commands.indexOf('fuzzie.openwebview') == -1)
-		// {
-		// 	context.subscriptions.push(   
-
-		// 		vscode.commands.registerCommand(
-		// 			'fuzzie.openwebview', () => 
-		// 				{
-		// 					VuejsPanel.createOrShow(context,_vscEHLogger, _webviewLogger, context.extensionUri.path);
-		// 				}
-		// 		)
-		// 	);
-
-		// 	stateManager = new StateManager(context);
-		
-		// 	_vscEHLogger.log('Fuzzie is initializing');
-		
-		// 	appcontext = new AppContext();
-		
-		// 	initFuzzerPYZPath(context);
-		
-		// 	startFuzzer();
-		
-		// 	_vscEHLogger.log(`Fuzzer file path detected at ${appcontext.fuzzerPYZFilePath}`);
-		
-		// 	_vscEHLogger.log(`starting fuzzer`);
-		// }
-		
-		
-		
-	
-	
 }
 
 export async function deactivate(context: vscode.ExtensionContext) {
@@ -109,30 +75,30 @@ export async function deactivate(context: vscode.ExtensionContext) {
 	_vscEHLogger.log('Fuzzie webview is deactivated and fuzzer engine is shut down');
 }
 
-async function unzipAndRunFuzzer() {
-	// directory exists means fuzzer-fuzzie.zip has been uncompressed, then ignore unzhip process
-	if (!fs.existsSync(appcontext.fuzzerExtractToPath)) {
-		fs.mkdirSync(appcontext.fuzzerExtractToPath);
-	}
+// async function unzipAndRunFuzzer() {
+// 	// directory exists means fuzzer-fuzzie.zip has been uncompressed, then ignore unzhip process
+// 	if (!fs.existsSync(appcontext.fuzzerPath)) {
+// 		fs.mkdirSync(appcontext.fuzzerPath);
+// 	}
 
-	if(await isEmptyDir(appcontext.fuzzerExtractToPath)) {
+// 	if(await isEmptyDir(appcontext.fuzzerPath)) {
 
-		_vscEHLogger.log(`unzipping fuzzer at ${appcontext.fuzzerPYZFilePath}`);
+// 		_vscEHLogger.log(`unzipping fuzzer at ${appcontext.fuzzerPYZFilePath}`);
 
-		fs.createReadStream(appcontext.fuzzerPYZFilePath)
-		.pipe(unzip.Extract({ path: appcontext.fuzzerDistFolder }))
-		.on('error', (error)=>{
-			_vscEHLogger.error(`error while unzipping fuzzer package: ${error}`);
-		})
-		.on('finish',()=>{
-			_vscEHLogger.log(`fuzzer package unzipped at ${appcontext.fuzzerExtractToPath}`);
-			startFuzzer();
-		})
-	}
-	else {
-		startFuzzer();
-	}
-}
+// 		fs.createReadStream(appcontext.fuzzerPYZFilePath)
+// 		.pipe(unzip.Extract({ path: appcontext.fuzzerDistFolder }))
+// 		.on('error', (error)=>{
+// 			_vscEHLogger.error(`error while unzipping fuzzer package: ${error}`);
+// 		})
+// 		.on('finish',()=>{
+// 			_vscEHLogger.log(`fuzzer package unzipped at ${appcontext.fuzzerPath}`);
+// 			startFuzzer();
+// 		})
+// 	}
+// 	else {
+// 		startFuzzer();
+// 	}
+// }
 
 async function isEmptyDir(path) {  
     try {
@@ -158,7 +124,7 @@ function startFuzzer() {
 
 		_vscEHLogger.log('spawning fuzzer child process', 'VSC');
 
-		_pythonProcess = cp.spawn("python" , [appcontext.fuzzerExtractToPath, "webserver", "start"], spawnOptions);
+		_pythonProcess = cp.spawn("python" , [appcontext.fuzzerPath, "webserver", "start"], spawnOptions);
 		
 		const pid = _pythonProcess.pid;
 
@@ -198,10 +164,6 @@ async function onFuzzerExit() {
 	stateManager.set('fuzzer.processid', undefined);
 }
 
-// async function hardResetFuzzerIfExists() {
-// 	killFuzzerProcess();
-// 	startFuzzer();
-// }
 
 function killFuzzerProcess() {
 
@@ -210,33 +172,19 @@ function killFuzzerProcess() {
 		_pythonProcess.kill();
 		_pythonProcess = undefined;
 	}
-
-	// const pid = stateManager.get('fuzzer.processid');
-	
-	// _vscEHLogger.log(`killing fuzzer process id ${pid}`, 'VSC')
-
-	// if(pid != undefined) {
-	// 	_vscEHLogger.log(`taskkill fuzzer process id ${pid}`, 'VSC')
-
-	// 	cp.spawn("taskkill", ["/pid", pid.toString(), '/f', '/t']);		 //on Windows
-
-	// 	_vscEHLogger.log(`process.kill fuzzer process id ${pid}`, 'VSC')
-
-	// 	process.kill(+pid);  		// on linux platform
-												
-	// 	stateManager.set('fuzzer.processid', undefined);
-	// }
 }
 
 function initFuzzerPYZPath(vscodeContext: vscode.ExtensionContext) {
+	
 	var distFuzzerFolder = "dist/fuzzer";
 	//var fuzzerPYZFileName : string = "fuzzie-fuzzer";
 	var distFuzzerFolderPath = path.join(vscodeContext.extensionPath, distFuzzerFolder);
-	var fuzzerPYZFilePath = path.join(distFuzzerFolderPath, fuzzerPackageName);
 
-	appcontext.fuzzerExtractToPath = path.join(distFuzzerFolderPath, "fuzzie-fuzzer");;
+	appcontext.fuzzerPath = path.join(distFuzzerFolderPath, fuzzerPackageName);
+
+	//appcontext.fuzzerPath = path.join(distFuzzerFolderPath, "fuzzie-fuzzer");;
 	//appcontext.fuzzerUnzippedFolder = path.join(distFuzzerFolderPath, "fuzzie-fuzzer");
-	appcontext.fuzzerPYZFilePath = fuzzerPYZFilePath;
+	//appcontext.fuzzerPYZFilePath = fuzzerPYZFilePath;
 	appcontext.fuzzerDistFolder = distFuzzerFolderPath;
 }
 

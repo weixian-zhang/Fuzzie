@@ -3,7 +3,7 @@ import {ChildProcess} from "child_process";
 
 export class AppContext
 {
-    fuzzerExtractToPath = ""
+    fuzzerPath = ""
     fuzzerDistFolder: string = "";
     fuzzerUnzippedFolder = "";
     fuzzerPYZFilePath: string = "";

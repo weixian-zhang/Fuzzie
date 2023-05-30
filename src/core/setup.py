@@ -23,11 +23,11 @@ with open(requirementTxtPath, 'rb') as f:
     
 setup(
    name='Fuzzie',
-   version='1.0',
+   version='0.16.0',
    description='',
    license="MIT",
    long_description='',
-   author='Man Foo',
+   author='WXZ',
    author_email='',
    url="",
    data_files=[sqlitedb], #, localhost_crt, localhost_key],     #contains sqlite.db and other data files
@@ -38,8 +38,8 @@ setup(
            "dist",
            ".git",
            ".gitignore",
-           "Fuzzie.egg-info",
-           "__pycache__"
+           "Fuzzie.egg-info"
+           #"__pycache__"
            ]
        
     ),  #same as name

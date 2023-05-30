@@ -96,12 +96,12 @@ class BackgroundTask_FuzzTest_Result_Saver(threading.Thread):
         summary.fuzzCaseSetId = fuzzCaseSetId
         summary.fuzzCaseSetRunId = fuzzCaseSetRunId
         summary.fuzzcontextId = fuzzcontextId
-        summary.http2xx = runSumStatsDict['http2xx']
-        summary.http3xx = runSumStatsDict['http3xx']
-        summary.http4xx = runSumStatsDict['http4xx']
-        summary.http5xx = runSumStatsDict['http5xx']
-        summary.completedDataCaseRuns = runSumStatsDict['completedDataCaseRuns']
-        summary.totalDataCaseRunsToComplete = runSumStatsDict['totalDataCaseRunsToComplete']
+        summary.http2xx = runSumStatsDict['http2xx'] if 'http2xx' in runSumStatsDict else 0
+        summary.http3xx = runSumStatsDict['http3xx'] if 'http3xx' in runSumStatsDict else 0
+        summary.http4xx = runSumStatsDict['http4xx'] if 'http4xx' in runSumStatsDict else 0
+        summary.http5xx = runSumStatsDict['http5xx'] if 'http5xx' in runSumStatsDict else 0
+        summary.completedDataCaseRuns = runSumStatsDict['completedDataCaseRuns'] if 'completedDataCaseRuns' in runSumStatsDict else 0
+        summary.totalDataCaseRunsToComplete = runSumStatsDict['totalDataCaseRunsToComplete'] if 'totalDataCaseRunsToComplete' in runSumStatsDict else 0
         
         return summary
             

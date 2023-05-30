@@ -176,7 +176,6 @@
 			},
 			"dependsOn":[
 				"npm build extension host",
-				// "package fuzzer.pyz",
 				"package webview dist"
 			]
 		},
