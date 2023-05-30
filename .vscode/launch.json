@@ -9,7 +9,7 @@
 			"name": "debug fuzzer",
 			"type": "python",
 			"request": "launch",
-			"program": "__main__.py",
+			"program": "main.py",
 			"args": ["webserver", "start"],
 			"console": "integratedTerminal",
 			"justMyCode": true,

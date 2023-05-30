@@ -1363,13 +1363,13 @@ def update_casesetrun_summary(fuzzcontextId, fuzzCaseSetRunId, fuzzCaseSetId,  c
     if Utils.isNoneEmpty(summary):
         return
     
-    rowDict =  summary._asdict()
-    existingHttp2xx = rowDict['http2xx']
-    existingHttp3xx = rowDict['http3xx']
-    existingHttp4xx = rowDict['http4xx']
-    existingHttp5xx = rowDict['http5xx']
-    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
-    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+    rowDict =  summary._asdict() if summary else {}
+    existingHttp2xx = rowDict['http2xx'] if 'http2xx' in rowDict else 0
+    existingHttp3xx = rowDict['http3xx'] if 'http3xx' in rowDict else 0
+    existingHttp4xx = rowDict['http4xx'] if 'http4xx' in rowDict else 0
+    existingHttp5xx = rowDict['http5xx'] if 'http5xx' in rowDict else 0
+    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns'] if 'completedDataCaseRuns' in rowDict else 0
+    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete'] if 'totalDataCaseRunsToComplete' in rowDict else 0
     
     if httpCode >= 200 and httpCode <= 299:
         existingHttp2xx = existingHttp2xx + 1
@@ -1455,13 +1455,13 @@ def get_fuzzcaseset_run_statistics(caseSetRunSummaryId, fuzzCaseSetId, fuzzCaseS
                 .filter(ApiFuzzRunSummaryPerCaseSetTable.c.Id == caseSetRunSummaryId)
                 .first()
                )
-    rowDict =  latestSummary._asdict()
-    existingHttp2xx = rowDict['http2xx']
-    existingHttp3xx = rowDict['http3xx']
-    existingHttp4xx = rowDict['http4xx']
-    existingHttp5xx = rowDict['http5xx']
-    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns']
-    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete']
+    rowDict =  latestSummary._asdict() if latestSummary is not None else {}
+    existingHttp2xx = rowDict['http2xx'] if 'http2xx' in rowDict else 0
+    existingHttp3xx = rowDict['http3xx'] if 'http3xx' in rowDict else 0
+    existingHttp4xx = rowDict['http4xx'] if 'http4xx' in rowDict else 0
+    existingHttp5xx = rowDict['http5xx'] if 'http5xx' in rowDict else 0
+    existingCompletedDataCaseRuns = rowDict['completedDataCaseRuns'] if 'completedDataCaseRuns' in rowDict else 0
+    totalDataCaseRunsToComplete = rowDict['totalDataCaseRunsToComplete'] if 'totalDataCaseRunsToComplete' in rowDict else 0
     
     # retrieve again from DB to get the latest stats as during the above code execution, concurrent fuzzing process
     # will be updating DB at the same time, so once execution reach this line of code, stats could be likely outdated.

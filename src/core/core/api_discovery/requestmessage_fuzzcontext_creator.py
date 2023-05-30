@@ -591,7 +591,7 @@ class RequestMessageFuzzContextCreator:
         
         line = line.strip()
         
-        if '###' in line:
+        if line.startswith('###') or line == '':
             return False
         
         if line.startswith('//') or line.startswith('#'):
@@ -642,7 +642,7 @@ class RequestMessageFuzzContextCreator:
     def remove_all_comments(self, rqMsg: str) -> str: 
         
         lines = rqMsg.splitlines()
-        lines = [x for x in lines if not self.is_line_comment(x)]
+        lines = [x for x in lines if not self.is_line_comment(x) and x.strip() != '']
         return '\n'.join(map(str,lines))
 
         

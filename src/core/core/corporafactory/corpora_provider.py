@@ -36,9 +36,6 @@ class CorporaProvider:
     
     def __init__(self) -> None:
         
-        # if CorporaProvider.hasExistingInstance == True:
-        #     return
-        
         self.es = EventStore()
         
         self._boolCorpora = BoolCorpora()
@@ -56,11 +53,10 @@ class CorporaProvider:
         self._httppath = HttpPathCorpora()
     
     def load_files_corpora(self):
-        #self.es.emitInfo('CorporaProvider: loading payload corpora')
+
         self._seclistPayloadCorpora.load_corpora()
         self.es.emitInfo('CorporaProvider: payload corpora loaded')
         
-        #self.es.emitInfo('CorporaProvider: loading pdf corpora')
         self._pdfCorpora.load_corpora()
         self.es.emitInfo('CorporaProvider: pdf corpora loaded')
         
@@ -68,7 +64,6 @@ class CorporaProvider:
         self.es.emitInfo('CorporaProvider: image corpora loaded')
         
     def load_username_corpora(self):
-        
         self._usernameCorpora.load_corpora()
         self.es.emitInfo('CorporaProvider: username corpora loaded')
         
@@ -92,13 +87,6 @@ class CorporaProvider:
     def load_all(self):
         try:
             
-            self.es.emitInfo('vacuuming sqlite')
-            engine.execute("VACUUM")
-            self.es.emitInfo('sqlite vacuumed')
-            
-
-            self.es.emitInfo('CorporaProvider: start loading corpora')
-
             #self.es.emitInfo('CorporaProvider: loading boolean corpora')
             self._boolCorpora.load_corpora()
             self.es.emitInfo('CorporaProvider: boolean corpora loaded')
