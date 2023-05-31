@@ -115,7 +115,7 @@
             this.fuzzerConnected = false;
             this.dataloadingComplete = false;
             this.notifyFuzzerIsNotReady();
-            this.toastInfo('fuzzer engine is starting up, could take a moment for the first time', '', 1500);
+            this.toastInfo('Fuzzie is starting up, could take a moment on VSCode first launch', '', 1500);
             return;
          }
 
