@@ -17,7 +17,7 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * Fuzzie uses port 50001  
   fuzzer engine listens on http://localhost:50001 serving requests from webview
 * Fuzzie uses sqlite internally to store all data, when upgrading to a newer extension version, previous data will not be retained
-* On the very first launch, Fuzzie can take up to 10 - 12 secs to start up due to data loading  
+* On VSCode first launch, Fuzzie can take up to 7-9 secs to start up
 
 <br />  
 
