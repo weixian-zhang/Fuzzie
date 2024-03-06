@@ -10,6 +10,14 @@ The ability to fuzz test right in VSCode brings about several benefits:
 * able to fuzz test any parts of a HTTP message by creating your request messages with built-in wordlist, functions and variables
 * Being available in VSCode allows developers to conveniently fuzz test anytime without prior knowledge of fuzzing
 
+## What Information Does Fuzzie Collects?
+
+* Fuzzie does not collect personal data
+* Fuzzie collects all HTTP Request and Response related data of the user's specified test-target Web APIs and Websites.
+  If authentication tokens and keys are supplied to Fuzzie to be able to authenticate itself to the targetted Web APIs and Websites, Fuzzie stores these authentication tokens and keys.
+  All data including authentication token, keys, HTTP request and response collected, are stored locally within VSCode extension folder. The data is not send over to any remote servers.
+ 
+
 ### *Things to Note    
 
 * Depending on [wordlist type](#2-write-http-request-messages), Fuzzie can send malicious strings from [SecList](https://github.com/danielmiessler/SecLists), recommend to use Fuzzie in test environments only
